@@ -222,10 +222,12 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
     
     console.log('📥 Скачиваем файл по ссылке...');
     
-    const response = await fetch(downloadLink);
+    // ИСПОЛЬЗУЕМ ПРОКСИ
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadLink)}`;
+    const response = await fetch(proxyUrl);
     
     if (!response.ok) {
-      console.error('❌ Ошибка скачивания файла:', response.status);
+      console.error('❌ Ошибка скачивания через прокси:', response.status);
       return [];
     }
     

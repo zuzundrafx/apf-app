@@ -50,7 +50,7 @@ export async function downloadTournamentFile(filename: string): Promise<Fighter[
     console.log(`📥 Скачиваю файл: ${filename}`);
     
     // Получаем ссылку на скачивание
-    const downloadUrl = `https://cloud-api.yandex.net/v1/disk/resources/download?path=${DISK_FOLDER}${filename}`;
+    const downloadUrl = `https://cloud-api.yandex.net/v1/disk/resources/download?path=app:/${filename}`;
     const response = await fetch(downloadUrl, {
       headers: {
         'Authorization': `OAuth ${YA_TOKEN}`
@@ -63,18 +63,19 @@ export async function downloadTournamentFile(filename: string): Promise<Fighter[
     
     const { href } = await response.json();
     
-    // Скачиваем файл
-    const fileResponse = await fetch(href);
+    // ИСПОЛЬЗУЕМ ПРОКСИ
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(href)}`;
+    const fileResponse = await fetch(proxyUrl);
+    
+    if (!fileResponse.ok) {
+      throw new Error(`Ошибка скачивания через прокси: ${fileResponse.status}`);
+    }
+    
     const arrayBuffer = await fileResponse.arrayBuffer();
     
-    // Читаем Excel
     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(firstSheet) as Fighter[];
-    
-    console.log(`✅ Загружено ${data.length} бойцов из ${filename}`);
-    return data;
-    
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(sheet) as Fighter[];
   } catch (error) {
     console.error(`❌ Ошибка скачивания ${filename}:`, error);
     return null;

@@ -314,7 +314,15 @@ export async function loadExistingResults(
       return [];
     }
     
-    const response = await fetch(downloadLink);
+    // ИСПОЛЬЗУЕМ ПРОКСИ
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadLink)}`;
+    const response = await fetch(proxyUrl);
+    
+    if (!response.ok) {
+      console.error('❌ Ошибка скачивания через прокси:', response.status);
+      return [];
+    }
+    
     const arrayBuffer = await response.arrayBuffer();
     
     // Читаем Excel
