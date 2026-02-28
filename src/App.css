@@ -1,0 +1,849 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #1C1D1F;
+  color: #FFFFFF;
+}
+
+.app {
+  max-width: 375px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #1C1D1F;
+  position: relative;
+}
+
+/* Профильная панель */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 8px 16px;
+  background: transparent;
+  border-bottom: 1px solid #313130;
+}
+
+.profile-avatar {
+  width: 60px;
+  height: 60px;
+  background: #313130;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: 0;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #FFFFFF;
+  margin-bottom: 4px;
+}
+
+.level-bar {
+  height: 20px;
+  width: 100%;
+  background: #3D3D3B;
+  border-radius: 0;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #000000;
+  margin-bottom: 4px;
+}
+
+.level-progress {
+  height: 100%;
+  background: #FFE438;
+  border-radius: 0;
+  transition: width 0.3s ease;
+}
+
+.level-text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.profile-coins {
+  font-size: 14px;
+  color: #FFD700;
+  text-align: right;
+}
+
+/* Основной контент */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px 16px 16px;
+  gap: 8px;
+  min-height: 0;
+}
+
+/* Контейнер для двух турниров */
+.tournaments-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  min-height: 0;
+}
+
+/* Блоки турниров - строго одинаковой высоты */
+.tournament-section {
+  display: flex;
+  flex-direction: column;
+  background: #313130;
+  border-radius: 0;
+  overflow: hidden;
+  width: 100%;
+  flex: 1 1 0;
+  min-height: 0;
+  height: 0;
+}
+
+.tournament-section.past .tournament-header {
+  background: #B20101;
+}
+
+.tournament-section.upcoming .tournament-header {
+  background: #666D74;
+}
+
+.tournament-header {
+  padding: 12px 16px;
+  flex-shrink: 0;
+}
+
+.tournament-header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.tournament-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #FFFFFF;
+  opacity: 0.9;
+}
+
+.tournament-status {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.tournament-status.active {
+  background: #B20101;
+}
+
+.tournament-status.upcoming {
+  background: #4CAF50;
+}
+
+.tournament-content {
+  flex: 1;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 0;
+}
+
+.select-button {
+  width: 100%;
+  padding: 12px;
+  background: #C9FFCE;
+  border: none;
+  border-radius: 4px;
+  color: #000000;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0 16px;
+}
+
+.tournament-message {
+  text-align: center;
+  color: #FFFFFF;
+  font-size: 14px;
+  padding: 12px;
+  background: #2A2A2A;
+  border-radius: 4px;
+  width: calc(100% - 32px);
+  margin: 0 16px;
+}
+
+/* Сетка выбранных бойцов - всегда 5 колонок */
+.selected-fighters-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  width: 100%;
+  padding: 0 2px;
+  margin-bottom: 0;
+}
+
+.selected-fighter-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 0;
+  border-radius: 0;
+  background: #2A2A2A;
+  min-width: 0;
+  width: 100%;
+  height: auto;
+  min-height: 85px;
+}
+
+.selected-fighter-damage-box {
+  width: 75%;
+  height: 16px;
+  background: #FFD966;
+  color: #000000;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+}
+
+.selected-fighter-avatar-square {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #3D3D3B;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selected-fighter-avatar-square img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selected-fighter-name {
+  font-size: 10px;
+  color: #FFFFFF;
+  text-align: center;
+  word-break: break-word;
+  line-height: 1.3;
+  max-width: 100%;
+  width: 100%;
+  padding: 6px 2px 4px 2px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  overflow: hidden;
+  min-height: 2.6em;
+}
+
+/* Кнопка общего урона для обоих турниров */
+.total-damage-button {
+  width: 100%;
+  height: 48px;
+  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0;
+  padding: 0 16px;
+  cursor: default;
+  pointer-events: none;
+  color: #000000;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-sizing: border-box;
+}
+
+/* Окно выбора бойцов */
+.selection-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #1C1D1F;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+.selection-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  max-width: 375px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.selection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #313130;
+  border-bottom: 1px solid #3D3D3B;
+  margin: 0 -16px;
+}
+
+.selection-header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin: 0;
+  flex: 1;
+}
+
+.close-button {
+  background: #B20101;
+  border: none;
+  border-radius: 4px;
+  color: #FFFFFF;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.selection-progress {
+  padding: 12px 16px;
+  background: #2A2A2A;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid #3D3D3B;
+  margin: 0 -16px;
+}
+
+.fighters-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 0;
+  background: #1C1D1F;
+  width: 100%;
+}
+
+.weight-section {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.weight-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  border-radius: 4px 4px 0 0;
+  width: 100%;
+}
+
+.selected-badge {
+  background: #4CAF50;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: normal;
+  text-transform: none;
+}
+
+.fight-pair {
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #3D3D3B;
+  width: 100%;
+}
+
+.fight-pair:last-child {
+  border-bottom: none;
+}
+
+.fighter-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: #2A2A2A;
+  border: 1px solid #3D3D3B;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #FFFFFF;
+  min-width: 0;
+  height: 40px;
+}
+
+.fighter-card.selected {
+  background: #4CAF50;
+  border-color: #45a049;
+}
+
+.fighter-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fighter-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 0;
+  background: #3D3D3B;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fighter-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fighter-info {
+  flex: 1;
+  min-width: 0;
+  padding-right: 8px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.fighter-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: #FFFFFF;
+  word-break: break-word;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  overflow: hidden;
+  max-height: 2.4em;
+}
+
+.selection-actions {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  background: #1C1D1F;
+  border-top: 1px solid #3D3D3B;
+  margin: 0 -16px;
+}
+
+.discard-button {
+  flex: 1;
+  padding: 12px;
+  background: #FFCAC9;
+  border: none;
+  border-radius: 4px;
+  color: #000000;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.accept-button {
+  flex: 1;
+  padding: 12px;
+  background: #C9FFCE;
+  border: none;
+  border-radius: 4px;
+  color: #000000;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.accept-button.active {
+  opacity: 1;
+}
+
+/* Нижняя навигация */
+.bottom-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 0 16px 16px 16px;
+  background: #1C1D1F;
+  min-height: 80px;
+  position: relative;
+  border-top: none;
+  margin-top: auto;
+}
+
+.bottom-nav::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 16px;
+  right: 16px;
+  height: 7px;
+  background: #B20101;
+  z-index: 1;
+}
+
+.nav-button {
+  flex: 1;
+  height: auto;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3D3D3B;
+  border: none;
+  cursor: pointer;
+  padding: 12px 0;
+  margin: 0;
+  border-radius: 0;
+  transition: background 0.2s;
+}
+
+.nav-button.active {
+  background: #B20101;
+}
+
+.nav-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nav-button img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.bottom-nav.hidden {
+  display: none;
+}
+
+/* Экран рейтинга */
+.leaderboard-screen {
+  background: #1C1D1F;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.leaderboard-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #2A2A2A;
+  border-radius: 6px;
+}
+
+.rank {
+  width: 40px;
+  font-weight: 600;
+  color: #FFD700;
+  font-size: 14px;
+}
+
+.user-name {
+  flex: 1;
+  font-size: 14px;
+  color: #FFFFFF;
+}
+
+.user-score {
+  font-weight: 600;
+  color: #4CAF50;
+  font-size: 14px;
+}
+
+/* Загрузочный экран */
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #1C1D1F;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #3D3D3B;
+  border-top-color: #B20101;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: #FFFFFF;
+  font-size: 14px;
+}
+
+/* Экран ошибки */
+.error-screen {
+  text-align: center;
+  padding: 40px 20px;
+  background: #2A2A2A;
+  border-radius: 8px;
+  margin: 20px;
+}
+
+.error-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+}
+
+.error-text {
+  color: #B20101;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.retry-button {
+  background: #B20101;
+  border: none;
+  border-radius: 4px;
+  color: #FFFFFF;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Медиа-запросы */
+@media (max-width: 375px) {
+  .app {
+    max-width: 100%;
+  }
+  
+  .profile-header {
+    padding: 12px 12px 8px 12px;
+  }
+  
+  .tournament-header {
+    padding: 10px 12px;
+  }
+  
+  .tournament-header h2 {
+    font-size: 13px;
+  }
+  
+  .selected-fighter-card {
+    min-height: 80px;
+  }
+  
+  .total-damage-button {
+    height: 44px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 320px) {
+  .nav-button {
+    min-height: 50px;
+    padding: 8px 0;
+  }
+  
+  .nav-button img {
+    width: 38px;
+    height: 38px;
+  }
+  
+  .bottom-nav::before {
+    height: 5px;
+    top: -5px;
+  }
+  
+  .selected-fighter-damage-box {
+    height: 14px;
+    font-size: 9px;
+  }
+  
+  .selected-fighter-card {
+    min-height: 75px;
+  }
+  
+  .selected-fighter-name {
+    font-size: 9px;
+    padding: 5px 2px 3px 2px;
+    min-height: 2.4em;
+  }
+  
+  .fighter-card {
+    height: 36px;
+  }
+  
+  .fighter-avatar {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .fighter-info {
+    height: 36px;
+  }
+  
+  .fighter-name {
+    font-size: 10px;
+  }
+  
+  .total-damage-button {
+    height: 40px;
+    font-size: 13px;
+    padding: 0 12px;
+  }
+}
+
+/* Экран рейтинга */
+.leaderboard-screen {
+  background: #1C1D1F;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.leaderboard-header {
+  margin-bottom: 16px;
+}
+
+.leaderboard-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #FFD700;
+}
+
+.leaderboard-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #2A2A2A;
+  border-radius: 6px;
+}
+
+.rank {
+  width: 40px;
+  font-weight: 600;
+  color: #FFD700;
+  font-size: 14px;
+}
+
+.user-name {
+  flex: 1;
+  font-size: 14px;
+  color: #FFFFFF;
+}
+
+.user-score {
+  font-weight: 600;
+  color: #4CAF50;
+  font-size: 14px;
+}
+
+.leaderboard-loading {
+  text-align: center;
+  color: #888;
+  padding: 40px;
+  font-size: 14px;
+}
+
+.leaderboard-empty {
+  text-align: center;
+  color: #888;
+  padding: 40px;
+  font-size: 14px;
+}
+
+.tournament-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.tournament-title-row h2 {
+  margin-bottom: 0;
+}
+
+.updating-indicator {
+  font-size: 14px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
