@@ -406,11 +406,14 @@ function App() {
   const isBetsAvailable = (): boolean => {
     if (!upcomingTournament) return false;
     
+    // Получаем сегодняшнюю дату без времени
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
     
+    // Получаем дату турнира
     const tournamentDateStr = upcomingTournament.date;
     
+    // Преобразуем в формат YYYY-MM-DD для сравнения
     const months: { [key: string]: string } = {
       'January': '01', 'February': '02', 'March': '03', 'April': '04',
       'May': '05', 'June': '06', 'July': '07', 'August': '08',
@@ -427,7 +430,11 @@ function App() {
         const formattedDay = day.padStart(2, '0');
         const tournamentStr = `${year}-${months[month]}-${formattedDay}`;
         
-        return todayStr <= tournamentStr;
+        console.log('📅 Сегодня:', todayStr, 'Турнир:', tournamentStr);
+        
+        // Ставки доступны ТОЛЬКО если сегодня МЕНЬШЕ даты турнира
+        // (не равно и не больше)
+        return todayStr < tournamentStr;
       }
     }
     
