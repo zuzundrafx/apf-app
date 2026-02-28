@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿import { useState, useEffect } from 'react';
+﻿﻿﻿﻿﻿﻿﻿import { useState, useEffect } from 'react';
 import './App.css';
 import { Fighter, Tournament, SelectedFighter } from './types';
 import { useTournaments } from './hooks/useTournaments';
@@ -157,7 +157,6 @@ function App() {
 
   // Функция для начисления опыта за угаданных бойцов
   const awardExperience = async (correctPicks: number, tournamentId: string) => {
-    // Проверяем, не начисляли ли уже опыт за этот турнир
     if (processedTournaments.has(tournamentId)) {
       console.log('ℹ️ Опыт за этот турнир уже был начислен');
       return;
@@ -167,7 +166,6 @@ function App() {
     const newExp = userData.experience + expGain;
     const { level, nextLevelExp } = calculateLevel(newExp);
     
-    // Сохраняем текущие монеты
     const currentCoins = userData.coins;
     
     setUserData(prev => ({
@@ -177,7 +175,6 @@ function App() {
       nextLevelExp
     }));
     
-    // Сохраняем изменения в профиле принудительно
     if (telegramUser) {
       console.log('💰 Сохраняем опыт, текущие монеты:', currentCoins);
       
@@ -197,7 +194,6 @@ function App() {
       }
     }
     
-    // Добавляем турнир в обработанные
     setProcessedTournaments(prev => new Set(prev).add(tournamentId));
     
     return expGain;
@@ -231,7 +227,6 @@ function App() {
             photoUrl: user.photo_url
           });
           
-          // Загружаем профиль пользователя
           setLoadingProfile(true);
           const profile = await loadUserProfile(userId);
           
@@ -252,13 +247,11 @@ function App() {
               };
             });
             
-            // Проверяем через setTimeout
             setTimeout(() => {
               console.log('⏱️ Проверка монет после setUserData:', userData.coins);
             }, 100);
             
           } else if (isMounted) {
-            // Создаем новый профиль
             console.log('🆕 Создаем новый профиль');
             const newProfile = {
               userId: userId,
@@ -304,7 +297,6 @@ function App() {
             photoUrl: undefined
           });
           
-          // Загружаем тестовый профиль
           const profile = await loadUserProfile('user_123');
           if (profile && isMounted) {
             const { level, nextLevelExp } = calculateLevel(profile.experience);
@@ -323,13 +315,11 @@ function App() {
               };
             });
             
-            // Проверяем через setTimeout
             setTimeout(() => {
               console.log('⏱️ Проверка тестовых монет после setUserData:', userData.coins);
             }, 100);
             
           } else if (isMounted) {
-            // Создаем новый тестовый профиль
             console.log('🆕 Создаем новый тестовый профиль');
             const newProfile = {
               userId: 'user_123',
@@ -402,18 +392,14 @@ function App() {
     }
   };
 
-  // Функция для проверки доступности ставок по дате
+  // Функция для проверки доступности ставок по дате - ИСПРАВЛЕНО
   const isBetsAvailable = (): boolean => {
     if (!upcomingTournament) return false;
     
-    // Получаем сегодняшнюю дату без времени
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
-    
-    // Получаем дату турнира
     const tournamentDateStr = upcomingTournament.date;
     
-    // Преобразуем в формат YYYY-MM-DD для сравнения
     const months: { [key: string]: string } = {
       'January': '01', 'February': '02', 'March': '03', 'April': '04',
       'May': '05', 'June': '06', 'July': '07', 'August': '08',
@@ -432,8 +418,7 @@ function App() {
         
         console.log('📅 Сегодня:', todayStr, 'Турнир:', tournamentStr);
         
-        // Ставки доступны ТОЛЬКО если сегодня МЕНЬШЕ даты турнира
-        // (не равно и не больше)
+        // Ставки доступны только если сегодня МЕНЬШЕ даты турнира
         return todayStr < tournamentStr;
       }
     }
@@ -557,7 +542,6 @@ function App() {
       
       setLoadingUserResults(true);
       
-      // Загружаем для будущего турнира
       if (upcomingTournament && isMounted) {
         console.log('📥 Загружаем результаты для будущего турнира:', upcomingTournament.name);
         const upcomingResults = await loadUserResults(upcomingTournament.name, telegramUser.id);
@@ -579,7 +563,6 @@ function App() {
         }
       }
       
-      // Загружаем для прошедшего турнира
       if (pastTournament && isMounted) {
         console.log('📥 Загружаем результаты для прошедшего турнира:', pastTournament.name);
         const pastResults = await loadUserResults(pastTournament.name, telegramUser.id);
@@ -592,7 +575,6 @@ function App() {
             pastSelections: pastResults.selections
           }));
           
-          // Начисляем опыт за угаданных бойцов
           const correctPicks = calculateCorrectPicks(pastResults.selections);
           if (correctPicks > 0) {
             await awardExperience(correctPicks, pastTournament.name);
@@ -641,7 +623,6 @@ function App() {
         coins: newCoins
       }));
       
-      // Сохраняем изменение монет принудительно
       const saved = await saveUserProfile({
         userId: telegramUser.id,
         username: userData.username,
@@ -672,7 +653,6 @@ function App() {
       coins: newCoins
     }));
     
-    // Сохраняем изменение монет принудительно
     const saved = await saveUserProfile({
       userId: telegramUser.id,
       username: userData.username,
@@ -799,7 +779,6 @@ function App() {
 
   return (
     <div className="app">
-      {/* Верхняя панель с аватаром из Telegram */}
       <header className="profile-header">
         <div className="profile-avatar">
           {telegramUser?.photoUrl ? (
@@ -828,7 +807,6 @@ function App() {
       <main className="main-content">
         {currentView === 'main' && (
           <div className="tournaments-container">
-            {/* Прошедший турнир */}
             {pastTournament && (
               <section className="tournament-section past">
                 <div className="tournament-header">
@@ -902,7 +880,6 @@ function App() {
               </section>
             )}
 
-            {/* Будущий турнир */}
             {upcomingTournament && (
               <section className="tournament-section upcoming">
                 <div className="tournament-header">
@@ -995,7 +972,6 @@ function App() {
           </div>
         )}
 
-        {/* Экран рейтинга */}
         {currentView === 'leaderboard' && (
           <div className="leaderboard-screen">
             <div className="leaderboard-header">
@@ -1022,7 +998,6 @@ function App() {
           </div>
         )}
 
-        {/* Окно выбора бойцов */}
         {currentView === 'selection' && selectedTournament && selectedTournament.data && (
           <div className="selection-modal">
             <div className="selection-content">
@@ -1126,7 +1101,6 @@ function App() {
         )}
       </main>
 
-      {/* Нижняя навигация */}
       <nav className={`bottom-nav ${currentView === 'selection' ? 'hidden' : ''}`}>
         <button 
           className={`nav-button ${currentView === 'main' ? 'active' : ''}`}
