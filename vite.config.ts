@@ -5,7 +5,8 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/reactjs-template/',
+  // Для Vercel base должен быть '/' (корень домена)
+  base: '/',
   css: {
     preprocessorOptions: {
       scss: {
@@ -27,7 +28,18 @@ export default defineConfig({
   ],
   build: {
     target: 'esnext',
-    minify: 'terser'
+    minify: 'terser',
+    // Явно указываем структуру папок для сборки
+    outDir: 'dist',
+    assetsDir: 'assets',
+    // Разделяем код на чанки для оптимизации
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+        },
+      },
+    },
   },
   publicDir: './public',
   server: {

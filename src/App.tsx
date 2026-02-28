@@ -60,7 +60,7 @@ declare global {
 // Пороговые значения для уровней (10 уровней)
 const LEVEL_THRESHOLDS = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225];
 
-const BASE_URL = '/reactjs-template';
+const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 const YA_TOKEN = "y0__xCOz-U8GI3sPSCOyp-2FnBLBQ7drGtOupKGVfu4CpN2qtUs";
 
 function getAvatarFilename(weightClass: string): string {
