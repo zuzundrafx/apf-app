@@ -861,5 +861,5 @@ body {
   gap: 8px;
   min-height: 0;
   /* Добавить небольшой отступ */
-  padding-bottom: 80px;
+  padding-bottom: 2px;
 }
