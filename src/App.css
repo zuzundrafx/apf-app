@@ -848,51 +848,11 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Фикс для Telegram Desktop */
-@media (max-width: 375px) {
-  .bottom-nav {
-    min-height: 70px;
-    padding: 0 12px 12px 12px;
-  }
-  
-  .nav-button {
-    min-height: 50px;
-  }
-  
-  .nav-button img {
-    width: 40px;
-    height: 40px;
-  }
-  
-  .bottom-nav::before {
-    height: 5px;
-    top: -5px;
-  }
-  
-  .total-damage-button {
-    height: 44px;
-    font-size: 14px;
-    margin-bottom: 8px; /* Добавить отступ снизу */
-  }
-  
-  .selected-fighters-grid {
-    margin-bottom: 8px; /* Добавить отступ */
-  }
-}
-
 /* Специально для Telegram Desktop */
-@media (min-width: 376px) and (max-width: 800px) {
-  .bottom-nav {
-    min-height: 80px;
-    padding: 0 16px 16px 16px;
-  }
-  
-  .total-damage-button {
-    margin-bottom: 12px;
-  }
+.telegram-desktop .total-damage-button {
+  margin-bottom: 12px;
 }
 
-/* Основной контент с учетом нижней навигации */
 .main-content {
   flex: 1;
   display: flex;
@@ -900,36 +860,6 @@ body {
   padding: 8px 16px 16px 16px;
   gap: 8px;
   min-height: 0;
-  /* Добавить отступ для нижней навигации */
-  padding-bottom: 90px;
-}
-
-/* Для маленьких экранов */
-@media (max-width: 375px) {
-  .main-content {
-    padding-bottom: 80px;
-  }
-  
-  .tournament-content {
-    padding: 12px 0;
-  }
-  
-  .total-damage-button {
-    height: 44px;
-    font-size: 14px;
-    margin-bottom: 8px;
-  }
-}
-
-/* Для совсем маленьких */
-@media (max-width: 320px) {
-  .main-content {
-    padding-bottom: 70px;
-  }
-  
-  .total-damage-button {
-    height: 40px;
-    font-size: 13px;
-    margin-bottom: 6px;
-  }
+  /* Добавить небольшой отступ */
+  padding-bottom: 80px;
 }
