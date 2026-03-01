@@ -166,9 +166,41 @@ function App() {
     return roundDamage(total);
   };
 
+  // Функция для начисления монет за победителей
+  const awardCoins = async (winners: number, tournamentId: string) => {
+    if (processedTournaments.has(`coins_${tournamentId}`)) {
+      console.log('ℹ️ Монеты за этот турнир уже были начислены');
+      return;
+    }
+    
+    const coinGain = winners * 50;
+    const newCoins = userData.coins + coinGain;
+    
+    setUserData(prev => ({
+      ...prev,
+      coins: newCoins
+    }));
+    
+    if (telegramUser) {
+      const saved = await saveUserProfile({
+        userId: telegramUser.id,
+        username: userData.username,
+        level: userData.level,
+        experience: userData.experience,
+        coins: newCoins,
+        lastUpdated: new Date().toISOString()
+      });
+      
+      if (saved) {
+        console.log(`💰 Начислено монет: +${coinGain} (${winners} победителей)`);
+        setProcessedTournaments(prev => new Set(prev).add(`coins_${tournamentId}`));
+      }
+    }
+  };
+
   // Функция для начисления опыта за угаданных бойцов
   const awardExperience = async (correctPicks: number, tournamentId: string) => {
-    if (processedTournaments.has(tournamentId)) {
+    if (processedTournaments.has(`exp_${tournamentId}`)) {
       console.log('ℹ️ Опыт за этот турнир уже был начислен');
       return;
     }
@@ -201,11 +233,9 @@ function App() {
       if (saved) {
         console.log(`✨ Начислено опыта: +${expGain} (${correctPicks} угаданных бойцов)`);
         console.log(`📊 Текущий уровень: ${level}, опыт: ${newExp}/${nextLevelExp}`);
-        console.log(`💰 Текущие монеты: ${currentCoins}`);
+        setProcessedTournaments(prev => new Set(prev).add(`exp_${tournamentId}`));
       }
     }
-    
-    setProcessedTournaments(prev => new Set(prev).add(tournamentId));
     
     return expGain;
   };
@@ -370,6 +400,41 @@ function App() {
       username: userData.username
     });
   }, [userData]);
+
+  // Периодическая проверка обновлений профиля (раз в 30 секунд)
+  useEffect(() => {
+    if (!telegramUser || !profileLoaded) return;
+    
+    const checkProfileUpdates = async () => {
+      console.log('🔄 Проверяю обновления профиля...');
+      const updatedProfile = await loadUserProfile(telegramUser.id);
+      
+      if (updatedProfile) {
+        const { level, nextLevelExp } = calculateLevel(updatedProfile.experience);
+        
+        // Проверяем, изменились ли данные
+        if (updatedProfile.coins !== userData.coins ||
+            updatedProfile.experience !== userData.experience ||
+            updatedProfile.level !== userData.level) {
+          
+          console.log('📊 Профиль обновлен:', updatedProfile);
+          
+          setUserData(prev => ({
+            ...prev,
+            username: updatedProfile.username,
+            level: updatedProfile.level,
+            experience: updatedProfile.experience,
+            nextLevelExp: nextLevelExp,
+            coins: updatedProfile.coins
+          }));
+        }
+      }
+    };
+    
+    const interval = setInterval(checkProfileUpdates, 30 * 1000); // каждые 30 секунд
+    
+    return () => clearInterval(interval);
+  }, [telegramUser, profileLoaded, userData.coins, userData.experience, userData.level]);
 
   // Функция для скачивания файла с Яндекс.Диска
   const downloadTournamentFile = async (filename: string): Promise<Fighter[] | null> => {
@@ -592,6 +657,16 @@ function App() {
             pastSelections: pastResults.selections
           }));
           
+          // Подсчитываем победителей и начисляем монеты
+          const winners = pastResults.selections.filter(sel => 
+            sel.fighter['W/L'] === 'win'
+          ).length;
+          
+          if (winners > 0) {
+            await awardCoins(winners, pastTournament.name);
+          }
+          
+          // Подсчитываем угаданных бойцов и начисляем опыт
           const correctPicks = calculateCorrectPicks(pastResults.selections);
           if (correctPicks > 0) {
             await awardExperience(correctPicks, pastTournament.name);
@@ -842,7 +917,6 @@ function App() {
                       <div className="selected-fighters-grid">
                         {userData.pastSelections.map((selection, index) => {
                           const weightClass = selection.fighter['Weight class'];
-                          const hasDamage = selection.fighter['Total Damage'] > 0;
                           const isWinner = selection.fighter['W/L'] === 'win';
                           
                           return (
