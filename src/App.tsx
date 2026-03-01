@@ -678,12 +678,14 @@ function App() {
           });
           
           // Подсчитываем победителей и начисляем монеты
-          const winners = pastResults.selections.filter(sel => 
-            sel.fighter['W/L'] === 'win'
-          ).length;
-          
-          // Подсчитываем угаданных бойцов и начисляем опыт
-          const correctPicks = calculateCorrectPicks(pastResults.selections);
+          // Теперь W/L уже есть в pastResults.selections!
+const winners = pastResults.selections.filter(sel => 
+  sel.fighter['W/L'] === 'win'
+).length;
+
+const correctPicks = pastResults.selections.filter(sel => 
+  sel.fighter['W/L'] === 'win'
+).length;
           
           console.log('📊 Сводная статистика:', {
             всего: pastResults.selections.length,

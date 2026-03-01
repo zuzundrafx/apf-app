@@ -241,14 +241,18 @@ export async function saveUserResults(
         'Место': index + 1,
         'User ID': result.userId,
         'Username': result.username,
-        'Total Damage': Math.round(result.totalDamage), // Округляем при сохранении
+        'Total Damage': Math.round(result.totalDamage),
         'Timestamp': result.timestamp,
       };
       
       result.selections.forEach((sel, i) => {
         row[`Боец ${i + 1}`] = sel.fighter.Fighter;
         row[`Вес ${i + 1}`] = sel.weightClass;
-        row[`Урон ${i + 1}`] = Math.round(sel.fighter['Total Damage']); // Округляем при сохранении
+        row[`Урон ${i + 1}`] = Math.round(sel.fighter['Total Damage']);
+        row[`W/L ${i + 1}`] = sel.fighter['W/L'] || '';
+        row[`Method ${i + 1}`] = sel.fighter['Method'] || '';
+        row[`Round ${i + 1}`] = sel.fighter['Round'] || 0;
+        row[`Time ${i + 1}`] = sel.fighter['Time'] || '';
       });
       
       return row;
@@ -296,7 +300,7 @@ export async function loadExistingResults(
       return [];
     }
     
-    const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadLink)}`;
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadLink)}&t=${Date.now()}`;
     const response = await fetch(proxyUrl);
     
     if (!response.ok) {
@@ -312,43 +316,56 @@ export async function loadExistingResults(
     
     console.log(`✅ Загружено ${data.length} существующих записей`);
     
-    return data.map((item: any) => {
-      const selections: SelectedFighter[] = [];
-      let i = 1;
-      
-      while (item[`Боец ${i}`]) {
-        selections.push({
-          weightClass: String(item[`Вес ${i}`] || ''),
-          fighter: {
-            Fighter: String(item[`Боец ${i}`]),
-            'Total Damage': Number(item[`Урон ${i}`]) || 0,
-            'Weight class': String(item[`Вес ${i}`] || ''),
-            'Fight_ID': 0,
-            'W/L': 'lose' as const,
-            'Kd': 0,
-            'Str': 0,
-            'Td': 0,
-            'Sub': 0,
-            'Head': 0,
-            'Body': 0,
-            'Leg': 0,
-            'Weight Coefficient': 1,
-            'Method': '',
-            'Round': 0,
-            'Time': ''
-          }
-        });
-        i++;
+    // Загружаем существующие результаты
+return data.map((item: any) => {
+  const selections: SelectedFighter[] = [];
+  let i = 1;
+  
+  while (item[`Боец ${i}`]) {
+    // Преобразуем строковое значение W/L в корректный тип
+    const wlValue = String(item[`W/L ${i}`] || '').toLowerCase();
+    let wl: 'win' | 'lose' = 'lose'; // По умолчанию 'lose', если значение не определено
+    
+    if (wlValue === 'win') {
+      wl = 'win';
+    } else if (wlValue === 'lose') {
+      wl = 'lose';
+    } else {
+      wl = 'lose'; // Для всех остальных случаев (пустая строка, undefined и т.д.) ставим 'lose'
+    }
+    
+    selections.push({
+      weightClass: String(item[`Вес ${i}`] || ''),
+      fighter: {
+        Fighter: String(item[`Боец ${i}`]),
+        'Total Damage': Number(item[`Урон ${i}`]) || 0,
+        'W/L': wl,  // Теперь всегда 'win' или 'lose'
+        'Method': String(item[`Method ${i}`] || ''),
+        'Round': Number(item[`Round ${i}`]) || 0,
+        'Time': String(item[`Time ${i}`] || ''),
+        'Weight class': String(item[`Вес ${i}`] || ''),
+        'Fight_ID': 0,
+        'Kd': 0,
+        'Str': 0,
+        'Td': 0,
+        'Sub': 0,
+        'Head': 0,
+        'Body': 0,
+        'Leg': 0,
+        'Weight Coefficient': 1
       }
-      
-      return {
-        userId: String(item['User ID'] || ''),
-        username: String(item['Username'] || 'Anonymous'),
-        totalDamage: Number(item['Total Damage']) || 0,
-        timestamp: String(item['Timestamp'] || ''),
-        selections: selections
-      };
     });
+    i++;
+  }
+  
+  return {
+    userId: String(item['User ID'] || ''),
+    username: String(item['Username'] || 'Anonymous'),
+    totalDamage: Number(item['Total Damage']) || 0,
+    timestamp: String(item['Timestamp'] || ''),
+    selections: selections
+  };
+});
     
   } catch (error) {
     console.error('❌ Ошибка загрузки существующих результатов:', error);
@@ -372,7 +389,7 @@ export async function loadLeaderboard(tournamentName: string): Promise<Leaderboa
       return [];
     }
     
-    const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadLink)}`;
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadLink)}&t=${Date.now()}`;
     const response = await fetch(proxyUrl);
     
     if (!response.ok) {
