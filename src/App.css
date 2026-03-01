@@ -174,17 +174,12 @@ body {
 
 .tournament-content {
   flex: 1;
-  padding: 16px 0;
+  padding: 13px 0 16px 0; /* Уменьшен верхний отступ на 20% (было 16px) */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   min-height: 0;
-}
-
-/* Уменьшаем отступ сверху у карточек бойцов на 20% */
-.tournament-content {
-  padding-top: 13px; /* 16px - 20% = 12.8px ≈ 13px */
 }
 
 .select-button {
@@ -509,7 +504,7 @@ body {
   padding: 12px;
   background: #C9FFCE;
   border: none;
-  ьborder-radius: 4px;
+  border-radius: 4px;
   color: #000000;
   font-size: 12px;
   font-weight: 600;
@@ -582,19 +577,17 @@ body {
   display: none;
 }
 
-/* Экран рейтинга */
+/* Экран рейтинга - ОБНОВЛЕННАЯ ВЕРСИЯ */
 .leaderboard-screen {
   background: #1C1D1F;
   height: 100%;
   display: flex;
   flex-direction: column;
   padding: 16px;
-  overflow: hidden;
 }
 
 .leaderboard-header {
   margin-bottom: 16px;
-  flex-shrink: 0;
 }
 
 .leaderboard-header h2 {
@@ -609,7 +602,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-right: 4px;
 }
 
 .leaderboard-item {
@@ -629,14 +621,22 @@ body {
   flex-shrink: 0;
 }
 
+/* Контейнер для аватарки и имени */
+.leaderboard-user-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Аватарка пользователя */
 .leaderboard-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 0;
   background: #3D3D3B;
   overflow: hidden;
   flex-shrink: 0;
-  margin-right: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -653,13 +653,7 @@ body {
   color: #FFFFFF;
 }
 
-.leaderboard-user-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
+/* Имя пользователя */
 .leaderboard-username {
   font-size: 14px;
   color: #FFFFFF;
@@ -669,12 +663,7 @@ body {
   text-overflow: ellipsis;
 }
 
-.leaderboard-user-id {
-  font-size: 10px;
-  color: #888;
-  margin-top: 2px;
-}
-
+/* Общий урон на градиентном фоне */
 .leaderboard-score {
   padding: 6px 12px;
   background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
@@ -686,6 +675,20 @@ body {
   min-width: 70px;
   flex-shrink: 0;
   margin-left: 8px;
+}
+
+.leaderboard-loading {
+  text-align: center;
+  color: #888;
+  padding: 40px;
+  font-size: 14px;
+}
+
+.leaderboard-empty {
+  text-align: center;
+  color: #888;
+  padding: 40px;
+  font-size: 14px;
 }
 
 /* Загрузочный экран */
@@ -787,7 +790,7 @@ body {
   }
   
   .selected-fighter-card {
-    min-height: 75px;
+    min-height: 80px;
   }
   
   .selected-fighter-name {
@@ -829,20 +832,15 @@ body {
     height: 40px;
   }
   
-  .leaderboard-item {
-    padding: 6px 10px;
-    min-height: 50px;
-  }
-  
+  /* Адаптивность для рейтинга на 375px */
   .leaderboard-rank {
-    width: 30px;
-    font-size: 12px;
+    width: 35px;
+    font-size: 13px;
   }
   
   .leaderboard-avatar {
     width: 32px;
     height: 32px;
-    margin-right: 8px;
   }
   
   .leaderboard-avatar span {
@@ -882,7 +880,7 @@ body {
   }
   
   .selected-fighter-card {
-    min-height: 70px;
+    min-height: 75px;
   }
   
   .selected-fighter-name {
@@ -892,36 +890,41 @@ body {
   }
   
   .fighter-card {
-    height: 34px;
+    height: 36px;
   }
   
   .fighter-avatar {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
   }
   
   .fighter-info {
-    height: 34px;
+    height: 36px;
   }
   
   .fighter-name {
-    font-size: 9px;
+    font-size: 10px;
   }
   
   .total-damage-button {
-    height: 38px;
-    font-size: 12px;
-    padding: 0 10px;
+    height: 40px;
+    font-size: 13px;
+    padding: 0 12px;
   }
   
+  /* Адаптивность для рейтинга на 320px */
   .leaderboard-rank {
-    width: 25px;
-    font-size: 11px;
+    width: 30px;
+    font-size: 12px;
   }
   
   .leaderboard-avatar {
     width: 28px;
     height: 28px;
+  }
+  
+  .leaderboard-avatar span {
+    font-size: 14px;
   }
   
   .leaderboard-username {
@@ -949,11 +952,6 @@ body {
 .updating-indicator {
   font-size: 14px;
   animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 /* Специально для Telegram Desktop */
