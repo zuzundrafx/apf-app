@@ -57,8 +57,8 @@ declare global {
   }
 }
 
-// Пороговые значения для уровней (10 уровней)
-const LEVEL_THRESHOLDS = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225];
+// Пороговые значения для уровней (10 уровней) - сколько опыта нужно для перехода на следующий уровень
+const LEVEL_THRESHOLDS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 0]; // 0 для 10 уровня (максимальный)
 
 const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 const YA_TOKEN = import.meta.env.VITE_YA_TOKEN;
@@ -66,6 +66,34 @@ const YA_TOKEN = import.meta.env.VITE_YA_TOKEN;
 // Функция для округления урона до целого числа
 const roundDamage = (damage: number): number => {
   return Math.round(damage);
+};
+
+// Функция для расчета уровня по общему опыту
+const calculateLevel = (totalExp: number): { level: number; currentExp: number; nextLevelExp: number } => {
+  let remainingExp = totalExp;
+  let level = 1;
+  
+  // Проходим по порогам уровней
+  for (let i = 0; i < LEVEL_THRESHOLDS.length - 1; i++) {
+    const expNeeded = LEVEL_THRESHOLDS[i];
+    
+    if (remainingExp >= expNeeded) {
+      // Вычитаем опыт, нужный для этого уровня
+      remainingExp -= expNeeded;
+      level = i + 2; // +2 потому что i=0 это переход с 1 на 2 уровень
+    } else {
+      break;
+    }
+  }
+  
+  // Следующий порог опыта (сколько нужно для следующего уровня)
+  const nextLevelExp = level < 10 ? LEVEL_THRESHOLDS[level - 1] : 0;
+  
+  return { 
+    level, 
+    currentExp: remainingExp,  // Текущий опыт на этом уровне
+    nextLevelExp 
+  };
 };
 
 function getAvatarFilename(weightClass: string): string {
@@ -124,25 +152,11 @@ function App() {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [processedTournaments, setProcessedTournaments] = useState<Set<string>>(new Set());
 
-  // Функция для расчета уровня по опыту
-  const calculateLevel = (exp: number): { level: number; nextLevelExp: number } => {
-    let calculatedLevel = 1;
-    for (let i = 0; i < LEVEL_THRESHOLDS.length; i++) {
-      if (exp >= LEVEL_THRESHOLDS[i]) {
-        calculatedLevel = i + 1;
-      } else {
-        break;
-      }
-    }
-    
-    const nextLevelExp = calculatedLevel < 10 ? LEVEL_THRESHOLDS[calculatedLevel] : LEVEL_THRESHOLDS[9];
-    return { level: calculatedLevel, nextLevelExp };
-  };
-
   const [userData, setUserData] = useState({
     username: 'Player',
     level: 1,
-    experience: 0,
+    currentExp: 0,
+    totalExp: 0,
     nextLevelExp: 5,
     coins: 100,
     upcomingSelections: [] as SelectedFighter[],
@@ -154,7 +168,9 @@ function App() {
   console.log('🏁 Начальное состояние userData:', {
     coins: 100,
     username: 'Player',
-    level: 1
+    level: 1,
+    currentExp: 0,
+    totalExp: 0
   });
 
   const hasUpcomingBet = userData.upcomingSelections.length > 0;
@@ -170,13 +186,11 @@ function App() {
   const awardCoins = async (winners: number, tournamentId: string): Promise<number> => {
     console.log('🎯 awardCoins вызвана:', { winners, tournamentId });
     
-    // Проверяем в памяти
     if (processedTournaments.has(`coins_${tournamentId}`)) {
       console.log('ℹ️ Монеты за этот турнир уже были начислены в этой сессии');
       return userData.coins;
     }
     
-    // Проверяем в профиле (загружаем актуальные данные)
     if (telegramUser) {
       const currentProfile = await loadUserProfile(telegramUser.id);
       if (currentProfile?.processedTournaments?.coins?.includes(tournamentId)) {
@@ -195,18 +209,16 @@ function App() {
     }));
     
     if (telegramUser) {
-      // Загружаем актуальный профиль
       const profile = await loadUserProfile(telegramUser.id) || {
         userId: telegramUser.id,
         username: userData.username,
         level: userData.level,
-        experience: userData.experience,
+        experience: userData.totalExp,
         coins: newCoins,
         lastUpdated: new Date().toISOString(),
         processedTournaments: { coins: [], exp: [] }
       };
       
-      // Добавляем турнир в список обработанных
       const updatedProfile = {
         ...profile,
         coins: newCoins,
@@ -228,17 +240,15 @@ function App() {
     return newCoins;
   };
 
-  // Функция для начисления опыта за угаданных бойцов
+  // Функция для начисления опыта за угаданных бойцов (с правильным расчетом уровней)
   const awardExperience = async (correctPicks: number, tournamentId: string, currentCoins: number) => {
     console.log('🎯 awardExperience вызвана:', { correctPicks, tournamentId, currentCoins });
     
-    // Проверяем в памяти
     if (processedTournaments.has(`exp_${tournamentId}`)) {
       console.log('ℹ️ Опыт за этот турнир уже был начислен в этой сессии');
       return;
     }
     
-    // Проверяем в профиле (загружаем актуальные данные)
     if (telegramUser) {
       const currentProfile = await loadUserProfile(telegramUser.id);
       if (currentProfile?.processedTournaments?.exp?.includes(tournamentId)) {
@@ -249,12 +259,22 @@ function App() {
     }
     
     const expGain = correctPicks * 5;
-    const newExp = userData.experience + expGain;
-    const { level, nextLevelExp } = calculateLevel(newExp);
+    const newTotalExp = userData.totalExp + expGain;
+    const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
+    
+    console.log('📊 Расчет опыта:', {
+      былоTotal: userData.totalExp,
+      gain: expGain,
+      сталоTotal: newTotalExp,
+      новыйУровень: level,
+      опытНаУровне: currentExp,
+      нужноДляСледующего: nextLevelExp
+    });
     
     setUserData(prev => ({
       ...prev,
-      experience: newExp,
+      totalExp: newTotalExp,
+      currentExp: currentExp,
       level,
       nextLevelExp
     }));
@@ -262,22 +282,20 @@ function App() {
     if (telegramUser) {
       console.log('💰 Сохраняем опыт, текущие монеты:', currentCoins);
       
-      // Загружаем актуальный профиль
       const profile = await loadUserProfile(telegramUser.id) || {
         userId: telegramUser.id,
         username: userData.username,
         level: level,
-        experience: newExp,
+        experience: newTotalExp,
         coins: currentCoins,
         lastUpdated: new Date().toISOString(),
         processedTournaments: { coins: [], exp: [] }
       };
       
-      // Добавляем турнир в список обработанных
       const updatedProfile = {
         ...profile,
         level: level,
-        experience: newExp,
+        experience: newTotalExp, // Сохраняем общий опыт
         coins: currentCoins,
         processedTournaments: {
           coins: profile.processedTournaments?.coins || [],
@@ -289,7 +307,7 @@ function App() {
       
       if (saved) {
         console.log(`✨ Начислено опыта: +${expGain} (${correctPicks} угаданных бойцов)`);
-        console.log(`📊 Текущий уровень: ${level}, опыт: ${newExp}/${nextLevelExp}`);
+        console.log(`📊 Текущий уровень: ${level}, опыт на уровне: ${currentExp}/${nextLevelExp}`);
         console.log(`💰 Баланс монет: ${currentCoins}`);
         setProcessedTournaments(prev => new Set(prev).add(`exp_${tournamentId}`));
       }
@@ -330,11 +348,15 @@ function App() {
           const profile = await loadUserProfile(userId);
           
           if (profile && isMounted) {
-            const { level, nextLevelExp } = calculateLevel(profile.experience);
+            // Из профиля загружаем общий опыт и рассчитываем уровень
+            const totalExp = profile.experience || 0;
+            const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
+            
             console.log('✅ Профиль загружен:', profile);
             console.log('💰 Загруженные монеты из профиля:', profile.coins);
+            console.log('📊 Загружен общий опыт:', totalExp);
+            console.log('📈 Рассчитанный уровень:', { level, currentExp, nextLevelExp });
             
-            // Восстанавливаем processedTournaments из профиля
             if (profile.processedTournaments) {
               const newProcessed = new Set<string>();
               if (profile.processedTournaments.coins) {
@@ -354,9 +376,10 @@ function App() {
             setUserData(prev => ({
               ...prev,
               username: profile.username,
-              level: profile.level,
-              experience: profile.experience,
-              nextLevelExp: nextLevelExp,
+              level,
+              currentExp,
+              totalExp,
+              nextLevelExp,
               coins: profile.coins
             }));
             
@@ -408,11 +431,13 @@ function App() {
           
           const profile = await loadUserProfile('user_123');
           if (profile && isMounted) {
-            const { level, nextLevelExp } = calculateLevel(profile.experience);
+            const totalExp = profile.experience || 0;
+            const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
+            
             console.log('✅ Тестовый профиль загружен:', profile);
             console.log('💰 Загруженные монеты из тестового профиля:', profile.coins);
+            console.log('📊 Загружен общий опыт:', totalExp);
             
-            // Восстанавливаем processedTournaments из профиля
             if (profile.processedTournaments) {
               const newProcessed = new Set<string>();
               if (profile.processedTournaments.coins) {
@@ -426,15 +451,15 @@ function App() {
                 );
               }
               setProcessedTournaments(newProcessed);
-              console.log('🔄 Восстановлены флаги начислений:', Array.from(newProcessed));
             }
             
             setUserData(prev => ({
               ...prev,
               username: profile.username,
-              level: profile.level,
-              experience: profile.experience,
-              nextLevelExp: nextLevelExp,
+              level,
+              currentExp,
+              totalExp,
+              nextLevelExp,
               coins: profile.coins
             }));
             
@@ -474,7 +499,8 @@ function App() {
     console.log('📊 userData обновился:', {
       coins: userData.coins,
       level: userData.level,
-      experience: userData.experience,
+      currentExp: userData.currentExp,
+      totalExp: userData.totalExp,
       username: userData.username
     });
   }, [userData]);
@@ -488,21 +514,22 @@ function App() {
       const updatedProfile = await loadUserProfile(telegramUser.id);
       
       if (updatedProfile) {
-        const { level, nextLevelExp } = calculateLevel(updatedProfile.experience);
+        const totalExp = updatedProfile.experience || 0;
+        const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
         
-        // Проверяем, изменились ли данные
         if (updatedProfile.coins !== userData.coins ||
-            updatedProfile.experience !== userData.experience ||
-            updatedProfile.level !== userData.level) {
+            updatedProfile.experience !== userData.totalExp ||
+            level !== userData.level) {
           
           console.log('📊 Профиль обновлен:', updatedProfile);
           
           setUserData(prev => ({
             ...prev,
             username: updatedProfile.username,
-            level: updatedProfile.level,
-            experience: updatedProfile.experience,
-            nextLevelExp: nextLevelExp,
+            level,
+            currentExp,
+            totalExp,
+            nextLevelExp,
             coins: updatedProfile.coins
           }));
         }
@@ -512,7 +539,7 @@ function App() {
     const interval = setInterval(checkProfileUpdates, 30 * 1000);
     
     return () => clearInterval(interval);
-  }, [telegramUser, profileLoaded, userData.coins, userData.experience, userData.level]);
+  }, [telegramUser, profileLoaded, userData.coins, userData.totalExp, userData.level]);
 
   // Функция для скачивания файла с Яндекс.Диска
   const downloadTournamentFile = async (filename: string): Promise<Fighter[] | null> => {
@@ -729,7 +756,6 @@ function App() {
             pastSelections: pastResults.selections
           }));
           
-          // Подсчитываем победителей и начисляем монеты
           const winners = pastResults.selections.filter(sel => 
             sel.fighter['W/L'] === 'win'
           ).length;
@@ -798,7 +824,7 @@ function App() {
         userId: telegramUser.id,
         username: userData.username,
         level: userData.level,
-        experience: userData.experience,
+        experience: userData.totalExp,
         coins: newCoins,
         lastUpdated: new Date().toISOString()
       });
@@ -828,7 +854,7 @@ function App() {
       userId: telegramUser.id,
       username: userData.username,
       level: userData.level,
-      experience: userData.experience,
+      experience: userData.totalExp,
       coins: newCoins,
       lastUpdated: new Date().toISOString()
     });
@@ -964,11 +990,13 @@ function App() {
             <div 
               className="level-progress" 
               style={{ 
-                width: `${Math.min(100, (userData.experience / userData.nextLevelExp) * 100)}%` 
+                width: `${userData.nextLevelExp > 0 ? Math.min(100, (userData.currentExp / userData.nextLevelExp) * 100) : 100}%` 
               }}
             ></div>
             <span className="level-text">
-              {userData.experience}/{userData.nextLevelExp} (Level {userData.level})
+              {userData.nextLevelExp > 0 
+                ? `${userData.currentExp}/${userData.nextLevelExp} (Level ${userData.level})`
+                : `Level ${userData.level} (MAX)`}
             </span>
           </div>
           <div className="profile-coins">🪙 {userData.coins}</div>
