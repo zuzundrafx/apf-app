@@ -663,34 +663,43 @@ function App() {
             pastSelections: pastResults.selections
           }));
           
-          // ДИАГНОСТИКА: проверяем, почему не работают awardCoins и awardExperience
-          console.log('🔍 ДИАГНОСТИКА: Анализ начисления для турнира:', pastTournament.name);
+          // ДЕТАЛЬНАЯ ДИАГНОСТИКА: анализ каждого бойца
+          console.log('🔍 ДЕТАЛЬНАЯ ДИАГНОСТИКА:');
+          pastResults.selections.forEach((sel, index) => {
+            console.log(`Боец ${index + 1}: ${sel.fighter.Fighter}`, {
+              'W/L': sel.fighter['W/L'],
+              'Total Damage': sel.fighter['Total Damage'],
+              'Method': sel.fighter['Method'],
+              'Round': sel.fighter['Round'],
+              'Time': sel.fighter['Time'],
+              isWinner: sel.fighter['W/L'] === 'win',
+              qualifiesForCorrectPick: sel.fighter['W/L'] === 'win' && sel.fighter['Total Damage'] > 0
+            });
+          });
           
-          // Проверяем данные
+          // Подсчитываем победителей и начисляем монеты
           const winners = pastResults.selections.filter(sel => 
             sel.fighter['W/L'] === 'win'
           ).length;
           
+          // Подсчитываем угаданных бойцов и начисляем опыт
           const correctPicks = calculateCorrectPicks(pastResults.selections);
           
-          console.log('📊 Статистика выбранных бойцов:', {
+          console.log('📊 Сводная статистика:', {
             всего: pastResults.selections.length,
             победителей: winners,
-            угаданных: correctPicks
+            угаданных: correctPicks,
+            processedTournaments_coins: processedTournaments.has(`coins_${pastTournament.name}`),
+            processedTournaments_exp: processedTournaments.has(`exp_${pastTournament.name}`)
           });
           
-          // Проверяем processedTournaments
-          console.log('📌 processedTournaments содержит:', {
-            coins: processedTournaments.has(`coins_${pastTournament.name}`),
-            exp: processedTournaments.has(`exp_${pastTournament.name}`)
-          });
+          if (winners > 0) {
+            await awardCoins(winners, pastTournament.name);
+          }
           
-          // Проверяем сами функции (без блокировок)
-          console.log('🎯 Пытаюсь вызвать awardCoins...');
-          await awardCoins(winners, pastTournament.name);
-          
-          console.log('🎯 Пытаюсь вызвать awardExperience...');
-          await awardExperience(correctPicks, pastTournament.name);
+          if (correctPicks > 0) {
+            await awardExperience(correctPicks, pastTournament.name);
+          }
         }
       }
       
