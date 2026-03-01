@@ -63,6 +63,11 @@ const LEVEL_THRESHOLDS = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225];
 const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 const YA_TOKEN = import.meta.env.VITE_YA_TOKEN;
 
+// Функция для округления урона до целого числа
+const roundDamage = (damage: number): number => {
+  return Math.round(damage);
+};
+
 function getAvatarFilename(weightClass: string): string {
   const map: { [key: string]: string } = {
     'Flyweight': 'Flyweight_avatar.png',
@@ -154,6 +159,12 @@ function App() {
 
   const hasUpcomingBet = userData.upcomingSelections.length > 0;
   const hasPastBet = userData.pastSelections.length > 0;
+
+  // Функция для подсчета общего урона с округлением
+  const calculateTotalDamage = (selections: SelectedFighter[]): number => {
+    const total = selections.reduce((sum, sel) => sum + (sel.fighter['Total Damage'] || 0), 0);
+    return roundDamage(total);
+  };
 
   // Функция для начисления опыта за угаданных бойцов
   const awardExperience = async (correctPicks: number, tournamentId: string) => {
@@ -360,11 +371,6 @@ function App() {
     });
   }, [userData]);
 
-  // Функция для подсчета общего урона
-  const calculateTotalDamage = (selections: SelectedFighter[]): number => {
-    return selections.reduce((sum, sel) => sum + (sel.fighter['Total Damage'] || 0), 0);
-  };
-
   // Функция для скачивания файла с Яндекс.Диска
   const downloadTournamentFile = async (filename: string): Promise<Fighter[] | null> => {
     try {
@@ -441,7 +447,6 @@ function App() {
       if (fighter['W/L'] === 'win' || fighter['W/L'] === 'lose') return true;
       // Если есть метод победы - турнир начался
       if (fighter['Method'] && fighter['Method'] !== '' && fighter['Method'] !== '--') return true;
-      // Если есть статистика (даже View/Matchup) - это все еще будущий турнир без данных
       return false;
     });
   };
@@ -850,7 +855,9 @@ function App() {
                               }}
                             >
                               <div className="selected-fighter-damage-box">
-                                {selection.fighter['Total Damage'] !== undefined ? selection.fighter['Total Damage'] : '?'}
+                                {selection.fighter['Total Damage'] !== undefined 
+                                  ? roundDamage(selection.fighter['Total Damage']) 
+                                  : '?'}
                               </div>
                               <div className="selected-fighter-avatar-square">
                                 <img 
@@ -924,7 +931,9 @@ function App() {
                               style={{ backgroundColor: getWeightClassColor(weightClass) }}
                             >
                               <div className="selected-fighter-damage-box">
-                                {hasResult ? selection.fighter['Total Damage'] : '?'}
+                                {hasResult 
+                                  ? roundDamage(selection.fighter['Total Damage']) 
+                                  : '?'}
                               </div>
                               <div className="selected-fighter-avatar-square">
                                 <img 

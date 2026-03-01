@@ -394,7 +394,14 @@ export async function loadLeaderboard(tournamentName: string): Promise<Leaderboa
       return [];
     }
     
-    const response = await fetch(downloadLink);
+    // ИСПОЛЬЗУЕМ ПРОКСИ (как везде)
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadLink)}`;
+    const response = await fetch(proxyUrl);
+    
+    if (!response.ok) {
+      console.error('❌ Ошибка скачивания через прокси:', response.status);
+      return [];
+    }
     const arrayBuffer = await response.arrayBuffer();
     
     // Читаем Excel
