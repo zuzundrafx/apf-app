@@ -85,8 +85,13 @@ export async function downloadTournamentFile(filename: string): Promise<Fighter[
 export function parseTournamentFromFilename(filename: string): Partial<Tournament> {
   const isUpcoming = filename.startsWith('UPCOMING_');
   
-  // Убираем префикс и расширение
-  let namePart = filename.replace(/^UFC_|^UPCOMING_/, '').replace('.xlsx', '');
+  // Убираем префикс UPCOMING_ если есть, и расширение
+  let namePart = filename;
+  if (isUpcoming) {
+    namePart = filename.replace(/^UPCOMING_/, '').replace('.xlsx', '');
+  } else {
+    namePart = filename.replace('.xlsx', '');
+  }
   
   // Заменяем подчеркивания на пробелы
   namePart = namePart.replace(/_/g, ' ');
@@ -102,9 +107,7 @@ export function parseTournamentFromFilename(filename: string): Partial<Tournamen
   let eventName = namePart;
   
   if (dateMatch) {
-    // Если нашли дату, используем её
     eventDate = dateMatch[0];
-    // Убираем дату из названия (всё что после неё)
     const dateIndex = namePart.indexOf(dateMatch[0]);
     if (dateIndex > 0) {
       eventName = namePart.substring(0, dateIndex).trim();
