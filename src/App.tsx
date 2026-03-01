@@ -663,48 +663,34 @@ function App() {
             pastSelections: pastResults.selections
           }));
           
-          // ВРЕМЕННО: принудительное начисление для турнира Moreno vs. Kavanagh
-          if (pastTournament.name.includes('Moreno vs. Kavanagh')) {
-            console.log('🔥 ПРИНУДИТЕЛЬНОЕ начисление для теста');
-            
-            const newCoins = userData.coins + 100;
-            const newExp = userData.experience + 10;
-            const { level, nextLevelExp } = calculateLevel(newExp);
-            
-            await saveUserProfile({
-              userId: telegramUser.id,
-              username: userData.username,
-              level,
-              experience: newExp,
-              coins: newCoins,
-              lastUpdated: new Date().toISOString()
-            });
-            
-            setUserData(prev => ({
-              ...prev,
-              coins: newCoins,
-              experience: newExp,
-              level,
-              nextLevelExp
-            }));
-            
-            console.log('✅ Принудительно начислено: +100 монет, +10 опыта');
-          }
+          // ДИАГНОСТИКА: проверяем, почему не работают awardCoins и awardExperience
+          console.log('🔍 ДИАГНОСТИКА: Анализ начисления для турнира:', pastTournament.name);
           
-          // Подсчитываем победителей и начисляем монеты
+          // Проверяем данные
           const winners = pastResults.selections.filter(sel => 
             sel.fighter['W/L'] === 'win'
           ).length;
           
-          if (winners > 0) {
-            await awardCoins(winners, pastTournament.name);
-          }
-          
-          // Подсчитываем угаданных бойцов и начисляем опыт
           const correctPicks = calculateCorrectPicks(pastResults.selections);
-          if (correctPicks > 0) {
-            await awardExperience(correctPicks, pastTournament.name);
-          }
+          
+          console.log('📊 Статистика выбранных бойцов:', {
+            всего: pastResults.selections.length,
+            победителей: winners,
+            угаданных: correctPicks
+          });
+          
+          // Проверяем processedTournaments
+          console.log('📌 processedTournaments содержит:', {
+            coins: processedTournaments.has(`coins_${pastTournament.name}`),
+            exp: processedTournaments.has(`exp_${pastTournament.name}`)
+          });
+          
+          // Проверяем сами функции (без блокировок)
+          console.log('🎯 Пытаюсь вызвать awardCoins...');
+          await awardCoins(winners, pastTournament.name);
+          
+          console.log('🎯 Пытаюсь вызвать awardExperience...');
+          await awardExperience(correctPicks, pastTournament.name);
         }
       }
       
