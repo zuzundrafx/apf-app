@@ -167,13 +167,23 @@ function App() {
   };
 
   // Функция для начисления монет за победителей
-  const awardCoins = async (winners: number, tournamentId: string) => {
+  const awardCoins = async (winners: number, tournamentId: string): Promise<number> => {
     console.log('🎯 awardCoins вызвана:', { winners, tournamentId });
-    console.log('📌 processedTournaments содержит:', processedTournaments.has(`coins_${tournamentId}`));
     
+    // Проверяем в памяти
     if (processedTournaments.has(`coins_${tournamentId}`)) {
-      console.log('ℹ️ Монеты за этот турнир уже были начислены');
-      return;
+      console.log('ℹ️ Монеты за этот турнир уже были начислены в этой сессии');
+      return userData.coins;
+    }
+    
+    // Проверяем в профиле (загружаем актуальные данные)
+    if (telegramUser) {
+      const currentProfile = await loadUserProfile(telegramUser.id);
+      if (currentProfile?.processedTournaments?.coins?.includes(tournamentId)) {
+        console.log('ℹ️ Монеты за этот турнир уже были начислены ранее');
+        setProcessedTournaments(prev => new Set(prev).add(`coins_${tournamentId}`));
+        return userData.coins;
+      }
     }
     
     const coinGain = winners * 50;
@@ -185,37 +195,62 @@ function App() {
     }));
     
     if (telegramUser) {
-      const saved = await saveUserProfile({
+      // Загружаем актуальный профиль
+      const profile = await loadUserProfile(telegramUser.id) || {
         userId: telegramUser.id,
         username: userData.username,
         level: userData.level,
         experience: userData.experience,
         coins: newCoins,
-        lastUpdated: new Date().toISOString()
-      });
+        lastUpdated: new Date().toISOString(),
+        processedTournaments: { coins: [], exp: [] }
+      };
+      
+      // Добавляем турнир в список обработанных
+      const updatedProfile = {
+        ...profile,
+        coins: newCoins,
+        processedTournaments: {
+          coins: [...(profile.processedTournaments?.coins || []), tournamentId],
+          exp: profile.processedTournaments?.exp || []
+        }
+      };
+      
+      const saved = await saveUserProfile(updatedProfile);
       
       if (saved) {
         console.log(`💰 Начислено монет: +${coinGain} (${winners} победителей)`);
+        console.log(`💰 Новый баланс: ${newCoins}`);
         setProcessedTournaments(prev => new Set(prev).add(`coins_${tournamentId}`));
       }
     }
+    
+    return newCoins;
   };
 
   // Функция для начисления опыта за угаданных бойцов
-  const awardExperience = async (correctPicks: number, tournamentId: string) => {
-    console.log('🎯 awardExperience вызвана:', { correctPicks, tournamentId });
-    console.log('📌 processedTournaments содержит:', processedTournaments.has(`exp_${tournamentId}`));
+  const awardExperience = async (correctPicks: number, tournamentId: string, currentCoins: number) => {
+    console.log('🎯 awardExperience вызвана:', { correctPicks, tournamentId, currentCoins });
     
+    // Проверяем в памяти
     if (processedTournaments.has(`exp_${tournamentId}`)) {
-      console.log('ℹ️ Опыт за этот турнир уже был начислен');
+      console.log('ℹ️ Опыт за этот турнир уже был начислен в этой сессии');
       return;
+    }
+    
+    // Проверяем в профиле (загружаем актуальные данные)
+    if (telegramUser) {
+      const currentProfile = await loadUserProfile(telegramUser.id);
+      if (currentProfile?.processedTournaments?.exp?.includes(tournamentId)) {
+        console.log('ℹ️ Опыт за этот турнир уже был начислен ранее');
+        setProcessedTournaments(prev => new Set(prev).add(`exp_${tournamentId}`));
+        return;
+      }
     }
     
     const expGain = correctPicks * 5;
     const newExp = userData.experience + expGain;
     const { level, nextLevelExp } = calculateLevel(newExp);
-    
-    const currentCoins = userData.coins;
     
     setUserData(prev => ({
       ...prev,
@@ -227,18 +262,35 @@ function App() {
     if (telegramUser) {
       console.log('💰 Сохраняем опыт, текущие монеты:', currentCoins);
       
-      const saved = await saveUserProfile({
+      // Загружаем актуальный профиль
+      const profile = await loadUserProfile(telegramUser.id) || {
         userId: telegramUser.id,
         username: userData.username,
         level: level,
         experience: newExp,
         coins: currentCoins,
-        lastUpdated: new Date().toISOString()
-      });
+        lastUpdated: new Date().toISOString(),
+        processedTournaments: { coins: [], exp: [] }
+      };
+      
+      // Добавляем турнир в список обработанных
+      const updatedProfile = {
+        ...profile,
+        level: level,
+        experience: newExp,
+        coins: currentCoins,
+        processedTournaments: {
+          coins: profile.processedTournaments?.coins || [],
+          exp: [...(profile.processedTournaments?.exp || []), tournamentId]
+        }
+      };
+      
+      const saved = await saveUserProfile(updatedProfile);
       
       if (saved) {
         console.log(`✨ Начислено опыта: +${expGain} (${correctPicks} угаданных бойцов)`);
         console.log(`📊 Текущий уровень: ${level}, опыт: ${newExp}/${nextLevelExp}`);
+        console.log(`💰 Баланс монет: ${currentCoins}`);
         setProcessedTournaments(prev => new Set(prev).add(`exp_${tournamentId}`));
       }
     }
@@ -250,7 +302,7 @@ function App() {
   const calculateCorrectPicks = (selections: SelectedFighter[]): number => {
     return selections.filter(sel => {
       const fighter = sel.fighter;
-      return fighter['W/L'] === 'win' && fighter['Total Damage'] > 0;
+      return fighter['W/L'] === 'win';
     }).length;
   };
 
@@ -282,21 +334,31 @@ function App() {
             console.log('✅ Профиль загружен:', profile);
             console.log('💰 Загруженные монеты из профиля:', profile.coins);
             
-            setUserData(prev => {
-              console.log('🔄 Обновляем userData, старые монеты:', prev.coins, 'новые монеты:', profile.coins);
-              return {
-                ...prev,
-                username: profile.username,
-                level: profile.level,
-                experience: profile.experience,
-                nextLevelExp: nextLevelExp,
-                coins: profile.coins
-              };
-            });
+            // Восстанавливаем processedTournaments из профиля
+            if (profile.processedTournaments) {
+              const newProcessed = new Set<string>();
+              if (profile.processedTournaments.coins) {
+                profile.processedTournaments.coins.forEach(id => 
+                  newProcessed.add(`coins_${id}`)
+                );
+              }
+              if (profile.processedTournaments.exp) {
+                profile.processedTournaments.exp.forEach(id => 
+                  newProcessed.add(`exp_${id}`)
+                );
+              }
+              setProcessedTournaments(newProcessed);
+              console.log('🔄 Восстановлены флаги начислений:', Array.from(newProcessed));
+            }
             
-            setTimeout(() => {
-              console.log('⏱️ Проверка монет после setUserData:', userData.coins);
-            }, 100);
+            setUserData(prev => ({
+              ...prev,
+              username: profile.username,
+              level: profile.level,
+              experience: profile.experience,
+              nextLevelExp: nextLevelExp,
+              coins: profile.coins
+            }));
             
           } else if (isMounted) {
             console.log('🆕 Создаем новый профиль');
@@ -350,21 +412,31 @@ function App() {
             console.log('✅ Тестовый профиль загружен:', profile);
             console.log('💰 Загруженные монеты из тестового профиля:', profile.coins);
             
-            setUserData(prev => {
-              console.log('🔄 Обновляем тестовый userData, старые монеты:', prev.coins, 'новые монеты:', profile.coins);
-              return {
-                ...prev,
-                username: profile.username,
-                level: profile.level,
-                experience: profile.experience,
-                nextLevelExp: nextLevelExp,
-                coins: profile.coins
-              };
-            });
+            // Восстанавливаем processedTournaments из профиля
+            if (profile.processedTournaments) {
+              const newProcessed = new Set<string>();
+              if (profile.processedTournaments.coins) {
+                profile.processedTournaments.coins.forEach(id => 
+                  newProcessed.add(`coins_${id}`)
+                );
+              }
+              if (profile.processedTournaments.exp) {
+                profile.processedTournaments.exp.forEach(id => 
+                  newProcessed.add(`exp_${id}`)
+                );
+              }
+              setProcessedTournaments(newProcessed);
+              console.log('🔄 Восстановлены флаги начислений:', Array.from(newProcessed));
+            }
             
-            setTimeout(() => {
-              console.log('⏱️ Проверка тестовых монет после setUserData:', userData.coins);
-            }, 100);
+            setUserData(prev => ({
+              ...prev,
+              username: profile.username,
+              level: profile.level,
+              experience: profile.experience,
+              nextLevelExp: nextLevelExp,
+              coins: profile.coins
+            }));
             
           } else if (isMounted) {
             console.log('🆕 Создаем новый тестовый профиль');
@@ -437,7 +509,7 @@ function App() {
       }
     };
     
-    const interval = setInterval(checkProfileUpdates, 30 * 1000); // каждые 30 секунд
+    const interval = setInterval(checkProfileUpdates, 30 * 1000);
     
     return () => clearInterval(interval);
   }, [telegramUser, profileLoaded, userData.coins, userData.experience, userData.level]);
@@ -457,7 +529,7 @@ function App() {
       }
       
       const { href } = await response.json();
-      const proxyUrl = `/api/proxy?url=${encodeURIComponent(href)}`;
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(href)}&t=${Date.now()}`;
       const fileResponse = await fetch(proxyUrl);
       
       if (!fileResponse.ok) {
@@ -501,7 +573,6 @@ function App() {
         
         console.log('📅 Сегодня:', todayStr, 'Турнир:', tournamentStr);
         
-        // Ставки доступны только если сегодня МЕНЬШЕ даты турнира
         return todayStr < tournamentStr;
       }
     }
@@ -514,9 +585,7 @@ function App() {
     if (!upcomingTournament?.data) return false;
     
     return upcomingTournament.data.some(fighter => {
-      // Если есть результат боя - турнир начался
       if (fighter['W/L'] === 'win' || fighter['W/L'] === 'lose') return true;
-      // Если есть метод победы - турнир начался
       if (fighter['Method'] && fighter['Method'] !== '' && fighter['Method'] !== '--') return true;
       return false;
     });
@@ -528,7 +597,7 @@ function App() {
       .replace(/[^a-zA-Z0-9]/g, '_')
       .replace(/\s+/g, '_');
     
-    const prefix = isUpcoming ? 'UPCOMING_' : 'UFC_';
+    const prefix = isUpcoming ? 'UPCOMING_' : '';
     const filename = `${prefix}${cleanName}.xlsx`;
     
     console.log(`📥 Пробую загрузить файл: ${filename}`);
@@ -553,7 +622,6 @@ function App() {
       const data = await loadTournamentData(upcomingTournament.name, true);
       
       if (data) {
-        // Проверяем, есть ли данные о результатах боев
         const fightersWithResults = data.filter(f => {
           return f['W/L'] === 'win' || f['W/L'] === 'lose';
         }).length;
@@ -562,10 +630,8 @@ function App() {
         
         console.log(`📊 Статистика результатов: ${fightersWithResults}/${totalFighters} бойцов с результатами`);
         
-        // Обновляем данные турнира
         upcomingTournament.data = data;
         
-        // Если у пользователя есть выбранные бойцы, обновляем их данные в UI
         if (userData.upcomingSelections.length > 0) {
           const fightersMap = new Map();
           data.forEach(fighter => {
@@ -663,44 +729,26 @@ function App() {
             pastSelections: pastResults.selections
           }));
           
-          // ДЕТАЛЬНАЯ ДИАГНОСТИКА: анализ каждого бойца
-          console.log('🔍 ДЕТАЛЬНАЯ ДИАГНОСТИКА:');
-          pastResults.selections.forEach((sel, index) => {
-            console.log(`Боец ${index + 1}: ${sel.fighter.Fighter}`, {
-              'W/L': sel.fighter['W/L'],
-              'Total Damage': sel.fighter['Total Damage'],
-              'Method': sel.fighter['Method'],
-              'Round': sel.fighter['Round'],
-              'Time': sel.fighter['Time'],
-              isWinner: sel.fighter['W/L'] === 'win',
-              qualifiesForCorrectPick: sel.fighter['W/L'] === 'win' && sel.fighter['Total Damage'] > 0
-            });
-          });
-          
           // Подсчитываем победителей и начисляем монеты
-          // Теперь W/L уже есть в pastResults.selections!
-const winners = pastResults.selections.filter(sel => 
-  sel.fighter['W/L'] === 'win'
-).length;
-
-const correctPicks = pastResults.selections.filter(sel => 
-  sel.fighter['W/L'] === 'win'
-).length;
+          const winners = pastResults.selections.filter(sel => 
+            sel.fighter['W/L'] === 'win'
+          ).length;
           
-          console.log('📊 Сводная статистика:', {
-            всего: pastResults.selections.length,
-            победителей: winners,
-            угаданных: correctPicks,
-            processedTournaments_coins: processedTournaments.has(`coins_${pastTournament.name}`),
-            processedTournaments_exp: processedTournaments.has(`exp_${pastTournament.name}`)
-          });
+          const correctPicks = pastResults.selections.filter(sel => 
+            sel.fighter['W/L'] === 'win'
+          ).length;
+          
+          console.log('📊 Статистика:', { winners, correctPicks });
           
           if (winners > 0) {
-            await awardCoins(winners, pastTournament.name);
-          }
-          
-          if (correctPicks > 0) {
-            await awardExperience(correctPicks, pastTournament.name);
+            const newCoins = await awardCoins(winners, pastTournament.name);
+            if (correctPicks > 0) {
+              await awardExperience(correctPicks, pastTournament.name, newCoins);
+            }
+          } else {
+            if (correctPicks > 0) {
+              await awardExperience(correctPicks, pastTournament.name, userData.coins);
+            }
           }
         }
       }

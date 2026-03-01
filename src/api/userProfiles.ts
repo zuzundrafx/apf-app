@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 
-const YA_TOKEN = "y0__xCOz-U8GI3sPSCOyp-2FnBLBQ7drGtOupKGVfu4CpN2qtUs";
+const YA_TOKEN = import.meta.env.VITE_YA_TOKEN;
 const PROFILES_FOLDER = "UFC_Bot_Results";
 const PROFILES_FILENAME = "UFC_User_Profiles.xlsx";
 
@@ -11,6 +11,10 @@ export interface UserProfile {
   experience: number;
   coins: number;
   lastUpdated: string;
+  processedTournaments?: {
+    coins: string[];  // массив ID турниров, за которые начислены монеты
+    exp: string[];    // массив ID турниров, за которые начислен опыт
+  };
 }
 
 // Функция для проверки существования файла
@@ -63,10 +67,8 @@ async function getUploadLink(filename: string): Promise<string | null> {
   try {
     console.log('📤 Получаем ссылку для загрузки файла:', filename);
     
-    // Сначала пробуем удалить старый файл, если он существует
     await deleteFileIfExists(filename);
     
-    // Затем запрашиваем ссылку на загрузку
     const response = await fetch(
       `https://cloud-api.yandex.net/v1/disk/resources/upload?path=app:/${PROFILES_FOLDER}/${filename}&overwrite=true`,
       {
@@ -222,8 +224,7 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
     
     console.log('📥 Скачиваем файл по ссылке...');
     
-    // ИСПОЛЬЗУЕМ ПРОКСИ
-    const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadLink)}`;
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadLink)}&t=${Date.now()}`;
     const response = await fetch(proxyUrl);
     
     if (!response.ok) {
@@ -239,7 +240,6 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
     
     console.log(`✅ Загружено ${data.length} профилей`);
     
-    // Выводим первые несколько записей для проверки
     if (data.length > 0) {
       console.log('📊 Пример данных из файла:', data[0]);
     }
@@ -253,14 +253,23 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
         return isNaN(parsed) ? defaultValue : parsed;
       };
 
+      // Парсим processedTournaments
+      let processedTournaments = undefined;
+      if (item['Processed Coins'] || item['Processed Exp']) {
+        processedTournaments = {
+          coins: item['Processed Coins'] ? String(item['Processed Coins']).split(',').filter(Boolean) : [],
+          exp: item['Processed Exp'] ? String(item['Processed Exp']).split(',').filter(Boolean) : []
+        };
+      }
+
       return {
         userId: String(item['User ID'] || ''),
         username: String(item['Username'] || 'Anonymous'),
-        // Явная проверка для каждого поля
         level: safeNumber(item['Level'], 1),
         experience: safeNumber(item['Experience'], 0),
         coins: safeNumber(item['Coins'], 100),
-        lastUpdated: String(item['Last Updated'] || new Date().toISOString())
+        lastUpdated: String(item['Last Updated'] || new Date().toISOString()),
+        processedTournaments: processedTournaments
       };
     });
   } catch (error) {
@@ -275,17 +284,16 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
     console.log('📤 Сохраняем профиль пользователя:', profile.userId);
     console.log('💰 Монеты для сохранения:', profile.coins);
     console.log('📊 Уровень:', profile.level, 'Опыт:', profile.experience);
+    console.log('🏆 Processed tournaments:', profile.processedTournaments);
     
     const folderOk = await ensureFolderExists();
     if (!folderOk) {
       throw new Error('Не удалось создать папку для профилей');
     }
     
-    // Загружаем все существующие профили
     const allProfiles = await loadAllProfiles();
     console.log('📊 Загружено существующих профилей:', allProfiles.length);
     
-    // Обновляем или добавляем профиль
     const existingIndex = allProfiles.findIndex(p => p.userId === profile.userId);
     if (existingIndex >= 0) {
       allProfiles[existingIndex] = {
@@ -301,31 +309,36 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
       console.log('➕ Добавлен новый профиль');
     }
     
-    // Сортируем по уровню и опыту
     allProfiles.sort((a, b) => {
       if (b.level !== a.level) return b.level - a.level;
       return b.experience - a.experience;
     });
     
-    // Преобразуем в формат Excel
-    const excelData = allProfiles.map(profile => ({
-      'User ID': profile.userId,
-      'Username': profile.username,
-      'Level': profile.level,
-      'Experience': profile.experience,
-      'Coins': profile.coins,
-      'Last Updated': profile.lastUpdated
-    }));
+    const excelData = allProfiles.map(profile => {
+      const row: any = {
+        'User ID': profile.userId,
+        'Username': profile.username,
+        'Level': profile.level,
+        'Experience': profile.experience,
+        'Coins': profile.coins,
+        'Last Updated': profile.lastUpdated
+      };
+      
+      // Сохраняем processedTournaments как строки с запятыми
+      if (profile.processedTournaments) {
+        row['Processed Coins'] = profile.processedTournaments.coins.join(',');
+        row['Processed Exp'] = profile.processedTournaments.exp.join(',');
+      }
+      
+      return row;
+    });
     
-    // Создаём Excel файл
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);
     XLSX.utils.book_append_sheet(wb, ws, 'Профили');
     
-    // Конвертируем в бинарные данные
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     
-    // Получаем ссылку для загрузки
     const uploadLink = await getUploadLink(PROFILES_FILENAME);
     if (!uploadLink) {
       throw new Error('Не удалось получить ссылку для загрузки');
@@ -333,9 +346,7 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
     
     console.log('📤 Загружаем файл на Яндекс.Диск...');
     console.log('📁 Путь для загрузки:', `app:/${PROFILES_FOLDER}/${PROFILES_FILENAME}`);
-    console.log('🔗 Ссылка для загрузки получена');
     
-    // Загружаем файл без лишних заголовков
     const uploadResponse = await fetch(uploadLink, {
       method: 'PUT',
       body: new Blob([wbout], { type: 'application/octet-stream' })
@@ -370,6 +381,7 @@ export async function loadUserProfile(userId: string): Promise<UserProfile | nul
     console.log('💰 Монеты в загруженном профиле:', profile?.coins);
     console.log('📊 Уровень в загруженном профиле:', profile?.level);
     console.log('📈 Опыт в загруженном профиле:', profile?.experience);
+    console.log('🏆 Processed tournaments:', profile?.processedTournaments);
     return profile;
   } catch (error) {
     console.error('❌ Ошибка загрузки профиля пользователя:', error);
@@ -383,7 +395,8 @@ export async function updateUserProfileIfChanged(
   username: string,
   newLevel: number,
   newExperience: number,
-  newCoins: number
+  newCoins: number,
+  processedTournaments?: { coins: string[]; exp: string[] }
 ): Promise<boolean> {
   try {
     console.log('🔄 Проверяем необходимость обновления профиля:', userId);
@@ -393,21 +406,23 @@ export async function updateUserProfileIfChanged(
     
     const currentProfile = await loadUserProfile(userId);
     
-    // Если профиля нет или данные изменились - сохраняем
     if (!currentProfile || 
         currentProfile.level !== newLevel ||
         currentProfile.experience !== newExperience ||
         currentProfile.coins !== newCoins ||
-        currentProfile.username !== username) {
+        currentProfile.username !== username ||
+        JSON.stringify(currentProfile.processedTournaments) !== JSON.stringify(processedTournaments)) {
       
       console.log('📝 Данные изменились, сохраняем...');
       if (currentProfile) {
         console.log('📊 Было - Уровень:', currentProfile.level, 
                    'Опыт:', currentProfile.experience, 
-                   'Монеты:', currentProfile.coins);
+                   'Монеты:', currentProfile.coins,
+                   'Processed:', currentProfile.processedTournaments);
         console.log('➡️ Стало - Уровень:', newLevel, 
                    'Опыт:', newExperience, 
-                   'Монеты:', newCoins);
+                   'Монеты:', newCoins,
+                   'Processed:', processedTournaments);
       }
       
       return await saveUserProfile({
@@ -416,7 +431,8 @@ export async function updateUserProfileIfChanged(
         level: newLevel,
         experience: newExperience,
         coins: newCoins,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        processedTournaments
       });
     }
     
