@@ -61,7 +61,7 @@ declare global {
 const LEVEL_THRESHOLDS = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225];
 
 const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
-const YA_TOKEN = "y0__xCOz-U8GI3sPSCOyp-2FnBLBQ7drGtOupKGVfu4CpN2qtUs";
+const YA_TOKEN = import.meta.env.VITE_YA_TOKEN;
 
 function getAvatarFilename(weightClass: string): string {
   const map: { [key: string]: string } = {
@@ -380,7 +380,13 @@ function App() {
       }
       
       const { href } = await response.json();
-      const fileResponse = await fetch(href);
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(href)}`;
+      const fileResponse = await fetch(proxyUrl);
+      
+      if (!fileResponse.ok) {
+        throw new Error(`Ошибка скачивания через прокси: ${fileResponse.status}`);
+      }
+      
       const arrayBuffer = await fileResponse.arrayBuffer();
       
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
@@ -392,7 +398,7 @@ function App() {
     }
   };
 
-  // Функция для проверки доступности ставок по дате - ИСПРАВЛЕНО
+  // Функция для проверки доступности ставок по дате
   const isBetsAvailable = (): boolean => {
     if (!upcomingTournament) return false;
     
@@ -426,13 +432,17 @@ function App() {
     return false;
   };
 
-  // Проверка, начался ли турнир
+  // Проверка, начался ли турнир (появились ли первые данные)
   const hasTournamentStarted = (): boolean => {
     if (!upcomingTournament?.data) return false;
     
     return upcomingTournament.data.some(fighter => {
-      const strValue = String(fighter['Str']).trim();
-      return strValue !== '' && strValue !== '0' && strValue !== 'View' && strValue !== 'Matchup';
+      // Если есть результат боя - турнир начался
+      if (fighter['W/L'] === 'win' || fighter['W/L'] === 'lose') return true;
+      // Если есть метод победы - турнир начался
+      if (fighter['Method'] && fighter['Method'] !== '' && fighter['Method'] !== '--') return true;
+      // Если есть статистика (даже View/Matchup) - это все еще будущий турнир без данных
+      return false;
     });
   };
 
@@ -467,17 +477,19 @@ function App() {
       const data = await loadTournamentData(upcomingTournament.name, true);
       
       if (data) {
-        const fightersWithData = data.filter(f => {
-          const strValue = String(f['Str']).trim();
-          return strValue !== '' && strValue !== '0' && strValue !== 'View' && strValue !== 'Matchup';
+        // Проверяем, есть ли данные о результатах боев
+        const fightersWithResults = data.filter(f => {
+          return f['W/L'] === 'win' || f['W/L'] === 'lose';
         }).length;
         
         const totalFighters = data.length;
         
-        console.log(`📊 Статистика данных: ${fightersWithData}/${totalFighters} бойцов с данными`);
+        console.log(`📊 Статистика результатов: ${fightersWithResults}/${totalFighters} бойцов с результатами`);
         
+        // Обновляем данные турнира
         upcomingTournament.data = data;
         
+        // Если у пользователя есть выбранные бойцы, обновляем их данные в UI
         if (userData.upcomingSelections.length > 0) {
           const fightersMap = new Map();
           data.forEach(fighter => {
@@ -838,7 +850,7 @@ function App() {
                               }}
                             >
                               <div className="selected-fighter-damage-box">
-                                {hasDamage ? selection.fighter['Total Damage'] : '?'}
+                                {selection.fighter['Total Damage'] !== undefined ? selection.fighter['Total Damage'] : '?'}
                               </div>
                               <div className="selected-fighter-avatar-square">
                                 <img 
@@ -903,7 +915,7 @@ function App() {
                       <div className="selected-fighters-grid">
                         {userData.upcomingSelections.map((selection, index) => {
                           const weightClass = selection.fighter['Weight class'];
-                          const hasDamage = selection.fighter['Total Damage'] > 0;
+                          const hasResult = selection.fighter['W/L'] === 'win' || selection.fighter['W/L'] === 'lose';
                           
                           return (
                             <div 
@@ -912,7 +924,7 @@ function App() {
                               style={{ backgroundColor: getWeightClassColor(weightClass) }}
                             >
                               <div className="selected-fighter-damage-box">
-                                {hasDamage ? selection.fighter['Total Damage'] : '?'}
+                                {hasResult ? selection.fighter['Total Damage'] : '?'}
                               </div>
                               <div className="selected-fighter-avatar-square">
                                 <img 
