@@ -1174,31 +1174,40 @@ function App() {
           </div>
         )}
 
-        {currentView === 'leaderboard' && (
-          <div className="leaderboard-screen">
-            <div className="leaderboard-header">
-              <h2>{pastTournament?.name || 'Рейтинг'}</h2>
-              {isCheckingUpdates && (
-                <span className="updating-indicator" style={{ marginLeft: '8px' }}>🔄</span>
-              )}
-            </div>
-            {leaderboardLoading ? (
-              <div className="leaderboard-loading">Загрузка рейтинга...</div>
-            ) : leaderboardData.length > 0 ? (
-              <div className="leaderboard-list">
-                {leaderboardData.map((entry) => (
-                  <div key={entry.userId} className="leaderboard-item">
-                    <span className="rank">{entry.rank}</span>
-                    <span className="user-name">{entry.username}</span>
-                    <span className="user-score">{entry.totalDamage}</span>
-                  </div>
-                ))}
+{currentView === 'leaderboard' && (
+  <div className="leaderboard-screen">
+    <div className="leaderboard-header">
+      <h2>{pastTournament?.name || 'Рейтинг'}</h2>
+      {isCheckingUpdates && (
+        <span className="updating-indicator" style={{ marginLeft: '8px' }}>🔄</span>
+      )}
+    </div>
+    {leaderboardLoading ? (
+      <div className="leaderboard-loading">Загрузка рейтинга...</div>
+    ) : leaderboardData.length > 0 ? (
+      <div className="leaderboard-list">
+        {leaderboardData.map((entry) => (
+          <div key={entry.userId} className="leaderboard-item">
+            <span className="rank">{entry.rank}</span>
+            <div className="user-info">
+              <div className="user-avatar">
+                {telegramUser?.photoUrl ? (
+                  <img src={telegramUser.photoUrl} alt="avatar" />
+                ) : (
+                  <span>👤</span>
+                )}
               </div>
-            ) : (
-              <div className="leaderboard-empty">Пока нет результатов</div>
-            )}
+              <span className="user-name">{entry.username}</span>
+            </div>
+            <span className="user-score">{entry.totalDamage}</span>
           </div>
-        )}
+        ))}
+      </div>
+    ) : (
+      <div className="leaderboard-empty">Пока нет результатов</div>
+    )}
+  </div>
+)}
 
         {currentView === 'selection' && selectedTournament && selectedTournament.data && (
           <div className="selection-modal">
