@@ -1188,18 +1188,18 @@ function App() {
       <div className="leaderboard-list">
         {leaderboardData.map((entry) => (
           <div key={entry.userId} className="leaderboard-item">
-            <span className="rank">{entry.rank}</span>
-            <div className="user-info">
-              <div className="user-avatar">
+            <span className="leaderboard-rank">{entry.rank}</span>
+            <div className="leaderboard-user-info">
+              <div className="leaderboard-avatar">
                 {telegramUser?.photoUrl ? (
                   <img src={telegramUser.photoUrl} alt="avatar" />
                 ) : (
                   <span>👤</span>
                 )}
               </div>
-              <span className="user-name">{entry.username}</span>
+              <span className="leaderboard-username">{entry.username}</span>
             </div>
-            <span className="user-score">{entry.totalDamage}</span>
+            <span className="leaderboard-score">{entry.totalDamage}</span>
           </div>
         ))}
       </div>
