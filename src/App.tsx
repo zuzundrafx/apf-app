@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿import { useState, useEffect } from 'react';
+﻿﻿﻿﻿﻿﻿﻿﻿﻿import { useState, useEffect } from 'react';
 import './App.css';
 import { Fighter, Tournament, SelectedFighter } from './types';
 import { useTournaments } from './hooks/useTournaments';
@@ -168,6 +168,9 @@ function App() {
 
   // Функция для начисления монет за победителей
   const awardCoins = async (winners: number, tournamentId: string) => {
+    console.log('🎯 awardCoins вызвана:', { winners, tournamentId });
+    console.log('📌 processedTournaments содержит:', processedTournaments.has(`coins_${tournamentId}`));
+    
     if (processedTournaments.has(`coins_${tournamentId}`)) {
       console.log('ℹ️ Монеты за этот турнир уже были начислены');
       return;
@@ -200,6 +203,9 @@ function App() {
 
   // Функция для начисления опыта за угаданных бойцов
   const awardExperience = async (correctPicks: number, tournamentId: string) => {
+    console.log('🎯 awardExperience вызвана:', { correctPicks, tournamentId });
+    console.log('📌 processedTournaments содержит:', processedTournaments.has(`exp_${tournamentId}`));
+    
     if (processedTournaments.has(`exp_${tournamentId}`)) {
       console.log('ℹ️ Опыт за этот турнир уже был начислен');
       return;
@@ -656,6 +662,34 @@ function App() {
             ...prev,
             pastSelections: pastResults.selections
           }));
+          
+          // ВРЕМЕННО: принудительное начисление для турнира Moreno vs. Kavanagh
+          if (pastTournament.name.includes('Moreno vs. Kavanagh')) {
+            console.log('🔥 ПРИНУДИТЕЛЬНОЕ начисление для теста');
+            
+            const newCoins = userData.coins + 100;
+            const newExp = userData.experience + 10;
+            const { level, nextLevelExp } = calculateLevel(newExp);
+            
+            await saveUserProfile({
+              userId: telegramUser.id,
+              username: userData.username,
+              level,
+              experience: newExp,
+              coins: newCoins,
+              lastUpdated: new Date().toISOString()
+            });
+            
+            setUserData(prev => ({
+              ...prev,
+              coins: newCoins,
+              experience: newExp,
+              level,
+              nextLevelExp
+            }));
+            
+            console.log('✅ Принудительно начислено: +100 монет, +10 опыта');
+          }
           
           // Подсчитываем победителей и начисляем монеты
           const winners = pastResults.selections.filter(sel => 
