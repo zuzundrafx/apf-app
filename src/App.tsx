@@ -536,7 +536,7 @@ function App() {
       }
     };
     
-    const interval = setInterval(checkProfileUpdates, 30 * 1000);
+    const interval = setInterval(checkProfileUpdates, 60 * 1000);
     
     return () => clearInterval(interval);
   }, [telegramUser, profileLoaded, userData.coins, userData.totalExp, userData.level]);
@@ -1191,8 +1191,9 @@ function App() {
             <span className="leaderboard-rank">{entry.rank}</span>
             <div className="leaderboard-user-info">
               <div className="leaderboard-avatar">
-                {telegramUser?.photoUrl ? (
-                  <img src={telegramUser.photoUrl} alt="avatar" />
+                {/* Показываем аватарку только если это текущий пользователь и у него есть фото */}
+                {entry.userId === telegramUser?.id && telegramUser?.photoUrl ? (
+                  <img src={telegramUser.photoUrl} alt={entry.username} />
                 ) : (
                   <span>👤</span>
                 )}

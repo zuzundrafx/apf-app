@@ -584,8 +584,7 @@ body {
   display: flex;
   flex-direction: column;
   padding: 16px;
-  max-width: 375px; /* Та же ширина, что и у .app */
-  margin: 0 auto; /* Центрирование */
+  
   width: 100%;
 }
 
