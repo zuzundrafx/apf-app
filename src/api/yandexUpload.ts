@@ -183,106 +183,7 @@ async function uploadWithRetry(
   return false;
 }
 
-// Основная функция сохранения результатов
-export async function saveUserResults(
-  tournamentName: string,
-  userResult: UserResult,
-  overwrite: boolean = false
-): Promise<boolean> {
-  try {
-    console.log('📤 Сохраняем результаты пользователя:', userResult);
-    
-    const cleanName = tournamentName
-      .replace(/[^a-zA-Z0-9]/g, '_')
-      .replace(/\s+/g, '_');
-    const filename = `UFC_Tournament_Results_${cleanName}.xlsx`;
-    
-    console.log('📁 Имя файла:', filename);
-    
-    const folderOk = await ensureFolderExists();
-    if (!folderOk) {
-      throw new Error('Не удалось создать папку для результатов');
-    }
-    
-    const uploadLink = await getUploadLink(filename);
-    if (!uploadLink) {
-      throw new Error('Не удалось получить ссылку для загрузки');
-    }
-    
-    const existingResults = await loadExistingResults(tournamentName);
-    
-    let updatedResults: UserResult[];
-    
-    if (overwrite) {
-      const userIndex = existingResults.findIndex(r => r.userId === userResult.userId);
-      if (userIndex >= 0) {
-        updatedResults = [...existingResults];
-        updatedResults[userIndex] = userResult;
-        console.log('🔄 Обновлен существующий результат пользователя');
-      } else {
-        updatedResults = [...existingResults, userResult];
-        console.log('➕ Добавлен новый результат пользователя');
-      }
-    } else {
-      const exists = existingResults.some(r => r.userId === userResult.userId);
-      if (!exists) {
-        updatedResults = [...existingResults, userResult];
-        console.log('➕ Добавлен новый результат пользователя');
-      } else {
-        console.log('ℹ️ Результат пользователя уже существует, используйте overwrite для обновления');
-        updatedResults = existingResults;
-      }
-    }
-    
-    updatedResults.sort((a, b) => b.totalDamage - a.totalDamage);
-    
-    const excelData = updatedResults.map((result, index) => {
-      const row: any = {
-        'Место': index + 1,
-        'User ID': result.userId,
-        'Username': result.username,
-        'Total Damage': Math.round(result.totalDamage),
-        'Timestamp': result.timestamp,
-      };
-      
-      result.selections.forEach((sel, i) => {
-        row[`Боец ${i + 1}`] = sel.fighter.Fighter;
-        row[`Вес ${i + 1}`] = sel.weightClass;
-        row[`Урон ${i + 1}`] = Math.round(sel.fighter['Total Damage']);
-        row[`W/L ${i + 1}`] = sel.fighter['W/L'] || '';
-        row[`Method ${i + 1}`] = sel.fighter['Method'] || '';
-        row[`Round ${i + 1}`] = sel.fighter['Round'] || 0;
-        row[`Time ${i + 1}`] = sel.fighter['Time'] || '';
-      });
-      
-      return row;
-    });
-    
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(excelData);
-    XLSX.utils.book_append_sheet(wb, ws, 'Результаты');
-    
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    
-    const uploadSuccess = await uploadWithRetry(
-      uploadLink,
-      new Blob([wbout], { type: 'application/octet-stream' })
-    );
-    
-    if (!uploadSuccess) {
-      throw new Error('Не удалось загрузить файл после нескольких попыток');
-    }
-    
-    console.log('✅ Результаты успешно сохранены на Яндекс.Диск');
-    return true;
-    
-  } catch (error) {
-    console.error('❌ Ошибка сохранения:', error);
-    return false;
-  }
-}
-
-// Функция для загрузки существующих результатов
+// Загрузка всех существующих результатов (ВСЕХ пользователей)
 export async function loadExistingResults(
   tournamentName: string
 ): Promise<UserResult[]> {
@@ -314,58 +215,55 @@ export async function loadExistingResults(
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(sheet);
     
-    console.log(`✅ Загружено ${data.length} существующих записей`);
+    console.log(`✅ Загружено ${data.length} записей пользователей`);
     
-    // Загружаем существующие результаты
-return data.map((item: any) => {
-  const selections: SelectedFighter[] = [];
-  let i = 1;
-  
-  while (item[`Боец ${i}`]) {
-    // Преобразуем строковое значение W/L в корректный тип
-    const wlValue = String(item[`W/L ${i}`] || '').toLowerCase();
-    let wl: 'win' | 'lose' = 'lose'; // По умолчанию 'lose', если значение не определено
-    
-    if (wlValue === 'win') {
-      wl = 'win';
-    } else if (wlValue === 'lose') {
-      wl = 'lose';
-    } else {
-      wl = 'lose'; // Для всех остальных случаев (пустая строка, undefined и т.д.) ставим 'lose'
-    }
-    
-    selections.push({
-      weightClass: String(item[`Вес ${i}`] || ''),
-      fighter: {
-        Fighter: String(item[`Боец ${i}`]),
-        'Total Damage': Number(item[`Урон ${i}`]) || 0,
-        'W/L': wl,  // Теперь всегда 'win' или 'lose'
-        'Method': String(item[`Method ${i}`] || ''),
-        'Round': Number(item[`Round ${i}`]) || 0,
-        'Time': String(item[`Time ${i}`] || ''),
-        'Weight class': String(item[`Вес ${i}`] || ''),
-        'Fight_ID': 0,
-        'Kd': 0,
-        'Str': 0,
-        'Td': 0,
-        'Sub': 0,
-        'Head': 0,
-        'Body': 0,
-        'Leg': 0,
-        'Weight Coefficient': 1
+    return data.map((item: any) => {
+      const selections: SelectedFighter[] = [];
+      let i = 1;
+      
+      while (item[`Боец ${i}`]) {
+        // Преобразуем строковое значение W/L в корректный тип
+        const wlValue = String(item[`W/L ${i}`] || '').toLowerCase();
+        let wl: 'win' | 'lose' = 'lose';
+        
+        if (wlValue === 'win') {
+          wl = 'win';
+        } else if (wlValue === 'lose') {
+          wl = 'lose';
+        }
+        
+        selections.push({
+          weightClass: String(item[`Вес ${i}`] || ''),
+          fighter: {
+            Fighter: String(item[`Боец ${i}`]),
+            'Total Damage': Number(item[`Урон ${i}`]) || 0,
+            'W/L': wl,
+            'Method': String(item[`Method ${i}`] || ''),
+            'Round': Number(item[`Round ${i}`]) || 0,
+            'Time': String(item[`Time ${i}`] || ''),
+            'Weight class': String(item[`Вес ${i}`] || ''),
+            'Fight_ID': 0,
+            'Kd': 0,
+            'Str': 0,
+            'Td': 0,
+            'Sub': 0,
+            'Head': 0,
+            'Body': 0,
+            'Leg': 0,
+            'Weight Coefficient': 1
+          }
+        });
+        i++;
       }
+      
+      return {
+        userId: String(item['User ID'] || ''),
+        username: String(item['Username'] || 'Anonymous'),
+        totalDamage: Number(item['Total Damage']) || 0,
+        timestamp: String(item['Timestamp'] || ''),
+        selections: selections
+      };
     });
-    i++;
-  }
-  
-  return {
-    userId: String(item['User ID'] || ''),
-    username: String(item['Username'] || 'Anonymous'),
-    totalDamage: Number(item['Total Damage']) || 0,
-    timestamp: String(item['Timestamp'] || ''),
-    selections: selections
-  };
-});
     
   } catch (error) {
     console.error('❌ Ошибка загрузки существующих результатов:', error);
@@ -373,60 +271,119 @@ return data.map((item: any) => {
   }
 }
 
-// Функция для загрузки рейтинга
-export async function loadLeaderboard(tournamentName: string): Promise<LeaderboardEntry[]> {
+// Основная функция сохранения результатов (СОХРАНЯЕТ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ)
+export async function saveUserResults(
+  tournamentName: string,
+  userResult: UserResult
+): Promise<boolean> {
   try {
+    console.log('📤 Сохраняем результаты пользователя:', userResult);
+    
     const cleanName = tournamentName
       .replace(/[^a-zA-Z0-9]/g, '_')
       .replace(/\s+/g, '_');
     const filename = `UFC_Tournament_Results_${cleanName}.xlsx`;
     
-    console.log('📥 Загружаем рейтинг из файла:', filename);
+    console.log('📁 Имя файла:', filename);
     
-    const downloadLink = await getDownloadLink(filename);
-    if (!downloadLink) {
-      console.log('📁 Файл рейтинга ещё не создан');
-      return [];
+    const folderOk = await ensureFolderExists();
+    if (!folderOk) {
+      throw new Error('Не удалось создать папку для результатов');
     }
     
-    const proxyUrl = `/api/proxy?url=${encodeURIComponent(downloadLink)}&t=${Date.now()}`;
-    const response = await fetch(proxyUrl);
+    // Загружаем ВСЕ существующие результаты
+    const existingResults = await loadExistingResults(tournamentName);
     
-    if (!response.ok) {
-      console.error('❌ Ошибка скачивания через прокси:', response.status);
-      return [];
+    // Проверяем, есть ли уже результат этого пользователя
+    const existingUserIndex = existingResults.findIndex(r => r.userId === userResult.userId);
+    
+    let updatedResults: UserResult[];
+    
+    if (existingUserIndex >= 0) {
+      // Обновляем существующую запись пользователя
+      updatedResults = [...existingResults];
+      updatedResults[existingUserIndex] = userResult;
+      console.log('🔄 Обновлен существующий результат пользователя');
+    } else {
+      // Добавляем новую запись
+      updatedResults = [...existingResults, userResult];
+      console.log('➕ Добавлен новый результат пользователя');
     }
     
-    const arrayBuffer = await response.arrayBuffer();
+    // Сортируем по урону (от большего к меньшему) для рейтинга
+    updatedResults.sort((a, b) => b.totalDamage - a.totalDamage);
     
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(sheet);
+    // Преобразуем в формат Excel
+    const excelData = updatedResults.map((result, index) => {
+      const row: any = {
+        'Место': index + 1,
+        'User ID': result.userId,
+        'Username': result.username,
+        'Total Damage': Math.round(result.totalDamage),
+        'Timestamp': result.timestamp,
+      };
+      
+      result.selections.forEach((sel, i) => {
+        const num = i + 1;
+        row[`Боец ${num}`] = sel.fighter.Fighter;
+        row[`Вес ${num}`] = sel.weightClass;
+        row[`Урон ${num}`] = Math.round(sel.fighter['Total Damage']);
+        row[`W/L ${num}`] = sel.fighter['W/L'] || '';
+        row[`Method ${num}`] = sel.fighter['Method'] || '';
+        row[`Round ${num}`] = sel.fighter['Round'] || 0;
+        row[`Time ${num}`] = sel.fighter['Time'] || '';
+      });
+      
+      return row;
+    });
     
-    console.log(`✅ Загружено ${data.length} записей`);
+    // Создаём Excel файл
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Результаты');
     
-    const entries: LeaderboardEntry[] = data.map((item: any) => ({
-      rank: 0,
-      username: String(item['Username'] || 'Anonymous'),
-      totalDamage: Math.round(Number(item['Total Damage']) || 0),
-      userId: String(item['User ID'] || ''),
-      timestamp: String(item['Timestamp'] || '')
+    // Конвертируем в бинарные данные
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    
+    // Получаем ссылку для загрузки
+    const uploadLink = await getUploadLink(filename);
+    if (!uploadLink) {
+      throw new Error('Не удалось получить ссылку для загрузки');
+    }
+    
+    // Загружаем файл
+    const uploadResponse = await fetch(uploadLink, {
+      method: 'PUT',
+      body: new Blob([wbout], { type: 'application/octet-stream' })
+    });
+    
+    if (!uploadResponse.ok) {
+      throw new Error(`Ошибка загрузки: ${uploadResponse.status}`);
+    }
+    
+    console.log(`✅ Результаты сохранены. Всего пользователей: ${updatedResults.length}`);
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Ошибка сохранения:', error);
+    return false;
+  }
+}
+
+// Функция для загрузки рейтинга
+export async function loadLeaderboard(tournamentName: string): Promise<LeaderboardEntry[]> {
+  try {
+    const allResults = await loadExistingResults(tournamentName);
+    
+    const entries: LeaderboardEntry[] = allResults.map((result, index) => ({
+      rank: index + 1,
+      username: result.username,
+      totalDamage: Math.round(result.totalDamage),
+      userId: result.userId,
+      timestamp: result.timestamp
     }));
     
-    entries.sort((a, b) => b.totalDamage - a.totalDamage);
-    
-    let currentRank = 1;
-    for (let i = 0; i < entries.length; i++) {
-      if (i > 0 && entries[i].totalDamage === entries[i-1].totalDamage) {
-        entries[i].rank = entries[i-1].rank;
-      } else {
-        entries[i].rank = currentRank;
-      }
-      currentRank++;
-    }
-    
-    return entries.slice(0, 100);
-    
+    return entries.slice(0, 100); // Топ-100
   } catch (error) {
     console.error('❌ Ошибка загрузки рейтинга:', error);
     return [];

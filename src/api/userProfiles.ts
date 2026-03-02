@@ -245,7 +245,6 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
     }
     
     return data.map((item: any) => {
-      // Функция для безопасного получения числа
       const safeNumber = (value: any, defaultValue: number): number => {
         if (typeof value === 'number') return value;
         if (value === undefined || value === null || value === '') return defaultValue;
@@ -324,7 +323,6 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
         'Last Updated': profile.lastUpdated
       };
       
-      // Сохраняем processedTournaments как строки с запятыми
       if (profile.processedTournaments) {
         row['Processed Coins'] = profile.processedTournaments.coins.join(',');
         row['Processed Exp'] = profile.processedTournaments.exp.join(',');
@@ -386,60 +384,5 @@ export async function loadUserProfile(userId: string): Promise<UserProfile | nul
   } catch (error) {
     console.error('❌ Ошибка загрузки профиля пользователя:', error);
     return null;
-  }
-}
-
-// Обновление профиля (если были изменения)
-export async function updateUserProfileIfChanged(
-  userId: string,
-  username: string,
-  newLevel: number,
-  newExperience: number,
-  newCoins: number,
-  processedTournaments?: { coins: string[]; exp: string[] }
-): Promise<boolean> {
-  try {
-    console.log('🔄 Проверяем необходимость обновления профиля:', userId);
-    console.log('💰 Новые монеты:', newCoins);
-    console.log('📊 Новый уровень:', newLevel);
-    console.log('📈 Новый опыт:', newExperience);
-    
-    const currentProfile = await loadUserProfile(userId);
-    
-    if (!currentProfile || 
-        currentProfile.level !== newLevel ||
-        currentProfile.experience !== newExperience ||
-        currentProfile.coins !== newCoins ||
-        currentProfile.username !== username ||
-        JSON.stringify(currentProfile.processedTournaments) !== JSON.stringify(processedTournaments)) {
-      
-      console.log('📝 Данные изменились, сохраняем...');
-      if (currentProfile) {
-        console.log('📊 Было - Уровень:', currentProfile.level, 
-                   'Опыт:', currentProfile.experience, 
-                   'Монеты:', currentProfile.coins,
-                   'Processed:', currentProfile.processedTournaments);
-        console.log('➡️ Стало - Уровень:', newLevel, 
-                   'Опыт:', newExperience, 
-                   'Монеты:', newCoins,
-                   'Processed:', processedTournaments);
-      }
-      
-      return await saveUserProfile({
-        userId,
-        username,
-        level: newLevel,
-        experience: newExperience,
-        coins: newCoins,
-        lastUpdated: new Date().toISOString(),
-        processedTournaments
-      });
-    }
-    
-    console.log('ℹ️ Данные не изменились, пропускаем сохранение');
-    return true;
-  } catch (error) {
-    console.error('❌ Ошибка обновления профиля:', error);
-    return false;
   }
 }
