@@ -545,37 +545,61 @@ function App() {
   }, [telegramUser, profileLoaded, userData.coins, userData.totalExp, userData.level]);
 
   // Функция для скачивания файла с Яндекс.Диска
-  const downloadTournamentFile = async (filename: string): Promise<Fighter[] | null> => {
-    try {
-      const downloadUrl = `https://cloud-api.yandex.net/v1/disk/resources/download?path=app:/${filename}`;
-      const response = await fetch(downloadUrl, {
-        headers: {
-          'Authorization': `OAuth ${YA_TOKEN}`
-        }
-      });
-      
-      if (!response.ok) {
-        return null;
+const downloadTournamentFile = async (filename: string): Promise<Fighter[] | null> => {
+  try {
+    const downloadUrl = `https://cloud-api.yandex.net/v1/disk/resources/download?path=app:/${filename}`;
+    const response = await fetch(downloadUrl, {
+      headers: {
+        'Authorization': `OAuth ${YA_TOKEN}`
       }
-      
-      const { href } = await response.json();
-      const proxyUrl = `/api/proxy?url=${encodeURIComponent(href)}&t=${Date.now()}`;
-      const fileResponse = await fetch(proxyUrl);
-      
-      if (!fileResponse.ok) {
-        throw new Error(`Ошибка скачивания через прокси: ${fileResponse.status}`);
-      }
-      
-      const arrayBuffer = await fileResponse.arrayBuffer();
-      
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      return XLSX.utils.sheet_to_json(sheet) as Fighter[];
-    } catch (error) {
-      console.error('Ошибка скачивания файла:', error);
+    });
+    
+    if (!response.ok) {
       return null;
     }
-  };
+    
+    const { href } = await response.json();
+    const proxyUrl = `/api/proxy?url=${encodeURIComponent(href)}&t=${Date.now()}`;
+    const fileResponse = await fetch(proxyUrl);
+    
+    if (!fileResponse.ok) {
+      throw new Error(`Ошибка скачивания через прокси: ${fileResponse.status}`);
+    }
+    
+    const arrayBuffer = await fileResponse.arrayBuffer();
+    
+    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    
+    // Явно указываем тип при преобразовании
+    const data = XLSX.utils.sheet_to_json(sheet) as unknown[];
+    
+    // Преобразуем данные в формат Fighter
+    const fighters: Fighter[] = data.map((item: any) => ({
+      Fight_ID: item['Fight_ID'] || 0,
+      Fighter: item['Fighter'] || '',
+      'W/L': item['W/L'] || null,
+      'Kd': item['Kd'] || 0,
+      'Str': item['Str'] || 0,
+      'Td': item['Td'] || 0,
+      'Sub': item['Sub'] || 0,
+      'Head': item['Head'] || 0,
+      'Body': item['Body'] || 0,
+      'Leg': item['Leg'] || 0,
+      'Weight class': item['Weight class'] || '',
+      'Weight Coefficient': item['Weight Coefficient'] || 1,
+      'Method': item['Method'] || '',
+      'Round': item['Round'] || 0,
+      'Time': item['Time'] || '',
+      'Total Damage': item['Total Damage'] || 0
+    }));
+    
+    return fighters;
+  } catch (error) {
+    console.error('Ошибка скачивания файла:', error);
+    return null;
+  }
+};
 
   // Функция для проверки доступности ставок по дате
   const isBetsAvailable = (): boolean => {
@@ -615,9 +639,7 @@ function App() {
     if (!upcomingTournament?.data) return false;
     
     return upcomingTournament.data.some(fighter => {
-      if (fighter['W/L'] === 'win' || fighter['W/L'] === 'lose') return true;
-      if (fighter['Method'] && fighter['Method'] !== '' && fighter['Method'] !== '--') return true;
-      return false;
+      return fighter['W/L'] === 'win' || fighter['W/L'] === 'lose';
     });
   };
 
@@ -769,11 +791,11 @@ function App() {
           }));
           
           const winners = pastResult.selections.filter((sel: SelectedFighter) => 
-            sel.fighter['W/L'] === 'win'
+            sel.fighter['W/L'] === 'win'  // Только явные победы
           ).length;
           
           const correctPicks = pastResult.selections.filter((sel: SelectedFighter) => 
-            sel.fighter['W/L'] === 'win'
+            sel.fighter['W/L'] === 'win'  // Угаданные победители
           ).length;
           
           console.log('📊 Статистика:', { winners, correctPicks });
@@ -1118,7 +1140,7 @@ function App() {
                       <div className="selected-fighters-grid">
                         {userData.mySelections.upcoming.map((selection, index) => {
                           const weightClass = selection.fighter['Weight class'];
-                          const hasResult = selection.fighter['W/L'] === 'win' || selection.fighter['W/L'] === 'lose';
+                          const hasResult = selection.fighter['W/L'] !== null;
                           
                           return (
                             <div 
@@ -1245,63 +1267,65 @@ function App() {
               </div>
 
               <div className="fighters-scroll">
-                {selectedTournament.data && Object.entries(groupFightersByWeight(selectedTournament.data)).map(([weightClass, fighters]) => {
-                  const pairs = getFighterPairs(fighters);
-                  const isWeightSelected = selectedFighters.has(weightClass);
-                  const selectedFighter = selectedFighters.get(weightClass);
+              {selectedTournament.data && Object.entries(groupFightersByWeight(selectedTournament.data)).map(([weightClass, fighters]) => {
+  // Приводим fighters к типу Fighter[]
+  const typedFighters = fighters as Fighter[];
+  const pairs = getFighterPairs(typedFighters);
+  const isWeightSelected = selectedFighters.has(weightClass);
+  const selectedFighter = selectedFighters.get(weightClass);
 
-                  return (
-                    <div key={weightClass} className="weight-section">
-                      <div className="weight-header" style={{ backgroundColor: getWeightClassColor(weightClass) }}>
-                        <span>{weightClass}</span>
-                        {isWeightSelected && (
-                          <span className="selected-badge">{selectedFighter?.Fighter}</span>
-                        )}
-                      </div>
+  return (
+    <div key={weightClass} className="weight-section">
+      <div className="weight-header" style={{ backgroundColor: getWeightClassColor(weightClass) }}>
+        <span>{weightClass}</span>
+        {isWeightSelected && (
+          <span className="selected-badge">{selectedFighter?.Fighter}</span>
+        )}
+      </div>
 
-                      {pairs.map((pair, idx) => (
-                        <div key={idx} className="fight-pair">
-                          {pair.map(fighter => (
-                            <button
-                              key={fighter.Fighter}
-                              className={`fighter-card ${
-                                selectedFighter?.Fighter === fighter.Fighter ? 'selected' : ''
-                              } ${
-                                isWeightSelected && selectedFighter?.Fighter !== fighter.Fighter ? 'disabled' : ''
-                              }`}
-                              onClick={() => handleSelectFighter(weightClass, fighter)}
-                              disabled={
-                                (isWeightSelected && selectedFighter?.Fighter !== fighter.Fighter) ||
-                                (selectedFighters.size >= 5 && !selectedFighters.has(weightClass))
-                              }
-                            >
-                              <div className="fighter-avatar">
-                                <img 
-                                  src={`${BASE_URL}/avatars/${getAvatarFilename(fighter['Weight class'])}`}
-                                  alt={fighter.Fighter}
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                    const parent = (e.target as HTMLImageElement).parentElement;
-                                    if (parent) {
-                                      parent.innerHTML = fighter['Weight class'].includes("Women") ? "👩" : "👤";
-                                      parent.style.fontSize = '24px';
-                                      parent.style.display = 'flex';
-                                      parent.style.alignItems = 'center';
-                                      parent.style.justifyContent = 'center';
-                                    }
-                                  }} 
-                                />
-                              </div>
-                              <div className="fighter-info">
-                                <span className="fighter-name">{fighter.Fighter}</span>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })}
+      {pairs.map((pair, idx) => (
+        <div key={idx} className="fight-pair">
+          {pair.map(fighter => (
+            <button
+              key={fighter.Fighter}
+              className={`fighter-card ${
+                selectedFighter?.Fighter === fighter.Fighter ? 'selected' : ''
+              } ${
+                isWeightSelected && selectedFighter?.Fighter !== fighter.Fighter ? 'disabled' : ''
+              }`}
+              onClick={() => handleSelectFighter(weightClass, fighter)}
+              disabled={
+                (isWeightSelected && selectedFighter?.Fighter !== fighter.Fighter) ||
+                (selectedFighters.size >= 5 && !selectedFighters.has(weightClass))
+              }
+            >
+              <div className="fighter-avatar">
+                <img 
+                  src={`${BASE_URL}/avatars/${getAvatarFilename(fighter['Weight class'])}`}
+                  alt={fighter.Fighter}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent) {
+                      parent.innerHTML = fighter['Weight class'].includes("Women") ? "👩" : "👤";
+                      parent.style.fontSize = '24px';
+                      parent.style.display = 'flex';
+                      parent.style.alignItems = 'center';
+                      parent.style.justifyContent = 'center';
+                    }
+                  }} 
+                />
+              </div>
+              <div className="fighter-info">
+                <span className="fighter-name">{fighter.Fighter}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+})}
               </div>
 
               <div className="selection-actions">

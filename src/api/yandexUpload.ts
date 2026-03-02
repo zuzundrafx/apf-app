@@ -222,15 +222,16 @@ export async function loadExistingResults(
       let i = 1;
       
       while (item[`Боец ${i}`]) {
-        // Преобразуем строковое значение W/L в корректный тип
+        // Обрабатываем W/L - может быть 'win', 'lose' или пусто (null)
         const wlValue = String(item[`W/L ${i}`] || '').toLowerCase();
-        let wl: 'win' | 'lose' = 'lose';
+        let wl: 'win' | 'lose' | null = null;
         
         if (wlValue === 'win') {
           wl = 'win';
         } else if (wlValue === 'lose') {
           wl = 'lose';
         }
+        // Если значение пустое, оставляем null
         
         selections.push({
           weightClass: String(item[`Вес ${i}`] || ''),
@@ -328,7 +329,11 @@ export async function saveUserResults(
         row[`Боец ${num}`] = sel.fighter.Fighter;
         row[`Вес ${num}`] = sel.weightClass;
         row[`Урон ${num}`] = Math.round(sel.fighter['Total Damage']);
+        
+        // Для будущих турниров W/L должно быть пустым
+        // Для прошедших - 'win' или 'lose'
         row[`W/L ${num}`] = sel.fighter['W/L'] || '';
+        
         row[`Method ${num}`] = sel.fighter['Method'] || '';
         row[`Round ${num}`] = sel.fighter['Round'] || 0;
         row[`Time ${num}`] = sel.fighter['Time'] || '';
