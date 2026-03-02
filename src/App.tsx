@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿import { useState, useEffect } from 'react';
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿import { useState, useEffect } from 'react';
 import './App.css';
 import { Fighter, Tournament, SelectedFighter } from './types';
 import { useTournaments } from './hooks/useTournaments';
@@ -152,6 +152,7 @@ function App() {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [processedTournaments, setProcessedTournaments] = useState<Set<string>>(new Set());
 
+  // Обновленная структура userData с отдельным хранением выборов текущего пользователя
   const [userData, setUserData] = useState({
     username: 'Player',
     level: 1,
@@ -159,8 +160,12 @@ function App() {
     totalExp: 0,
     nextLevelExp: 5,
     coins: 100,
-    upcomingSelections: [] as SelectedFighter[],
-    pastSelections: [] as SelectedFighter[],
+    // Выборы только текущего пользователя
+    mySelections: {
+      upcoming: [] as SelectedFighter[],
+      past: [] as SelectedFighter[]
+    },
+    myUserId: null as string | null,
     hasBet: false
   });
 
@@ -173,8 +178,8 @@ function App() {
     totalExp: 0
   });
 
-  const hasUpcomingBet = userData.upcomingSelections.length > 0;
-  const hasPastBet = userData.pastSelections.length > 0;
+  const hasUpcomingBet = userData.mySelections.upcoming.length > 0;
+  const hasPastBet = userData.mySelections.past.length > 0;
 
   // Функция для подсчета общего урона с округлением
   const calculateTotalDamage = (selections: SelectedFighter[]): number => {
@@ -295,7 +300,7 @@ function App() {
       const updatedProfile = {
         ...profile,
         level: level,
-        experience: newTotalExp, // Сохраняем общий опыт
+        experience: newTotalExp,
         coins: currentCoins,
         processedTournaments: {
           coins: profile.processedTournaments?.coins || [],
@@ -314,14 +319,6 @@ function App() {
     }
     
     return expGain;
-  };
-
-  // Функция для подсчета угаданных бойцов в прошедшем турнире
-  const calculateCorrectPicks = (selections: SelectedFighter[]): number => {
-    return selections.filter(sel => {
-      const fighter = sel.fighter;
-      return fighter['W/L'] === 'win';
-    }).length;
   };
 
   // Инициализация Telegram WebApp и загрузка профиля
@@ -348,7 +345,6 @@ function App() {
           const profile = await loadUserProfile(userId);
           
           if (profile && isMounted) {
-            // Из профиля загружаем общий опыт и рассчитываем уровень
             const totalExp = profile.experience || 0;
             const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
             
@@ -380,7 +376,8 @@ function App() {
               currentExp,
               totalExp,
               nextLevelExp,
-              coins: profile.coins
+              coins: profile.coins,
+              myUserId: userId
             }));
             
           } else if (isMounted) {
@@ -401,7 +398,8 @@ function App() {
               setUserData(prev => ({
                 ...prev,
                 username: username,
-                coins: 100
+                coins: 100,
+                myUserId: userId
               }));
             }
           }
@@ -460,7 +458,8 @@ function App() {
               currentExp,
               totalExp,
               nextLevelExp,
-              coins: profile.coins
+              coins: profile.coins,
+              myUserId: 'user_123'
             }));
             
           } else if (isMounted) {
@@ -501,11 +500,15 @@ function App() {
       level: userData.level,
       currentExp: userData.currentExp,
       totalExp: userData.totalExp,
-      username: userData.username
+      username: userData.username,
+      mySelections: {
+        upcoming: userData.mySelections.upcoming.length,
+        past: userData.mySelections.past.length
+      }
     });
   }, [userData]);
 
-  // Периодическая проверка обновлений профиля (раз в 30 секунд)
+  // Периодическая проверка обновлений профиля (раз в 60 секунд)
   useEffect(() => {
     if (!telegramUser || !profileLoaded) return;
     
@@ -659,13 +662,13 @@ function App() {
         
         upcomingTournament.data = data;
         
-        if (userData.upcomingSelections.length > 0) {
+        if (userData.mySelections.upcoming.length > 0) {
           const fightersMap = new Map();
           data.forEach(fighter => {
             fightersMap.set(fighter.Fighter, fighter);
           });
           
-          const updatedSelections = userData.upcomingSelections.map(sel => {
+          const updatedSelections = userData.mySelections.upcoming.map(sel => {
             const updatedFighter = fightersMap.get(sel.fighter.Fighter);
             if (updatedFighter) {
               return {
@@ -678,7 +681,10 @@ function App() {
           
           setUserData(prev => ({
             ...prev,
-            upcomingSelections: updatedSelections
+            mySelections: {
+              ...prev.mySelections,
+              upcoming: updatedSelections
+            }
           }));
         }
       }
@@ -714,7 +720,7 @@ function App() {
     }
   }, [currentView]);
 
-  // Загружаем результаты пользователя для обоих турниров
+  // Загружаем результаты пользователя для обоих турниров (только для текущего пользователя)
   useEffect(() => {
     let isMounted = true;
     
@@ -725,19 +731,22 @@ function App() {
       
       if (upcomingTournament && isMounted) {
         console.log('📥 Загружаем результаты для будущего турнира:', upcomingTournament.name);
-        const upcomingResults = await loadUserResults(upcomingTournament.name, telegramUser.id);
+        const upcomingResult = await loadUserResults(upcomingTournament.name, telegramUser.id);
         
-        if (upcomingResults && upcomingResults.selections.length > 0 && isMounted) {
-          console.log('✅ Найдены выборы для будущего турнира');
+        if (upcomingResult && upcomingResult.selections.length > 0 && isMounted) {
+          console.log('✅ Найдены мои выборы для будущего турнира');
           
           setUserData(prev => ({
             ...prev,
-            upcomingSelections: upcomingResults.selections,
+            mySelections: {
+              ...prev.mySelections,
+              upcoming: upcomingResult.selections
+            },
             hasBet: true
           }));
           
-          const selectionsMap = new Map();
-          upcomingResults.selections.forEach((sel: SelectedFighter) => {
+          const selectionsMap = new Map<string, Fighter>();
+          upcomingResult.selections.forEach((sel: SelectedFighter) => {
             selectionsMap.set(sel.weightClass, sel.fighter);
           });
           setSelectedFighters(selectionsMap);
@@ -746,21 +755,24 @@ function App() {
       
       if (pastTournament && isMounted) {
         console.log('📥 Загружаем результаты для прошедшего турнира:', pastTournament.name);
-        const pastResults = await loadUserResults(pastTournament.name, telegramUser.id);
+        const pastResult = await loadUserResults(pastTournament.name, telegramUser.id);
         
-        if (pastResults && pastResults.selections.length > 0 && isMounted) {
-          console.log('✅ Найдены выборы для прошедшего турнира');
+        if (pastResult && pastResult.selections.length > 0 && isMounted) {
+          console.log('✅ Найдены мои выборы для прошедшего турнира');
           
           setUserData(prev => ({
             ...prev,
-            pastSelections: pastResults.selections
+            mySelections: {
+              ...prev.mySelections,
+              past: pastResult.selections
+            }
           }));
           
-          const winners = pastResults.selections.filter(sel => 
+          const winners = pastResult.selections.filter((sel: SelectedFighter) => 
             sel.fighter['W/L'] === 'win'
           ).length;
           
-          const correctPicks = pastResults.selections.filter(sel => 
+          const correctPicks = pastResult.selections.filter((sel: SelectedFighter) => 
             sel.fighter['W/L'] === 'win'
           ).length;
           
@@ -887,7 +899,10 @@ function App() {
       if (saved) {
         setUserData(prev => ({
           ...prev,
-          upcomingSelections: selectionsArray,
+          mySelections: {
+            ...prev.mySelections,
+            upcoming: selectionsArray
+          },
           hasBet: true
         }));
         console.log('✅ Результаты сохранены');
@@ -1022,7 +1037,7 @@ function App() {
                   ) : hasPastBet ? (
                     <>
                       <div className="selected-fighters-grid">
-                        {userData.pastSelections.map((selection, index) => {
+                        {userData.mySelections.past.map((selection, index) => {
                           const weightClass = selection.fighter['Weight class'];
                           const isWinner = selection.fighter['W/L'] === 'win';
                           
@@ -1070,7 +1085,7 @@ function App() {
                       </div>
                       
                       <div className="total-damage-button">
-                        <span>Total Damage: {calculateTotalDamage(userData.pastSelections)}</span>
+                        <span>Total Damage: {calculateTotalDamage(userData.mySelections.past)}</span>
                       </div>
                     </>
                   ) : (
@@ -1101,7 +1116,7 @@ function App() {
                   ) : hasUpcomingBet ? (
                     <>
                       <div className="selected-fighters-grid">
-                        {userData.upcomingSelections.map((selection, index) => {
+                        {userData.mySelections.upcoming.map((selection, index) => {
                           const weightClass = selection.fighter['Weight class'];
                           const hasResult = selection.fighter['W/L'] === 'win' || selection.fighter['W/L'] === 'lose';
                           
@@ -1137,7 +1152,7 @@ function App() {
                       </div>
                       
                       <div className="total-damage-button">
-                        <span>Total Damage: {calculateTotalDamage(userData.upcomingSelections)}</span>
+                        <span>Total Damage: {calculateTotalDamage(userData.mySelections.upcoming)}</span>
                       </div>
                     </>
                   ) : (
@@ -1174,41 +1189,40 @@ function App() {
           </div>
         )}
 
-{currentView === 'leaderboard' && (
-  <div className="leaderboard-screen">
-    <div className="leaderboard-header">
-      <h2>{pastTournament?.name || 'Рейтинг'}</h2>
-      {isCheckingUpdates && (
-        <span className="updating-indicator" style={{ marginLeft: '8px' }}>🔄</span>
-      )}
-    </div>
-    {leaderboardLoading ? (
-      <div className="leaderboard-loading">Загрузка рейтинга...</div>
-    ) : leaderboardData.length > 0 ? (
-      <div className="leaderboard-list">
-        {leaderboardData.map((entry) => (
-          <div key={entry.userId} className="leaderboard-item">
-            <span className="leaderboard-rank">{entry.rank}</span>
-            <div className="leaderboard-user-info">
-              <div className="leaderboard-avatar">
-                {/* Показываем аватарку только если это текущий пользователь и у него есть фото */}
-                {entry.userId === telegramUser?.id && telegramUser?.photoUrl ? (
-                  <img src={telegramUser.photoUrl} alt={entry.username} />
-                ) : (
-                  <span>👤</span>
-                )}
-              </div>
-              <span className="leaderboard-username">{entry.username}</span>
+        {currentView === 'leaderboard' && (
+          <div className="leaderboard-screen">
+            <div className="leaderboard-header">
+              <h2>{pastTournament?.name || 'Рейтинг'}</h2>
+              {isCheckingUpdates && (
+                <span className="updating-indicator" style={{ marginLeft: '8px' }}>🔄</span>
+              )}
             </div>
-            <span className="leaderboard-score">{entry.totalDamage}</span>
+            {leaderboardLoading ? (
+              <div className="leaderboard-loading">Загрузка рейтинга...</div>
+            ) : leaderboardData.length > 0 ? (
+              <div className="leaderboard-list">
+                {leaderboardData.map((entry) => (
+                  <div key={entry.userId} className="leaderboard-item">
+                    <span className="leaderboard-rank">{entry.rank}</span>
+                    <div className="leaderboard-user-info">
+                      <div className="leaderboard-avatar">
+                        {entry.userId === telegramUser?.id && telegramUser?.photoUrl ? (
+                          <img src={telegramUser.photoUrl} alt={entry.username} />
+                        ) : (
+                          <span>👤</span>
+                        )}
+                      </div>
+                      <span className="leaderboard-username">{entry.username}</span>
+                    </div>
+                    <span className="leaderboard-score">{entry.totalDamage}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="leaderboard-empty">Пока нет результатов</div>
+            )}
           </div>
-        ))}
-      </div>
-    ) : (
-      <div className="leaderboard-empty">Пока нет результатов</div>
-    )}
-  </div>
-)}
+        )}
 
         {currentView === 'selection' && selectedTournament && selectedTournament.data && (
           <div className="selection-modal">
