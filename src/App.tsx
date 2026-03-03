@@ -1179,46 +1179,46 @@ function App() {
         )}
       </main>
 
-      {/* Модальное окно с наградами */}
-      {showRewardsModal && pendingRewards && (
-        <div className="rewards-modal">
-          <div className="rewards-content">
-            <h2>🏆 Поздравляем! 🏆</h2>
-            <p>Турнир "{pendingRewards.tournamentName}" завершен</p>
-            
-            {pendingRewards.winners.length > 0 ? (
-              <>
-                <div className="winners-list">
-                  <h3>Победители в вашей ставке:</h3>
-                  {pendingRewards.winners.map((sel, idx) => (
-                    <div key={idx} className="winner-item">
-                      <span className="winner-name">{sel.fighter.Fighter}</span>
-                      <span className="winner-badge">👑</span>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="rewards-summary">
-                  <div className="reward-item">
-                    <span className="reward-label">Монеты:</span>
-                    <span className="reward-value">+{pendingRewards.totalCoins} 🪙</span>
-                  </div>
-                  <div className="reward-item">
-                    <span className="reward-label">Опыт:</span>
-                    <span className="reward-value">+{pendingRewards.totalExp} ✨</span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <p className="no-winners">К сожалению, никто из ваших бойцов не победил 😢</p>
-            )}
-            
-            <button className="accept-button" onClick={acceptRewards}>
-              ACCEPT
-            </button>
+      {/* Модальное окно с наградами - ОБНОВЛЕННАЯ ВЕРСИЯ */}
+{showRewardsModal && pendingRewards && (
+  <div className="rewards-modal">
+    <div className="rewards-content">
+      <h2>🏆 CONGRATULATIONS! 🏆</h2>
+      <p>Tournament "{pendingRewards.tournamentName}" completed</p>
+      
+      {pendingRewards.winners.length > 0 ? (
+        <>
+          <div className="winners-list">
+            <h3>WINNERS IN YOUR BET:</h3>
+            {pendingRewards.winners.map((sel, idx) => (
+              <div key={idx} className="winner-item">
+                <span className="winner-name">{sel.fighter.Fighter}</span>
+                <span className="winner-badge">👑</span>
+              </div>
+            ))}
           </div>
-        </div>
+          
+          <div className="rewards-summary">
+            <div className="reward-item">
+              <span className="reward-label">COINS:</span>
+              <span className="reward-value">+{pendingRewards.totalCoins} 🪙</span>
+            </div>
+            <div className="reward-item">
+              <span className="reward-label">EXP:</span>
+              <span className="reward-value">+{pendingRewards.totalExp} ✨</span>
+            </div>
+          </div>
+        </>
+      ) : (
+        <p className="no-winners">Unfortunately, none of your fighters won 😢</p>
       )}
+      
+      <button className="accept-button" onClick={acceptRewards}>
+        ACCEPT
+      </button>
+    </div>
+  </div>
+)}
 
       <nav className={`bottom-nav ${currentView === 'selection' ? 'hidden' : ''}`}>
         <button 

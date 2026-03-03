@@ -769,13 +769,13 @@ body {
 .rewards-content {
   background: #2A2A2A;
   padding: 28px 24px;
-  border-radius: 16px;
   max-width: 90%;
   width: 340px;
   text-align: center;
   border: 2px solid #FFD700;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   animation: slideUp 0.3s ease;
+  border-radius: 0; /* Убрано закругление */
 }
 
 @keyframes slideUp {
@@ -809,8 +809,8 @@ body {
   margin: 20px 0;
   padding: 16px;
   background: #1C1D1F;
-  border-radius: 12px;
   border: 1px solid #3D3D3B;
+  border-radius: 0; /* Убрано закругление */
 }
 
 .winners-list h3 {
@@ -820,6 +820,8 @@ body {
   text-align: left;
   font-weight: 500;
   opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .winner-item {
@@ -849,8 +851,8 @@ body {
   margin: 20px 0;
   padding: 16px;
   background: #313130;
-  border-radius: 12px;
   border: 1px solid #4A4A48;
+  border-radius: 0; /* Убрано закругление */
 }
 
 .reward-item {
@@ -867,6 +869,9 @@ body {
 .reward-label {
   color: #888;
   font-weight: 400;
+  text-transform: uppercase;
+  font-size: 14px;
+  letter-spacing: 0.5px;
 }
 
 .reward-value {
@@ -885,9 +890,8 @@ body {
 .rewards-content .accept-button {
   width: 100%;
   padding: 16px;
-  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
+  background: linear-gradient(180deg, #C9FFCE 0%, #61FF63 100%);
   border: none;
-  border-radius: 12px;
   color: #000000;
   font-size: 18px;
   font-weight: 700;
@@ -896,11 +900,12 @@ body {
   text-transform: uppercase;
   letter-spacing: 1px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 0; /* Убрано закругление */
 }
 
 .rewards-content .accept-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 5px 15px rgba(97, 255, 99, 0.3);
 }
 
 .rewards-content .accept-button:active {
