@@ -716,6 +716,7 @@ body {
   border-top-color: #B20101;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  margin-top: 20px;
   margin-bottom: 20px;
 }
 
@@ -726,6 +727,8 @@ body {
 .loading-text {
   color: #FFFFFF;
   font-size: 14px;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 /* Адаптивность для мобильных */
