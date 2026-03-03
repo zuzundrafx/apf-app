@@ -73,25 +73,22 @@ const calculateLevel = (totalExp: number): { level: number; currentExp: number; 
   let remainingExp = totalExp;
   let level = 1;
   
-  // Проходим по порогам уровней
   for (let i = 0; i < LEVEL_THRESHOLDS.length - 1; i++) {
     const expNeeded = LEVEL_THRESHOLDS[i];
     
     if (remainingExp >= expNeeded) {
-      // Вычитаем опыт, нужный для этого уровня
       remainingExp -= expNeeded;
-      level = i + 2; // +2 потому что i=0 это переход с 1 на 2 уровень
+      level = i + 2;
     } else {
       break;
     }
   }
   
-  // Следующий порог опыта (сколько нужно для следующего уровня)
   const nextLevelExp = level < 10 ? LEVEL_THRESHOLDS[level - 1] : 0;
   
   return { 
     level, 
-    currentExp: remainingExp,  // Текущий опыт на этом уровне
+    currentExp: remainingExp,
     nextLevelExp 
   };
 };
@@ -150,9 +147,16 @@ function App() {
     photoUrl?: string;
   } | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
-  const [processedTournaments, setProcessedTournaments] = useState<Set<string>>(new Set());
 
-  // Обновленная структура userData с отдельным хранением выборов текущего пользователя
+  // Состояния для окна наград
+  const [showRewardsModal, setShowRewardsModal] = useState(false);
+  const [pendingRewards, setPendingRewards] = useState<{
+    tournamentName: string;
+    winners: SelectedFighter[];
+    totalCoins: number;
+    totalExp: number;
+  } | null>(null);
+
   const [userData, setUserData] = useState({
     username: 'Player',
     level: 1,
@@ -160,7 +164,6 @@ function App() {
     totalExp: 0,
     nextLevelExp: 5,
     coins: 100,
-    // Выборы только текущего пользователя
     mySelections: {
       upcoming: [] as SelectedFighter[],
       past: [] as SelectedFighter[]
@@ -169,7 +172,6 @@ function App() {
     hasBet: false
   });
 
-  // Логируем начальное состояние
   console.log('🏁 Начальное состояние userData:', {
     coins: 100,
     username: 'Player',
@@ -181,144 +183,65 @@ function App() {
   const hasUpcomingBet = userData.mySelections.upcoming.length > 0;
   const hasPastBet = userData.mySelections.past.length > 0;
 
-  // Функция для подсчета общего урона с округлением
   const calculateTotalDamage = (selections: SelectedFighter[]): number => {
     const total = selections.reduce((sum, sel) => sum + (sel.fighter['Total Damage'] || 0), 0);
     return roundDamage(total);
   };
 
-  // Функция для начисления монет за победителей
-  const awardCoins = async (winners: number, tournamentId: string): Promise<number> => {
-    console.log('🎯 awardCoins вызвана:', { winners, tournamentId });
+  // Функция принятия наград
+  const acceptRewards = async () => {
+    if (!pendingRewards || !telegramUser || !pastTournament) return;
     
-    if (processedTournaments.has(`coins_${tournamentId}`)) {
-      console.log('ℹ️ Монеты за этот турнир уже были начислены в этой сессии');
-      return userData.coins;
-    }
-    
-    if (telegramUser) {
-      const currentProfile = await loadUserProfile(telegramUser.id);
-      if (currentProfile?.processedTournaments?.coins?.includes(tournamentId)) {
-        console.log('ℹ️ Монеты за этот турнир уже были начислены ранее');
-        setProcessedTournaments(prev => new Set(prev).add(`coins_${tournamentId}`));
-        return userData.coins;
-      }
-    }
-    
-    const coinGain = winners * 50;
-    const newCoins = userData.coins + coinGain;
-    
-    setUserData(prev => ({
-      ...prev,
-      coins: newCoins
-    }));
-    
-    if (telegramUser) {
-      const profile = await loadUserProfile(telegramUser.id) || {
-        userId: telegramUser.id,
-        username: userData.username,
-        level: userData.level,
-        experience: userData.totalExp,
-        coins: newCoins,
-        lastUpdated: new Date().toISOString(),
-        processedTournaments: { coins: [], exp: [] }
-      };
-      
-      const updatedProfile = {
-        ...profile,
-        coins: newCoins,
-        processedTournaments: {
-          coins: [...(profile.processedTournaments?.coins || []), tournamentId],
-          exp: profile.processedTournaments?.exp || []
-        }
-      };
-      
-      const saved = await saveUserProfile(updatedProfile);
-      
-      if (saved) {
-        console.log(`💰 Начислено монет: +${coinGain} (${winners} победителей)`);
-        console.log(`💰 Новый баланс: ${newCoins}`);
-        setProcessedTournaments(prev => new Set(prev).add(`coins_${tournamentId}`));
-      }
-    }
-    
-    return newCoins;
-  };
-
-  // Функция для начисления опыта за угаданных бойцов (с правильным расчетом уровней)
-  const awardExperience = async (correctPicks: number, tournamentId: string, currentCoins: number) => {
-    console.log('🎯 awardExperience вызвана:', { correctPicks, tournamentId, currentCoins });
-    
-    if (processedTournaments.has(`exp_${tournamentId}`)) {
-      console.log('ℹ️ Опыт за этот турнир уже был начислен в этой сессии');
-      return;
-    }
-    
-    if (telegramUser) {
-      const currentProfile = await loadUserProfile(telegramUser.id);
-      if (currentProfile?.processedTournaments?.exp?.includes(tournamentId)) {
-        console.log('ℹ️ Опыт за этот турнир уже был начислен ранее');
-        setProcessedTournaments(prev => new Set(prev).add(`exp_${tournamentId}`));
-        return;
-      }
-    }
-    
-    const expGain = correctPicks * 5;
-    const newTotalExp = userData.totalExp + expGain;
+    // 1. Начисляем монеты и опыт
+    const newCoins = userData.coins + pendingRewards.totalCoins;
+    const newTotalExp = userData.totalExp + pendingRewards.totalExp;
     const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
     
-    console.log('📊 Расчет опыта:', {
-      былоTotal: userData.totalExp,
-      gain: expGain,
-      сталоTotal: newTotalExp,
-      новыйУровень: level,
-      опытНаУровне: currentExp,
-      нужноДляСледующего: nextLevelExp
+    // 2. Обновляем профиль пользователя
+    await saveUserProfile({
+      userId: telegramUser.id,
+      username: userData.username,
+      level,
+      experience: newTotalExp,
+      coins: newCoins,
+      lastUpdated: new Date().toISOString()
     });
     
-    setUserData(prev => ({
-      ...prev,
-      totalExp: newTotalExp,
-      currentExp: currentExp,
-      level,
-      nextLevelExp
-    }));
-    
-    if (telegramUser) {
-      console.log('💰 Сохраняем опыт, текущие монеты:', currentCoins);
-      
-      const profile = await loadUserProfile(telegramUser.id) || {
-        userId: telegramUser.id,
-        username: userData.username,
-        level: level,
-        experience: newTotalExp,
-        coins: currentCoins,
-        lastUpdated: new Date().toISOString(),
-        processedTournaments: { coins: [], exp: [] }
-      };
-      
-      const updatedProfile = {
-        ...profile,
-        level: level,
-        experience: newTotalExp,
-        coins: currentCoins,
-        processedTournaments: {
-          coins: profile.processedTournaments?.coins || [],
-          exp: [...(profile.processedTournaments?.exp || []), tournamentId]
+    // 3. Обновляем запись в результатах турнира
+    const currentResult = await loadUserResults(pastTournament.name, telegramUser.id);
+    if (currentResult) {
+      const updatedResult: UserResult = {
+        ...currentResult,
+        rewardsAccepted: true,
+        rewards: {
+          coins: pendingRewards.totalCoins,
+          experience: pendingRewards.totalExp
         }
       };
-      
-      const saved = await saveUserProfile(updatedProfile);
-      
-      if (saved) {
-        console.log(`✨ Начислено опыта: +${expGain} (${correctPicks} угаданных бойцов)`);
-        console.log(`📊 Текущий уровень: ${level}, опыт на уровне: ${currentExp}/${nextLevelExp}`);
-        console.log(`💰 Баланс монет: ${currentCoins}`);
-        setProcessedTournaments(prev => new Set(prev).add(`exp_${tournamentId}`));
-      }
+      await saveUserResults(pastTournament.name, updatedResult);
     }
     
-    return expGain;
+    // 4. Загружаем обновленные результаты для отображения
+    const updatedPastSelections = await loadUserResults(pastTournament.name, telegramUser.id)
+      .then(r => r?.selections || []);
+    
+    // 5. Обновляем UI
+    setUserData(prev => ({
+      ...prev,
+      coins: newCoins,
+      totalExp: newTotalExp,
+      level,
+      currentExp,
+      nextLevelExp,
+      mySelections: {
+        ...prev.mySelections,
+        past: updatedPastSelections
+      }
+    }));
+    
+    // 6. Закрываем окно
+    setShowRewardsModal(false);
+    setPendingRewards(null);
   };
 
   // Инициализация Telegram WebApp и загрузка профиля
@@ -349,25 +272,6 @@ function App() {
             const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
             
             console.log('✅ Профиль загружен:', profile);
-            console.log('💰 Загруженные монеты из профиля:', profile.coins);
-            console.log('📊 Загружен общий опыт:', totalExp);
-            console.log('📈 Рассчитанный уровень:', { level, currentExp, nextLevelExp });
-            
-            if (profile.processedTournaments) {
-              const newProcessed = new Set<string>();
-              if (profile.processedTournaments.coins) {
-                profile.processedTournaments.coins.forEach(id => 
-                  newProcessed.add(`coins_${id}`)
-                );
-              }
-              if (profile.processedTournaments.exp) {
-                profile.processedTournaments.exp.forEach(id => 
-                  newProcessed.add(`exp_${id}`)
-                );
-              }
-              setProcessedTournaments(newProcessed);
-              console.log('🔄 Восстановлены флаги начислений:', Array.from(newProcessed));
-            }
             
             setUserData(prev => ({
               ...prev,
@@ -432,25 +336,6 @@ function App() {
             const totalExp = profile.experience || 0;
             const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
             
-            console.log('✅ Тестовый профиль загружен:', profile);
-            console.log('💰 Загруженные монеты из тестового профиля:', profile.coins);
-            console.log('📊 Загружен общий опыт:', totalExp);
-            
-            if (profile.processedTournaments) {
-              const newProcessed = new Set<string>();
-              if (profile.processedTournaments.coins) {
-                profile.processedTournaments.coins.forEach(id => 
-                  newProcessed.add(`coins_${id}`)
-                );
-              }
-              if (profile.processedTournaments.exp) {
-                profile.processedTournaments.exp.forEach(id => 
-                  newProcessed.add(`exp_${id}`)
-                );
-              }
-              setProcessedTournaments(newProcessed);
-            }
-            
             setUserData(prev => ({
               ...prev,
               username: profile.username,
@@ -464,20 +349,6 @@ function App() {
             
           } else if (isMounted) {
             console.log('🆕 Создаем новый тестовый профиль');
-            const newProfile = {
-              userId: 'user_123',
-              username: 'Test Player',
-              level: 1,
-              experience: 0,
-              coins: 100,
-              lastUpdated: new Date().toISOString()
-            };
-            
-            const saved = await saveUserProfile(newProfile);
-            
-            if (saved) {
-              console.log('✅ Новый тестовый профиль создан с монетами: 100');
-            }
           }
           
           setProfileLoaded(true);
@@ -499,109 +370,64 @@ function App() {
       coins: userData.coins,
       level: userData.level,
       currentExp: userData.currentExp,
-      totalExp: userData.totalExp,
-      username: userData.username,
-      mySelections: {
-        upcoming: userData.mySelections.upcoming.length,
-        past: userData.mySelections.past.length
-      }
+      totalExp: userData.totalExp
     });
   }, [userData]);
 
-  // Периодическая проверка обновлений профиля (раз в 60 секунд)
-  useEffect(() => {
-    if (!telegramUser || !profileLoaded) return;
-    
-    const checkProfileUpdates = async () => {
-      console.log('🔄 Проверяю обновления профиля...');
-      const updatedProfile = await loadUserProfile(telegramUser.id);
-      
-      if (updatedProfile) {
-        const totalExp = updatedProfile.experience || 0;
-        const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
-        
-        if (updatedProfile.coins !== userData.coins ||
-            updatedProfile.experience !== userData.totalExp ||
-            level !== userData.level) {
-          
-          console.log('📊 Профиль обновлен:', updatedProfile);
-          
-          setUserData(prev => ({
-            ...prev,
-            username: updatedProfile.username,
-            level,
-            currentExp,
-            totalExp,
-            nextLevelExp,
-            coins: updatedProfile.coins
-          }));
-        }
-      }
-    };
-    
-    const interval = setInterval(checkProfileUpdates, 60 * 1000);
-    
-    return () => clearInterval(interval);
-  }, [telegramUser, profileLoaded, userData.coins, userData.totalExp, userData.level]);
-
   // Функция для скачивания файла с Яндекс.Диска
-const downloadTournamentFile = async (filename: string): Promise<Fighter[] | null> => {
-  try {
-    const downloadUrl = `https://cloud-api.yandex.net/v1/disk/resources/download?path=app:/${filename}`;
-    const response = await fetch(downloadUrl, {
-      headers: {
-        'Authorization': `OAuth ${YA_TOKEN}`
+  const downloadTournamentFile = async (filename: string): Promise<Fighter[] | null> => {
+    try {
+      const downloadUrl = `https://cloud-api.yandex.net/v1/disk/resources/download?path=app:/${filename}`;
+      const response = await fetch(downloadUrl, {
+        headers: {
+          'Authorization': `OAuth ${YA_TOKEN}`
+        }
+      });
+      
+      if (!response.ok) {
+        return null;
       }
-    });
-    
-    if (!response.ok) {
+      
+      const { href } = await response.json();
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(href)}&t=${Date.now()}`;
+      const fileResponse = await fetch(proxyUrl);
+      
+      if (!fileResponse.ok) {
+        throw new Error(`Ошибка скачивания через прокси: ${fileResponse.status}`);
+      }
+      
+      const arrayBuffer = await fileResponse.arrayBuffer();
+      
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet) as any[];
+      
+      const fighters: Fighter[] = data.map((item: any) => ({
+        Fight_ID: item['Fight_ID'] || 0,
+        Fighter: item['Fighter'] || '',
+        'W/L': item['W/L'] || null,
+        'Kd': item['Kd'] || 0,
+        'Str': item['Str'] || 0,
+        'Td': item['Td'] || 0,
+        'Sub': item['Sub'] || 0,
+        'Head': item['Head'] || 0,
+        'Body': item['Body'] || 0,
+        'Leg': item['Leg'] || 0,
+        'Weight class': item['Weight class'] || '',
+        'Weight Coefficient': item['Weight Coefficient'] || 1,
+        'Method': item['Method'] || '',
+        'Round': item['Round'] || 0,
+        'Time': item['Time'] || '',
+        'Total Damage': item['Total Damage'] || 0
+      }));
+      
+      return fighters;
+    } catch (error) {
+      console.error('Ошибка скачивания файла:', error);
       return null;
     }
-    
-    const { href } = await response.json();
-    const proxyUrl = `/api/proxy?url=${encodeURIComponent(href)}&t=${Date.now()}`;
-    const fileResponse = await fetch(proxyUrl);
-    
-    if (!fileResponse.ok) {
-      throw new Error(`Ошибка скачивания через прокси: ${fileResponse.status}`);
-    }
-    
-    const arrayBuffer = await fileResponse.arrayBuffer();
-    
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    
-    // Явно указываем тип при преобразовании
-    const data = XLSX.utils.sheet_to_json(sheet) as unknown[];
-    
-    // Преобразуем данные в формат Fighter
-    const fighters: Fighter[] = data.map((item: any) => ({
-      Fight_ID: item['Fight_ID'] || 0,
-      Fighter: item['Fighter'] || '',
-      'W/L': item['W/L'] || null,
-      'Kd': item['Kd'] || 0,
-      'Str': item['Str'] || 0,
-      'Td': item['Td'] || 0,
-      'Sub': item['Sub'] || 0,
-      'Head': item['Head'] || 0,
-      'Body': item['Body'] || 0,
-      'Leg': item['Leg'] || 0,
-      'Weight class': item['Weight class'] || '',
-      'Weight Coefficient': item['Weight Coefficient'] || 1,
-      'Method': item['Method'] || '',
-      'Round': item['Round'] || 0,
-      'Time': item['Time'] || '',
-      'Total Damage': item['Total Damage'] || 0
-    }));
-    
-    return fighters;
-  } catch (error) {
-    console.error('Ошибка скачивания файла:', error);
-    return null;
-  }
-};
+  };
 
-  // Функция для проверки доступности ставок по дате
   const isBetsAvailable = (): boolean => {
     if (!upcomingTournament) return false;
     
@@ -625,8 +451,6 @@ const downloadTournamentFile = async (filename: string): Promise<Fighter[] | nul
         const formattedDay = day.padStart(2, '0');
         const tournamentStr = `${year}-${months[month]}-${formattedDay}`;
         
-        console.log('📅 Сегодня:', todayStr, 'Турнир:', tournamentStr);
-        
         return todayStr < tournamentStr;
       }
     }
@@ -634,7 +458,6 @@ const downloadTournamentFile = async (filename: string): Promise<Fighter[] | nul
     return false;
   };
 
-  // Проверка, начался ли турнир (появились ли первые данные)
   const hasTournamentStarted = (): boolean => {
     if (!upcomingTournament?.data) return false;
     
@@ -643,7 +466,6 @@ const downloadTournamentFile = async (filename: string): Promise<Fighter[] | nul
     });
   };
 
-  // Функция для загрузки данных турнира
   const loadTournamentData = async (tournamentName: string, isUpcoming: boolean = true): Promise<Fighter[] | null> => {
     const cleanName = tournamentName
       .replace(/[^a-zA-Z0-9]/g, '_')
@@ -663,7 +485,6 @@ const downloadTournamentFile = async (filename: string): Promise<Fighter[] | nul
     return null;
   };
 
-  // Функция для принудительной загрузки актуальных данных турнира
   const loadFreshTournamentData = async () => {
     if (!upcomingTournament) return;
     
@@ -678,9 +499,7 @@ const downloadTournamentFile = async (filename: string): Promise<Fighter[] | nul
           return f['W/L'] === 'win' || f['W/L'] === 'lose';
         }).length;
         
-        const totalFighters = data.length;
-        
-        console.log(`📊 Статистика результатов: ${fightersWithResults}/${totalFighters} бойцов с результатами`);
+        console.log(`📊 Статистика результатов: ${fightersWithResults}/${data.length} бойцов с результатами`);
         
         upcomingTournament.data = data;
         
@@ -717,14 +536,12 @@ const downloadTournamentFile = async (filename: string): Promise<Fighter[] | nul
     }
   };
 
-  // Загружаем свежие данные при старте
   useEffect(() => {
     if (upcomingTournament) {
       loadFreshTournamentData();
     }
   }, [upcomingTournament?.name]);
 
-  // Периодическая проверка обновлений (раз в 5 минут)
   useEffect(() => {
     if (!upcomingTournament) return;
     
@@ -735,14 +552,13 @@ const downloadTournamentFile = async (filename: string): Promise<Fighter[] | nul
     return () => clearInterval(interval);
   }, [upcomingTournament?.name]);
 
-  // Проверка при возвращении на главный экран
   useEffect(() => {
     if (currentView === 'main' && upcomingTournament) {
       loadFreshTournamentData();
     }
   }, [currentView]);
 
-  // Загружаем результаты пользователя для обоих турниров (только для текущего пользователя)
+  // Загружаем результаты пользователя для обоих турниров
   useEffect(() => {
     let isMounted = true;
     
@@ -751,6 +567,7 @@ const downloadTournamentFile = async (filename: string): Promise<Fighter[] | nul
       
       setLoadingUserResults(true);
       
+      // Загружаем для будущего турнира
       if (upcomingTournament && isMounted) {
         console.log('📥 Загружаем результаты для будущего турнира:', upcomingTournament.name);
         const upcomingResult = await loadUserResults(upcomingTournament.name, telegramUser.id);
@@ -775,40 +592,52 @@ const downloadTournamentFile = async (filename: string): Promise<Fighter[] | nul
         }
       }
       
+      // Загружаем для прошедшего турнира
       if (pastTournament && isMounted) {
         console.log('📥 Загружаем результаты для прошедшего турнира:', pastTournament.name);
         const pastResult = await loadUserResults(pastTournament.name, telegramUser.id);
         
         if (pastResult && pastResult.selections.length > 0 && isMounted) {
-          console.log('✅ Найдены мои выборы для прошедшего турнира');
           
-          setUserData(prev => ({
-            ...prev,
-            mySelections: {
-              ...prev.mySelections,
-              past: pastResult.selections
-            }
-          }));
-          
-          const winners = pastResult.selections.filter((sel: SelectedFighter) => 
-            sel.fighter['W/L'] === 'win'  // Только явные победы
-          ).length;
-          
-          const correctPicks = pastResult.selections.filter((sel: SelectedFighter) => 
-            sel.fighter['W/L'] === 'win'  // Угаданные победители
-          ).length;
-          
-          console.log('📊 Статистика:', { winners, correctPicks });
-          
-          if (winners > 0) {
-            const newCoins = await awardCoins(winners, pastTournament.name);
-            if (correctPicks > 0) {
-              await awardExperience(correctPicks, pastTournament.name, newCoins);
-            }
+          // Проверяем, были ли уже приняты награды
+          if (!pastResult.rewardsAccepted) {
+            
+            // Подсчитываем награды
+            const winners = pastResult.selections.filter(sel => 
+              sel.fighter['W/L'] === 'win'
+            );
+            
+            const totalCoins = winners.length * 50;
+            const totalExp = winners.length * 5;
+            
+            // Показываем окно с наградами
+            setPendingRewards({
+              tournamentName: pastTournament.name,
+              winners: winners,
+              totalCoins,
+              totalExp
+            });
+            setShowRewardsModal(true);
+            
+            // Не показываем карточки бойцов, пока не приняты награды
+            setUserData(prev => ({
+              ...prev,
+              mySelections: {
+                ...prev.mySelections,
+                past: []
+              }
+            }));
+            
           } else {
-            if (correctPicks > 0) {
-              await awardExperience(correctPicks, pastTournament.name, userData.coins);
-            }
+            // Награды уже приняты - показываем карточки
+            console.log('✅ Найдены мои выборы для прошедшего турнира (награды получены)');
+            setUserData(prev => ({
+              ...prev,
+              mySelections: {
+                ...prev.mySelections,
+                past: pastResult.selections
+              }
+            }));
           }
         }
       }
@@ -1267,65 +1096,64 @@ const downloadTournamentFile = async (filename: string): Promise<Fighter[] | nul
               </div>
 
               <div className="fighters-scroll">
-              {selectedTournament.data && Object.entries(groupFightersByWeight(selectedTournament.data)).map(([weightClass, fighters]) => {
-  // Приводим fighters к типу Fighter[]
-  const typedFighters = fighters as Fighter[];
-  const pairs = getFighterPairs(typedFighters);
-  const isWeightSelected = selectedFighters.has(weightClass);
-  const selectedFighter = selectedFighters.get(weightClass);
+                {selectedTournament.data && Object.entries(groupFightersByWeight(selectedTournament.data)).map(([weightClass, fighters]) => {
+                  const typedFighters = fighters as Fighter[];
+                  const pairs = getFighterPairs(typedFighters);
+                  const isWeightSelected = selectedFighters.has(weightClass);
+                  const selectedFighter = selectedFighters.get(weightClass);
 
-  return (
-    <div key={weightClass} className="weight-section">
-      <div className="weight-header" style={{ backgroundColor: getWeightClassColor(weightClass) }}>
-        <span>{weightClass}</span>
-        {isWeightSelected && (
-          <span className="selected-badge">{selectedFighter?.Fighter}</span>
-        )}
-      </div>
+                  return (
+                    <div key={weightClass} className="weight-section">
+                      <div className="weight-header" style={{ backgroundColor: getWeightClassColor(weightClass) }}>
+                        <span>{weightClass}</span>
+                        {isWeightSelected && (
+                          <span className="selected-badge">{selectedFighter?.Fighter}</span>
+                        )}
+                      </div>
 
-      {pairs.map((pair, idx) => (
-        <div key={idx} className="fight-pair">
-          {pair.map(fighter => (
-            <button
-              key={fighter.Fighter}
-              className={`fighter-card ${
-                selectedFighter?.Fighter === fighter.Fighter ? 'selected' : ''
-              } ${
-                isWeightSelected && selectedFighter?.Fighter !== fighter.Fighter ? 'disabled' : ''
-              }`}
-              onClick={() => handleSelectFighter(weightClass, fighter)}
-              disabled={
-                (isWeightSelected && selectedFighter?.Fighter !== fighter.Fighter) ||
-                (selectedFighters.size >= 5 && !selectedFighters.has(weightClass))
-              }
-            >
-              <div className="fighter-avatar">
-                <img 
-                  src={`${BASE_URL}/avatars/${getAvatarFilename(fighter['Weight class'])}`}
-                  alt={fighter.Fighter}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    const parent = (e.target as HTMLImageElement).parentElement;
-                    if (parent) {
-                      parent.innerHTML = fighter['Weight class'].includes("Women") ? "👩" : "👤";
-                      parent.style.fontSize = '24px';
-                      parent.style.display = 'flex';
-                      parent.style.alignItems = 'center';
-                      parent.style.justifyContent = 'center';
-                    }
-                  }} 
-                />
-              </div>
-              <div className="fighter-info">
-                <span className="fighter-name">{fighter.Fighter}</span>
-              </div>
-            </button>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-})}
+                      {pairs.map((pair, idx) => (
+                        <div key={idx} className="fight-pair">
+                          {pair.map(fighter => (
+                            <button
+                              key={fighter.Fighter}
+                              className={`fighter-card ${
+                                selectedFighter?.Fighter === fighter.Fighter ? 'selected' : ''
+                              } ${
+                                isWeightSelected && selectedFighter?.Fighter !== fighter.Fighter ? 'disabled' : ''
+                              }`}
+                              onClick={() => handleSelectFighter(weightClass, fighter)}
+                              disabled={
+                                (isWeightSelected && selectedFighter?.Fighter !== fighter.Fighter) ||
+                                (selectedFighters.size >= 5 && !selectedFighters.has(weightClass))
+                              }
+                            >
+                              <div className="fighter-avatar">
+                                <img 
+                                  src={`${BASE_URL}/avatars/${getAvatarFilename(fighter['Weight class'])}`}
+                                  alt={fighter.Fighter}
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    const parent = (e.target as HTMLImageElement).parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = fighter['Weight class'].includes("Women") ? "👩" : "👤";
+                                      parent.style.fontSize = '24px';
+                                      parent.style.display = 'flex';
+                                      parent.style.alignItems = 'center';
+                                      parent.style.justifyContent = 'center';
+                                    }
+                                  }} 
+                                />
+                              </div>
+                              <div className="fighter-info">
+                                <span className="fighter-name">{fighter.Fighter}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="selection-actions">
@@ -1350,6 +1178,47 @@ const downloadTournamentFile = async (filename: string): Promise<Fighter[] | nul
           </div>
         )}
       </main>
+
+      {/* Модальное окно с наградами */}
+      {showRewardsModal && pendingRewards && (
+        <div className="rewards-modal">
+          <div className="rewards-content">
+            <h2>🏆 Поздравляем! 🏆</h2>
+            <p>Турнир "{pendingRewards.tournamentName}" завершен</p>
+            
+            {pendingRewards.winners.length > 0 ? (
+              <>
+                <div className="winners-list">
+                  <h3>Победители в вашей ставке:</h3>
+                  {pendingRewards.winners.map((sel, idx) => (
+                    <div key={idx} className="winner-item">
+                      <span className="winner-name">{sel.fighter.Fighter}</span>
+                      <span className="winner-badge">👑</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="rewards-summary">
+                  <div className="reward-item">
+                    <span className="reward-label">Монеты:</span>
+                    <span className="reward-value">+{pendingRewards.totalCoins} 🪙</span>
+                  </div>
+                  <div className="reward-item">
+                    <span className="reward-label">Опыт:</span>
+                    <span className="reward-value">+{pendingRewards.totalExp} ✨</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="no-winners">К сожалению, никто из ваших бойцов не победил 😢</p>
+            )}
+            
+            <button className="accept-button" onClick={acceptRewards}>
+              ACCEPT
+            </button>
+          </div>
+        </div>
+      )}
 
       <nav className={`bottom-nav ${currentView === 'selection' ? 'hidden' : ''}`}>
         <button 

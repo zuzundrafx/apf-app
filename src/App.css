@@ -174,7 +174,7 @@ body {
 
 .tournament-content {
   flex: 1;
-  padding: 13px 0 16px 0; /* Уменьшен верхний отступ на 20% (было 16px) */
+  padding: 13px 0 16px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -577,20 +577,18 @@ body {
   display: none;
 }
 
-/* Экран рейтинга - обновленная версия */
+/* Экран рейтинга */
 .leaderboard-screen {
   background: #1C1D1F;
   height: 100%;
   display: flex;
   flex-direction: column;
   padding: 16px;
-  
   width: 100%;
 }
 
 .leaderboard-header {
   margin-bottom: 16px;
-  padding: 0 0;
 }
 
 .leaderboard-header h2 {
@@ -627,7 +625,6 @@ body {
   text-align: left;
 }
 
-/* Контейнер для аватарки и имени */
 .leaderboard-user-info {
   flex: 1;
   display: flex;
@@ -636,7 +633,6 @@ body {
   min-width: 0;
 }
 
-/* Аватарка пользователя */
 .leaderboard-avatar {
   width: 40px;
   height: 40px;
@@ -660,7 +656,6 @@ body {
   color: #FFFFFF;
 }
 
-/* Имя пользователя */
 .leaderboard-username {
   font-size: 14px;
   color: #FFFFFF;
@@ -670,7 +665,6 @@ body {
   text-overflow: ellipsis;
 }
 
-/* Общий урон на градиентном фоне */
 .leaderboard-score {
   padding: 6px 12px;
   background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
@@ -757,6 +751,169 @@ body {
   cursor: pointer;
 }
 
+/* Модальное окно с наградами - НОВЫЙ СТИЛЬ */
+.rewards-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.rewards-content {
+  background: #2A2A2A;
+  padding: 28px 24px;
+  border-radius: 16px;
+  max-width: 90%;
+  width: 340px;
+  text-align: center;
+  border: 2px solid #FFD700;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.rewards-content h2 {
+  color: #FFD700;
+  margin-bottom: 12px;
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.rewards-content p {
+  color: #FFFFFF;
+  margin-bottom: 20px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.winners-list {
+  margin: 20px 0;
+  padding: 16px;
+  background: #1C1D1F;
+  border-radius: 12px;
+  border: 1px solid #3D3D3B;
+}
+
+.winners-list h3 {
+  color: #FFFFFF;
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-align: left;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.winner-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #3D3D3B;
+}
+
+.winner-item:last-child {
+  border-bottom: none;
+}
+
+.winner-name {
+  color: #FFFFFF;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.winner-badge {
+  font-size: 20px;
+  filter: drop-shadow(0 2px 4px rgba(255, 215, 0, 0.3));
+}
+
+.rewards-summary {
+  margin: 20px 0;
+  padding: 16px;
+  background: #313130;
+  border-radius: 12px;
+  border: 1px solid #4A4A48;
+}
+
+.reward-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 16px;
+}
+
+.reward-item:first-child {
+  border-bottom: 1px solid #4A4A48;
+}
+
+.reward-label {
+  color: #888;
+  font-weight: 400;
+}
+
+.reward-value {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.reward-item:first-child .reward-value {
+  color: #FFD700;
+}
+
+.reward-item:last-child .reward-value {
+  color: #4CAF50;
+}
+
+.rewards-content .accept-button {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
+  border: none;
+  border-radius: 12px;
+  color: #000000;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rewards-content .accept-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+}
+
+.rewards-content .accept-button:active {
+  transform: translateY(0);
+}
+
+.no-winners {
+  color: #888 !important;
+  font-style: italic;
+  padding: 30px 0;
+  font-size: 16px !important;
+}
+
 /* Медиа-запросы */
 @media (max-width: 375px) {
   .app {
@@ -839,11 +996,6 @@ body {
     height: 40px;
   }
   
-  /* Адаптивность для рейтинга на 375px */
-  .leaderboard-screen {
-    padding: 12px;
-  }
-  
   .leaderboard-rank {
     width: 35px;
     font-size: 13px;
@@ -866,6 +1018,24 @@ body {
     padding: 4px 8px;
     font-size: 12px;
     min-width: 60px;
+  }
+  
+  .rewards-content {
+    padding: 20px 16px;
+    width: 320px;
+  }
+  
+  .rewards-content h2 {
+    font-size: 20px;
+  }
+  
+  .reward-value {
+    font-size: 16px;
+  }
+  
+  .rewards-content .accept-button {
+    padding: 14px;
+    font-size: 16px;
   }
 }
 
@@ -923,11 +1093,6 @@ body {
     padding: 0 12px;
   }
   
-  /* Адаптивность для рейтинга на 320px */
-  .leaderboard-screen {
-    padding: 10px;
-  }
-  
   .leaderboard-rank {
     width: 30px;
     font-size: 12px;
@@ -950,6 +1115,36 @@ body {
     padding: 3px 6px;
     font-size: 11px;
     min-width: 50px;
+  }
+  
+  .rewards-content {
+    padding: 16px 12px;
+    width: 280px;
+  }
+  
+  .rewards-content h2 {
+    font-size: 18px;
+  }
+  
+  .winners-list h3 {
+    font-size: 12px;
+  }
+  
+  .winner-name {
+    font-size: 12px;
+  }
+  
+  .reward-item {
+    font-size: 14px;
+  }
+  
+  .reward-value {
+    font-size: 15px;
+  }
+  
+  .rewards-content .accept-button {
+    padding: 12px;
+    font-size: 15px;
   }
 }
 
