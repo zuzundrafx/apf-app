@@ -820,7 +820,7 @@ function App() {
       <div className="app">
         <div className="loading-screen">
           <div className="loading-spinner"></div>
-          <div className="loading-text">⏳ Загрузка...</div>
+          <div className="loading-text">⏳ Loading...</div>
         </div>
       </div>
     );
@@ -884,7 +884,7 @@ function App() {
                 
                 <div className="tournament-content">
                   {loadingUserResults ? (
-                    <div className="tournament-message">Загрузка...</div>
+                    <div className="tournament-message">Loading...</div>
                   ) : hasPastBet ? (
                     <>
                       <div className="selected-fighters-grid">
@@ -963,7 +963,7 @@ function App() {
                 
                 <div className="tournament-content">
                   {loadingUserResults ? (
-                    <div className="tournament-message">Собираем информацию...</div>
+                    <div className="tournament-message">Checking information...</div>
                   ) : hasUpcomingBet ? (
                     <>
                       <div className="selected-fighters-grid">
@@ -1049,7 +1049,7 @@ function App() {
               )}
             </div>
             {leaderboardLoading ? (
-              <div className="leaderboard-loading">Загрузка рейтинга...</div>
+              <div className="leaderboard-loading">Loading the rating...</div>
             ) : leaderboardData.length > 0 ? (
               <div className="leaderboard-list">
                 {leaderboardData.map((entry) => (
