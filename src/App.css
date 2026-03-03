@@ -702,6 +702,13 @@ body {
   background: #1C1D1F;
 }
 
+.loading-logo {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 20px;
+  object-fit: contain;
+}
+
 .loading-spinner {
   width: 40px;
   height: 40px;
@@ -719,6 +726,35 @@ body {
 .loading-text {
   color: #FFFFFF;
   font-size: 14px;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 375px) {
+  .loading-logo {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .loading-spinner {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .loading-text {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 320px) {
+  .loading-logo {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .loading-spinner {
+    width: 30px;
+    height: 30px;
+  }
 }
 
 /* Экран ошибки */

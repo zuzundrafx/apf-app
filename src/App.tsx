@@ -819,8 +819,9 @@ function App() {
     return (
       <div className="app">
         <div className="loading-screen">
+          <img src={`${BASE_URL}/Logo.webp`} alt="AFTER PARTY FIGHTS" className="loading-logo" />
           <div className="loading-spinner"></div>
-          <div className="loading-text">⏳ Loading...</div>
+          <div className="loading-text">LOADING...</div>
         </div>
       </div>
     );
