@@ -10,6 +10,11 @@ export interface UserResult {
   totalDamage: number;
   timestamp: string;
   selections: SelectedFighter[];
+  rewardsAccepted?: boolean;  // true если награды получены
+  rewards?: {                 // Сохраняем, сколько было начислено
+    coins: number;
+    experience: number;
+  };
 }
 
 export interface LeaderboardEntry {
@@ -231,7 +236,6 @@ export async function loadExistingResults(
         } else if (wlValue === 'lose') {
           wl = 'lose';
         }
-        // Если значение пустое, оставляем null
         
         selections.push({
           weightClass: String(item[`Вес ${i}`] || ''),
@@ -262,7 +266,12 @@ export async function loadExistingResults(
         username: String(item['Username'] || 'Anonymous'),
         totalDamage: Number(item['Total Damage']) || 0,
         timestamp: String(item['Timestamp'] || ''),
-        selections: selections
+        selections: selections,
+        rewardsAccepted: item['Rewards Accepted'] === 'true' || item['Rewards Accepted'] === true,
+        rewards: item['Reward Coins'] ? {
+          coins: Number(item['Reward Coins']) || 0,
+          experience: Number(item['Reward Exp']) || 0
+        } : undefined
       };
     });
     
@@ -322,6 +331,9 @@ export async function saveUserResults(
         'Username': result.username,
         'Total Damage': Math.round(result.totalDamage),
         'Timestamp': result.timestamp,
+        'Rewards Accepted': result.rewardsAccepted ? 'true' : '',
+        'Reward Coins': result.rewards?.coins || '',
+        'Reward Exp': result.rewards?.experience || ''
       };
       
       result.selections.forEach((sel, i) => {
@@ -329,11 +341,7 @@ export async function saveUserResults(
         row[`Боец ${num}`] = sel.fighter.Fighter;
         row[`Вес ${num}`] = sel.weightClass;
         row[`Урон ${num}`] = Math.round(sel.fighter['Total Damage']);
-        
-        // Для будущих турниров W/L должно быть пустым
-        // Для прошедших - 'win' или 'lose'
         row[`W/L ${num}`] = sel.fighter['W/L'] || '';
-        
         row[`Method ${num}`] = sel.fighter['Method'] || '';
         row[`Round ${num}`] = sel.fighter['Round'] || 0;
         row[`Time ${num}`] = sel.fighter['Time'] || '';
