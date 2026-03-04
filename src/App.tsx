@@ -57,25 +57,22 @@ declare global {
   }
 }
 
-// Пороговые значения для уровней (10 уровней) - сколько опыта нужно для перехода на следующий уровень
-const LEVEL_THRESHOLDS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 0]; // 0 для 10 уровня (максимальный)
+// Пороговые значения для уровней (10 уровней)
+const LEVEL_THRESHOLDS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 0];
 
 const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 const YA_TOKEN = import.meta.env.VITE_YA_TOKEN;
 
-// Функция для округления урона до целого числа
-const roundDamage = (damage: number): number => {
-  return Math.round(damage);
-};
+// Функция для округления урона
+const roundDamage = (damage: number): number => Math.round(damage);
 
-// Функция для расчета уровня по общему опыту
+// Функция для расчета уровня
 const calculateLevel = (totalExp: number): { level: number; currentExp: number; nextLevelExp: number } => {
   let remainingExp = totalExp;
   let level = 1;
   
   for (let i = 0; i < LEVEL_THRESHOLDS.length - 1; i++) {
     const expNeeded = LEVEL_THRESHOLDS[i];
-    
     if (remainingExp >= expNeeded) {
       remainingExp -= expNeeded;
       level = i + 2;
@@ -85,12 +82,7 @@ const calculateLevel = (totalExp: number): { level: number; currentExp: number; 
   }
   
   const nextLevelExp = level < 10 ? LEVEL_THRESHOLDS[level - 1] : 0;
-  
-  return { 
-    level, 
-    currentExp: remainingExp,
-    nextLevelExp 
-  };
+  return { level, currentExp: remainingExp, nextLevelExp };
 };
 
 function getAvatarFilename(weightClass: string): string {
@@ -108,7 +100,6 @@ function getAvatarFilename(weightClass: string): string {
     "Women's Bantamweight": "Women's_Bantamweight_avatar.png",
     "Catch Weight": 'default-avatar.png'
   };
-  
   return map[weightClass] || 'default-avatar.png';
 }
 
@@ -130,8 +121,21 @@ function getWeightClassColor(weightClass: string): string {
   return colors[weightClass] || '#666666';
 }
 
+// Компонент скелетона для загрузки
+const TournamentSkeleton = () => (
+  <section className="tournament-section skeleton">
+    <div className="tournament-header skeleton-header">
+      <div className="skeleton-title"></div>
+      <div className="skeleton-meta"></div>
+    </div>
+    <div className="tournament-content">
+      <div className="skeleton-message"></div>
+    </div>
+  </section>
+);
+
 function App() {
-  const { pastTournament, upcomingTournament, loading, error } = useTournaments();
+  const { pastTournament, upcomingTournament, loading, loadingProgress, loadingStage, error } = useTournaments();
   
   const [selectedFighters, setSelectedFighters] = useState<Map<string, Fighter>>(new Map());
   const [currentView, setCurrentView] = useState<'main' | 'leaderboard' | 'selection'>('main');
@@ -157,6 +161,10 @@ function App() {
     totalExp: number;
   } | null>(null);
 
+  // Состояние для данных окна выбора
+  const [selectionData, setSelectionData] = useState<Fighter[] | null>(null);
+  const [loadingSelection, setLoadingSelection] = useState(false);
+
   const [userData, setUserData] = useState({
     username: 'Player',
     level: 1,
@@ -172,14 +180,6 @@ function App() {
     hasBet: false
   });
 
-  console.log('🏁 Начальное состояние userData:', {
-    coins: 100,
-    username: 'Player',
-    level: 1,
-    currentExp: 0,
-    totalExp: 0
-  });
-
   const hasUpcomingBet = userData.mySelections.upcoming.length > 0;
   const hasPastBet = userData.mySelections.past.length > 0;
 
@@ -192,12 +192,10 @@ function App() {
   const acceptRewards = async () => {
     if (!pendingRewards || !telegramUser || !pastTournament) return;
     
-    // 1. Начисляем монеты и опыт
     const newCoins = userData.coins + pendingRewards.totalCoins;
     const newTotalExp = userData.totalExp + pendingRewards.totalExp;
     const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
     
-    // 2. Обновляем профиль пользователя
     await saveUserProfile({
       userId: telegramUser.id,
       username: userData.username,
@@ -207,7 +205,6 @@ function App() {
       lastUpdated: new Date().toISOString()
     });
     
-    // 3. Обновляем запись в результатах турнира
     const currentResult = await loadUserResults(pastTournament.name, telegramUser.id);
     if (currentResult) {
       const updatedResult: UserResult = {
@@ -221,11 +218,9 @@ function App() {
       await saveUserResults(pastTournament.name, updatedResult);
     }
     
-    // 4. Загружаем обновленные результаты для отображения
     const updatedPastSelections = await loadUserResults(pastTournament.name, telegramUser.id)
       .then(r => r?.selections || []);
     
-    // 5. Обновляем UI
     setUserData(prev => ({
       ...prev,
       coins: newCoins,
@@ -239,12 +234,83 @@ function App() {
       }
     }));
     
-    // 6. Закрываем окно
     setShowRewardsModal(false);
     setPendingRewards(null);
   };
 
-  // Инициализация Telegram WebApp и загрузка профиля
+  // Функция загрузки данных для окна выбора
+  const loadSelectionData = async (tournament: Tournament) => {
+    if (!tournament) return;
+    
+    setLoadingSelection(true);
+    
+    if (tournament.data) {
+      setSelectionData(tournament.data);
+      setLoadingSelection(false);
+      return;
+    }
+    
+    const prefix = tournament.status === 'upcoming' ? 'UPCOMING_' : '';
+    const cleanName = tournament.name.replace(/[^a-zA-Z0-9]/g, '_').replace(/\s+/g, '_');
+    const filename = `${prefix}${cleanName}.xlsx`;
+    
+    try {
+      const downloadUrl = `https://cloud-api.yandex.net/v1/disk/resources/download?path=app:/${filename}`;
+      const response = await fetch(downloadUrl, {
+        headers: { 'Authorization': `OAuth ${YA_TOKEN}` }
+      });
+      
+      if (!response.ok) {
+        setSelectionData(null);
+        setLoadingSelection(false);
+        return;
+      }
+      
+      const { href } = await response.json();
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(href)}&t=${Date.now()}`;
+      const fileResponse = await fetch(proxyUrl);
+      
+      if (!fileResponse.ok) {
+        setSelectionData(null);
+        setLoadingSelection(false);
+        return;
+      }
+      
+      const arrayBuffer = await fileResponse.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet) as any[];
+      
+      const fighters: Fighter[] = data.map((item: any) => ({
+        Fight_ID: item['Fight_ID'] || 0,
+        Fighter: item['Fighter'] || '',
+        'W/L': item['W/L'] || null,
+        'Kd': item['Kd'] || 0,
+        'Str': item['Str'] || 0,
+        'Td': item['Td'] || 0,
+        'Sub': item['Sub'] || 0,
+        'Head': item['Head'] || 0,
+        'Body': item['Body'] || 0,
+        'Leg': item['Leg'] || 0,
+        'Weight class': item['Weight class'] || '',
+        'Weight Coefficient': item['Weight Coefficient'] || 1,
+        'Method': item['Method'] || '',
+        'Round': item['Round'] || 0,
+        'Time': item['Time'] || '',
+        'Total Damage': item['Total Damage'] || 0
+      }));
+      
+      setSelectionData(fighters);
+      tournament.data = fighters; // Кэшируем
+    } catch (error) {
+      console.error('Ошибка загрузки данных для выбора:', error);
+      setSelectionData(null);
+    } finally {
+      setLoadingSelection(false);
+    }
+  };
+
+  // Инициализация Telegram WebApp
   useEffect(() => {
     let isMounted = true;
     
@@ -271,8 +337,6 @@ function App() {
             const totalExp = profile.experience || 0;
             const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
             
-            console.log('✅ Профиль загружен:', profile);
-            
             setUserData(prev => ({
               ...prev,
               username: profile.username,
@@ -285,7 +349,6 @@ function App() {
             }));
             
           } else if (isMounted) {
-            console.log('🆕 Создаем новый профиль');
             const newProfile = {
               userId: userId,
               username: username,
@@ -298,7 +361,6 @@ function App() {
             const saved = await saveUserProfile(newProfile);
             
             if (saved) {
-              console.log('✅ Новый профиль создан с монетами: 100');
               setUserData(prev => ({
                 ...prev,
                 username: username,
@@ -313,14 +375,6 @@ function App() {
             setLoadingProfile(false);
           }
         }
-        
-        window.addEventListener('beforeunload', () => {
-          console.log('🔄 Приложение закрывается');
-        });
-        
-        return () => {
-          window.removeEventListener('beforeunload', () => {});
-        };
       } else {
         console.log('⚠️ Telegram WebApp не обнаружен, работаем в тестовом режиме');
         
@@ -346,9 +400,6 @@ function App() {
               coins: profile.coins,
               myUserId: 'user_123'
             }));
-            
-          } else if (isMounted) {
-            console.log('🆕 Создаем новый тестовый профиль');
           }
           
           setProfileLoaded(true);
@@ -359,206 +410,10 @@ function App() {
     
     initTelegram();
     
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
-  // Следим за изменениями userData
-  useEffect(() => {
-    console.log('📊 userData обновился:', {
-      coins: userData.coins,
-      level: userData.level,
-      currentExp: userData.currentExp,
-      totalExp: userData.totalExp
-    });
-  }, [userData]);
-
-  // Функция для скачивания файла с Яндекс.Диска
-  const downloadTournamentFile = async (filename: string): Promise<Fighter[] | null> => {
-    try {
-      const downloadUrl = `https://cloud-api.yandex.net/v1/disk/resources/download?path=app:/${filename}`;
-      const response = await fetch(downloadUrl, {
-        headers: {
-          'Authorization': `OAuth ${YA_TOKEN}`
-        }
-      });
-      
-      if (!response.ok) {
-        return null;
-      }
-      
-      const { href } = await response.json();
-      const proxyUrl = `/api/proxy?url=${encodeURIComponent(href)}&t=${Date.now()}`;
-      const fileResponse = await fetch(proxyUrl);
-      
-      if (!fileResponse.ok) {
-        throw new Error(`Ошибка скачивания через прокси: ${fileResponse.status}`);
-      }
-      
-      const arrayBuffer = await fileResponse.arrayBuffer();
-      
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const data = XLSX.utils.sheet_to_json(sheet) as any[];
-      
-      const fighters: Fighter[] = data.map((item: any) => ({
-        Fight_ID: item['Fight_ID'] || 0,
-        Fighter: item['Fighter'] || '',
-        'W/L': item['W/L'] || null,
-        'Kd': item['Kd'] || 0,
-        'Str': item['Str'] || 0,
-        'Td': item['Td'] || 0,
-        'Sub': item['Sub'] || 0,
-        'Head': item['Head'] || 0,
-        'Body': item['Body'] || 0,
-        'Leg': item['Leg'] || 0,
-        'Weight class': item['Weight class'] || '',
-        'Weight Coefficient': item['Weight Coefficient'] || 1,
-        'Method': item['Method'] || '',
-        'Round': item['Round'] || 0,
-        'Time': item['Time'] || '',
-        'Total Damage': item['Total Damage'] || 0
-      }));
-      
-      return fighters;
-    } catch (error) {
-      console.error('Ошибка скачивания файла:', error);
-      return null;
-    }
-  };
-
-  const isBetsAvailable = (): boolean => {
-    if (!upcomingTournament) return false;
-    
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const tournamentDateStr = upcomingTournament.date;
-    
-    const months: { [key: string]: string } = {
-      'January': '01', 'February': '02', 'March': '03', 'April': '04',
-      'May': '05', 'June': '06', 'July': '07', 'August': '08',
-      'September': '09', 'October': '10', 'November': '11', 'December': '12'
-    };
-    
-    const parts = tournamentDateStr.split(' ');
-    if (parts.length >= 3) {
-      const month = parts[0];
-      const day = parts[1].replace(',', '');
-      const year = parts[2];
-      
-      if (months[month]) {
-        const formattedDay = day.padStart(2, '0');
-        const tournamentStr = `${year}-${months[month]}-${formattedDay}`;
-        
-        return todayStr < tournamentStr;
-      }
-    }
-    
-    return false;
-  };
-
-  const hasTournamentStarted = (): boolean => {
-    if (!upcomingTournament?.data) return false;
-    
-    return upcomingTournament.data.some(fighter => {
-      return fighter['W/L'] === 'win' || fighter['W/L'] === 'lose';
-    });
-  };
-
-  const loadTournamentData = async (tournamentName: string, isUpcoming: boolean = true): Promise<Fighter[] | null> => {
-    const cleanName = tournamentName
-      .replace(/[^a-zA-Z0-9]/g, '_')
-      .replace(/\s+/g, '_');
-    
-    const prefix = isUpcoming ? 'UPCOMING_' : '';
-    const filename = `${prefix}${cleanName}.xlsx`;
-    
-    console.log(`📥 Пробую загрузить файл: ${filename}`);
-    const data = await downloadTournamentFile(filename);
-    
-    if (data) {
-      console.log(`✅ Загружен файл: ${filename}`);
-      return data;
-    }
-    
-    return null;
-  };
-
-  const loadFreshTournamentData = async () => {
-    if (!upcomingTournament) return;
-    
-    setIsCheckingUpdates(true);
-    console.log('📥 Загружаю свежие данные для турнира:', upcomingTournament.name);
-    
-    try {
-      const data = await loadTournamentData(upcomingTournament.name, true);
-      
-      if (data) {
-        const fightersWithResults = data.filter(f => {
-          return f['W/L'] === 'win' || f['W/L'] === 'lose';
-        }).length;
-        
-        console.log(`📊 Статистика результатов: ${fightersWithResults}/${data.length} бойцов с результатами`);
-        
-        upcomingTournament.data = data;
-        
-        if (userData.mySelections.upcoming.length > 0) {
-          const fightersMap = new Map();
-          data.forEach(fighter => {
-            fightersMap.set(fighter.Fighter, fighter);
-          });
-          
-          const updatedSelections = userData.mySelections.upcoming.map(sel => {
-            const updatedFighter = fightersMap.get(sel.fighter.Fighter);
-            if (updatedFighter) {
-              return {
-                ...sel,
-                fighter: updatedFighter
-              };
-            }
-            return sel;
-          });
-          
-          setUserData(prev => ({
-            ...prev,
-            mySelections: {
-              ...prev.mySelections,
-              upcoming: updatedSelections
-            }
-          }));
-        }
-      }
-    } catch (error) {
-      console.error('Ошибка при загрузке данных:', error);
-    } finally {
-      setIsCheckingUpdates(false);
-    }
-  };
-
-  useEffect(() => {
-    if (upcomingTournament) {
-      loadFreshTournamentData();
-    }
-  }, [upcomingTournament?.name]);
-
-  useEffect(() => {
-    if (!upcomingTournament) return;
-    
-    const interval = setInterval(() => {
-      loadFreshTournamentData();
-    }, 5 * 60 * 1000);
-    
-    return () => clearInterval(interval);
-  }, [upcomingTournament?.name]);
-
-  useEffect(() => {
-    if (currentView === 'main' && upcomingTournament) {
-      loadFreshTournamentData();
-    }
-  }, [currentView]);
-
-  // Загружаем результаты пользователя для обоих турниров
+  // Загружаем результаты пользователя
   useEffect(() => {
     let isMounted = true;
     
@@ -567,94 +422,61 @@ function App() {
       
       setLoadingUserResults(true);
       
-      // Загружаем для будущего турнира
-      if (upcomingTournament && isMounted) {
-        console.log('📥 Загружаем результаты для будущего турнира:', upcomingTournament.name);
-        const upcomingResult = await loadUserResults(upcomingTournament.name, telegramUser.id);
+      // Параллельная загрузка результатов
+      const [upcomingResult, pastResult] = await Promise.all([
+        upcomingTournament ? loadUserResults(upcomingTournament.name, telegramUser.id) : null,
+        pastTournament ? loadUserResults(pastTournament.name, telegramUser.id) : null
+      ]);
+      
+      if (upcomingResult && upcomingResult.selections.length > 0 && isMounted) {
+        setUserData(prev => ({
+          ...prev,
+          mySelections: { ...prev.mySelections, upcoming: upcomingResult.selections },
+          hasBet: true
+        }));
         
-        if (upcomingResult && upcomingResult.selections.length > 0 && isMounted) {
-          console.log('✅ Найдены мои выборы для будущего турнира');
+        const selectionsMap = new Map<string, Fighter>();
+        upcomingResult.selections.forEach((sel: SelectedFighter) => {
+          selectionsMap.set(sel.weightClass, sel.fighter);
+        });
+        setSelectedFighters(selectionsMap);
+      }
+      
+      if (pastResult && pastResult.selections.length > 0 && isMounted) {
+        if (!pastResult.rewardsAccepted) {
+          const winners = pastResult.selections.filter(sel => sel.fighter['W/L'] === 'win');
+          const totalCoins = winners.length * 50;
+          const totalExp = winners.length * 5;
+          
+          setPendingRewards({
+            tournamentName: pastTournament!.name,
+            winners,
+            totalCoins,
+            totalExp
+          });
+          setShowRewardsModal(true);
           
           setUserData(prev => ({
             ...prev,
-            mySelections: {
-              ...prev.mySelections,
-              upcoming: upcomingResult.selections
-            },
-            hasBet: true
+            mySelections: { ...prev.mySelections, past: [] }
           }));
-          
-          const selectionsMap = new Map<string, Fighter>();
-          upcomingResult.selections.forEach((sel: SelectedFighter) => {
-            selectionsMap.set(sel.weightClass, sel.fighter);
-          });
-          setSelectedFighters(selectionsMap);
+        } else {
+          setUserData(prev => ({
+            ...prev,
+            mySelections: { ...prev.mySelections, past: pastResult.selections }
+          }));
         }
       }
       
-      // Загружаем для прошедшего турнира
-      if (pastTournament && isMounted) {
-        console.log('📥 Загружаем результаты для прошедшего турнира:', pastTournament.name);
-        const pastResult = await loadUserResults(pastTournament.name, telegramUser.id);
-        
-        if (pastResult && pastResult.selections.length > 0 && isMounted) {
-          
-          // Проверяем, были ли уже приняты награды
-          if (!pastResult.rewardsAccepted) {
-            
-            // Подсчитываем награды
-            const winners = pastResult.selections.filter(sel => 
-              sel.fighter['W/L'] === 'win'
-            );
-            
-            const totalCoins = winners.length * 50;
-            const totalExp = winners.length * 5;
-            
-            // Показываем окно с наградами
-            setPendingRewards({
-              tournamentName: pastTournament.name,
-              winners: winners,
-              totalCoins,
-              totalExp
-            });
-            setShowRewardsModal(true);
-            
-            // Не показываем карточки бойцов, пока не приняты награды
-            setUserData(prev => ({
-              ...prev,
-              mySelections: {
-                ...prev.mySelections,
-                past: []
-              }
-            }));
-            
-          } else {
-            // Награды уже приняты - показываем карточки
-            console.log('✅ Найдены мои выборы для прошедшего турнира (награды получены)');
-            setUserData(prev => ({
-              ...prev,
-              mySelections: {
-                ...prev.mySelections,
-                past: pastResult.selections
-              }
-            }));
-          }
-        }
-      }
-      
-      if (isMounted) {
-        setLoadingUserResults(false);
-      }
+      if (isMounted) setLoadingUserResults(false);
     };
     
     loadUserData();
     
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [upcomingTournament, pastTournament, telegramUser, profileLoaded]);
 
-  // Загружаем рейтинг при переходе на экран
+  // Загружаем рейтинг
   useEffect(() => {
     if (currentView === 'leaderboard' && pastTournament) {
       setLeaderboardLoading(true);
@@ -676,14 +498,9 @@ function App() {
     if (userData.coins >= 100) {
       const newCoins = userData.coins - 100;
       
-      console.log('💰 Списание монет: было', userData.coins, 'станет', newCoins);
+      setUserData(prev => ({ ...prev, coins: newCoins }));
       
-      setUserData(prev => ({
-        ...prev,
-        coins: newCoins
-      }));
-      
-      const saved = await saveUserProfile({
+      await saveUserProfile({
         userId: telegramUser.id,
         username: userData.username,
         level: userData.level,
@@ -691,10 +508,6 @@ function App() {
         coins: newCoins,
         lastUpdated: new Date().toISOString()
       });
-      
-      if (saved) {
-        console.log(`💰 Монеты списаны: 100, осталось: ${newCoins}`);
-      }
       
       return true;
     }
@@ -706,14 +519,9 @@ function App() {
     
     const newCoins = userData.coins + 100;
     
-    console.log('💰 Возврат монет: было', userData.coins, 'станет', newCoins);
+    setUserData(prev => ({ ...prev, coins: newCoins }));
     
-    setUserData(prev => ({
-      ...prev,
-      coins: newCoins
-    }));
-    
-    const saved = await saveUserProfile({
+    await saveUserProfile({
       userId: telegramUser.id,
       username: userData.username,
       level: userData.level,
@@ -721,10 +529,6 @@ function App() {
       coins: newCoins,
       lastUpdated: new Date().toISOString()
     });
-    
-    if (saved) {
-      console.log(`💰 Монеты возвращены: 100, теперь: ${newCoins}`);
-    }
   };
 
   const saveSelections = async (selections: Map<string, Fighter>) => {
@@ -735,12 +539,10 @@ function App() {
       fighter
     }));
     
-    const totalDamage = 0;
-    
     const userResult: UserResult = {
       userId: telegramUser.id,
       username: telegramUser.username,
-      totalDamage,
+      totalDamage: 0,
       timestamp: new Date().toISOString(),
       selections: selectionsArray
     };
@@ -750,13 +552,9 @@ function App() {
       if (saved) {
         setUserData(prev => ({
           ...prev,
-          mySelections: {
-            ...prev.mySelections,
-            upcoming: selectionsArray
-          },
+          mySelections: { ...prev.mySelections, upcoming: selectionsArray },
           hasBet: true
         }));
-        console.log('✅ Результаты сохранены');
       }
     }
   };
@@ -776,9 +574,7 @@ function App() {
   const getFighterPairs = (fighters: Fighter[]): Fighter[][] => {
     const pairs: Fighter[][] = [];
     for (let i = 0; i < fighters.length; i += 2) {
-      if (i + 1 < fighters.length) {
-        pairs.push([fighters[i], fighters[i + 1]]);
-      }
+      if (i + 1 < fighters.length) pairs.push([fighters[i], fighters[i + 1]]);
     }
     return pairs;
   };
@@ -815,14 +611,17 @@ function App() {
     }
   };
 
+  // Загрузочный экран с прогрессом
   if (loading || loadingProfile) {
     return (
       <div className="app">
         <div className="loading-screen">
           <img src={`${BASE_URL}/Logo.webp`} alt="AFTER PARTY FIGHTS" className="loading-logo" />
-          <div className="total-damage-button">AFTER PARTY FIGHTS</div>
-          <div className="loading-text">LOADING...</div>
-          <div className="loading-spinner"></div>
+          <div className="loading-progress-bar">
+            <div className="loading-progress-fill" style={{ width: `${loadingProgress}%` }}></div>
+          </div>
+          <div className="loading-stage">{loadingStage}</div>
+          <div className="loading-text">{loadingProgress}%</div>
         </div>
       </div>
     );
@@ -835,7 +634,7 @@ function App() {
           <div className="error-icon">❌</div>
           <div className="error-text">{error}</div>
           <button className="retry-button" onClick={() => window.location.reload()}>
-            Попробовать снова
+            TRY AGAIN
           </button>
         </div>
       </div>
@@ -857,14 +656,10 @@ function App() {
           <div className="level-bar">
             <div 
               className="level-progress" 
-              style={{ 
-                width: `${userData.nextLevelExp > 0 ? Math.min(100, (userData.currentExp / userData.nextLevelExp) * 100) : 100}%` 
-              }}
+              style={{ width: `${(userData.currentExp / userData.nextLevelExp) * 100}%` }}
             ></div>
             <span className="level-text">
-              {userData.nextLevelExp > 0 
-                ? `${userData.currentExp}/${userData.nextLevelExp} (Level ${userData.level})`
-                : `Level ${userData.level} (MAX)`}
+              Lvl {userData.level} • {userData.currentExp}/{userData.nextLevelExp}
             </span>
           </div>
           <div className="profile-coins">🪙 {userData.coins}</div>
@@ -874,13 +669,13 @@ function App() {
       <main className="main-content">
         {currentView === 'main' && (
           <div className="tournaments-container">
-            {pastTournament && (
+            {pastTournament ? (
               <section className="tournament-section past">
                 <div className="tournament-header">
                   <h2>{pastTournament.name}</h2>
                   <div className="tournament-meta">
-                    <span className="tournament-date">{formatDate(pastTournament.date)}</span>
-                    <span className="tournament-status active">Active</span>
+                    <span>{formatDate(pastTournament.date)}</span>
+                    <span className="tournament-status active">ACTIVE</span>
                   </div>
                 </div>
                 
@@ -890,173 +685,118 @@ function App() {
                   ) : hasPastBet ? (
                     <>
                       <div className="selected-fighters-grid">
-                        {userData.mySelections.past.map((selection, index) => {
-                          const weightClass = selection.fighter['Weight class'];
-                          const isWinner = selection.fighter['W/L'] === 'win';
-                          
+                        {userData.mySelections.past.map((sel, idx) => {
+                          const isWinner = sel.fighter['W/L'] === 'win';
                           return (
-                            <div 
-                              key={index} 
-                              className="selected-fighter-card"
-                              style={{ 
-                                backgroundColor: getWeightClassColor(weightClass),
-                                border: isWinner ? '2px solid #FFD700' : 'none'
-                              }}
-                            >
+                            <div key={idx} className="selected-fighter-card" 
+                                 style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
                               <div className="selected-fighter-damage-box">
-                                {selection.fighter['Total Damage'] !== undefined 
-                                  ? roundDamage(selection.fighter['Total Damage']) 
-                                  : '?'}
+                                {roundDamage(sel.fighter['Total Damage'])}
                               </div>
                               <div className="selected-fighter-avatar-square">
-                                <img 
-                                  src={`${BASE_URL}/avatars/${getAvatarFilename(weightClass)}`}
-                                  alt={selection.fighter.Fighter}
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                    const parent = (e.target as HTMLImageElement).parentElement;
-                                    if (parent) {
-                                      parent.innerHTML = weightClass.includes("Women") ? "👩" : "👤";
-                                      parent.style.fontSize = '24px';
-                                    }
-                                  }}
-                                />
+                                <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`} 
+                                     alt={sel.fighter.Fighter}
+                                     onError={(e) => {
+                                       (e.target as HTMLImageElement).style.display = 'none';
+                                       const parent = (e.target as HTMLImageElement).parentElement;
+                                       if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
+                                     }} />
                               </div>
-                              <span className="selected-fighter-name">{selection.fighter.Fighter}</span>
-                              {isWinner && (
-                                <span style={{ 
-                                  position: 'absolute', 
-                                  top: 2, 
-                                  right: 2, 
-                                  fontSize: '10px',
-                                  color: '#FFD700'
-                                }}>👑</span>
-                              )}
+                              <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
+                              {isWinner && <span className="winner-crown">👑</span>}
                             </div>
                           );
                         })}
                       </div>
-                      
                       <div className="total-damage-button">
-                        <span>Total Damage: {calculateTotalDamage(userData.mySelections.past)}</span>
+                        TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.past)}
                       </div>
                     </>
                   ) : (
-                    <div className="tournament-message">Bets are no longer accepted</div>
+                    <div className="tournament-message">BETS ARE CLOSED</div>
                   )}
                 </div>
               </section>
+            ) : (
+              <TournamentSkeleton />
             )}
 
-            {upcomingTournament && (
+            {upcomingTournament ? (
               <section className="tournament-section upcoming">
                 <div className="tournament-header">
-                  <div className="tournament-title-row">
-                    <h2>{upcomingTournament.name}</h2>
-                    {isCheckingUpdates && (
-                      <span className="updating-indicator">🔄</span>
-                    )}
-                  </div>
+                  <h2>{upcomingTournament.name}</h2>
                   <div className="tournament-meta">
-                    <span className="tournament-date">{formatDate(upcomingTournament.date)}</span>
-                    <span className="tournament-status upcoming">Upcoming</span>
+                    <span>{formatDate(upcomingTournament.date)}</span>
+                    <span className="tournament-status upcoming">UPCOMING</span>
                   </div>
                 </div>
                 
                 <div className="tournament-content">
                   {loadingUserResults ? (
-                    <div className="tournament-message">Checking information...</div>
+                    <div className="tournament-message">Loading...</div>
                   ) : hasUpcomingBet ? (
                     <>
                       <div className="selected-fighters-grid">
-                        {userData.mySelections.upcoming.map((selection, index) => {
-                          const weightClass = selection.fighter['Weight class'];
-                          const hasResult = selection.fighter['W/L'] !== null;
-                          
+                        {userData.mySelections.upcoming.map((sel, idx) => {
+                          const hasResult = sel.fighter['W/L'] !== null;
                           return (
-                            <div 
-                              key={index} 
-                              className="selected-fighter-card"
-                              style={{ backgroundColor: getWeightClassColor(weightClass) }}
-                            >
+                            <div key={idx} className="selected-fighter-card"
+                                 style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
                               <div className="selected-fighter-damage-box">
-                                {hasResult 
-                                  ? roundDamage(selection.fighter['Total Damage']) 
-                                  : '?'}
+                                {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
                               </div>
                               <div className="selected-fighter-avatar-square">
-                                <img 
-                                  src={`${BASE_URL}/avatars/${getAvatarFilename(weightClass)}`}
-                                  alt={selection.fighter.Fighter}
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                    const parent = (e.target as HTMLImageElement).parentElement;
-                                    if (parent) {
-                                      parent.innerHTML = weightClass.includes("Women") ? "👩" : "👤";
-                                      parent.style.fontSize = '24px';
-                                    }
-                                  }}
-                                />
+                                <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`}
+                                     alt={sel.fighter.Fighter}
+                                     onError={(e) => {
+                                       (e.target as HTMLImageElement).style.display = 'none';
+                                       const parent = (e.target as HTMLImageElement).parentElement;
+                                       if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
+                                     }} />
                               </div>
-                              <span className="selected-fighter-name">{selection.fighter.Fighter}</span>
+                              <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
                             </div>
                           );
                         })}
                       </div>
-                      
                       <div className="total-damage-button">
-                        <span>Total Damage: {calculateTotalDamage(userData.mySelections.upcoming)}</span>
+                        TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.upcoming)}
                       </div>
                     </>
                   ) : (
-                    upcomingTournament.data ? (
-                      userData.coins >= 100 && isBetsAvailable() && !hasTournamentStarted() ? (
-                        <button 
-                          className="select-button"
-                          onClick={async () => {
-                            if (await deductCoinsForBet()) {
-                              setSelectedTournament(upcomingTournament);
-                              setCurrentView('selection');
-                              setSelectedFighters(new Map());
-                            }
-                          }}
-                        >
-                          Select your Fight card
-                        </button>
-                      ) : (
-                        <div className="tournament-message">
-                          {!isBetsAvailable() 
-                            ? 'Bets are closed by date' 
-                            : hasTournamentStarted()
-                              ? 'Tournament has started - bets are closed'
-                              : 'Not enough coins to place bets'}
-                        </div>
-                      )
+                    userData.coins >= 100 && new Date(upcomingTournament.date) > new Date() ? (
+                      <button className="select-button" onClick={() => {
+                        setSelectedTournament(upcomingTournament);
+                        setCurrentView('selection');
+                        loadSelectionData(upcomingTournament);
+                        setSelectedFighters(new Map());
+                      }}>
+                        SELECT YOUR FIGHT CARD
+                      </button>
                     ) : (
-                      <div className="tournament-message">Loading tournament data...</div>
+                      <div className="tournament-message">
+                        {userData.coins < 100 ? 'NOT ENOUGH COINS' : 'BETS ARE CLOSED'}
+                      </div>
                     )
                   )}
                 </div>
               </section>
+            ) : (
+              <TournamentSkeleton />
             )}
           </div>
         )}
 
         {currentView === 'leaderboard' && (
           <div className="leaderboard-screen">
-            <div className="leaderboard-header">
-              <h2>{pastTournament?.name || 'Рейтинг'}</h2>
-              {isCheckingUpdates && (
-                <span className="updating-indicator" style={{ marginLeft: '8px' }}>🔄</span>
-              )}
-            </div>
+            <h2 className="leaderboard-header">{pastTournament?.name || 'LEADERBOARD'}</h2>
             {leaderboardLoading ? (
-              <div className="leaderboard-loading">Loading the rating...</div>
+              <div className="leaderboard-loading">LOADING...</div>
             ) : leaderboardData.length > 0 ? (
               <div className="leaderboard-list">
-                {leaderboardData.map((entry) => (
+                {leaderboardData.map(entry => (
                   <div key={entry.userId} className="leaderboard-item">
-                    <span className="leaderboard-rank">{entry.rank}</span>
+                    <span className="leaderboard-rank">#{entry.rank}</span>
                     <div className="leaderboard-user-info">
                       <div className="leaderboard-avatar">
                         {entry.userId === telegramUser?.id && telegramUser?.photoUrl ? (
@@ -1072,97 +812,84 @@ function App() {
                 ))}
               </div>
             ) : (
-              <div className="leaderboard-empty">Пока нет результатов</div>
+              <div className="leaderboard-empty">NO RESULTS YET</div>
             )}
           </div>
         )}
 
-        {currentView === 'selection' && selectedTournament && selectedTournament.data && (
+        {currentView === 'selection' && selectedTournament && (
           <div className="selection-modal">
             <div className="selection-content">
               <div className="selection-header">
                 <h2>{selectedTournament.name}</h2>
-                <button 
-                  className="close-button" 
-                  onClick={async () => {
-                    await refundCoins();
-                    setCurrentView('main');
-                  }}
-                >
-                  CLOSE
-                </button>
+                <button className="close-button" onClick={async () => {
+                  await refundCoins();
+                  setCurrentView('main');
+                }}>CLOSE</button>
               </div>
               
               <div className="selection-progress">
-                Выбрано: {selectedFighters.size} / 5
+                SELECTED: {selectedFighters.size} / 5
               </div>
 
-              <div className="fighters-scroll">
-                {selectedTournament.data && Object.entries(groupFightersByWeight(selectedTournament.data)).map(([weightClass, fighters]) => {
-                  const typedFighters = fighters as Fighter[];
-                  const pairs = getFighterPairs(typedFighters);
-                  const isWeightSelected = selectedFighters.has(weightClass);
-                  const selectedFighter = selectedFighters.get(weightClass);
+              {loadingSelection ? (
+                <div className="selection-loading">LOADING FIGHTERS...</div>
+              ) : (
+                <div className="fighters-scroll">
+                  {selectionData && Object.entries(groupFightersByWeight(selectionData)).map(([weightClass, fighters]) => {
+                    const pairs = getFighterPairs(fighters as Fighter[]);
+                    const isWeightSelected = selectedFighters.has(weightClass);
+                    const selectedFighter = selectedFighters.get(weightClass);
 
-                  return (
-                    <div key={weightClass} className="weight-section">
-                      <div className="weight-header" style={{ backgroundColor: getWeightClassColor(weightClass) }}>
-                        <span>{weightClass}</span>
-                        {isWeightSelected && (
-                          <span className="selected-badge">{selectedFighter?.Fighter}</span>
-                        )}
-                      </div>
-
-                      {pairs.map((pair, idx) => (
-                        <div key={idx} className="fight-pair">
-                          {pair.map(fighter => (
-                            <button
-                              key={fighter.Fighter}
-                              className={`fighter-card ${
-                                selectedFighter?.Fighter === fighter.Fighter ? 'selected' : ''
-                              } ${
-                                isWeightSelected && selectedFighter?.Fighter !== fighter.Fighter ? 'disabled' : ''
-                              }`}
-                              onClick={() => handleSelectFighter(weightClass, fighter)}
-                              disabled={
-                                (isWeightSelected && selectedFighter?.Fighter !== fighter.Fighter) ||
-                                (selectedFighters.size >= 5 && !selectedFighters.has(weightClass))
-                              }
-                            >
-                              <div className="fighter-avatar">
-                                <img 
-                                  src={`${BASE_URL}/avatars/${getAvatarFilename(fighter['Weight class'])}`}
-                                  alt={fighter.Fighter}
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                    const parent = (e.target as HTMLImageElement).parentElement;
-                                    if (parent) {
-                                      parent.innerHTML = fighter['Weight class'].includes("Women") ? "👩" : "👤";
-                                      parent.style.fontSize = '24px';
-                                      parent.style.display = 'flex';
-                                      parent.style.alignItems = 'center';
-                                      parent.style.justifyContent = 'center';
-                                    }
-                                  }} 
-                                />
-                              </div>
-                              <div className="fighter-info">
-                                <span className="fighter-name">{fighter.Fighter}</span>
-                              </div>
-                            </button>
-                          ))}
+                    return (
+                      <div key={weightClass} className="weight-section">
+                        <div className="weight-header" style={{ backgroundColor: getWeightClassColor(weightClass) }}>
+                          <span>{weightClass}</span>
+                          {isWeightSelected && (
+                            <span className="selected-badge">{selectedFighter?.Fighter}</span>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  );
-                })}
-              </div>
+
+                        {pairs.map((pair, idx) => (
+                          <div key={idx} className="fight-pair">
+                            {pair.map(fighter => (
+                              <button
+                                key={fighter.Fighter}
+                                className={`fighter-card ${
+                                  selectedFighter?.Fighter === fighter.Fighter ? 'selected' : ''
+                                } ${isWeightSelected && selectedFighter?.Fighter !== fighter.Fighter ? 'disabled' : ''}`}
+                                onClick={() => handleSelectFighter(weightClass, fighter)}
+                                disabled={
+                                  (isWeightSelected && selectedFighter?.Fighter !== fighter.Fighter) ||
+                                  (selectedFighters.size >= 5 && !selectedFighters.has(weightClass))
+                                }>
+                                <div className="fighter-avatar">
+                                  <img src={`${BASE_URL}/avatars/${getAvatarFilename(weightClass)}`}
+                                       alt={fighter.Fighter}
+                                       onError={(e) => {
+                                         (e.target as HTMLImageElement).style.display = 'none';
+                                         const parent = (e.target as HTMLImageElement).parentElement;
+                                         if (parent) {
+                                           parent.innerHTML = weightClass.includes("Women") ? "👩" : "👤";
+                                           parent.style.fontSize = '24px';
+                                         }
+                                       }} />
+                                </div>
+                                <div className="fighter-info">
+                                  <span className="fighter-name">{fighter.Fighter}</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <div className="selection-actions">
-                <button 
-                  className="discard-button"
-                  onClick={() => setSelectedFighters(new Map())}
-                >
+                <button className="discard-button" onClick={() => setSelectedFighters(new Map())}>
                   DISCARD ALL
                 </button>
                 <button 
@@ -1171,8 +898,7 @@ function App() {
                   onClick={async () => {
                     await saveSelections(selectedFighters);
                     setCurrentView('main');
-                  }}
-                >
+                  }}>
                   ACCEPT CARD
                 </button>
               </div>
@@ -1181,58 +907,52 @@ function App() {
         )}
       </main>
 
-      {/* Модальное окно с наградами - ОБНОВЛЕННАЯ ВЕРСИЯ */}
-{showRewardsModal && pendingRewards && (
-  <div className="rewards-modal">
-    <div className="rewards-content">
-      <h2>🏆 CONGRATULATIONS! 🏆</h2>
-      <p>Tournament "{pendingRewards.tournamentName}" completed</p>
-      
-      {pendingRewards.winners.length > 0 ? (
-        <>
-          <div className="winners-list">
-            <h3>WINNERS IN YOUR BET:</h3>
-            {pendingRewards.winners.map((sel, idx) => (
-              <div key={idx} className="winner-item">
-                <span className="winner-name">{sel.fighter.Fighter}</span>
-                <span className="winner-badge">👑</span>
-              </div>
-            ))}
+      {/* Модальное окно с наградами */}
+      {showRewardsModal && pendingRewards && (
+        <div className="rewards-modal">
+          <div className="rewards-content">
+            <h2>🏆 CONGRATULATIONS! 🏆</h2>
+            <p>Tournament "{pendingRewards.tournamentName}" completed</p>
+            
+            {pendingRewards.winners.length > 0 ? (
+              <>
+                <div className="winners-list">
+                  <h3>WINNERS IN YOUR BET:</h3>
+                  {pendingRewards.winners.map((sel, idx) => (
+                    <div key={idx} className="winner-item">
+                      <span className="winner-name">{sel.fighter.Fighter}</span>
+                      <span className="winner-badge">👑</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="rewards-summary">
+                  <div className="reward-item">
+                    <span className="reward-label">COINS:</span>
+                    <span className="reward-value">+{pendingRewards.totalCoins} 🪙</span>
+                  </div>
+                  <div className="reward-item">
+                    <span className="reward-label">EXP:</span>
+                    <span className="reward-value">+{pendingRewards.totalExp} ✨</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="no-winners">Unfortunately, none of your fighters won 😢</p>
+            )}
+            
+            <button className="accept-button" onClick={acceptRewards}>
+              ACCEPT
+            </button>
           </div>
-          
-          <div className="rewards-summary">
-            <div className="reward-item">
-              <span className="reward-label">COINS:</span>
-              <span className="reward-value">+{pendingRewards.totalCoins} 🪙</span>
-            </div>
-            <div className="reward-item">
-              <span className="reward-label">EXP:</span>
-              <span className="reward-value">+{pendingRewards.totalExp} ✨</span>
-            </div>
-          </div>
-        </>
-      ) : (
-        <p className="no-winners">Unfortunately, none of your fighters won 😢</p>
+        </div>
       )}
-      
-      <button className="accept-button" onClick={acceptRewards}>
-        ACCEPT
-      </button>
-    </div>
-  </div>
-)}
 
       <nav className={`bottom-nav ${currentView === 'selection' ? 'hidden' : ''}`}>
-        <button 
-          className={`nav-button ${currentView === 'main' ? 'active' : ''}`}
-          onClick={() => setCurrentView('main')}
-        >
+        <button className={`nav-button ${currentView === 'main' ? 'active' : ''}`} onClick={() => setCurrentView('main')}>
           <img src={`${BASE_URL}/Home_button.png`} alt="Home" />
         </button>
-        <button 
-          className={`nav-button ${currentView === 'leaderboard' ? 'active' : ''}`}
-          onClick={() => setCurrentView('leaderboard')}
-        >
+        <button className={`nav-button ${currentView === 'leaderboard' ? 'active' : ''}`} onClick={() => setCurrentView('leaderboard')}>
           <img src={`${BASE_URL}/Leadeship_button.png`} alt="Leaderboard" />
         </button>
         <button className="nav-button disabled">
