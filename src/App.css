@@ -323,7 +323,7 @@ body {
   align-items: center;
   width: 30%; /* ровно как карточка бойца в сетке 5 колонок */
   min-width: 0;
-  background: #1C1D1F;
+  background: #313130;
   cursor: pointer;
   transition: opacity 0.2s ease;
   padding: 0;
@@ -414,7 +414,7 @@ body {
   letter-spacing: 0.5px;
   z-index: 10;
   transition: background 0.2s ease;
-  height: 52.8px; /* 48px * 1.1 = 52.8px (на 10% выше кнопки TOTAL DAMAGE) */
+  height: 48px; /* 48px * 1.1 = 52.8px (на 10% выше кнопки TOTAL DAMAGE) */
   line-height: 36.8px; /* Центрируем текст вертикально */
   box-sizing: border-box;
 }
