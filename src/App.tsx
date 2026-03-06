@@ -16,6 +16,7 @@ import {
 } from './api/userProfiles';
 import * as XLSX from 'xlsx';
 
+// Объявляем что нибудь
 // Объявляем глобальный тип для Telegram WebApp
 declare global {
   interface Window {
