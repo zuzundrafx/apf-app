@@ -288,14 +288,14 @@ body {
 /* Кнопка общего урона для обоих турниров */
 .total-damage-button {
   width: 100%;
-  height: 48px;
+  height: 10%;
   background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-top: 0;
-  padding: 0 16px;
+  padding: 0 10px;
   cursor: default;
   pointer-events: none;
   color: #000000;
