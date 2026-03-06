@@ -304,6 +304,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   box-sizing: border-box;
+  z-index: 1;
 }
 
 /* ===== КАРТОЧКА ТУРНИРА (как карточка бойца - 20% ширины) ===== */
@@ -400,8 +401,8 @@ body {
 .close-fighters-button {
   position: absolute;
   right: 8px;
-  bottom: 50%;
-  transform: translateY(50%);
+  top: 50%; /* Меняем bottom на top для более точного позиционирования */
+  transform: translateY(-50%); /* Центрируем по вертикали относительно TOTAL DAMAGE */
   background: #B20101;
   border: 1px solid #FFFFFF;
   border-radius: 4px;
@@ -414,7 +415,7 @@ body {
   letter-spacing: 0.5px;
   z-index: 10;
   transition: background 0.2s ease;
-  height: 48px; /* 48px * 1.1 = 52.8px (на 10% выше кнопки TOTAL DAMAGE) */
+  height: 52.8px; /* 48px * 1.1 = 52.8px (на 10% выше кнопки TOTAL DAMAGE) */
   line-height: 36.8px; /* Центрируем текст вертикально */
   box-sizing: border-box;
 }
@@ -1204,11 +1205,16 @@ body {
     height: 14px;
     font-size: 9px;
   }
+
+  .total-damage-button-wrapper {
+    margin-bottom: 6px;
+    min-height: 52px;
+  }
   
   .total-damage-button {
     height: 44px;
     font-size: 14px;
-    margin-top: 6px;
+    margin-top: 3px;
   }
   
   .tournament-card {
@@ -1343,6 +1349,11 @@ body {
     font-size: 8px;
     padding: 4px 1px 2px 1px;
     min-height: 2.2em;
+  }
+
+  .total-damage-button-wrapper {
+    margin-bottom: 4px;
+    min-height: 48px;
   }
   
   .total-damage-button {
