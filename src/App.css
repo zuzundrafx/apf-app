@@ -415,8 +415,8 @@ body {
   letter-spacing: 0.5px;
   z-index: 10;
   transition: background 0.2s ease;
-  height: 52.8px; /* 48px * 1.1 = 52.8px (на 10% выше кнопки TOTAL DAMAGE) */
-  line-height: 36.8px; /* Центрируем текст вертикально */
+  height: 48px; /* 48px * 1.1 = 52.8px (на 10% выше кнопки TOTAL DAMAGE) */
+  line-height: 1; /* Центрируем текст вертикально */
   box-sizing: border-box;
 }
 
