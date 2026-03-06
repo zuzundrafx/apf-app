@@ -174,7 +174,7 @@ body {
 
 .tournament-content {
   flex: 1;
-  padding: 5px 0 16px 0;
+  padding: 5px 0 5px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
