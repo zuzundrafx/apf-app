@@ -355,9 +355,9 @@ body {
 }
 
 .tournament-card-image {
-  width: 100%;
+  width: 90%;
   aspect-ratio: 1 / 1;
-  background: #3D3D3B;
+  /*background: #3D3D3B;*/
   overflow: hidden;
   display: flex;
   align-items: center;
