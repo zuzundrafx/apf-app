@@ -321,7 +321,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 25%; /* ровно как карточка бойца в сетке 5 колонок */
+  width: 33%; /* ровно как карточка бойца в сетке 5 колонок */
   min-width: 0;
   background: #1C1D1F;
   cursor: pointer;
