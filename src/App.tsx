@@ -691,60 +691,64 @@ function App() {
                   ) : hasPastBet ? (
                     <>
                       {!showPastFighters ? (
-                        // КАРТОЧКА ТУРНИРА (кликабельная)
-                        <div 
-                          className="tournament-card" 
-                          onClick={() => setShowPastFighters(true)}
-                        >
-                          <div className="tournament-card-damage-box">
-                            TOTAL: {calculateTotalDamage(userData.mySelections.past)}
-                          </div>
-                          <div className="tournament-card-image">
-                            <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
-                          </div>
-                          <div className="tournament-card-name">{pastTournament.name}</div>
-                        </div>
-                      ) : (
-                        // КАРТОЧКИ БОЙЦОВ (как было, но с кнопкой CLOSE)
-                        <>
-                          <div className="selected-fighters-grid">
-                            {userData.mySelections.past.map((sel, idx) => {
-                              const isWinner = sel.fighter['W/L'] === 'win';
-                              return (
-                                <div key={idx} className="selected-fighter-card" 
-                                     style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-                                  <div className="selected-fighter-damage-box">
-                                    {roundDamage(sel.fighter['Total Damage'])}
-                                  </div>
-                                  <div className="selected-fighter-avatar-square">
-                                    <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`} 
-                                         alt={sel.fighter.Fighter}
-                                         onError={(e) => {
-                                           (e.target as HTMLImageElement).style.display = 'none';
-                                           const parent = (e.target as HTMLImageElement).parentElement;
-                                           if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
-                                         }} />
-                                  </div>
-                                  <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
-                                  {isWinner && <span className="winner-crown">👑</span>}
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div className="total-damage-button" style={{ position: 'relative' }}>
-                            <span>TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.past)}</span>
-                            <button 
-                              className="close-fighters-button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setShowPastFighters(false);
-                              }}
-                            >
-                              CLOSE
-                            </button>
-                          </div>
-                        </>
-                      )}
+  // КАРТОЧКА ТУРНИРА (такого же размера, как карточка бойца - 20% ширины)
+  <div className="tournament-card-container">
+    <div 
+      className="tournament-card" 
+      onClick={() => setShowPastFighters(true)}
+    >
+      <div className="tournament-card-damage-box">
+        TOTAL: {calculateTotalDamage(userData.mySelections.past)}
+      </div>
+      <div className="tournament-card-image">
+        <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
+      </div>
+      <div className="tournament-card-name">{pastTournament.name}</div>
+    </div>
+  </div>
+) : (
+  // КАРТОЧКИ БОЙЦОВ
+  <>
+    <div className="selected-fighters-grid">
+      {userData.mySelections.past.map((sel, idx) => {
+        const isWinner = sel.fighter['W/L'] === 'win';
+        return (
+          <div key={idx} className="selected-fighter-card" 
+               style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
+            <div className="selected-fighter-damage-box">
+              {roundDamage(sel.fighter['Total Damage'])}
+            </div>
+            <div className="selected-fighter-avatar-square">
+              <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`} 
+                   alt={sel.fighter.Fighter}
+                   onError={(e) => {
+                     (e.target as HTMLImageElement).style.display = 'none';
+                     const parent = (e.target as HTMLImageElement).parentElement;
+                     if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
+                   }} />
+            </div>
+            <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
+            {isWinner && <span className="winner-crown">👑</span>}
+          </div>
+        );
+      })}
+    </div>
+    <div className="total-damage-button-wrapper">
+      <div className="total-damage-button">
+        TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.past)}
+      </div>
+      <button 
+        className="close-fighters-button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowPastFighters(false);
+        }}
+      >
+        CLOSE
+      </button>
+    </div>
+  </>
+)}
                     </>
                   ) : (
                     <div className="tournament-message">BETS ARE CLOSED</div>
