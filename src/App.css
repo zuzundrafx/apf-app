@@ -130,7 +130,7 @@ body {
 }
 
 .tournament-header {
-  padding: clamp(8px, 2vh, 12px) clamp(8px, 4vw, 16px);
+  padding: clamp(4px, 2vh, 6px) clamp(8px, 4vw, 16px);
   flex-shrink: 0;
 }
 
