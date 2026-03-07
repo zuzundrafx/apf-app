@@ -176,6 +176,7 @@ body {
   align-items: center;
   padding: 2% 0; /* Отступы сверху и снизу по 2% */
   overflow: hidden;
+  height: 100%;
 }
 
 .select-button {
