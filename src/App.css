@@ -377,7 +377,7 @@ body {
   margin: 0 clamp(8px, 4vw, 16px);
   gap: clamp(4px, 1vw, 8px);
   align-items: stretch;
-  height: 10%; /* 10% от высоты родительского контейнера */
+  height: 15%; /* 10% от высоты родительского контейнера */
   min-height: 30px; /* Минимальная высота */
   max-height: 60px; /* Максимальная высота */
   flex-shrink: 0;
