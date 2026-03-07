@@ -133,38 +133,8 @@ const TournamentSkeleton = () => (
   </section>
 );
 
-// Функция для проверки, можно ли делать ставки на турнир
-const canPlaceBet = (tournament: Tournament | null, userCoins: number): boolean => {
-  if (!tournament) return false;
-  
-  // 1. Проверяем монеты
-  if (userCoins < 100) return false;
-  
-  // 2. Получаем дату турнира
-  const tournamentDate = new Date(tournament.date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  // 3. Проверяем, есть ли статистика у бойцов
-  const hasStats = tournament.data?.some(fighter => {
-    // Приводим значения к числам для безопасного сравнения
-    const totalDamage = Number(fighter['Total Damage']) || 0;
-    const str = Number(fighter['Str']) || 0;
-    const hasWinLoss = fighter['W/L'] !== null && fighter['W/L'] !== undefined;
-    
-    return hasWinLoss || totalDamage > 0 || str > 0;
-  }) ?? false;
-  
-  // 4. Проверяем, прошла ли дата турнира
-  const isDatePassed = tournamentDate < today;
-  
-  // 5. Логика: можно ставить если (дата не прошла) ИЛИ (нет статистики)
-  // То есть нельзя ставить ТОЛЬКО если дата прошла И есть статистика
-  return !(isDatePassed && hasStats);
-};
-
 function App() {
-  const { pastTournament, upcomingTournaments, loading, loadingProgress, loadingStage, error } = useTournaments();
+  const { pastTournament, upcomingTournament, loading, loadingProgress, loadingStage, error } = useTournaments();
   
   const [selectedFighters, setSelectedFighters] = useState<Map<string, Fighter>>(new Map());
   const [currentView, setCurrentView] = useState<'main' | 'leaderboard' | 'selection'>('main');
@@ -195,9 +165,6 @@ function App() {
 
   // Состояние для переключения между карточкой турнира и карточками бойцов
   const [showPastFighters, setShowPastFighters] = useState(false);
-  
-  // Состояние для отслеживания, какой будущий турнир открыт
-  const [selectedUpcomingTournament, setSelectedUpcomingTournament] = useState<string | null>(null);
 
   const [userData, setUserData] = useState({
     username: 'Player',
@@ -214,6 +181,7 @@ function App() {
     hasBet: false
   });
 
+  const hasUpcomingBet = userData.mySelections.upcoming.length > 0;
   const hasPastBet = userData.mySelections.past.length > 0;
 
   const calculateTotalDamage = (selections: SelectedFighter[]): number => {
@@ -456,38 +424,25 @@ function App() {
       
       setLoadingUserResults(true);
       setShowPastFighters(false);
-      setSelectedUpcomingTournament(null);
       
-      // Загружаем результаты для прошедшего турнира
-      const pastResult = pastTournament ? await loadUserResults(pastTournament.name, telegramUser.id) : null;
+      // Параллельная загрузка результатов
+      const [upcomingResult, pastResult] = await Promise.all([
+        upcomingTournament ? loadUserResults(upcomingTournament.name, telegramUser.id) : null,
+        pastTournament ? loadUserResults(pastTournament.name, telegramUser.id) : null
+      ]);
       
-      // Загружаем результаты для ВСЕХ будущих турниров
-      const upcomingResults = await Promise.all(
-        upcomingTournaments.map(t => loadUserResults(t.name, telegramUser.id))
-      );
-      
-      // Собираем все ставки на будущие турниры
-      const allUpcomingSelections: SelectedFighter[] = [];
-      upcomingResults.forEach((result) => {
-        if (result && result.selections.length > 0) {
-          allUpcomingSelections.push(...result.selections);
-        }
-      });
-      
-      if (allUpcomingSelections.length > 0 && isMounted) {
+      if (upcomingResult && upcomingResult.selections.length > 0 && isMounted) {
         setUserData(prev => ({
           ...prev,
-          mySelections: { ...prev.mySelections, upcoming: allUpcomingSelections },
+          mySelections: { ...prev.mySelections, upcoming: upcomingResult.selections },
           hasBet: true
         }));
         
-        // Для совместимости с существующим кодом сохраняем первую ставку в selectedFighters
-        const firstBet = allUpcomingSelections[0];
-        if (firstBet) {
-          const selectionsMap = new Map<string, Fighter>();
-          selectionsMap.set(firstBet.weightClass, firstBet.fighter);
-          setSelectedFighters(selectionsMap);
-        }
+        const selectionsMap = new Map<string, Fighter>();
+        upcomingResult.selections.forEach((sel: SelectedFighter) => {
+          selectionsMap.set(sel.weightClass, sel.fighter);
+        });
+        setSelectedFighters(selectionsMap);
       }
       
       if (pastResult && pastResult.selections.length > 0 && isMounted) {
@@ -522,7 +477,7 @@ function App() {
     loadUserData();
     
     return () => { isMounted = false; };
-  }, [upcomingTournaments, pastTournament, telegramUser, profileLoaded]);
+  }, [upcomingTournament, pastTournament, telegramUser, profileLoaded]);
 
   // Загружаем рейтинг
   useEffect(() => {
@@ -578,10 +533,7 @@ function App() {
       if (saved) {
         setUserData(prev => ({
           ...prev,
-          mySelections: { 
-            ...prev.mySelections, 
-            upcoming: [...prev.mySelections.upcoming, ...selectionsArray] 
-          },
+          mySelections: { ...prev.mySelections, upcoming: selectionsArray },
           hasBet: true
         }));
       }
@@ -782,113 +734,74 @@ function App() {
               <TournamentSkeleton />
             )}
 
-            {/* БУДУЩИЕ ТУРНИРЫ */}
-            {upcomingTournaments.length > 0 ? (
-              upcomingTournaments.map((tournament) => {
-                // Находим ставки для этого конкретного турнира
-                const tournamentSelections = userData.mySelections.upcoming.filter(sel => {
-                  // Проверяем, есть ли этот боец в турнире
-                  return tournament.data?.some(f => f.Fighter === sel.fighter.Fighter);
-                });
+            {/* БУДУЩИЙ ТУРНИР */}
+            {upcomingTournament ? (
+              <section className="tournament-section upcoming">
+                <div className="tournament-header">
+                  <h2>{upcomingTournament.name}</h2>
+                  <div className="tournament-meta">
+                    <span>{formatDate(upcomingTournament.date)}</span>
+                    <span className="tournament-status upcoming">UPCOMING</span>
+                  </div>
+                </div>
                 
-                const hasBetForThisTournament = tournamentSelections.length > 0;
-                const isThisTournamentSelected = selectedUpcomingTournament === tournament.name;
-                
-                return (
-                  <section key={tournament.name} className="tournament-section upcoming">
-                    <div className="tournament-header">
-                      <h2>{tournament.name}</h2>
-                      <div className="tournament-meta">
-                        <span>{formatDate(tournament.date)}</span>
-                        <span className="tournament-status upcoming">UPCOMING</span>
+                <div className="tournament-content">
+                  {loadingUserResults ? (
+                    <div className="tournament-message">Loading...</div>
+                  ) : hasUpcomingBet ? (
+                    <>
+                      <div className="selected-fighters-grid">
+                        {userData.mySelections.upcoming.map((sel, idx) => {
+                          const hasResult = sel.fighter['W/L'] !== null;
+                          return (
+                            <div key={idx} className="selected-fighter-card"
+                                 style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
+                              <div className="selected-fighter-damage-box">
+                                {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
+                              </div>
+                              <div className="selected-fighter-avatar-square">
+                                <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`}
+                                     alt={sel.fighter.Fighter}
+                                     onError={(e) => {
+                                       (e.target as HTMLImageElement).style.display = 'none';
+                                       const parent = (e.target as HTMLImageElement).parentElement;
+                                       if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
+                                     }} />
+                              </div>
+                              <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
+                            </div>
+                          );
+                        })}
                       </div>
-                    </div>
-                    
-                    <div className="tournament-content">
-                      {loadingUserResults ? (
-                        <div className="tournament-message">Loading...</div>
-                      ) : hasBetForThisTournament && isThisTournamentSelected ? (
-                        // ПОКАЗЫВАЕМ КАРТОЧКИ БОЙЦОВ ДЛЯ ВЫБРАННОГО ТУРНИРА
-                        <>
-                          <div className="selected-fighters-grid">
-                            {tournamentSelections.map((sel, idx) => {
-                              const hasResult = sel.fighter['W/L'] !== null;
-                              return (
-                                <div key={idx} className="selected-fighter-card"
-                                     style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-                                  <div className="selected-fighter-damage-box">
-                                    {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
-                                  </div>
-                                  <div className="selected-fighter-avatar-square">
-                                    <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`}
-                                         alt={sel.fighter.Fighter}
-                                         onError={(e) => {
-                                           (e.target as HTMLImageElement).style.display = 'none';
-                                           const parent = (e.target as HTMLImageElement).parentElement;
-                                           if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
-                                         }} />
-                                  </div>
-                                  <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                          
-                          {/* ФУТЕР С КНОПКОЙ CLOSE */}
-                          <div className="tournament-footer">
-                            <div className="footer-total-damage">
-                              TOTAL DAMAGE: {calculateTotalDamage(tournamentSelections)}
-                            </div>
-                            <button 
-                              className="footer-close-button"
-                              onClick={() => setSelectedUpcomingTournament(null)}
-                            >
-                              CLOSE
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        // ПОКАЗЫВАЕМ КАРТОЧКУ ТУРНИРА ИЛИ КНОПКУ ВЫБОРА
-                        <>
-                          {hasBetForThisTournament ? (
-                            // КАРТОЧКА ТУРНИРА (ЕСТЬ СТАВКА)
-                            <div className="tournament-card-container">
-                              <div 
-                                className="tournament-card" 
-                                onClick={() => setSelectedUpcomingTournament(tournament.name)}
-                              >
-                                <div className="tournament-card-damage-box">
-                                  BET PLACED
-                                </div>
-                                <div className="tournament-card-image">
-                                  <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
-                                </div>
-                                <div className="tournament-card-name">{tournament.name}</div>
-                              </div>
-                            </div>
-                          ) : (
-                            // КНОПКА ВЫБОРА (НЕТ СТАВКИ)
-                            canPlaceBet(tournament, userData.coins) ? (
-                              <button className="select-button" onClick={() => {
-                                setSelectedTournament(tournament);
-                                setCurrentView('selection');
-                                loadSelectionData(tournament);
-                                setSelectedFighters(new Map());
-                              }}>
-                                SELECT YOUR FIGHT CARD
-                              </button>
-                            ) : (
-                              <div className="tournament-message">
-                                {userData.coins < 100 ? 'NOT ENOUGH COINS' : 'BETS ARE CLOSED'}
-                              </div>
-                            )
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </section>
-                );
-              })
+                      
+                      {/* ЕДИНЫЙ ФУТЕР (с неактивной кнопкой для будущего турнира) */}
+                      <div className="tournament-footer">
+                        <div className="footer-total-damage">
+                          TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.upcoming)}
+                        </div>
+                        <button className="footer-close-button" disabled>
+                          CLOSE
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    userData.coins >= 100 && new Date(upcomingTournament.date) > new Date() ? (
+                      <button className="select-button" onClick={() => {
+                        setSelectedTournament(upcomingTournament);
+                        setCurrentView('selection');
+                        loadSelectionData(upcomingTournament);
+                        setSelectedFighters(new Map());
+                      }}>
+                        SELECT YOUR FIGHT CARD
+                      </button>
+                    ) : (
+                      <div className="tournament-message">
+                        {userData.coins < 100 ? 'NOT ENOUGH COINS' : 'BETS ARE CLOSED'}
+                      </div>
+                    )
+                  )}
+                </div>
+              </section>
             ) : (
               <TournamentSkeleton />
             )}
