@@ -219,7 +219,7 @@ body {
   flex-direction: column;
   align-items: center;
   width: 33%;
-  background: #1C1D1F;
+  background: #313130;
   cursor: pointer;
   transition: opacity 0.2s ease;
   padding: 0;
@@ -255,12 +255,12 @@ body {
 .tournament-card-image {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background: #3D3D3B;
+  background: #313130;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: clamp(1px, 0.5vh, 2px) 0;
+  margin: clamp(2px, 0.5vh, 4px) 0;
   flex-shrink: 1;
 }
 
@@ -377,11 +377,11 @@ body {
   margin: 0 clamp(8px, 4vw, 16px);
   gap: clamp(4px, 1vw, 8px);
   align-items: stretch;
-  height: 20%; /* 10% от высоты родительского контейнера */
+  height: 25%; /* 25% от высоты родительского контейнера */
   min-height: 30px; /* Минимальная высота */
   max-height: 70px; /* Максимальная высота */
   flex-shrink: 0;
-  padding-top: 2%;
+  padding-top: 4%;
   box-sizing: border-box;
 }
 
