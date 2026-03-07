@@ -290,7 +290,9 @@ body {
 .tournament-card-container {
   display: flex;
   justify-content: center;
+  align-items: center; /* Центрируем по вертикали */
   width: 100%;
+  height: 100%; /* На всю высоту контейнера */
   padding: 0 2px;
 }
 
@@ -298,14 +300,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 20%;
-  min-width: 0;
+  width: 100%; /* На всю ширину контейнера */
+  max-width: 200px; /* Ограничиваем максимальную ширину */
   background: #1C1D1F;
   cursor: pointer;
   transition: opacity 0.2s ease;
   padding: 0;
   margin: 0;
-  min-height: 85px;
+  height: 100%; /* На всю высоту */
+  justify-content: space-between; /* Равномерно распределяем пространство */
 }
 
 .tournament-card:hover {
@@ -326,19 +329,22 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0;
+  margin: 8px 0 4px 0; /* Отступ сверху 8px, снизу 4px */
   padding: 0;
   line-height: 1;
+  flex-shrink: 0; /* Не сжимается */
 }
 
 .tournament-card-image {
-  width: 100%;
+  width: 85%; /* Немного меньше ширины карточки */
   aspect-ratio: 1 / 1;
   background: #3D3D3B;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 4px 0; /* Отступы сверху и снизу 4px */
+  flex-shrink: 0; /* Не сжимается */
 }
 
 .tournament-card-image img {
@@ -355,13 +361,15 @@ body {
   line-height: 1.3;
   max-width: 100%;
   width: 100%;
-  padding: 6px 2px 4px 2px;
+  padding: 4px 2px 8px 2px; /* Отступ снизу 8px */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   line-clamp: 2;
   overflow: hidden;
   min-height: 2.6em;
+  flex-shrink: 0; /* Не сжимается */
+  margin-top: auto; /* Прижимаем к низу */
 }
 
 /* ===== ЕДИНЫЙ ФУТЕР ДЛЯ ВСЕХ ТУРНИРОВ ===== */
@@ -1158,6 +1166,11 @@ body {
   .app {
     max-width: 100%;
   }
+
+  .tournament-card-image {
+    width: 80%;
+    margin: 3px 0;
+  }
   
   .profile-header {
     padding: 12px 12px 8px 12px;
@@ -1214,11 +1227,17 @@ body {
   .tournament-card-damage-box {
     height: 14px;
     font-size: 9px;
+    margin: 6px 0 3px 0;
+  }
+  
+  .tournament-card-image {
+    width: 80%;
+    margin: 3px 0;
   }
   
   .tournament-card-name {
     font-size: 9px;
-    padding: 5px 2px 3px 2px;
+    padding: 3px 2px 6px 2px;
     min-height: 2.4em;
   }
   
@@ -1340,11 +1359,17 @@ body {
   .tournament-card-damage-box {
     height: 13px;
     font-size: 8px;
+    margin: 4px 0 2px 0;
+  }
+  
+  .tournament-card-image {
+    width: 75%;
+    margin: 2px 0;
   }
   
   .tournament-card-name {
     font-size: 8px;
-    padding: 4px 1px 2px 1px;
+    padding: 2px 2px 4px 2px;
     min-height: 2.2em;
   }
   
