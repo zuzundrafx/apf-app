@@ -133,6 +133,36 @@ const TournamentSkeleton = () => (
   </section>
 );
 
+// Функция для проверки, можно ли делать ставки на турнир
+const canPlaceBet = (tournament: Tournament | null, userCoins: number): boolean => {
+  if (!tournament) return false;
+  
+  // 1. Проверяем монеты
+  if (userCoins < 100) return false;
+  
+  // 2. Получаем дату турнира
+  const tournamentDate = new Date(tournament.date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // 3. Проверяем, есть ли статистика у бойцов
+  const hasStats = tournament.data?.some(fighter => {
+    // Приводим значения к числам для безопасного сравнения
+    const totalDamage = Number(fighter['Total Damage']) || 0;
+    const str = Number(fighter['Str']) || 0;
+    const hasWinLoss = fighter['W/L'] !== null && fighter['W/L'] !== undefined;
+    
+    return hasWinLoss || totalDamage > 0 || str > 0;
+  }) ?? false;
+  
+  // 4. Проверяем, прошла ли дата турнира
+  const isDatePassed = tournamentDate < today;
+  
+  // 5. Логика: можно ставить если (дата не прошла) ИЛИ (нет статистики)
+  // То есть нельзя ставить ТОЛЬКО если дата прошла И есть статистика
+  return !(isDatePassed && hasStats);
+};
+
 function App() {
   const { pastTournament, upcomingTournament, loading, loadingProgress, loadingStage, error } = useTournaments();
   
@@ -785,7 +815,8 @@ function App() {
                       </div>
                     </>
                   ) : (
-                    userData.coins >= 100 && new Date(upcomingTournament.date) > new Date() ? (
+                    // ИСПРАВЛЕННАЯ ЛОГИКА ЗДЕСЬ
+                    canPlaceBet(upcomingTournament, userData.coins) ? (
                       <button className="select-button" onClick={() => {
                         setSelectedTournament(upcomingTournament);
                         setCurrentView('selection');
