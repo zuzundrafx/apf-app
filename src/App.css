@@ -99,7 +99,7 @@ body {
   flex-direction: column;
   padding: 8px 16px 16px 16px;
   gap: 8px;
-  min-height: 0;
+  min-height: 0; /* Важно для flex-детей */
   overflow: hidden;
 }
 
@@ -121,11 +121,9 @@ body {
   border-radius: 0;
   overflow: hidden;
   width: 100%;
-  flex: 1 1 0;
+  flex: 1 1 0; /* Равное распределение */
   min-height: 0;
-  height: 0;
 }
-
 .tournament-section.past .tournament-header {
   background: #B20101;
 }
@@ -136,7 +134,9 @@ body {
 
 .tournament-header {
   padding: 12px 16px;
-  flex-shrink: 0;
+  flex-shrink: 0; /* Не сжимается */
+  height: auto;
+  min-height: 60px;
 }
 
 .tournament-header h2 {
@@ -174,12 +174,12 @@ body {
 
 .tournament-content {
   flex: 1;
-  padding: 13px 0 16px 0;
+  min-height: 0; /* Критически важно! */
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  min-height: 0;
+  padding: 13px 0 16px 0;
+  overflow: hidden; /* Чтобы ничего не вылезало */
 }
 
 .select-button {
@@ -214,6 +214,8 @@ body {
   width: 100%;
   padding: 0 2px;
   margin-bottom: 0;
+  flex-shrink: 1; /* Может сжиматься */
+  min-height: 0;
 }
 
 .selected-fighter-card {
@@ -227,7 +229,7 @@ body {
   min-width: 0;
   width: 100%;
   height: auto;
-  min-height: 85px;
+  min-height: 70px; /* Уменьшил */
 }
 
 .selected-fighter-damage-box {
@@ -290,9 +292,10 @@ body {
 .tournament-card-container {
   display: flex;
   justify-content: center;
-  align-items: center; /* Центрируем по вертикали */
+  align-items: center;
   width: 100%;
-  height: 100%; /* На всю высоту контейнера */
+  height: 100%;
+  min-height: 0; /* Важно для flex-детей */
   padding: 0 2px;
 }
 
@@ -300,15 +303,14 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%; /* На всю ширину контейнера */
-  max-width: 200px; /* Ограничиваем максимальную ширину */
+  width: 60%; /* Умеренная ширина */
+  max-width: 160px; /* Ограничение */
   background: #1C1D1F;
   cursor: pointer;
   transition: opacity 0.2s ease;
   padding: 0;
   margin: 0;
-  height: 100%; /* На всю высоту */
-  justify-content: space-between; /* Равномерно распределяем пространство */
+  max-height: 100%; /* Не больше контейнера */
 }
 
 .tournament-card:hover {
@@ -329,22 +331,23 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 8px 0 4px 0; /* Отступ сверху 8px, снизу 4px */
+  margin: 4px 0 2px 0;
   padding: 0;
   line-height: 1;
-  flex-shrink: 0; /* Не сжимается */
+  flex-shrink: 0;
 }
 
 .tournament-card-image {
-  width: 85%; /* Немного меньше ширины карточки */
+  width: 90%;
   aspect-ratio: 1 / 1;
   background: #3D3D3B;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 4px 0; /* Отступы сверху и снизу 4px */
-  flex-shrink: 0; /* Не сжимается */
+  margin: 2px 0;
+  flex-shrink: 1; /* Может сжиматься если нужно */
+  max-height: 120px; /* Ограничение */
 }
 
 .tournament-card-image img {
@@ -361,15 +364,14 @@ body {
   line-height: 1.3;
   max-width: 100%;
   width: 100%;
-  padding: 4px 2px 8px 2px; /* Отступ снизу 8px */
+  padding: 2px 2px 4px 2px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   line-clamp: 2;
   overflow: hidden;
   min-height: 2.6em;
-  flex-shrink: 0; /* Не сжимается */
-  margin-top: auto; /* Прижимаем к низу */
+  flex-shrink: 0;
 }
 
 /* ===== ЕДИНЫЙ ФУТЕР ДЛЯ ВСЕХ ТУРНИРОВ ===== */
@@ -380,14 +382,14 @@ body {
   margin: 8px 16px 0 16px;
   gap: 8px;
   align-items: stretch;
-  height: 52.8px; /* 48px * 1.1 */
+  height: 48px; /* Вернул к исходному */
+  flex-shrink: 0; /* Не сжимается */
 }
 
 .footer-total-damage {
   flex: 7;
   height: 100%;
   background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
-  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -395,11 +397,7 @@ body {
   font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
   padding: 0 8px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .footer-close-button {
@@ -1220,8 +1218,9 @@ body {
     font-size: 9px;
   }
   
-  .tournament-card {
-    min-height: 80px;
+   .tournament-card {
+    width: 70%;
+    max-width: 140px;
   }
   
   .tournament-card-damage-box {
@@ -1231,8 +1230,7 @@ body {
   }
   
   .tournament-card-image {
-    width: 80%;
-    margin: 3px 0;
+    max-height: 100px;
   }
   
   .tournament-card-name {
@@ -1241,11 +1239,10 @@ body {
     min-height: 2.4em;
   }
   
-  .tournament-footer {
-    width: calc(100% - 24px);
+   .tournament-footer {
+    height: 44px;
     margin: 6px 12px 0 12px;
-    height: 48.4px;
-    gap: 6px;
+    width: calc(100% - 24px);
   }
   
   .footer-total-damage {
@@ -1343,7 +1340,7 @@ body {
   }
   
   .selected-fighter-card {
-    min-height: 75px;
+    min-height: 60px;
   }
   
   .selected-fighter-name {
@@ -1353,7 +1350,8 @@ body {
   }
   
   .tournament-card {
-    min-height: 75px;
+    width: 80%;
+    max-width: 120px;
   }
   
   .tournament-card-damage-box {
@@ -1363,8 +1361,7 @@ body {
   }
   
   .tournament-card-image {
-    width: 75%;
-    margin: 2px 0;
+    max-height: 90px;
   }
   
   .tournament-card-name {
@@ -1374,10 +1371,9 @@ body {
   }
   
   .tournament-footer {
-    width: calc(100% - 16px);
+    height: 40px;
     margin: 4px 8px 0 8px;
-    height: 44px;
-    gap: 4px;
+    width: calc(100% - 16px);
   }
   
   .footer-total-damage {
