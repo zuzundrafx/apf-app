@@ -61,7 +61,6 @@ declare global {
 const LEVEL_THRESHOLDS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 0];
 
 const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
-const YA_TOKEN = import.meta.env.VITE_YA_TOKEN;
 
 // Функция для округления урона
 const roundDamage = (damage: number): number => Math.round(damage);
@@ -144,7 +143,6 @@ function App() {
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [loadingUserResults, setLoadingUserResults] = useState(true);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  
   const [telegramUser, setTelegramUser] = useState<{
     id: string;
     username: string;
@@ -165,7 +163,7 @@ function App() {
   const [selectionData, setSelectionData] = useState<Fighter[] | null>(null);
   const [loadingSelection, setLoadingSelection] = useState(false);
 
-  // НОВОЕ СОСТОЯНИЕ: переключение между карточкой турнира и карточками бойцов
+  // Состояние для переключения между карточкой турнира и карточками бойцов
   const [showPastFighters, setShowPastFighters] = useState(false);
 
   const [userData, setUserData] = useState({
@@ -239,7 +237,7 @@ function App() {
     
     setShowRewardsModal(false);
     setPendingRewards(null);
-    setShowPastFighters(false); // Сбрасываем состояние после получения наград
+    setShowPastFighters(false);
   };
 
   // Функция загрузки данных для окна выбора
@@ -261,7 +259,7 @@ function App() {
     try {
       const downloadUrl = `https://cloud-api.yandex.net/v1/disk/resources/download?path=app:/${filename}`;
       const response = await fetch(downloadUrl, {
-        headers: { 'Authorization': `OAuth ${YA_TOKEN}` }
+        headers: { 'Authorization': `OAuth ${import.meta.env.VITE_YA_TOKEN}` }
       });
       
       if (!response.ok) {
@@ -425,7 +423,7 @@ function App() {
       if (!telegramUser || !profileLoaded) return;
       
       setLoadingUserResults(true);
-      setShowPastFighters(false); // Сбрасываем состояние при загрузке новых данных
+      setShowPastFighters(false);
       
       // Параллельная загрузка результатов
       const [upcomingResult, pastResult] = await Promise.all([
@@ -496,28 +494,6 @@ function App() {
         });
     }
   }, [currentView, pastTournament]);
-
-  /*const deductCoinsForBet = async () => {
-    if (!telegramUser) return false;
-    
-    if (userData.coins >= 100) {
-      const newCoins = userData.coins - 100;
-      
-      setUserData(prev => ({ ...prev, coins: newCoins }));
-      
-      await saveUserProfile({
-        userId: telegramUser.id,
-        username: userData.username,
-        level: userData.level,
-        experience: userData.totalExp,
-        coins: newCoins,
-        lastUpdated: new Date().toISOString()
-      });
-      
-      return true;
-    }
-    return false;
-  };*/
 
   const refundCoins = async () => {
     if (!telegramUser) return;
@@ -674,7 +650,7 @@ function App() {
       <main className="main-content">
         {currentView === 'main' && (
           <div className="tournaments-container">
-            {/* ПРОШЕДШИЙ ТУРНИР - ПОЛНОСТЬЮ ПЕРЕРАБОТАННЫЙ БЛОК */}
+            {/* ПРОШЕДШИЙ ТУРНИР */}
             {pastTournament ? (
               <section className="tournament-section past">
                 <div className="tournament-header">
@@ -691,64 +667,63 @@ function App() {
                   ) : hasPastBet ? (
                     <>
                       {!showPastFighters ? (
-  // КАРТОЧКА ТУРНИРА (такого же размера, как карточка бойца - 20% ширины)
-  <div className="tournament-card-container">
-    <div 
-      className="tournament-card" 
-      onClick={() => setShowPastFighters(true)}
-    >
-      <div className="tournament-card-damage-box">
-        TOTAL: {calculateTotalDamage(userData.mySelections.past)}
-      </div>
-      <div className="tournament-card-image">
-        <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
-      </div>
-      <div className="tournament-card-name">{pastTournament.name}</div>
-    </div>
-  </div>
-) : (
-  // КАРТОЧКИ БОЙЦОВ
-  <>
-    <div className="selected-fighters-grid">
-      {userData.mySelections.past.map((sel, idx) => {
-        const isWinner = sel.fighter['W/L'] === 'win';
-        return (
-          <div key={idx} className="selected-fighter-card" 
-               style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-            <div className="selected-fighter-damage-box">
-              {roundDamage(sel.fighter['Total Damage'])}
-            </div>
-            <div className="selected-fighter-avatar-square">
-              <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`} 
-                   alt={sel.fighter.Fighter}
-                   onError={(e) => {
-                     (e.target as HTMLImageElement).style.display = 'none';
-                     const parent = (e.target as HTMLImageElement).parentElement;
-                     if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
-                   }} />
-            </div>
-            <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
-            {isWinner && <span className="winner-crown">👑</span>}
-          </div>
-        );
-      })}
-    </div>
-    <div className="total-damage-button-wrapper">
-      <div className="total-damage-button">
-        TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.past)}
-      </div>
-      <button 
-        className="close-fighters-button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setShowPastFighters(false);
-        }}
-      >
-        CLOSE
-      </button>
-    </div>
-  </>
-)}
+                        // КАРТОЧКА ТУРНИРА
+                        <div className="tournament-card-container">
+                          <div 
+                            className="tournament-card" 
+                            onClick={() => setShowPastFighters(true)}
+                          >
+                            <div className="tournament-card-damage-box">
+                              TOTAL: {calculateTotalDamage(userData.mySelections.past)}
+                            </div>
+                            <div className="tournament-card-image">
+                              <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
+                            </div>
+                            <div className="tournament-card-name">{pastTournament.name}</div>
+                          </div>
+                        </div>
+                      ) : (
+                        // КАРТОЧКИ БОЙЦОВ С ФУТЕРОМ
+                        <>
+                          <div className="selected-fighters-grid">
+                            {userData.mySelections.past.map((sel, idx) => {
+                              const isWinner = sel.fighter['W/L'] === 'win';
+                              return (
+                                <div key={idx} className="selected-fighter-card" 
+                                     style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
+                                  <div className="selected-fighter-damage-box">
+                                    {roundDamage(sel.fighter['Total Damage'])}
+                                  </div>
+                                  <div className="selected-fighter-avatar-square">
+                                    <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`} 
+                                         alt={sel.fighter.Fighter}
+                                         onError={(e) => {
+                                           (e.target as HTMLImageElement).style.display = 'none';
+                                           const parent = (e.target as HTMLImageElement).parentElement;
+                                           if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
+                                         }} />
+                                  </div>
+                                  <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
+                                  {isWinner && <span className="winner-crown">👑</span>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          
+                          {/* ЕДИНЫЙ ФУТЕР */}
+                          <div className="tournament-footer">
+                            <div className="footer-total-damage">
+                              TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.past)}
+                            </div>
+                            <button 
+                              className="footer-close-button"
+                              onClick={() => setShowPastFighters(false)}
+                            >
+                              CLOSE
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </>
                   ) : (
                     <div className="tournament-message">BETS ARE CLOSED</div>
@@ -759,7 +734,7 @@ function App() {
               <TournamentSkeleton />
             )}
 
-            {/* БУДУЩИЙ ТУРНИР - БЕЗ ИЗМЕНЕНИЙ */}
+            {/* БУДУЩИЙ ТУРНИР */}
             {upcomingTournament ? (
               <section className="tournament-section upcoming">
                 <div className="tournament-header">
@@ -798,8 +773,15 @@ function App() {
                           );
                         })}
                       </div>
-                      <div className="total-damage-button">
-                        TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.upcoming)}
+                      
+                      {/* ЕДИНЫЙ ФУТЕР (с неактивной кнопкой для будущего турнира) */}
+                      <div className="tournament-footer">
+                        <div className="footer-total-damage">
+                          TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.upcoming)}
+                        </div>
+                        <button className="footer-close-button" disabled>
+                          CLOSE
+                        </button>
                       </div>
                     </>
                   ) : (

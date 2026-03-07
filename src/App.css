@@ -174,7 +174,7 @@ body {
 
 .tournament-content {
   flex: 1;
-  padding: 5px 0 5px 0;
+  padding: 13px 0 16px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -285,46 +285,22 @@ body {
   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
 }
 
-/* Кнопка общего урона для обоих турниров */
-.total-damage-button {
-  width: 100%;
-  height: 10%;
-  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 0;
-  padding: 0 10px;
-  cursor: default;
-  pointer-events: none;
-  color: #000000;
-  font-size: 16px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-sizing: border-box;
-  z-index: 1;
-}
+/* ===== КАРТОЧКА ТУРНИРА ===== */
 
-/* ===== КАРТОЧКА ТУРНИРА (как карточка бойца - 20% ширины) ===== */
-
-/* Контейнер для карточки турнира, чтобы она была в сетке */
 .tournament-card-container {
   display: flex;
   justify-content: center;
   width: 100%;
-  padding: 0 0px;
+  padding: 0 2px;
 }
 
-/* Сама карточка турнира - размеры как у selected-fighter-card */
 .tournament-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 30%; /* ровно как карточка бойца в сетке 5 колонок */
+  width: 20%;
   min-width: 0;
-  background: #313130;
+  background: #1C1D1F;
   cursor: pointer;
   transition: opacity 0.2s ease;
   padding: 0;
@@ -356,9 +332,9 @@ body {
 }
 
 .tournament-card-image {
-  width: 90%;
+  width: 100%;
   aspect-ratio: 1 / 1;
-  background: #313130;
+  background: #3D3D3B;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -388,44 +364,69 @@ body {
   min-height: 2.6em;
 }
 
-/* ===== ОБНОВЛЕННАЯ КНОПКА CLOSE ===== */
+/* ===== ЕДИНЫЙ ФУТЕР ДЛЯ ВСЕХ ТУРНИРОВ ===== */
 
-/* Обертка для кнопки TOTAL DAMAGE и CLOSE */
-.total-damage-button-wrapper {
-  position: relative;
-  width: 100%;
-  margin-top: 0;
+.tournament-footer {
+  display: flex;
+  width: calc(100% - 32px);
+  margin: 8px 16px 0 16px;
+  gap: 8px;
+  align-items: stretch;
+  height: 52.8px; /* 48px * 1.1 */
 }
 
-/* Кнопка CLOSE - на одном уровне с TOTAL DAMAGE, но выше */
-.close-fighters-button {
-  position: absolute;
-  right: 8px;
-  top: 50%; /* Меняем bottom на top для более точного позиционирования */
-  transform: translateY(-50%); /* Центрируем по вертикали относительно TOTAL DAMAGE */
+.footer-total-damage {
+  flex: 7;
+  height: 100%;
+  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footer-close-button {
+  flex: 3;
+  height: 100%;
   background: #B20101;
   border: 1px solid #FFFFFF;
   border-radius: 4px;
   color: #FFFFFF;
   font-size: 12px;
   font-weight: 600;
-  padding: 8px 16px;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  z-index: 10;
   transition: background 0.2s ease;
-  height: 48px; /* 48px * 1.1 = 52.8px (на 10% выше кнопки TOTAL DAMAGE) */
-  line-height: 1; /* Центрируем текст вертикально */
-  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  white-space: nowrap;
 }
 
-.close-fighters-button:hover {
+.footer-close-button:hover:not(:disabled) {
   background: #8B0000;
 }
 
-.close-fighters-button:active {
+.footer-close-button:active:not(:disabled) {
   background: #6B0000;
+}
+
+.footer-close-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #666D74;
+  border-color: #888;
 }
 
 /* Окно выбора бойцов */
@@ -1205,17 +1206,6 @@ body {
     height: 14px;
     font-size: 9px;
   }
-
-  .total-damage-button-wrapper {
-    margin-bottom: 6px;
-    min-height: 52px;
-  }
-  
-  .total-damage-button {
-    height: 44px;
-    font-size: 14px;
-    margin-top: 3px;
-  }
   
   .tournament-card {
     min-height: 80px;
@@ -1232,12 +1222,19 @@ body {
     min-height: 2.4em;
   }
   
-  .close-fighters-button {
-    font-size: 11px;
-    padding: 7px 14px;
-    height: 48.4px; /* 44px * 1.1 = 48.4px */
-    line-height: 34.4px;
-    right: 6px;
+  .tournament-footer {
+    width: calc(100% - 24px);
+    margin: 6px 12px 0 12px;
+    height: 48.4px;
+    gap: 6px;
+  }
+  
+  .footer-total-damage {
+    font-size: 12px;
+  }
+  
+  .footer-close-button {
+    font-size: 10px;
   }
   
   .bottom-nav {
@@ -1350,24 +1347,20 @@ body {
     padding: 4px 1px 2px 1px;
     min-height: 2.2em;
   }
-
-  .total-damage-button-wrapper {
-    margin-bottom: 4px;
-    min-height: 48px;
+  
+  .tournament-footer {
+    width: calc(100% - 16px);
+    margin: 4px 8px 0 8px;
+    height: 44px;
+    gap: 4px;
   }
   
-  .total-damage-button {
-    height: 40px;
-    font-size: 13px;
-    padding: 0 12px;
+  .footer-total-damage {
+    font-size: 11px;
   }
   
-  .close-fighters-button {
-    font-size: 10px;
-    padding: 6px 12px;
-    height: 44px; /* 40px * 1.1 = 44px */
-    line-height: 32px;
-    right: 4px;
+  .footer-close-button {
+    font-size: 9px;
   }
   
   .fighter-card {

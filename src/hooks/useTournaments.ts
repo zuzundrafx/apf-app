@@ -10,6 +10,43 @@ const tournamentCache = new Map<string, {
 
 const CACHE_DURATION = 3600000; // 1 час в миллисекундах
 
+// Функция для безопасного парсинга даты
+const parseDate = (dateStr: string): Date | null => {
+  try {
+    if (!dateStr) return null;
+    
+    // Пробуем разные форматы
+    let date: Date | null = null;
+    
+    // Формат "March 07 2026"
+    const parts = dateStr.split(' ');
+    if (parts.length === 3) {
+      const month = parts[0];
+      const day = parseInt(parts[1]);
+      const year = parseInt(parts[2]);
+      
+      const months: { [key: string]: number } = {
+        'January': 0, 'February': 1, 'March': 2, 'April': 3,
+        'May': 4, 'June': 5, 'July': 6, 'August': 7,
+        'September': 8, 'October': 9, 'November': 10, 'December': 11
+      };
+      
+      if (months[month] !== undefined) {
+        date = new Date(year, months[month], day);
+      }
+    }
+    
+    // Если не получилось, пробуем стандартный парсинг
+    if (!date || isNaN(date.getTime())) {
+      date = new Date(dateStr);
+    }
+    
+    return date && !isNaN(date.getTime()) ? date : null;
+  } catch {
+    return null;
+  }
+};
+
 export function useTournaments() {
   const [pastTournament, setPastTournament] = useState<Tournament | null>(null);
   const [upcomingTournament, setUpcomingTournament] = useState<Tournament | null>(null);
@@ -29,7 +66,7 @@ export function useTournaments() {
       setLoadingProgress(30);
       
       // Разделяем на прошедшие и будущие
-      const pastFiles = files.filter(f => f.name.startsWith('UFC_'));
+      const pastFiles = files.filter(f => f.name.startsWith('UFC_') && !f.name.startsWith('UPCOMING_'));
       const upcomingFiles = files.filter(f => f.name.startsWith('UPCOMING_'));
       
       console.log('Past files:', pastFiles);
@@ -61,7 +98,9 @@ export function useTournaments() {
       setLoadingStage('Loading past tournament...');
       setLoadingProgress(50);
       
-      // Загружаем прошедший турнир
+      // Загружаем прошедший турнир (самый свежий по дате)
+      const pastTournaments: Tournament[] = [];
+      
       for (const [baseName, files] of tournamentMap.entries()) {
         if (files.past) {
           const tournament = parseTournamentFromFilename(files.past.name) as Tournament;
@@ -85,18 +124,28 @@ export function useTournaments() {
             }
           }
           
-          if (!latestPast || new Date(tournament.date) > new Date(latestPast.date)) {
-            latestPast = tournament;
-          }
+          pastTournaments.push(tournament);
         }
       }
+      
+      // Сортируем прошедшие турниры по дате (от новых к старым)
+      pastTournaments.sort((a, b) => {
+        const dateA = parseDate(a.date);
+        const dateB = parseDate(b.date);
+        if (!dateA || !dateB) return 0;
+        return dateB.getTime() - dateA.getTime();
+      });
+      
+      latestPast = pastTournaments[0] || null;
       
       setLoadingStage('Loading upcoming tournament...');
       setLoadingProgress(70);
       
-      // Загружаем будущий турнир
+      // Загружаем будущие турниры
+      const upcomingTournaments: Tournament[] = [];
+      
       for (const [baseName, files] of tournamentMap.entries()) {
-        if (files.upcoming && !files.past) {
+        if (files.upcoming) {
           const tournament = parseTournamentFromFilename(files.upcoming.name) as Tournament;
           
           // Проверяем кэш
@@ -118,47 +167,61 @@ export function useTournaments() {
             }
           }
           
-          const tournamentDate = new Date(tournament.date);
-          if (tournamentDate >= now) {
-            if (!latestUpcoming || new Date(tournament.date) < new Date(latestUpcoming.date)) {
-              latestUpcoming = tournament;
+          // Парсим дату турнира
+          const tournamentDate = parseDate(tournament.date);
+          console.log(`Tournament ${tournament.name} date:`, tournament.date, 'parsed:', tournamentDate);
+          
+          // Если дата парсится и турнир в будущем (или сегодня)
+          if (tournamentDate) {
+            // Сравниваем без времени, только по дате
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const tourDate = new Date(tournamentDate);
+            tourDate.setHours(0, 0, 0, 0);
+            
+            if (tourDate >= today) {
+              upcomingTournaments.push(tournament);
+            } else {
+              console.log(`Турнир ${tournament.name} пропущен - дата в прошлом`);
             }
+          } else {
+            // Если дату не удалось распарсить, все равно показываем турнир
+            console.log(`Дата не распарсилась для ${tournament.name}, показываем как есть`);
+            upcomingTournaments.push(tournament);
           }
         }
       }
       
-      // Если не нашли подходящий будущий турнир, берем ближайший
+      // Сортируем будущие турниры по дате (от ближайших к дальним)
+      upcomingTournaments.sort((a, b) => {
+        const dateA = parseDate(a.date);
+        const dateB = parseDate(b.date);
+        if (!dateA || !dateB) return 0;
+        return dateA.getTime() - dateB.getTime();
+      });
+      
+      // Берем самый ближайший будущий турнир
+      latestUpcoming = upcomingTournaments[0] || null;
+      
+      // Если не нашли ни одного будущего турнира с корректной датой,
+      // но есть файлы с префиксом UPCOMING_, показываем первый
       if (!latestUpcoming && upcomingFiles.length > 0) {
-        const sortedUpcoming = await Promise.all(
-          upcomingFiles.map(async (file) => {
-            const tournament = parseTournamentFromFilename(file.name) as Tournament;
-            
-            const cacheKey = `tournament_${file.name}`;
-            const cached = tournamentCache.get(cacheKey);
-            
-            if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-              tournament.data = cached.data;
-            } else {
-              const data = await downloadTournamentFile(file.name);
-              tournament.data = data;
-              
-              if (data) {
-                tournamentCache.set(cacheKey, {
-                  data,
-                  timestamp: Date.now()
-                });
-              }
-            }
-            
-            return tournament;
-          })
-        );
+        console.log('Используем первый UPCOMING файл без проверки даты');
+        const firstUpcoming = upcomingFiles[0];
+        const tournament = parseTournamentFromFilename(firstUpcoming.name) as Tournament;
         
-        const futureTournaments = sortedUpcoming.filter(t => new Date(t.date) >= now);
-        if (futureTournaments.length > 0) {
-          futureTournaments.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-          latestUpcoming = futureTournaments[0];
+        const cacheKey = `tournament_${firstUpcoming.name}`;
+        const cached = tournamentCache.get(cacheKey);
+        
+        if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+          tournament.data = cached.data;
+        } else {
+          const data = await downloadTournamentFile(firstUpcoming.name);
+          tournament.data = data;
         }
+        
+        latestUpcoming = tournament;
       }
       
       setLoadingStage('Finalizing...');
