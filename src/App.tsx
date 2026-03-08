@@ -515,6 +515,39 @@ function App() {
     });
   };
 
+  // Функция для открытия окна выбора со списанием монет
+  const openSelectionModal = async (tournament: Tournament) => {
+    if (!telegramUser) return;
+    
+    // Проверяем, хватает ли монет
+    if (userData.coins < 100) {
+      console.log('Not enough coins');
+      return;
+    }
+    
+    // Списываем 100 монет
+    const newCoins = userData.coins - 100;
+    
+    // Обновляем состояние
+    setUserData(prev => ({ ...prev, coins: newCoins }));
+    
+    // Сохраняем в профиль
+    await saveUserProfile({
+      userId: telegramUser.id,
+      username: userData.username,
+      level: userData.level,
+      experience: userData.totalExp,
+      coins: newCoins,
+      lastUpdated: new Date().toISOString()
+    });
+    
+    // Открываем окно выбора
+    setSelectedTournament(tournament);
+    setCurrentView('selection');
+    loadSelectionData(tournament);
+    setSelectedFighters(new Map());
+  };
+
   // Обработчик для кнопки CLOSE с защитой от множественных нажатий
   const handleCloseClick = async () => {
     if (isClosing) return; // Если уже нажали - игнорируем
@@ -798,13 +831,12 @@ function App() {
                       </div>
                     </>
                   ) : (
+                    // Используем openSelectionModal вместо прямого setState
                     userData.coins >= 100 && new Date(upcomingTournament.date) > new Date() ? (
-                      <button className="select-button" onClick={() => {
-                        setSelectedTournament(upcomingTournament);
-                        setCurrentView('selection');
-                        loadSelectionData(upcomingTournament);
-                        setSelectedFighters(new Map());
-                      }}>
+                      <button 
+                        className="select-button" 
+                        onClick={() => openSelectionModal(upcomingTournament)}
+                      >
                         SELECT YOUR FIGHT CARD
                       </button>
                     ) : (
