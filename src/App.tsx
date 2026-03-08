@@ -165,6 +165,9 @@ function App() {
 
   // Состояние для переключения между карточкой турнира и карточками бойцов
   const [showPastFighters, setShowPastFighters] = useState(false);
+  
+  // Состояние для блокировки кнопки CLOSE (чтобы не начислялись монеты много раз)
+  const [isClosing, setIsClosing] = useState(false);
 
   const [userData, setUserData] = useState({
     username: 'Player',
@@ -512,6 +515,16 @@ function App() {
     });
   };
 
+  // Обработчик для кнопки CLOSE с защитой от множественных нажатий
+  const handleCloseClick = async () => {
+    if (isClosing) return; // Если уже нажали - игнорируем
+    
+    setIsClosing(true); // Блокируем кнопку
+    await refundCoins(); // Возвращаем монеты
+    setCurrentView('main'); // Возвращаемся на главный экран
+    setIsClosing(false); // Разблокируем для следующего раза
+  };
+
   const saveSelections = async (selections: Map<string, Fighter>) => {
     if (!telegramUser) return;
     
@@ -843,10 +856,13 @@ function App() {
             <div className="selection-content">
               <div className="selection-header">
                 <h2>{selectedTournament.name}</h2>
-                <button className="close-button" onClick={async () => {
-                  await refundCoins();
-                  setCurrentView('main');
-                }}>CLOSE</button>
+                <button 
+                  className="close-button" 
+                  onClick={handleCloseClick}
+                  disabled={isClosing}
+                >
+                  {isClosing ? 'CLOSING...' : 'CLOSE'}
+                </button>
               </div>
               
               <div className="selection-progress">
