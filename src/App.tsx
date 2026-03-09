@@ -226,89 +226,109 @@ function App() {
   };
 
   // ОПТИМИЗИРОВАННАЯ функция принятия наград
-  const acceptRewards = async () => {
-    if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
+  // ОПТИМИЗИРОВАННАЯ функция принятия наград
+const acceptRewards = async () => {
+  if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
+  
+  setIsAcceptingRewards(true);
+  
+  try {
+    // 1. Расчет новых значений (мгновенно)
+    const newCoins = userData.coins + pendingRewards.totalCoins;
+    const newTotalExp = userData.totalExp + pendingRewards.totalExp;
+    const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
     
-    setIsAcceptingRewards(true);
+    // 2. Находим турнир и его текущие selections
+    const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
     
-    try {
-      // 1. Расчет новых значений (мгновенно)
-      const newCoins = userData.coins + pendingRewards.totalCoins;
-      const newTotalExp = userData.totalExp + pendingRewards.totalExp;
-      const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
-      
-      // 2. ОБНОВЛЯЕМ СОСТОЯНИЕ СРАЗУ (UI откликается мгновенно)
-      setUserData(prev => ({
-        ...prev,
-        coins: newCoins,
-        totalExp: newTotalExp,
-        level,
-        currentExp,
-        nextLevelExp
-      }));
-      
-      // 3. Закрываем модалку (пользователь видит, что действие принято)
-      setShowRewardsModal(false);
-      const acceptedTournamentName = pendingRewards.tournamentName;
-      setPendingRewards(null);
-      
-      // 4. Параллельное выполнение запросов
-      const tournament = pastTournaments.find(t => t.name === acceptedTournamentName);
-      
-      if (tournament) {
-        // Запускаем оба запроса параллельно
-        await Promise.all([
-          // Сохраняем профиль
-          saveUserProfile({
-            userId: telegramUser.id,
-            username: userData.username,
-            level,
-            experience: newTotalExp,
-            coins: newCoins,
-            lastUpdated: new Date().toISOString()
-          }),
-          
-          // Загружаем и обновляем результат турнира
-          (async () => {
-            const currentResult = await loadUserResults(tournament.name, telegramUser.id);
-            if (currentResult) {
-              const updatedResult: UserResult = {
-                ...currentResult,
-                rewardsAccepted: true,
-                rewards: {
-                  coins: pendingRewards.totalCoins,
-                  experience: pendingRewards.totalExp
-                }
-              };
-              await saveUserResults(tournament.name, updatedResult);
-            }
-          })()
-        ]);
-        
-        // 5. Обновляем только этот конкретный турнир в состоянии
-        // Вместо перезагрузки всех, обновляем локально
-        setUserData(prev => {
-          const updatedPastSelections = prev.mySelections.past.map(sel => sel);
-          // Добавляем пометку, что награды получены (в данных это уже обновлено на сервере)
-          return {
-            ...prev,
-            mySelections: {
-              ...prev.mySelections,
-              past: updatedPastSelections
-            }
-          };
-        });
+    // Получаем текущие selections для этого турнира
+    const tournamentSelections = userData.mySelections.past.filter(
+      (sel: SelectedFighter) => tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+    );
+    
+    // 3. ОБНОВЛЯЕМ СОСТОЯНИЕ СРАЗУ (UI откликается мгновенно)
+    setUserData(prev => ({
+      ...prev,
+      coins: newCoins,
+      totalExp: newTotalExp,
+      level,
+      currentExp,
+      nextLevelExp,
+      mySelections: {
+        ...prev.mySelections,
+        past: prev.mySelections.past.map(sel => {
+          // Для каждого выбранного бойца в этом турнире помечаем, что награды получены
+          // Сами данные остаются теми же, но турнир теперь будет отображаться
+          return sel;
+        })
       }
-      
-      setShowPastFighters(false);
-      
-    } catch (error) {
-      console.error('Ошибка при получении наград:', error);
-      // В случае ошибки показываем уведомление (можно добавить toast)
-    } finally {
-      setIsAcceptingRewards(false);
+    }));
+    
+    // 4. Закрываем модалку (пользователь видит, что действие принято)
+    setShowRewardsModal(false);
+    const acceptedTournamentName = pendingRewards.tournamentName;
+    setPendingRewards(null);
+    
+    // 5. Параллельное выполнение запросов
+    if (tournament) {
+      // Запускаем оба запроса параллельно
+      await Promise.all([
+        // Сохраняем профиль
+        saveUserProfile({
+          userId: telegramUser.id,
+          username: userData.username,
+          level,
+          experience: newTotalExp,
+          coins: newCoins,
+          lastUpdated: new Date().toISOString()
+        }),
+        
+        // Загружаем и обновляем результат турнира
+        (async () => {
+          const currentResult = await loadUserResults(tournament.name, telegramUser.id);
+          if (currentResult) {
+            const updatedResult: UserResult = {
+              ...currentResult,
+              rewardsAccepted: true,
+              rewards: {
+                coins: pendingRewards.totalCoins,
+                experience: pendingRewards.totalExp
+              }
+            };
+            await saveUserResults(tournament.name, updatedResult);
+            
+            // После успешного сохранения на сервере, обновляем состояние с актуальными данными
+            // Загружаем свежие данные по этому турниру
+            const freshResult = await loadUserResults(tournament.name, telegramUser.id);
+            if (freshResult) {
+              setUserData(prev => {
+                // Удаляем старые selections этого турнира и добавляем свежие
+                const otherPastSelections = prev.mySelections.past.filter(
+                  (sel: SelectedFighter) => !tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+                );
+                
+                return {
+                  ...prev,
+                  mySelections: {
+                    ...prev.mySelections,
+                    past: [...otherPastSelections, ...freshResult.selections]
+                  }
+                };
+              });
+            }
+          }
+        })()
+      ]);
     }
-  };
+    
+    setShowPastFighters(false);
+    
+  } catch (error) {
+    console.error('Ошибка при получении наград:', error);
+  } finally {
+    setIsAcceptingRewards(false);
+  }
+};
 
   // Функция загрузки данных для окна выбора
   const loadSelectionData = async (tournament: Tournament) => {
