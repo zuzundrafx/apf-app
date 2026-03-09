@@ -167,14 +167,14 @@ body {
   background: #4CAF50;
 }
 
-/* ===== КОНТЕНТ ТУРНИРА - исправленные отступы ===== */
+/* ===== КОНТЕНТ ТУРНИРА ===== */
 .tournament-content {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2% 0; /* Отступы сверху и снизу по 2% */
+  padding: 2% 0;
   overflow: hidden;
   height: 100%;
 }
@@ -203,30 +203,21 @@ body {
   margin: 0 clamp(8px, 4vw, 16px);
 }
 
-/* ===== КАРТОЧКА ТУРНИРА ===== */
-
-.tournament-card-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  padding: 0 clamp(1px, 0.5vw, 2px);
-}
+/* ===== БАЗОВЫЕ СТИЛИ КАРТОЧКИ ТУРНИРА ===== */
+/* Эти стили применяются к карточке независимо от контекста */
 
 .tournament-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 33%;
+  width: 100%; /* Берет ширину от родителя */
+  max-width: 120px; /* Максимальная ширина как у карточки бойца */
   background: #313130;
   cursor: pointer;
   transition: opacity 0.2s ease;
   padding: 0;
   margin: 0;
   height: auto;
-  max-height: 100%;
 }
 
 .tournament-card:hover {
@@ -269,7 +260,6 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
-
 }
 
 .tournament-card-name {
@@ -290,7 +280,74 @@ body {
   margin-top: auto;
 }
 
-/* ===== СЕТКА КАРТОЧЕК БОЙЦОВ - исправлено ===== */
+/* ===== РЕЖИМ ОДНОЙ КАРТОЧКИ (центрирование) ===== */
+.tournament-card-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0 clamp(1px, 0.5vw, 2px);
+}
+
+.tournament-card-container .tournament-card {
+  width: 33%; /* 33% как было изначально */
+  max-width: 120px;
+}
+
+/* ===== РЕЖИМ СЕТКИ (несколько карточек) ===== */
+.tournament-card-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.tournament-card-wrapper .tournament-card {
+  width: 100%; /* В сетке карточка занимает всю ширину ячейки */
+  max-width: 120px; /* Но не больше 120px */
+}
+
+.tournament-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  width: 100%;
+  padding: 0 2px;
+  overflow-y: auto;
+  max-height: 100%;
+  justify-items: center; /* Центрируем карточки по горизонтали */
+  align-items: start; /* Выравниваем по верхнему краю */
+}
+
+/* Адаптация для разных экранов */
+@media (max-width: 375px) {
+  .tournament-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 6px;
+  }
+  
+  .tournament-card,
+  .tournament-card-container .tournament-card,
+  .tournament-card-wrapper .tournament-card {
+    max-width: 100px;
+  }
+}
+
+@media (max-width: 320px) {
+  .tournament-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 4px;
+  }
+  
+  .tournament-card,
+  .tournament-card-container .tournament-card,
+  .tournament-card-wrapper .tournament-card {
+    max-width: 85px;
+  }
+}
+
+/* ===== СЕТКА КАРТОЧЕК БОЙЦОВ ===== */
 
 .selected-fighters-grid {
   display: grid;
@@ -313,7 +370,7 @@ body {
   min-width: 0;
   width: 100%;
   height: auto;
-  aspect-ratio: 1 / 1.2; /* Фиксированное соотношение сторон */
+  aspect-ratio: 1 / 1.2;
 }
 
 .selected-fighter-damage-box {
@@ -352,12 +409,12 @@ body {
   text-align: center;
   padding: 2px 0;
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* Всегда 2 строки */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   width: 100%;
   line-height: 1.3;
-  height: 3.1em; /* Фиксированная высота для 2 строк */
+  height: 3.1em;
   flex-shrink: 0;
   word-break: break-word;
 }
@@ -370,7 +427,7 @@ body {
   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
 }
 
-/* ===== ФУТЕР ДЛЯ ТУРНИРОВ - исправлено ===== */
+/* ===== ФУТЕР ДЛЯ ТУРНИРОВ ===== */
 
 .tournament-footer {
   display: flex;
@@ -378,9 +435,9 @@ body {
   margin: 0 clamp(8px, 4vw, 16px);
   gap: clamp(4px, 1vw, 8px);
   align-items: stretch;
-  height: 25%; /* 25% от высоты родительского контейнера */
-  min-height: 30px; /* Минимальная высота */
-  max-height: 70px; /* Максимальная высота */
+  height: 25%;
+  min-height: 30px;
+  max-height: 70px;
   flex-shrink: 0;
   padding-top: 4%;
   box-sizing: border-box;
@@ -437,7 +494,7 @@ body {
   border-color: #888;
 }
 
-/* ===== ОСТАЛЬНЫЕ СТИЛИ (без изменений) ===== */
+/* ===== ОСТАЛЬНЫЕ СТИЛИ ===== */
 
 .selection-modal {
   position: fixed;
@@ -1103,8 +1160,10 @@ body {
 /* ===== МЕДИА-ЗАПРОСЫ ===== */
 
 @media (max-width: 280px) {
-  .tournament-card {
-    width: 33%;
+  .tournament-card,
+  .tournament-card-container .tournament-card,
+  .tournament-card-wrapper .tournament-card {
+    max-width: 75px;
   }
   
   .selected-fighter-card {
@@ -1123,42 +1182,5 @@ body {
 @media (min-width: 376px) and (max-width: 480px) {
   .app {
     max-width: 100%;
-  }
-  
-  .tournament-card {
-    max-width: 200px;
-  }
-}
-
-/* ===== ОБЕРТКА ДЛЯ КАРТОЧКИ ТУРНИРА В СЕТКЕ ===== */
-.tournament-card-wrapper {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-/* ===== СЕТКА ДЛЯ КАРТОЧЕК ТУРНИРОВ ===== */
-.tournament-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
-  width: 100%;
-  padding: 0 2px;
-  overflow-y: auto;
-  max-height: 100%;
-}
-
-/* Адаптация для разных экранов */
-@media (max-width: 375px) {
-  .tournament-cards-grid {
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 6px;
-  }
-}
-
-@media (max-width: 320px) {
-  .tournament-cards-grid {
-    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-    gap: 4px;
   }
 }
