@@ -1130,13 +1130,35 @@ body {
   }
 }
 
+/* ===== ОБЕРТКА ДЛЯ КАРТОЧКИ ТУРНИРА В СЕТКЕ ===== */
+.tournament-card-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
 /* ===== СЕТКА ДЛЯ КАРТОЧЕК ТУРНИРОВ ===== */
 .tournament-cards-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 8px;
   width: 100%;
   padding: 0 2px;
   overflow-y: auto;
+  max-height: 100%;
+}
+
+/* Адаптация для разных экранов */
+@media (max-width: 375px) {
+  .tournament-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 6px;
+  }
+}
+
+@media (max-width: 320px) {
+  .tournament-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 4px;
+  }
 }

@@ -839,115 +839,120 @@ function App() {
             )}
 
             {/* БУДУЩИЕ ТУРНИРЫ */}
-            {upcomingTournaments.length > 0 ? (
-              <section className="tournament-section upcoming">
-                <div className="tournament-header">
-                  <h2>
-                    {selectedUpcomingTournament ? 'UPCOMING TOURNAMENT' : 'UPCOMING TOURNAMENTS'}
-                  </h2>
-                  <div className="tournament-meta">
-                    <span>
-                      {selectedUpcomingTournament 
-                        ? formatDate(upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament)?.date || '')
-                        : `${upcomingTournaments.length} event(s)`}
-                    </span>
-                    <span className="tournament-status upcoming">
-                      {selectedUpcomingTournament ? 'UPCOMING' : 'SCHEDULED'}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="tournament-content">
-                  {loadingUserResults ? (
-                    <div className="tournament-message">Loading...</div>
-                  ) : selectedUpcomingTournament ? (
-                    // ПОКАЗЫВАЕМ КАРТОЧКИ БОЙЦОВ ДЛЯ ВЫБРАННОГО ТУРНИРА
-                    <>
-                      <div className="selected-fighters-grid">
-                        {userData.mySelections.upcoming
-                          .filter((sel: SelectedFighter) => {
-                            const tournament = upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament);
-                            return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
-                          })
-                          .map((sel: SelectedFighter, idx: number) => {
-                            const hasResult = sel.fighter['W/L'] !== null;
-                            return (
-                              <div key={idx} className="selected-fighter-card"
-                                   style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-                                <div className="selected-fighter-damage-box">
-                                  {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
-                                </div>
-                                <div className="selected-fighter-avatar-square">
-                                  <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`}
-                                       alt={sel.fighter.Fighter}
-                                       onError={(e) => {
-                                         (e.target as HTMLImageElement).style.display = 'none';
-                                         const parent = (e.target as HTMLImageElement).parentElement;
-                                         if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
-                                       }} />
-                                </div>
-                                <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
-                              </div>
-                            );
-                          })}
-                      </div>
-                      
-                      {/* ФУТЕР БУДУЩЕГО ТУРНИРА */}
-                      <div className="tournament-footer">
-                        <div className="footer-total-damage">
-                          TOTAL DAMAGE: {calculateTotalDamage(
-                            userData.mySelections.upcoming.filter((sel: SelectedFighter) => {
-                              const tournament = upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament);
-                              return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
-                            })
-                          )}
-                        </div>
-                        <button 
-                          className="footer-close-button"
-                          onClick={() => setSelectedUpcomingTournament(null)}
-                        >
-                          CLOSE
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    // КАРТОЧКИ ВСЕХ БУДУЩИХ ТУРНИРОВ
-                    <div className="tournament-cards-grid">
-                      {upcomingTournaments.map((tournament: Tournament) => {
-                        const hasBetForThisTournament = userData.mySelections.upcoming.some(
-                          (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
-                        );
-                        
-                        return (
-                          <div key={tournament.name} className="tournament-card-container">
-                            <div 
-                              className="tournament-card" 
-                              onClick={() => handleUpcomingTournamentClick(tournament)}
-                            >
-                              <div className="tournament-card-damage-box">
-                                {hasBetForThisTournament 
-                                  ? `TOTAL: ${calculateTotalDamage(
-                                      userData.mySelections.upcoming.filter(
-                                        (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
-                                      )
-                                    )}`
-                                  : 'SELECT'}
-                              </div>
-                              <div className="tournament-card-image">
-                                <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
-                              </div>
-                              <div className="tournament-card-name">{tournament.name}</div>
-                            </div>
-                          </div>
-                        );
-                      })}
+{upcomingTournaments.length > 0 ? (
+  <section className="tournament-section upcoming">
+    <div className="tournament-header">
+      <h2>
+        {selectedUpcomingTournament 
+          ? upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament)?.name 
+          : 'UPCOMING TOURNAMENTS'}
+      </h2>
+      <div className="tournament-meta">
+        <span>
+          {selectedUpcomingTournament 
+            ? formatDate(upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament)?.date || '')
+            : `${upcomingTournaments.length} event(s)`}
+        </span>
+        <span className="tournament-status upcoming">
+          {selectedUpcomingTournament ? 'UPCOMING' : 'SCHEDULED'}
+        </span>
+      </div>
+    </div>
+    
+    <div className="tournament-content">
+      {loadingUserResults ? (
+        <div className="tournament-message">Loading...</div>
+      ) : selectedUpcomingTournament ? (
+        // ПОКАЗЫВАЕМ КАРТОЧКИ БОЙЦОВ ДЛЯ ВЫБРАННОГО ТУРНИРА
+        <>
+          <div className="selected-fighters-grid">
+            {userData.mySelections.upcoming
+              .filter((sel: SelectedFighter) => {
+                const tournament = upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament);
+                return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
+              })
+              .map((sel: SelectedFighter, idx: number) => {
+                const hasResult = sel.fighter['W/L'] !== null;
+                return (
+                  <div key={idx} className="selected-fighter-card"
+                       style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
+                    <div className="selected-fighter-damage-box">
+                      {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
                     </div>
-                  )}
+                    <div className="selected-fighter-avatar-square">
+                      <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`}
+                           alt={sel.fighter.Fighter}
+                           onError={(e) => {
+                             (e.target as HTMLImageElement).style.display = 'none';
+                             const parent = (e.target as HTMLImageElement).parentElement;
+                             if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
+                           }} />
+                    </div>
+                    <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
+                  </div>
+                );
+              })}
+          </div>
+          
+          {/* ФУТЕР БУДУЩЕГО ТУРНИРА */}
+          <div className="tournament-footer">
+            <div className="footer-total-damage">
+              TOTAL DAMAGE: {calculateTotalDamage(
+                userData.mySelections.upcoming.filter((sel: SelectedFighter) => {
+                  const tournament = upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament);
+                  return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
+                })
+              )}
+            </div>
+            <button 
+              className="footer-close-button"
+              onClick={() => setSelectedUpcomingTournament(null)}
+            >
+              CLOSE
+            </button>
+          </div>
+        </>
+      ) : (
+        // КАРТОЧКИ ВСЕХ БУДУЩИХ ТУРНИРОВ В СЕТКЕ
+        <div className="tournament-cards-grid">
+          {upcomingTournaments.map((tournament: Tournament) => {
+            const hasBetForThisTournament = userData.mySelections.upcoming.some(
+              (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+            );
+            
+            // Вычисляем TOTAL для этого турнира, если есть ставка
+            const tournamentTotal = hasBetForThisTournament 
+              ? calculateTotalDamage(
+                  userData.mySelections.upcoming.filter(
+                    (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+                  )
+                )
+              : null;
+            
+            return (
+              <div key={tournament.name} className="tournament-card-wrapper">
+                <div 
+                  className="tournament-card" 
+                  onClick={() => handleUpcomingTournamentClick(tournament)}
+                >
+                  <div className="tournament-card-damage-box">
+                    {hasBetForThisTournament ? `TOTAL: ${tournamentTotal}` : 'SELECT'}
+                  </div>
+                  <div className="tournament-card-image">
+                    <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
+                  </div>
+                  <div className="tournament-card-name">{tournament.name}</div>
                 </div>
-              </section>
-            ) : (
-              <TournamentSkeleton />
-            )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  </section>
+) : (
+  <TournamentSkeleton />
+)}
           </div>
         )}
 
