@@ -320,6 +320,7 @@ body {
   min-height: 0;
   scrollbar-width: none; /* Скрываем скроллбар для Firefox */
   -ms-overflow-style: none; /* Скрываем скроллбар для IE/Edge */
+  justify-content: center; /* Центрируем карточки по горизонтали */
 }
 
 .tournament-cards-grid::-webkit-scrollbar {
