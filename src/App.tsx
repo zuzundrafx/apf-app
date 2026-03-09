@@ -163,8 +163,9 @@ function App() {
   const [selectionData, setSelectionData] = useState<Fighter[] | null>(null);
   const [loadingSelection, setLoadingSelection] = useState(false);
 
-  // Состояние для переключения между карточкой турнира и карточками бойцов
+  // Состояния для переключения между карточкой турнира и карточками бойцов
   const [showPastFighters, setShowPastFighters] = useState(false);
+  const [showUpcomingFighters, setShowUpcomingFighters] = useState(false);
   
   // Состояние для блокировки кнопки CLOSE (чтобы не начислялись монеты много раз)
   const [isClosing, setIsClosing] = useState(false);
@@ -427,6 +428,7 @@ function App() {
       
       setLoadingUserResults(true);
       setShowPastFighters(false);
+      setShowUpcomingFighters(false);
       
       // Параллельная загрузка результатов
       const [upcomingResult, pastResult] = await Promise.all([
@@ -713,7 +715,7 @@ function App() {
                   ) : hasPastBet ? (
                     <>
                       {!showPastFighters ? (
-                        // КАРТОЧКА ТУРНИРА
+                        // КАРТОЧКА ПРОШЕДШЕГО ТУРНИРА
                         <div className="tournament-card-container">
                           <div 
                             className="tournament-card" 
@@ -729,7 +731,7 @@ function App() {
                           </div>
                         </div>
                       ) : (
-                        // КАРТОЧКИ БОЙЦОВ С ФУТЕРОМ
+                        // КАРТОЧКИ БОЙЦОВ ПРОШЕДШЕГО ТУРНИРА С ФУТЕРОМ
                         <>
                           <div className="selected-fighters-grid">
                             {userData.mySelections.past.map((sel, idx) => {
@@ -756,7 +758,7 @@ function App() {
                             })}
                           </div>
                           
-                          {/* ЕДИНЫЙ ФУТЕР */}
+                          {/* ФУТЕР ПРОШЕДШЕГО ТУРНИРА */}
                           <div className="tournament-footer">
                             <div className="footer-total-damage">
                               TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.past)}
@@ -796,39 +798,63 @@ function App() {
                     <div className="tournament-message">Loading...</div>
                   ) : hasUpcomingBet ? (
                     <>
-                      <div className="selected-fighters-grid">
-                        {userData.mySelections.upcoming.map((sel, idx) => {
-                          const hasResult = sel.fighter['W/L'] !== null;
-                          return (
-                            <div key={idx} className="selected-fighter-card"
-                                 style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-                              <div className="selected-fighter-damage-box">
-                                {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
-                              </div>
-                              <div className="selected-fighter-avatar-square">
-                                <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`}
-                                     alt={sel.fighter.Fighter}
-                                     onError={(e) => {
-                                       (e.target as HTMLImageElement).style.display = 'none';
-                                       const parent = (e.target as HTMLImageElement).parentElement;
-                                       if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
-                                     }} />
-                              </div>
-                              <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
+                      {!showUpcomingFighters ? (
+                        // КАРТОЧКА БУДУЩЕГО ТУРНИРА
+                        <div className="tournament-card-container">
+                          <div 
+                            className="tournament-card" 
+                            onClick={() => setShowUpcomingFighters(true)}
+                          >
+                            <div className="tournament-card-damage-box">
+                              TOTAL: {calculateTotalDamage(userData.mySelections.upcoming)}
                             </div>
-                          );
-                        })}
-                      </div>
-                      
-                      {/* ЕДИНЫЙ ФУТЕР (с неактивной кнопкой для будущего турнира) */}
-                      <div className="tournament-footer">
-                        <div className="footer-total-damage">
-                          TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.upcoming)}
+                            <div className="tournament-card-image">
+                              <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
+                            </div>
+                            <div className="tournament-card-name">{upcomingTournament.name}</div>
+                          </div>
                         </div>
-                        <button className="footer-close-button" disabled>
-                          CLOSE
-                        </button>
-                      </div>
+                      ) : (
+                        // КАРТОЧКИ БОЙЦОВ БУДУЩЕГО ТУРНИРА С ФУТЕРОМ
+                        <>
+                          <div className="selected-fighters-grid">
+                            {userData.mySelections.upcoming.map((sel, idx) => {
+                              const hasResult = sel.fighter['W/L'] !== null;
+                              return (
+                                <div key={idx} className="selected-fighter-card"
+                                     style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
+                                  <div className="selected-fighter-damage-box">
+                                    {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
+                                  </div>
+                                  <div className="selected-fighter-avatar-square">
+                                    <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`}
+                                         alt={sel.fighter.Fighter}
+                                         onError={(e) => {
+                                           (e.target as HTMLImageElement).style.display = 'none';
+                                           const parent = (e.target as HTMLImageElement).parentElement;
+                                           if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
+                                         }} />
+                                  </div>
+                                  <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          
+                          {/* ФУТЕР БУДУЩЕГО ТУРНИРА */}
+                          <div className="tournament-footer">
+                            <div className="footer-total-damage">
+                              TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.upcoming)}
+                            </div>
+                            <button 
+                              className="footer-close-button"
+                              onClick={() => setShowUpcomingFighters(false)}
+                            >
+                              CLOSE
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </>
                   ) : (
                     // Используем openSelectionModal вместо прямого setState
