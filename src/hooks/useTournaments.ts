@@ -67,7 +67,7 @@ export function useTournaments() {
       setLoadingStage('Loading past tournaments...');
       setLoadingProgress(50);
       
-      // Загружаем ВСЕ прошедшие турниры
+      // Загружаем ВСЕ прошедшие турниры (для будущего расширения)
       const pastList: Tournament[] = [];
       
       for (const file of pastFiles) {
