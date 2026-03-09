@@ -133,8 +133,36 @@ const TournamentSkeleton = () => (
   </section>
 );
 
+// Функция для проверки, можно ли делать ставки на турнир
+const canPlaceBet = (tournament: Tournament | null, userCoins: number): boolean => {
+  if (!tournament) return false;
+  
+  // 1. Проверяем монеты
+  if (userCoins < 100) return false;
+  
+  // 2. Получаем дату турнира
+  const tournamentDate = new Date(tournament.date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // 3. Проверяем, есть ли статистика у бойцов
+  const hasStats = tournament.data?.some(fighter => {
+    const totalDamage = Number(fighter['Total Damage']) || 0;
+    const str = Number(fighter['Str']) || 0;
+    const hasWinLoss = fighter['W/L'] !== null && fighter['W/L'] !== undefined;
+    
+    return hasWinLoss || totalDamage > 0 || str > 0;
+  }) ?? false;
+  
+  // 4. Проверяем, прошла ли дата турнира
+  const isDatePassed = tournamentDate < today;
+  
+  // 5. Логика: можно ставить если (дата не прошла) ИЛИ (нет статистики)
+  return !(isDatePassed && hasStats);
+};
+
 function App() {
-  const { pastTournament, upcomingTournament, loading, loadingProgress, loadingStage, error } = useTournaments();
+  const { pastTournament, upcomingTournaments, loading, loadingProgress, loadingStage, error } = useTournaments();
   
   const [selectedFighters, setSelectedFighters] = useState<Map<string, Fighter>>(new Map());
   const [currentView, setCurrentView] = useState<'main' | 'leaderboard' | 'selection'>('main');
@@ -165,7 +193,7 @@ function App() {
 
   // Состояния для переключения между карточкой турнира и карточками бойцов
   const [showPastFighters, setShowPastFighters] = useState(false);
-  const [showUpcomingFighters, setShowUpcomingFighters] = useState(false);
+  const [selectedUpcomingTournament, setSelectedUpcomingTournament] = useState<string | null>(null);
   
   // Состояние для блокировки кнопки CLOSE (чтобы не начислялись монеты много раз)
   const [isClosing, setIsClosing] = useState(false);
@@ -185,7 +213,6 @@ function App() {
     hasBet: false
   });
 
-  const hasUpcomingBet = userData.mySelections.upcoming.length > 0;
   const hasPastBet = userData.mySelections.past.length > 0;
 
   const calculateTotalDamage = (selections: SelectedFighter[]): number => {
@@ -428,26 +455,30 @@ function App() {
       
       setLoadingUserResults(true);
       setShowPastFighters(false);
-      setShowUpcomingFighters(false);
+      setSelectedUpcomingTournament(null);
       
-      // Параллельная загрузка результатов
-      const [upcomingResult, pastResult] = await Promise.all([
-        upcomingTournament ? loadUserResults(upcomingTournament.name, telegramUser.id) : null,
-        pastTournament ? loadUserResults(pastTournament.name, telegramUser.id) : null
-      ]);
+      // Загружаем результаты для прошедшего турнира
+      const pastResult = pastTournament ? await loadUserResults(pastTournament.name, telegramUser.id) : null;
       
-      if (upcomingResult && upcomingResult.selections.length > 0 && isMounted) {
+      // Загружаем результаты для ВСЕХ будущих турниров
+      const upcomingResults = await Promise.all(
+        upcomingTournaments.map((tournament: Tournament) => loadUserResults(tournament.name, telegramUser.id))
+      );
+      
+      // Собираем все ставки на будущие турниры
+      const allUpcomingSelections: SelectedFighter[] = [];
+      upcomingResults.forEach((result: UserResult | null) => {
+        if (result && result.selections.length > 0) {
+          allUpcomingSelections.push(...result.selections);
+        }
+      });
+      
+      if (allUpcomingSelections.length > 0 && isMounted) {
         setUserData(prev => ({
           ...prev,
-          mySelections: { ...prev.mySelections, upcoming: upcomingResult.selections },
+          mySelections: { ...prev.mySelections, upcoming: allUpcomingSelections },
           hasBet: true
         }));
-        
-        const selectionsMap = new Map<string, Fighter>();
-        upcomingResult.selections.forEach((sel: SelectedFighter) => {
-          selectionsMap.set(sel.weightClass, sel.fighter);
-        });
-        setSelectedFighters(selectionsMap);
       }
       
       if (pastResult && pastResult.selections.length > 0 && isMounted) {
@@ -482,7 +513,7 @@ function App() {
     loadUserData();
     
     return () => { isMounted = false; };
-  }, [upcomingTournament, pastTournament, telegramUser, profileLoaded]);
+  }, [upcomingTournaments, pastTournament, telegramUser, profileLoaded]);
 
   // Загружаем рейтинг
   useEffect(() => {
@@ -521,9 +552,9 @@ function App() {
   const openSelectionModal = async (tournament: Tournament) => {
     if (!telegramUser) return;
     
-    // Проверяем, хватает ли монет
-    if (userData.coins < 100) {
-      console.log('Not enough coins');
+    // Проверяем, можно ли делать ставку
+    if (!canPlaceBet(tournament, userData.coins)) {
+      console.log('Cannot place bet');
       return;
     }
     
@@ -552,12 +583,27 @@ function App() {
 
   // Обработчик для кнопки CLOSE с защитой от множественных нажатий
   const handleCloseClick = async () => {
-    if (isClosing) return; // Если уже нажали - игнорируем
+    if (isClosing) return;
     
-    setIsClosing(true); // Блокируем кнопку
-    await refundCoins(); // Возвращаем монеты
-    setCurrentView('main'); // Возвращаемся на главный экран
-    setIsClosing(false); // Разблокируем для следующего раза
+    setIsClosing(true);
+    await refundCoins();
+    setCurrentView('main');
+    setIsClosing(false);
+  };
+
+  // Обработчик клика по карточке будущего турнира
+  const handleUpcomingTournamentClick = (tournament: Tournament) => {
+    const hasBetForThisTournament = userData.mySelections.upcoming.some(
+      (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+    );
+    
+    if (hasBetForThisTournament) {
+      // Если есть ставка - показываем карточки бойцов
+      setSelectedUpcomingTournament(tournament.name);
+    } else {
+      // Если нет ставки - открываем окно выбора
+      openSelectionModal(tournament);
+    }
   };
 
   const saveSelections = async (selections: Map<string, Fighter>) => {
@@ -581,9 +627,13 @@ function App() {
       if (saved) {
         setUserData(prev => ({
           ...prev,
-          mySelections: { ...prev.mySelections, upcoming: selectionsArray },
+          mySelections: { 
+            ...prev.mySelections, 
+            upcoming: [...prev.mySelections.upcoming, ...selectionsArray] 
+          },
           hasBet: true
         }));
+        setCurrentView('main');
       }
     }
   };
@@ -719,7 +769,7 @@ function App() {
                   ) : hasPastBet ? (
                     <>
                       {!showPastFighters ? (
-                        // КАРТОЧКИ ПРОШЕДШИХ ТУРНИРОВ (пока только один)
+                        // КАРТОЧКИ ПРОШЕДШИХ ТУРНИРОВ
                         <div className="tournament-cards-grid">
                           <div className="tournament-card-container">
                             <div 
@@ -735,13 +785,12 @@ function App() {
                               <div className="tournament-card-name">{pastTournament.name}</div>
                             </div>
                           </div>
-                          {/* Здесь будут другие карточки прошедших турниров, если их несколько */}
                         </div>
                       ) : (
                         // КАРТОЧКИ БОЙЦОВ ПРОШЕДШЕГО ТУРНИРА С ФУТЕРОМ
                         <>
                           <div className="selected-fighters-grid">
-                            {userData.mySelections.past.map((sel, idx) => {
+                            {userData.mySelections.past.map((sel: SelectedFighter, idx: number) => {
                               const isWinner = sel.fighter['W/L'] === 'win';
                               return (
                                 <div key={idx} className="selected-fighter-card" 
@@ -789,17 +838,21 @@ function App() {
               <TournamentSkeleton />
             )}
 
-            {/* БУДУЩИЙ ТУРНИР */}
-            {upcomingTournament ? (
+            {/* БУДУЩИЕ ТУРНИРЫ */}
+            {upcomingTournaments.length > 0 ? (
               <section className="tournament-section upcoming">
                 <div className="tournament-header">
                   <h2>
-                    {!showUpcomingFighters ? 'UPCOMING TOURNAMENTS' : upcomingTournament.name}
+                    {selectedUpcomingTournament ? 'UPCOMING TOURNAMENT' : 'UPCOMING TOURNAMENTS'}
                   </h2>
                   <div className="tournament-meta">
-                    <span>{!showUpcomingFighters ? 'Upcoming events' : formatDate(upcomingTournament.date)}</span>
+                    <span>
+                      {selectedUpcomingTournament 
+                        ? formatDate(upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament)?.date || '')
+                        : `${upcomingTournaments.length} event(s)`}
+                    </span>
                     <span className="tournament-status upcoming">
-                      {!showUpcomingFighters ? 'SCHEDULED' : 'UPCOMING'}
+                      {selectedUpcomingTournament ? 'UPCOMING' : 'SCHEDULED'}
                     </span>
                   </div>
                 </div>
@@ -807,83 +860,88 @@ function App() {
                 <div className="tournament-content">
                   {loadingUserResults ? (
                     <div className="tournament-message">Loading...</div>
-                  ) : hasUpcomingBet ? (
+                  ) : selectedUpcomingTournament ? (
+                    // ПОКАЗЫВАЕМ КАРТОЧКИ БОЙЦОВ ДЛЯ ВЫБРАННОГО ТУРНИРА
                     <>
-                      {!showUpcomingFighters ? (
-                        // КАРТОЧКИ БУДУЩИХ ТУРНИРОВ (пока только один)
-                        <div className="tournament-cards-grid">
-                          <div className="tournament-card-container">
+                      <div className="selected-fighters-grid">
+                        {userData.mySelections.upcoming
+                          .filter((sel: SelectedFighter) => {
+                            const tournament = upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament);
+                            return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
+                          })
+                          .map((sel: SelectedFighter, idx: number) => {
+                            const hasResult = sel.fighter['W/L'] !== null;
+                            return (
+                              <div key={idx} className="selected-fighter-card"
+                                   style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
+                                <div className="selected-fighter-damage-box">
+                                  {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
+                                </div>
+                                <div className="selected-fighter-avatar-square">
+                                  <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`}
+                                       alt={sel.fighter.Fighter}
+                                       onError={(e) => {
+                                         (e.target as HTMLImageElement).style.display = 'none';
+                                         const parent = (e.target as HTMLImageElement).parentElement;
+                                         if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
+                                       }} />
+                                </div>
+                                <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
+                              </div>
+                            );
+                          })}
+                      </div>
+                      
+                      {/* ФУТЕР БУДУЩЕГО ТУРНИРА */}
+                      <div className="tournament-footer">
+                        <div className="footer-total-damage">
+                          TOTAL DAMAGE: {calculateTotalDamage(
+                            userData.mySelections.upcoming.filter((sel: SelectedFighter) => {
+                              const tournament = upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament);
+                              return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
+                            })
+                          )}
+                        </div>
+                        <button 
+                          className="footer-close-button"
+                          onClick={() => setSelectedUpcomingTournament(null)}
+                        >
+                          CLOSE
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    // КАРТОЧКИ ВСЕХ БУДУЩИХ ТУРНИРОВ
+                    <div className="tournament-cards-grid">
+                      {upcomingTournaments.map((tournament: Tournament) => {
+                        const hasBetForThisTournament = userData.mySelections.upcoming.some(
+                          (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+                        );
+                        
+                        return (
+                          <div key={tournament.name} className="tournament-card-container">
                             <div 
                               className="tournament-card" 
-                              onClick={() => setShowUpcomingFighters(true)}
+                              onClick={() => handleUpcomingTournamentClick(tournament)}
                             >
                               <div className="tournament-card-damage-box">
-                                TOTAL: {calculateTotalDamage(userData.mySelections.upcoming)}
+                                {hasBetForThisTournament 
+                                  ? `TOTAL: ${calculateTotalDamage(
+                                      userData.mySelections.upcoming.filter(
+                                        (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+                                      )
+                                    )}`
+                                  : 'SELECT'}
                               </div>
                               <div className="tournament-card-image">
                                 <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
                               </div>
-                              <div className="tournament-card-name">{upcomingTournament.name}</div>
+                              <div className="tournament-card-name">{tournament.name}</div>
                             </div>
                           </div>
-                          {/* Здесь будут другие карточки будущих турниров, если их несколько */}
-                        </div>
-                      ) : (
-                        // КАРТОЧКИ БОЙЦОВ БУДУЩЕГО ТУРНИРА С ФУТЕРОМ
-                        <>
-                          <div className="selected-fighters-grid">
-                            {userData.mySelections.upcoming.map((sel, idx) => {
-                              const hasResult = sel.fighter['W/L'] !== null;
-                              return (
-                                <div key={idx} className="selected-fighter-card"
-                                     style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-                                  <div className="selected-fighter-damage-box">
-                                    {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
-                                  </div>
-                                  <div className="selected-fighter-avatar-square">
-                                    <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`}
-                                         alt={sel.fighter.Fighter}
-                                         onError={(e) => {
-                                           (e.target as HTMLImageElement).style.display = 'none';
-                                           const parent = (e.target as HTMLImageElement).parentElement;
-                                           if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
-                                         }} />
-                                  </div>
-                                  <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                          
-                          {/* ФУТЕР БУДУЩЕГО ТУРНИРА */}
-                          <div className="tournament-footer">
-                            <div className="footer-total-damage">
-                              TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.upcoming)}
-                            </div>
-                            <button 
-                              className="footer-close-button"
-                              onClick={() => setShowUpcomingFighters(false)}
-                            >
-                              CLOSE
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    // Используем openSelectionModal вместо прямого setState
-                    userData.coins >= 100 && new Date(upcomingTournament.date) > new Date() ? (
-                      <button 
-                        className="select-button" 
-                        onClick={() => openSelectionModal(upcomingTournament)}
-                      >
-                        SELECT YOUR FIGHT CARD
-                      </button>
-                    ) : (
-                      <div className="tournament-message">
-                        {userData.coins < 100 ? 'NOT ENOUGH COINS' : 'BETS ARE CLOSED'}
-                      </div>
-                    )
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               </section>
@@ -900,7 +958,7 @@ function App() {
               <div className="leaderboard-loading">LOADING...</div>
             ) : leaderboardData.length > 0 ? (
               <div className="leaderboard-list">
-                {leaderboardData.map(entry => (
+                {leaderboardData.map((entry: LeaderboardEntry) => (
                   <div key={entry.userId} className="leaderboard-item">
                     <span className="leaderboard-rank">#{entry.rank}</span>
                     <div className="leaderboard-user-info">
@@ -1006,7 +1064,6 @@ function App() {
                   disabled={selectedFighters.size !== 5}
                   onClick={async () => {
                     await saveSelections(selectedFighters);
-                    setCurrentView('main');
                   }}>
                   ACCEPT CARD
                 </button>
@@ -1027,7 +1084,7 @@ function App() {
               <>
                 <div className="winners-list">
                   <h3>WINNERS IN YOUR BET:</h3>
-                  {pendingRewards.winners.map((sel, idx) => (
+                  {pendingRewards.winners.map((sel: SelectedFighter, idx: number) => (
                     <div key={idx} className="winner-item">
                       <span className="winner-name">{sel.fighter.Fighter}</span>
                       <span className="winner-badge">👑</span>
