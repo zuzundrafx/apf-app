@@ -225,28 +225,22 @@ function App() {
     return roundDamage(total);
   };
 
-  // ОПТИМИЗИРОВАННАЯ функция принятия наград
-  // ОПТИМИЗИРОВАННАЯ функция принятия наград
+// ОПТИМИЗИРОВАННАЯ функция принятия наград
 const acceptRewards = async () => {
   if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
   
   setIsAcceptingRewards(true);
   
   try {
-    // 1. Расчет новых значений (мгновенно)
+    // 1. Расчет новых значений
     const newCoins = userData.coins + pendingRewards.totalCoins;
     const newTotalExp = userData.totalExp + pendingRewards.totalExp;
     const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
     
-    // 2. Находим турнир и его текущие selections
+    // 2. Находим турнир
     const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
     
-    // Получаем текущие selections для этого турнира
-    const tournamentSelections = userData.mySelections.past.filter(
-      (sel: SelectedFighter) => tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
-    );
-    
-    // 3. ОБНОВЛЯЕМ СОСТОЯНИЕ СРАЗУ (UI откликается мгновенно)
+    // 3. МГНОВЕННО обновляем UI
     setUserData(prev => ({
       ...prev,
       coins: newCoins,
@@ -254,25 +248,17 @@ const acceptRewards = async () => {
       level,
       currentExp,
       nextLevelExp,
-      mySelections: {
-        ...prev.mySelections,
-        past: prev.mySelections.past.map(sel => {
-          // Для каждого выбранного бойца в этом турнире помечаем, что награды получены
-          // Сами данные остаются теми же, но турнир теперь будет отображаться
-          return sel;
-        })
-      }
+      // selections остаются без изменений - они уже есть в prev.mySelections.past
     }));
     
-    // 4. Закрываем модалку (пользователь видит, что действие принято)
+    // 4. Закрываем модалку
     setShowRewardsModal(false);
-    const acceptedTournamentName = pendingRewards.tournamentName;
     setPendingRewards(null);
+    setShowPastFighters(false); // Возвращаемся к карточкам турниров
     
-    // 5. Параллельное выполнение запросов
+    // 5. Параллельное выполнение запросов (фоном)
     if (tournament) {
-      // Запускаем оба запроса параллельно
-      await Promise.all([
+      Promise.all([
         // Сохраняем профиль
         saveUserProfile({
           userId: telegramUser.id,
@@ -283,7 +269,7 @@ const acceptRewards = async () => {
           lastUpdated: new Date().toISOString()
         }),
         
-        // Загружаем и обновляем результат турнира
+        // Обновляем результат турнира
         (async () => {
           const currentResult = await loadUserResults(tournament.name, telegramUser.id);
           if (currentResult) {
@@ -296,32 +282,12 @@ const acceptRewards = async () => {
               }
             };
             await saveUserResults(tournament.name, updatedResult);
-            
-            // После успешного сохранения на сервере, обновляем состояние с актуальными данными
-            // Загружаем свежие данные по этому турниру
-            const freshResult = await loadUserResults(tournament.name, telegramUser.id);
-            if (freshResult) {
-              setUserData(prev => {
-                // Удаляем старые selections этого турнира и добавляем свежие
-                const otherPastSelections = prev.mySelections.past.filter(
-                  (sel: SelectedFighter) => !tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
-                );
-                
-                return {
-                  ...prev,
-                  mySelections: {
-                    ...prev.mySelections,
-                    past: [...otherPastSelections, ...freshResult.selections]
-                  }
-                };
-              });
-            }
           }
         })()
-      ]);
+      ]).catch(error => {
+        console.error('Фоновое сохранение ошибки:', error);
+      });
     }
-    
-    setShowPastFighters(false);
     
   } catch (error) {
     console.error('Ошибка при получении наград:', error);
