@@ -15,10 +15,6 @@ const parseDate = (dateStr: string): Date | null => {
   try {
     if (!dateStr) return null;
     
-    // Пробуем разные форматы
-    let date: Date | null = null;
-    
-    // Формат "March 07 2026"
     const parts = dateStr.split(' ');
     if (parts.length === 3) {
       const month = parts[0];
@@ -32,23 +28,19 @@ const parseDate = (dateStr: string): Date | null => {
       };
       
       if (months[month] !== undefined) {
-        date = new Date(year, months[month], day);
+        return new Date(year, months[month], day);
       }
     }
     
-    // Если не получилось, пробуем стандартный парсинг
-    if (!date || isNaN(date.getTime())) {
-      date = new Date(dateStr);
-    }
-    
-    return date && !isNaN(date.getTime()) ? date : null;
+    const date = new Date(dateStr);
+    return !isNaN(date.getTime()) ? date : null;
   } catch {
     return null;
   }
 };
 
 export function useTournaments() {
-  const [pastTournament, setPastTournament] = useState<Tournament | null>(null);
+  const [pastTournaments, setPastTournaments] = useState<Tournament[]>([]);
   const [upcomingTournaments, setUpcomingTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -72,16 +64,15 @@ export function useTournaments() {
       console.log('Past files (no prefix):', pastFiles);
       console.log('Upcoming files (UPCOMING_ prefix):', upcomingFiles);
       
-      setLoadingStage('Loading past tournament...');
+      setLoadingStage('Loading past tournaments...');
       setLoadingProgress(50);
       
-      // Загружаем прошедший турнир (самый свежий по дате)
-      const pastTournaments: Tournament[] = [];
+      // Загружаем ВСЕ прошедшие турниры
+      const pastList: Tournament[] = [];
       
       for (const file of pastFiles) {
         const tournament = parseTournamentFromFilename(file.name) as Tournament;
         
-        // Проверяем кэш
         const cacheKey = `tournament_${file.name}`;
         const cached = tournamentCache.get(cacheKey);
         
@@ -100,18 +91,16 @@ export function useTournaments() {
           }
         }
         
-        pastTournaments.push(tournament);
+        pastList.push(tournament);
       }
       
       // Сортируем прошедшие турниры по дате (от новых к старым)
-      pastTournaments.sort((a, b) => {
+      pastList.sort((a, b) => {
         const dateA = parseDate(a.date);
         const dateB = parseDate(b.date);
         if (!dateA || !dateB) return 0;
         return dateB.getTime() - dateA.getTime();
       });
-      
-      const latestPast = pastTournaments[0] || null;
       
       setLoadingStage('Loading upcoming tournaments...');
       setLoadingProgress(70);
@@ -154,10 +143,10 @@ export function useTournaments() {
       setLoadingStage('Finalizing...');
       setLoadingProgress(90);
       
-      console.log('Past tournament parsed:', latestPast);
-      console.log('Upcoming tournaments parsed:', upcomingList);
+      console.log('Past tournaments:', pastList);
+      console.log('Upcoming tournaments:', upcomingList);
       
-      setPastTournament(latestPast);
+      setPastTournaments(pastList);
       setUpcomingTournaments(upcomingList);
       setLoadingProgress(100);
       setLoadingStage('Ready!');
@@ -175,7 +164,7 @@ export function useTournaments() {
   }, []);
 
   return { 
-    pastTournament, 
+    pastTournaments, 
     upcomingTournaments, 
     loading, 
     loadingProgress,
