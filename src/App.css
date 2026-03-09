@@ -300,7 +300,8 @@ body {
 .tournament-card-wrapper {
   display: flex;
   justify-content: center;
-  width: 100%;
+  flex-shrink: 0;
+  width: 33%;
 }
 
 .tournament-card-wrapper .tournament-card {
@@ -309,15 +310,20 @@ body {
 }
 
 .tournament-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
   gap: 8px;
   width: 100%;
   padding: 0 2px;
-  overflow-y: auto;
-  max-height: 100%;
-  justify-items: center; /* Центрируем карточки по горизонтали */
-  align-items: start; /* Выравниваем по верхнему краю */
+  flex: 1;
+  min-height: 0;
+  scrollbar-width: none; /* Скрываем скроллбар для Firefox */
+  -ms-overflow-style: none; /* Скрываем скроллбар для IE/Edge */
+}
+
+.tournament-cards-grid::-webkit-scrollbar {
+  display: none;
 }
 
 /* Адаптация для разных экранов */
