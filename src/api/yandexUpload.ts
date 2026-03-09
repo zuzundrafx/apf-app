@@ -25,51 +25,17 @@ export interface LeaderboardEntry {
   timestamp: string;
 }
 
-// Функция для проверки существования файла
-async function checkFileExists(filename: string): Promise<boolean> {
-  try {
-    const response = await fetch(
-      `https://cloud-api.yandex.net/v1/disk/resources?path=app:/${RESULTS_FOLDER}/${filename}`,
-      {
-        headers: {
-          'Authorization': `OAuth ${YA_TOKEN}`
-        }
-      }
-    );
-    return response.ok;
-  } catch {
-    return false;
-  }
-}
+
 
 // Функция для удаления файла, если он существует
-async function deleteFileIfExists(filename: string): Promise<boolean> {
-  try {
-    const exists = await checkFileExists(filename);
-    if (exists) {
-      const response = await fetch(
-        `https://cloud-api.yandex.net/v1/disk/resources?path=app:/${RESULTS_FOLDER}/${filename}&permanently=true`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `OAuth ${YA_TOKEN}`
-          }
-        }
-      );
-      return response.ok;
-    }
-    return true;
-  } catch (error) {
-    console.error('❌ Ошибка удаления файла:', error);
-    return false;
-  }
-}
+
 
 // Функция для получения ссылки на загрузку файла
 async function getUploadLink(filename: string): Promise<string | null> {
   try {
-    await deleteFileIfExists(filename);
+    console.log('📤 Получаем ссылку для загрузки файла:', filename);
     
+    // НИЧЕГО НЕ УДАЛЯЕМ! Просим ссылку с overwrite=true
     const response = await fetch(
       `https://cloud-api.yandex.net/v1/disk/resources/upload?path=app:/${RESULTS_FOLDER}/${filename}&overwrite=true`,
       {
@@ -80,11 +46,18 @@ async function getUploadLink(filename: string): Promise<string | null> {
     );
     
     if (!response.ok) {
+      // Если файл заблокирован, пробуем еще раз
+      if (response.status === 423) {
+        console.log('⚠️ Файл заблокирован, пробуем через секунду...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return getUploadLink(filename);
+      }
       throw new Error(`Ошибка получения ссылки: ${response.status}`);
     }
     
     const data = await response.json();
     return data.href;
+    
   } catch (error) {
     console.error('❌ Ошибка получения ссылки на загрузку:', error);
     return null;
@@ -152,41 +125,7 @@ async function ensureFolderExists(): Promise<boolean> {
   }
 }
 
-// Функция для загрузки с повторными попытками
-async function uploadWithRetry(
-  uploadLink: string, 
-  data: Blob, 
-  maxRetries: number = 3
-): Promise<boolean> {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const uploadResponse = await fetch(uploadLink, {
-        method: 'PUT',
-        body: data,
-        headers: {
-          'Content-Type': 'application/octet-stream'
-        }
-      });
-      
-      if (uploadResponse.ok) {
-        return true;
-      }
-      
-      if (uploadResponse.status === 423) {
-        console.log(`⚠️ Файл заблокирован, попытка ${i + 1} из ${maxRetries}`);
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-        continue;
-      }
-      
-      throw new Error(`Ошибка загрузки: ${uploadResponse.status}`);
-    } catch (error) {
-      if (i === maxRetries - 1) throw error;
-      console.log(`⚠️ Ошибка загрузки, попытка ${i + 1} из ${maxRetries}`);
-      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-    }
-  }
-  return false;
-}
+
 
 // Загрузка всех существующих результатов (ВСЕХ пользователей)
 export async function loadExistingResults(

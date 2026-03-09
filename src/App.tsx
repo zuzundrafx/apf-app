@@ -226,6 +226,7 @@ function App() {
   };
 
 // ОПТИМИЗИРОВАННАЯ функция принятия наград
+// ОПТИМИЗИРОВАННАЯ функция принятия наград
 const acceptRewards = async () => {
   if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
   
@@ -240,26 +241,40 @@ const acceptRewards = async () => {
     // 2. Находим турнир
     const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
     
-    // 3. МГНОВЕННО обновляем UI
-    setUserData(prev => ({
-      ...prev,
-      coins: newCoins,
-      totalExp: newTotalExp,
-      level,
-      currentExp,
-      nextLevelExp,
-      // selections остаются без изменений - они уже есть в prev.mySelections.past
-    }));
+    // 3. Получаем текущие selections для этого турнира
+    // Они должны быть где-то сохранены! Где? 
+    // В момент показа модалки мы их очистили, но они есть в pendingRewards.winners
+    const tournamentSelections = pendingRewards.winners; // ← вот они!
     
-    // 4. Закрываем модалку
+    // 4. МГНОВЕННО обновляем UI
+    setUserData(prev => {
+      // Оставляем другие прошедшие турниры, добавляем этот
+      const otherPastSelections = prev.mySelections.past.filter(
+        (sel: SelectedFighter) => !tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+      );
+      
+      return {
+        ...prev,
+        coins: newCoins,
+        totalExp: newTotalExp,
+        level,
+        currentExp,
+        nextLevelExp,
+        mySelections: {
+          ...prev.mySelections,
+          past: [...otherPastSelections, ...tournamentSelections]
+        }
+      };
+    });
+    
+    // 5. Закрываем модалку
     setShowRewardsModal(false);
     setPendingRewards(null);
     setShowPastFighters(false); // Возвращаемся к карточкам турниров
     
-    // 5. Параллельное выполнение запросов (фоном)
+    // 6. Параллельное выполнение запросов (фоном)
     if (tournament) {
       Promise.all([
-        // Сохраняем профиль
         saveUserProfile({
           userId: telegramUser.id,
           username: userData.username,
@@ -269,7 +284,6 @@ const acceptRewards = async () => {
           lastUpdated: new Date().toISOString()
         }),
         
-        // Обновляем результат турнира
         (async () => {
           const currentResult = await loadUserResults(tournament.name, telegramUser.id);
           if (currentResult) {

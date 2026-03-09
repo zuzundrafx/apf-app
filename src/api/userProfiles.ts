@@ -37,38 +37,12 @@ async function checkFileExists(filename: string): Promise<boolean> {
   }
 }
 
-// Функция для удаления файла, если он существует
-async function deleteFileIfExists(filename: string): Promise<boolean> {
-  try {
-    const exists = await checkFileExists(filename);
-    if (exists) {
-      console.log('🗑️ Удаляем существующий файл:', filename);
-      const response = await fetch(
-        `https://cloud-api.yandex.net/v1/disk/resources?path=app:/${PROFILES_FOLDER}/${filename}&permanently=true`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `OAuth ${YA_TOKEN}`
-          }
-        }
-      );
-      console.log('✅ Результат удаления:', response.status, response.ok);
-      return response.ok;
-    }
-    return true;
-  } catch (error) {
-    console.error('❌ Ошибка удаления файла:', error);
-    return false;
-  }
-}
-
 // Функция для получения ссылки на загрузку файла
 async function getUploadLink(filename: string): Promise<string | null> {
   try {
     console.log('📤 Получаем ссылку для загрузки файла:', filename);
     
-    await deleteFileIfExists(filename);
-    
+    // НИЧЕГО НЕ УДАЛЯЕМ! Просим ссылку с overwrite=true
     const response = await fetch(
       `https://cloud-api.yandex.net/v1/disk/resources/upload?path=app:/${PROFILES_FOLDER}/${filename}&overwrite=true`,
       {
@@ -79,6 +53,12 @@ async function getUploadLink(filename: string): Promise<string | null> {
     );
     
     if (!response.ok) {
+      // Если файл заблокирован, пробуем еще раз
+      if (response.status === 423) {
+        console.log('⚠️ Файл заблокирован, пробуем через секунду...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return getUploadLink(filename);
+      }
       console.error('❌ Ошибка получения ссылки:', response.status, response.statusText);
       throw new Error(`Ошибка получения ссылки: ${response.status}`);
     }
@@ -161,49 +141,6 @@ async function ensureFolderExists(): Promise<boolean> {
     console.error('❌ Ошибка проверки папки:', error);
     return false;
   }
-}
-
-// Функция для загрузки с повторными попытками
-async function uploadWithRetry(
-  uploadLink: string, 
-  data: Blob, 
-  maxRetries: number = 3
-): Promise<boolean> {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      console.log(`📤 Попытка загрузки ${i + 1} из ${maxRetries}...`);
-      
-      const uploadResponse = await fetch(uploadLink, {
-        method: 'PUT',
-        body: data,
-        headers: {
-          'Content-Type': 'application/octet-stream'
-        }
-      });
-      
-      if (uploadResponse.ok) {
-        console.log(`✅ Файл успешно загружен (попытка ${i + 1})`);
-        return true;
-      }
-      
-      if (uploadResponse.status === 423) {
-        console.log(`⚠️ Файл заблокирован, попытка ${i + 1} из ${maxRetries}`);
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-        continue;
-      }
-      
-      console.error(`❌ Ошибка загрузки: ${uploadResponse.status} (попытка ${i + 1})`);
-      throw new Error(`Ошибка загрузки: ${uploadResponse.status}`);
-    } catch (error) {
-      if (i === maxRetries - 1) {
-        console.error(`❌ Все попытки загрузки исчерпаны`);
-        throw error;
-      }
-      console.log(`⚠️ Ошибка загрузки, повтор через ${1000 * (i + 1)}мс...`);
-      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-    }
-  }
-  return false;
 }
 
 // Загрузка всех профилей пользователей
