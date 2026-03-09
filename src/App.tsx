@@ -820,7 +820,7 @@ function App() {
                         : formatDate(pastTournaments.find((t: Tournament) => t.name === selectedPastTournament)?.date || '')}
                     </span>
                     <span className="tournament-status active">
-                      {!showPastFighters ? 'HISTORY' : 'ACTIVE'}
+                      {!showPastFighters ? 'IN GAME' : 'ACTIVE'}
                     </span>
                   </div>
                 </div>
