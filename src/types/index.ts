@@ -25,6 +25,7 @@ export interface SelectedFighter {
 export interface Tournament {
   id: string;
   name: string;
+  league: string;  // ← ДОБАВЛЯЕМ поле league
   date: string;
   status: 'active' | 'upcoming';
   filename: string;

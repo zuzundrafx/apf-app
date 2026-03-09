@@ -85,6 +85,16 @@ export async function downloadTournamentFile(filename: string): Promise<Fighter[
 export function parseTournamentFromFilename(filename: string): Partial<Tournament> {
   const isUpcoming = filename.startsWith('UPCOMING_');
   
+  // Определяем лигу по названию файла
+  let league = 'UFC'; // по умолчанию
+  if (filename.includes('PFL_')) {
+    league = 'PFL';
+  } else if (filename.includes('ONE_')) {
+    league = 'ONE';
+  } else if (filename.includes('Bellator_')) {
+    league = 'Bellator';
+  }
+  
   // Убираем префикс UPCOMING_ если есть, и расширение
   let namePart = filename;
   if (isUpcoming) {
@@ -98,6 +108,7 @@ export function parseTournamentFromFilename(filename: string): Partial<Tournamen
   
   console.log('Parsing filename:', filename);
   console.log('Name part:', namePart);
+  console.log('League:', league);
   
   // Ищем дату в формате "Month DD, YYYY" в имени файла
   const datePattern = /(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})/;
@@ -120,6 +131,7 @@ export function parseTournamentFromFilename(filename: string): Partial<Tournamen
   
   return {
     name: eventName || namePart,
+    league: league,
     status: isUpcoming ? 'upcoming' : 'active',
     date: eventDate,
     filename: filename,

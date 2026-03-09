@@ -39,6 +39,14 @@ const parseDate = (dateStr: string): Date | null => {
   }
 };
 
+// Функция для определения лиги из имени файла
+const detectLeague = (filename: string): string => {
+  if (filename.includes('PFL_')) return 'PFL';
+  if (filename.includes('ONE_')) return 'ONE';
+  if (filename.includes('Bellator_')) return 'Bellator';
+  return 'UFC'; // по умолчанию
+};
+
 export function useTournaments() {
   const [pastTournaments, setPastTournaments] = useState<Tournament[]>([]);
   const [upcomingTournaments, setUpcomingTournaments] = useState<Tournament[]>([]);
@@ -53,24 +61,50 @@ export function useTournaments() {
       setLoadingStage('Loading tournaments list...');
       setLoadingProgress(10);
       
-      // Получаем список всех файлов турниров
+      // Получаем список всех файлов турниров (только метаданные!)
       const files = await getTournamentFiles();
       setLoadingProgress(30);
       
-      // Разделяем на прошедшие (без префикса UPCOMING_) и будущие (с префиксом UPCOMING_)
+      // Разделяем на прошедшие и будущие
       const pastFiles = files.filter(f => !f.name.startsWith('UPCOMING_') && f.name.endsWith('.xlsx'));
       const upcomingFiles = files.filter(f => f.name.startsWith('UPCOMING_'));
       
       console.log('Past files (no prefix):', pastFiles);
       console.log('Upcoming files (UPCOMING_ prefix):', upcomingFiles);
       
-      setLoadingStage('Loading past tournaments...');
+      setLoadingStage('Selecting latest tournaments...');
       setLoadingProgress(50);
       
-      // Загружаем ВСЕ прошедшие турниры (для будущего расширения)
-      const pastList: Tournament[] = [];
+      // Группируем прошедшие турниры по лигам БЕЗ загрузки данных
+      const latestByLeague = new Map<string, { file: typeof pastFiles[0], tournament: Partial<Tournament> }>();
       
       for (const file of pastFiles) {
+        const tournament = parseTournamentFromFilename(file.name);
+        const league = detectLeague(file.name);
+        const tournamentDate = parseDate(tournament.date || '');
+        
+        if (!tournamentDate) continue;
+        
+        const existing = latestByLeague.get(league);
+        if (!existing) {
+          latestByLeague.set(league, { file, tournament });
+        } else {
+          const existingDate = parseDate(existing.tournament.date || '');
+          if (existingDate && tournamentDate > existingDate) {
+            latestByLeague.set(league, { file, tournament });
+          }
+        }
+      }
+      
+      setLoadingStage('Loading tournament data...');
+      setLoadingProgress(70);
+      
+      // Загружаем ТОЛЬКО последние турниры из каждой лиги
+      const latestPastTournaments: Tournament[] = [];
+      let loadedCount = 0;
+      const totalToLoad = latestByLeague.size;
+      
+      for (const [league, { file }] of latestByLeague.entries()) {
         const tournament = parseTournamentFromFilename(file.name) as Tournament;
         
         const cacheKey = `tournament_${file.name}`;
@@ -91,11 +125,13 @@ export function useTournaments() {
           }
         }
         
-        pastList.push(tournament);
+        latestPastTournaments.push(tournament);
+        loadedCount++;
+        setLoadingProgress(70 + (loadedCount / totalToLoad) * 20);
       }
       
-      // Сортируем прошедшие турниры по дате (от новых к старым)
-      pastList.sort((a, b) => {
+      // Сортируем по дате (от новых к старым)
+      latestPastTournaments.sort((a, b) => {
         const dateA = parseDate(a.date);
         const dateB = parseDate(b.date);
         if (!dateA || !dateB) return 0;
@@ -103,9 +139,8 @@ export function useTournaments() {
       });
       
       setLoadingStage('Loading upcoming tournaments...');
-      setLoadingProgress(70);
       
-      // Загружаем ВСЕ будущие турниры
+      // Загружаем ВСЕ будущие турниры (их обычно немного)
       const upcomingList: Tournament[] = [];
       
       for (const file of upcomingFiles) {
@@ -132,7 +167,7 @@ export function useTournaments() {
         upcomingList.push(tournament);
       }
       
-      // Сортируем будущие турниры по дате (от ближайших к дальним)
+      // Сортируем будущие турниры по дате
       upcomingList.sort((a, b) => {
         const dateA = parseDate(a.date);
         const dateB = parseDate(b.date);
@@ -141,15 +176,13 @@ export function useTournaments() {
       });
       
       setLoadingStage('Finalizing...');
-      setLoadingProgress(90);
+      setLoadingProgress(100);
       
-      console.log('Past tournaments:', pastList);
+      console.log('Past tournaments (latest per league):', latestPastTournaments);
       console.log('Upcoming tournaments:', upcomingList);
       
-      setPastTournaments(pastList);
+      setPastTournaments(latestPastTournaments);
       setUpcomingTournaments(upcomingList);
-      setLoadingProgress(100);
-      setLoadingStage('Ready!');
       
     } catch (err) {
       console.error('Ошибка загрузки турниров:', err);
