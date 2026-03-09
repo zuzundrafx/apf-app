@@ -1129,3 +1129,14 @@ body {
     max-width: 200px;
   }
 }
+
+/* ===== СЕТКА ДЛЯ КАРТОЧЕК ТУРНИРОВ ===== */
+.tournament-cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0 2px;
+  overflow-y: auto;
+}

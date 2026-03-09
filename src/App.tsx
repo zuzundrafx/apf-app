@@ -702,10 +702,14 @@ function App() {
             {pastTournament ? (
               <section className="tournament-section past">
                 <div className="tournament-header">
-                  <h2>{pastTournament.name}</h2>
+                  <h2>
+                    {!showPastFighters ? 'ACTIVE TOURNAMENTS' : pastTournament.name}
+                  </h2>
                   <div className="tournament-meta">
-                    <span>{formatDate(pastTournament.date)}</span>
-                    <span className="tournament-status active">ACTIVE</span>
+                    <span>{!showPastFighters ? 'Completed' : formatDate(pastTournament.date)}</span>
+                    <span className="tournament-status active">
+                      {!showPastFighters ? 'HISTORY' : 'ACTIVE'}
+                    </span>
                   </div>
                 </div>
                 
@@ -715,20 +719,23 @@ function App() {
                   ) : hasPastBet ? (
                     <>
                       {!showPastFighters ? (
-                        // КАРТОЧКА ПРОШЕДШЕГО ТУРНИРА
-                        <div className="tournament-card-container">
-                          <div 
-                            className="tournament-card" 
-                            onClick={() => setShowPastFighters(true)}
-                          >
-                            <div className="tournament-card-damage-box">
-                              TOTAL: {calculateTotalDamage(userData.mySelections.past)}
+                        // КАРТОЧКИ ПРОШЕДШИХ ТУРНИРОВ (пока только один)
+                        <div className="tournament-cards-grid">
+                          <div className="tournament-card-container">
+                            <div 
+                              className="tournament-card" 
+                              onClick={() => setShowPastFighters(true)}
+                            >
+                              <div className="tournament-card-damage-box">
+                                TOTAL: {calculateTotalDamage(userData.mySelections.past)}
+                              </div>
+                              <div className="tournament-card-image">
+                                <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
+                              </div>
+                              <div className="tournament-card-name">{pastTournament.name}</div>
                             </div>
-                            <div className="tournament-card-image">
-                              <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
-                            </div>
-                            <div className="tournament-card-name">{pastTournament.name}</div>
                           </div>
+                          {/* Здесь будут другие карточки прошедших турниров, если их несколько */}
                         </div>
                       ) : (
                         // КАРТОЧКИ БОЙЦОВ ПРОШЕДШЕГО ТУРНИРА С ФУТЕРОМ
@@ -786,10 +793,14 @@ function App() {
             {upcomingTournament ? (
               <section className="tournament-section upcoming">
                 <div className="tournament-header">
-                  <h2>{upcomingTournament.name}</h2>
+                  <h2>
+                    {!showUpcomingFighters ? 'UPCOMING TOURNAMENTS' : upcomingTournament.name}
+                  </h2>
                   <div className="tournament-meta">
-                    <span>{formatDate(upcomingTournament.date)}</span>
-                    <span className="tournament-status upcoming">UPCOMING</span>
+                    <span>{!showUpcomingFighters ? 'Upcoming events' : formatDate(upcomingTournament.date)}</span>
+                    <span className="tournament-status upcoming">
+                      {!showUpcomingFighters ? 'SCHEDULED' : 'UPCOMING'}
+                    </span>
                   </div>
                 </div>
                 
@@ -799,20 +810,23 @@ function App() {
                   ) : hasUpcomingBet ? (
                     <>
                       {!showUpcomingFighters ? (
-                        // КАРТОЧКА БУДУЩЕГО ТУРНИРА
-                        <div className="tournament-card-container">
-                          <div 
-                            className="tournament-card" 
-                            onClick={() => setShowUpcomingFighters(true)}
-                          >
-                            <div className="tournament-card-damage-box">
-                              TOTAL: {calculateTotalDamage(userData.mySelections.upcoming)}
+                        // КАРТОЧКИ БУДУЩИХ ТУРНИРОВ (пока только один)
+                        <div className="tournament-cards-grid">
+                          <div className="tournament-card-container">
+                            <div 
+                              className="tournament-card" 
+                              onClick={() => setShowUpcomingFighters(true)}
+                            >
+                              <div className="tournament-card-damage-box">
+                                TOTAL: {calculateTotalDamage(userData.mySelections.upcoming)}
+                              </div>
+                              <div className="tournament-card-image">
+                                <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
+                              </div>
+                              <div className="tournament-card-name">{upcomingTournament.name}</div>
                             </div>
-                            <div className="tournament-card-image">
-                              <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
-                            </div>
-                            <div className="tournament-card-name">{upcomingTournament.name}</div>
                           </div>
+                          {/* Здесь будут другие карточки будущих турниров, если их несколько */}
                         </div>
                       ) : (
                         // КАРТОЧКИ БОЙЦОВ БУДУЩЕГО ТУРНИРА С ФУТЕРОМ
