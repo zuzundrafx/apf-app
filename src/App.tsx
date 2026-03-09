@@ -197,6 +197,9 @@ function App() {
   
   // Состояние для блокировки кнопки CLOSE (чтобы не начислялись монеты много раз)
   const [isClosing, setIsClosing] = useState(false);
+  
+  // НОВОЕ СОСТОЯНИЕ: защита от множественных нажатий при открытии окна выбора
+  const [isOpeningSelection, setIsOpeningSelection] = useState(false);
 
   const [userData, setUserData] = useState({
     username: 'Player',
@@ -548,37 +551,53 @@ function App() {
     });
   };
 
-  // Функция для открытия окна выбора со списанием монет
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ: открытие окна выбора с защитой от множественных нажатий
   const openSelectionModal = async (tournament: Tournament) => {
-    if (!telegramUser) return;
+    // Защита от множественных нажатий
+    if (!telegramUser || isOpeningSelection) return;
     
-    // Проверяем, можно ли делать ставку
-    if (!canPlaceBet(tournament, userData.coins)) {
-      console.log('Cannot place bet');
-      return;
+    setIsOpeningSelection(true);
+    
+    try {
+      // Проверяем, можно ли делать ставку
+      if (!canPlaceBet(tournament, userData.coins)) {
+        console.log('Cannot place bet');
+        setIsOpeningSelection(false);
+        return;
+      }
+      
+      // Списываем 100 монет
+      const newCoins = userData.coins - 100;
+      
+      // Обновляем состояние
+      setUserData(prev => ({ ...prev, coins: newCoins }));
+      
+      // Сохраняем в профиль
+      await saveUserProfile({
+        userId: telegramUser.id,
+        username: userData.username,
+        level: userData.level,
+        experience: userData.totalExp,
+        coins: newCoins,
+        lastUpdated: new Date().toISOString()
+      });
+      
+      // СНАЧАЛА открываем окно выбора (мгновенно)
+      setSelectedTournament(tournament);
+      setCurrentView('selection');
+      setSelectedFighters(new Map());
+      
+      // ПОТОМ загружаем данные (они отобразятся с лоадером)
+      loadSelectionData(tournament);
+      
+    } catch (error) {
+      console.error('Error opening selection:', error);
+    } finally {
+      // Сбрасываем флаг через небольшую задержку, чтобы избежать двойных кликов
+      setTimeout(() => {
+        setIsOpeningSelection(false);
+      }, 500);
     }
-    
-    // Списываем 100 монет
-    const newCoins = userData.coins - 100;
-    
-    // Обновляем состояние
-    setUserData(prev => ({ ...prev, coins: newCoins }));
-    
-    // Сохраняем в профиль
-    await saveUserProfile({
-      userId: telegramUser.id,
-      username: userData.username,
-      level: userData.level,
-      experience: userData.totalExp,
-      coins: newCoins,
-      lastUpdated: new Date().toISOString()
-    });
-    
-    // Открываем окно выбора
-    setSelectedTournament(tournament);
-    setCurrentView('selection');
-    loadSelectionData(tournament);
-    setSelectedFighters(new Map());
   };
 
   // Обработчик для кнопки CLOSE с защитой от множественных нажатий
@@ -591,8 +610,11 @@ function App() {
     setIsClosing(false);
   };
 
-  // Обработчик клика по карточке будущего турнира
+  // ИСПРАВЛЕННЫЙ ОБРАБОТЧИК: клик по карточке будущего турнира
   const handleUpcomingTournamentClick = (tournament: Tournament) => {
+    // Защита от множественных нажатий
+    if (isOpeningSelection) return;
+    
     const hasBetForThisTournament = userData.mySelections.upcoming.some(
       (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
     );
@@ -929,14 +951,23 @@ function App() {
                 )
               : null;
             
+            // Визуальное состояние при загрузке
+            const isLoading = isOpeningSelection;
+            
             return (
               <div key={tournament.name} className="tournament-card-wrapper">
                 <div 
                   className="tournament-card" 
                   onClick={() => handleUpcomingTournamentClick(tournament)}
+                  style={{ 
+                    opacity: isLoading ? 0.7 : 1, 
+                    pointerEvents: isLoading ? 'none' : 'auto' 
+                  }}
                 >
                   <div className="tournament-card-damage-box">
-                    {hasBetForThisTournament ? `TOTAL: ${tournamentTotal}` : 'SELECT'}
+                    {isLoading && !hasBetForThisTournament 
+                      ? 'LOADING...' 
+                      : (hasBetForThisTournament ? `TOTAL: ${tournamentTotal}` : 'SELECT')}
                   </div>
                   <div className="tournament-card-image">
                     <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
