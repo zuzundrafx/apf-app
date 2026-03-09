@@ -544,7 +544,7 @@ const acceptRewards = async () => {
               
               setPendingRewards({
                 tournamentName: pastTournaments[i].name,
-                winners,
+                winners: result.selections,
                 totalCoins,
                 totalExp
               });
