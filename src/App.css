@@ -1234,8 +1234,8 @@ body {
   height: 32%;
   min-height: 140px; /* Увеличил минимальную высоту для лучшей читаемости */
   max-height: 200px;
-  background: #313130;
-  border-radius: 4px;
+  background: #00CCCC;
+  
   overflow: hidden;
   flex-shrink: 0;
 }
