@@ -1191,3 +1191,193 @@ body {
     max-width: 100%;
   }
 }
+
+/* ===== PvP ЭКРАН ===== */
+
+.pvp-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  flex: 1;
+  background: #1C1D1F;
+  overflow: hidden;
+}
+
+.pvp-header {
+  background: #B20101;
+  padding: clamp(6px, 2vh, 10px) clamp(8px, 4vw, 16px);
+  margin: 0 0 clamp(4px, 1vh, 8px) 0;
+  flex-shrink: 0;
+}
+
+.pvp-header-title {
+  color: #FFFFFF;
+  font-size: clamp(12px, 3.5vw, 14px);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.pvp-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 2vh, 12px);
+  padding: 0 clamp(8px, 4vw, 16px) clamp(8px, 2vh, 12px);
+  min-height: 0;
+}
+
+.pvp-tournament-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 32%;
+  min-height: 120px;
+  max-height: 180px;
+  background: #313130;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.pvp-card-top {
+  display: flex;
+  height: 65%;
+  width: 100%;
+  background: #3D3D3B;
+}
+
+.pvp-card-league {
+  width: auto;
+  aspect-ratio: 1 / 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: clamp(10px, 3vw, 14px);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.pvp-card-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 clamp(8px, 2vw, 12px);
+  color: #FFFFFF;
+  font-size: clamp(10px, 3vw, 12px);
+  line-height: 1.3;
+  word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.pvp-card-damage {
+  width: 27%;
+  height: 100%;
+  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  padding: 0 clamp(2px, 1vw, 4px);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.pvp-damage-label {
+  font-size: clamp(7px, 2vw, 9px);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.pvp-damage-value {
+  font-size: clamp(12px, 3.5vw, 16px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.pvp-damage-na {
+  font-size: clamp(8px, 2.5vw, 10px);
+  color: #000000;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.2;
+  padding: 0 2px;
+}
+
+.pvp-card-bottom {
+  display: flex;
+  height: 35%;
+  width: 100%;
+  background: #313130;
+  border-top: 1px solid #4A4A48;
+}
+
+.pvp-card-cost {
+  width: 73%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 clamp(8px, 2vw, 12px);
+  color: #FFFFFF;
+  font-size: clamp(10px, 3vw, 12px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pvp-card-engage {
+  width: 27%;
+  height: 100%;
+  background: linear-gradient(180deg, #C9FFCE 0%, #61FF63 100%);
+  border: none;
+  color: #000000;
+  font-size: clamp(10px, 3vw, 12px);
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: opacity 0.2s ease;
+}
+
+.pvp-card-engage.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.pvp-empty {
+  text-align: center;
+  color: #888;
+  padding: clamp(30px, 15vh, 60px) 0;
+  font-size: clamp(12px, 3.5vw, 14px);
+  width: 100%;
+}
+
+/* Адаптация для маленьких экранов */
+@media (max-width: 320px) {
+  .pvp-tournament-card {
+    min-height: 100px;
+  }
+  
+  .pvp-card-league {
+    font-size: 9px;
+  }
+  
+  .pvp-card-name {
+    font-size: 9px;
+  }
+  
+  .pvp-card-cost {
+    font-size: 9px;
+  }
+}

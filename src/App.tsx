@@ -1,5 +1,6 @@
 ﻿﻿import { useState, useEffect } from 'react';
 import './App.css';
+import Pvp from './components/Pvp';
 import { Fighter, Tournament, SelectedFighter } from './types';
 import { useTournaments } from './hooks/useTournaments';
 import { groupFightersByWeight } from './data/loadFighters';
@@ -165,7 +166,7 @@ function App() {
   const { pastTournaments, upcomingTournaments, loading, loadingProgress, loadingStage, error } = useTournaments();
   
   const [selectedFighters, setSelectedFighters] = useState<Map<string, Fighter>>(new Map());
-  const [currentView, setCurrentView] = useState<'main' | 'leaderboard' | 'selection'>('main');
+  const [currentView, setCurrentView] = useState<'main' | 'leaderboard' | 'selection' | 'pvp'>('main');
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
@@ -1195,6 +1196,21 @@ const acceptRewards = async () => {
             </div>
           </div>
         )}
+
+        {currentView === 'pvp' && (
+  <Pvp
+    pastTournaments={pastTournaments}
+    userSelections={userData.mySelections.past}
+    username={userData.username}
+    level={userData.level}
+    currentExp={userData.currentExp}
+    nextLevelExp={userData.nextLevelExp}
+    coins={userData.coins}
+    photoUrl={telegramUser?.photoUrl}
+    baseUrl={BASE_URL}
+  />
+)}
+
       </main>
 
       {/* Модальное окно с наградами */}
@@ -1249,9 +1265,12 @@ const acceptRewards = async () => {
         <button className={`nav-button ${currentView === 'leaderboard' ? 'active' : ''}`} onClick={() => setCurrentView('leaderboard')}>
           <img src={`${BASE_URL}/Leadeship_button.png`} alt="Leaderboard" />
         </button>
-        <button className="nav-button disabled">
-          <img src={`${BASE_URL}/PvP_button.png`} alt="PvP" />
-        </button>
+        <button 
+  className={`nav-button ${currentView === 'pvp' ? 'active' : ''}`} 
+  onClick={() => setCurrentView('pvp')}
+>
+  <img src={`${BASE_URL}/PvP_button.png`} alt="PvP" />
+</button>
         <button className="nav-button disabled">
           <img src={`${BASE_URL}/Shop_button.png`} alt="Shop" />
         </button>
