@@ -1278,6 +1278,7 @@ body {
   /*-webkit-line-clamp: 3;*/
   -webkit-box-orient: vertical;
   text-align: center;
+  height: 100%;
 }
 
 .pvp-card-damage {
