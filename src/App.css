@@ -1257,7 +1257,7 @@ body {
   justify-content: center;
   color: #FFFFFF;
   font-weight: 600;
-  font-size: calc(0.9 * 100%);
+  font-size: calc(1.0 * 100%);
   text-transform: uppercase;
   flex-shrink: 0;
 }
@@ -1293,7 +1293,7 @@ body {
   flex-shrink: 0;
   
   /* Используем высоту самого блока для расчета */
-  font-size: calc(0.6 * 100%); /* 20% от высоты родителя */
+  font-size: calc(0.95 * 100%); /* 95% от высоты родителя */
 }
 
 .pvp-damage-label {
