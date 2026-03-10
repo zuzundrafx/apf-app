@@ -1201,13 +1201,7 @@ const acceptRewards = async () => {
   <Pvp
     pastTournaments={pastTournaments}
     userSelections={userData.mySelections.past}
-    username={userData.username}
-    level={userData.level}
-    currentExp={userData.currentExp}
-    nextLevelExp={userData.nextLevelExp}
-    coins={userData.coins}
-    photoUrl={telegramUser?.photoUrl}
-    baseUrl={BASE_URL}
+    // Убираем все остальные пропсы - они больше не нужны
   />
 )}
 
