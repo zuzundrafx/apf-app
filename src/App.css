@@ -1242,7 +1242,7 @@ body {
 
 .pvp-card-top {
   display: flex;
-  height: 58%; /* 58% от высоты родителя */
+  height: 55%; /* 55% от высоты родителя */
   width: 100%;
   background: #3D3D3B;
   min-height: 0; /* Важно для flex-детей */
@@ -1274,7 +1274,7 @@ body {
   word-break: break-word;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  /*-webkit-line-clamp: 3;*/
   -webkit-box-orient: vertical;
 }
 
@@ -1315,7 +1315,7 @@ body {
 
 .pvp-card-bottom {
   display: flex;
-  height: 42%; /* 42% от высоты родителя */
+  height: 45%; /* 45% от высоты родителя */
   width: 100%;
   background: #313130;
   border-top: 1px solid #4A4A48;
