@@ -1232,8 +1232,8 @@ body {
   flex-direction: column;
   width: 100%;
   height: 32%;
-  min-height: 120px;
-  max-height: 180px;
+  min-height: 140px; /* Увеличил минимальную высоту для лучшей читаемости */
+  max-height: 200px;
   background: #313130;
   border-radius: 4px;
   overflow: hidden;
@@ -1242,9 +1242,10 @@ body {
 
 .pvp-card-top {
   display: flex;
-  height: 65%;
+  height: 65%; /* 65% от высоты родителя */
   width: 100%;
   background: #3D3D3B;
+  min-height: 0; /* Важно для flex-детей */
 }
 
 .pvp-card-league {
@@ -1313,10 +1314,11 @@ body {
 
 .pvp-card-bottom {
   display: flex;
-  height: 35%;
+  height: 35%; /* 35% от высоты родителя */
   width: 100%;
   background: #313130;
   border-top: 1px solid #4A4A48;
+  min-height: 0; /* Важно для flex-детей */
 }
 
 .pvp-card-cost {
@@ -1366,7 +1368,7 @@ body {
 /* Адаптация для маленьких экранов */
 @media (max-width: 320px) {
   .pvp-tournament-card {
-    min-height: 100px;
+    min-height: 120px;
   }
   
   .pvp-card-league {

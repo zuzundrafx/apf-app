@@ -1,3 +1,5 @@
+// src/components/Pvp.tsx - исправленная версия
+
 import React from 'react';
 import { Tournament, SelectedFighter } from '../types';
 
@@ -41,30 +43,6 @@ const Pvp: React.FC<PvpProps> = ({
 
   return (
     <div className="pvp-screen">
-      {/* Верхняя панель (копируем из App.tsx) */}
-      <header className="profile-header">
-        <div className="profile-avatar">
-          {photoUrl ? (
-            <img src={photoUrl} alt="avatar" />
-          ) : (
-            <img src={`${baseUrl}/Home_button.png`} alt="avatar" />
-          )}
-        </div>
-        <div className="profile-info">
-          <div className="profile-name">{username}</div>
-          <div className="level-bar">
-            <div 
-              className="level-progress" 
-              style={{ width: `${(currentExp / nextLevelExp) * 100}%` }}
-            ></div>
-            <span className="level-text">
-              Lvl {level} • {currentExp}/{nextLevelExp}
-            </span>
-          </div>
-          <div className="profile-coins">🪙 {coins}</div>
-        </div>
-      </header>
-
       {/* Заголовок Active Tournaments */}
       <div className="pvp-header">
         <div className="pvp-header-title">ACTIVE TOURNAMENTS</div>
