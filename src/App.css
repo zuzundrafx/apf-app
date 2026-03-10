@@ -1257,7 +1257,7 @@ body {
   justify-content: center;
   color: #FFFFFF;
   font-weight: 600;
-  font-size: calc(0.6 * 100%);
+  font-size: calc(0.9 * 100%);
   text-transform: uppercase;
   flex-shrink: 0;
 }
