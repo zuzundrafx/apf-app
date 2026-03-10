@@ -1276,6 +1276,7 @@ body {
   display: -webkit-box;
   /*-webkit-line-clamp: 3;*/
   -webkit-box-orient: vertical;
+  text-align: center;
 }
 
 .pvp-card-damage {
@@ -1292,7 +1293,7 @@ body {
   flex-shrink: 0;
   
   /* Используем высоту самого блока для расчета */
-  font-size: calc(0.2 * 100%); /* 20% от высоты родителя */
+  font-size: calc(0.6 * 100%); /* 20% от высоты родителя */
 }
 
 .pvp-damage-label {
