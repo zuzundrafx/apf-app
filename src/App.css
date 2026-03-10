@@ -1225,7 +1225,7 @@ body {
   display: grid;
   grid-auto-rows: 32%; /* Каждая строка занимает 32% высоты контейнера */
   gap: clamp(8px, 2vh, 12px);
-  padding: 0 clamp(8px, 4vw, 16px) clamp(8px, 2vh, 12px);
+  padding: 0; /*clamp(8px, 4vw, 16px) clamp(8px, 2vh, 12px);*/
   min-height: 0;
   height: 100%; /* Важно! */
 }
