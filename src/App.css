@@ -1297,19 +1297,19 @@ body {
 }
 
 .pvp-damage-label {
-  font-size: 0.4em; /* 40% от размера шрифта родителя */
+  font-size: 0.7em; /* 40% от размера шрифта родителя */
   line-height: 1.2;
   white-space: nowrap;
 }
 
 .pvp-damage-value {
-  font-size: 0.7em; /* 70% от размера шрифта родителя */
+  font-size: 1.0em; /* 70% от размера шрифта родителя */
   font-weight: 700;
   line-height: 1.2;
 }
 
 .pvp-damage-na {
-  font-size: 0.5em;
+  font-size: 0.7em;
   color: #000000;
   font-weight: 500;
 }
