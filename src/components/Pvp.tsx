@@ -6,25 +6,12 @@ import { Tournament, SelectedFighter } from '../types';
 interface PvpProps {
   pastTournaments: Tournament[];
   userSelections: SelectedFighter[];
-  username: string;
-  level: number;
-  currentExp: number;
-  nextLevelExp: number;
-  coins: number;
-  photoUrl?: string;
-  baseUrl: string;
+  // Убираем все неиспользуемые пропсы
 }
 
 const Pvp: React.FC<PvpProps> = ({
   pastTournaments,
   userSelections,
-  username,
-  level,
-  currentExp,
-  nextLevelExp,
-  coins,
-  photoUrl,
-  baseUrl
 }) => {
   // Функция для получения урона игрока в конкретном турнире
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
