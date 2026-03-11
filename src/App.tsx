@@ -1,4 +1,4 @@
-﻿﻿﻿﻿import { useState, useEffect, useCallback, useRef } from 'react';
+﻿﻿﻿﻿import { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
 import LeaderboardItem from './components/LeaderboardItem';
@@ -182,10 +182,8 @@ function App() {
   } | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   
-  // Кэш всех профилей для рейтинга
+  // Кэш всех профилей для рейтинга (загружаем один раз)
   const [allProfiles, setAllProfiles] = useState<Map<string, UserProfile>>(new Map());
-  // Флаг, что профили уже загружены
-  const profilesLoadedRef = useRef(false);
 
   // Состояния для окна наград
   const [showRewardsModal, setShowRewardsModal] = useState(false);
@@ -234,26 +232,23 @@ function App() {
     return roundDamage(total);
   };
 
-  // Загружаем все профили ТОЛЬКО ОДИН РАЗ при старте
+  // Загружаем все профили ТОЛЬКО ОДИН РАЗ (для рейтинга)
   useEffect(() => {
     const loadAllUserProfiles = async () => {
-      if (profilesLoadedRef.current) return;
-      
-      console.log('📥 Загружаем все профили для рейтинга (один раз)...');
+      console.log('📥 Загружаем все профили для рейтинга...');
       const profiles = await loadAllProfiles();
       const profilesMap = new Map();
       profiles.forEach(profile => {
         profilesMap.set(profile.userId, profile);
       });
       setAllProfiles(profilesMap);
-      profilesLoadedRef.current = true;
       console.log(`✅ Загружено ${profiles.length} профилей`);
     };
     
     loadAllUserProfiles();
-  }, []); // Пустой массив зависимостей - выполнится только один раз
+  }, []); // Пустой массив - выполнится один раз
 
-  // Функция для обновления одного профиля в кэше (без перезагрузки всех)
+  // Функция для обновления одного профиля в кэше
   const updateProfileInCache = useCallback((updatedProfile: UserProfile) => {
     setAllProfiles(prev => {
       const newMap = new Map(prev);
@@ -262,63 +257,54 @@ function App() {
     });
   }, []);
 
-// ОПТИМИЗИРОВАННАЯ функция принятия наград
-const acceptRewards = async () => {
-  if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
-  
-  setIsAcceptingRewards(true);
-  
-  try {
-    // 1. Расчет новых значений
-    const newCoins = userData.coins + pendingRewards.totalCoins;
-    const newTotalExp = userData.totalExp + pendingRewards.totalExp;
-    const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
+  // ОПТИМИЗИРОВАННАЯ функция принятия наград
+  const acceptRewards = async () => {
+    if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
     
-    // 2. Находим турнир
-    const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
+    setIsAcceptingRewards(true);
     
-    // 3. Получаем текущие selections для этого турнира
-    const tournamentSelections = pendingRewards.winners;
-    
-    // 4. МГНОВЕННО обновляем UI
-    setUserData(prev => {
-      const otherPastSelections = prev.mySelections.past.filter(
-        (sel: SelectedFighter) => !tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
-      );
+    try {
+      const newCoins = userData.coins + pendingRewards.totalCoins;
+      const newTotalExp = userData.totalExp + pendingRewards.totalExp;
+      const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
       
-      return {
-        ...prev,
-        coins: newCoins,
-        totalExp: newTotalExp,
-        level,
-        currentExp,
-        nextLevelExp,
-        mySelections: {
-          ...prev.mySelections,
-          past: [...otherPastSelections, ...tournamentSelections]
-        }
-      };
-    });
-    
-    // 5. Закрываем модалку
-    setShowRewardsModal(false);
-    setPendingRewards(null);
-    setShowPastFighters(false);
-    
-    // 6. Параллельное выполнение запросов (фоном)
-    if (tournament) {
-      Promise.all([
-        saveUserProfile({
-          userId: telegramUser.id,
-          username: userData.username,
-          photoUrl: telegramUser.photoUrl,
-          level,
-          experience: newTotalExp,
+      const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
+      const tournamentSelections = pendingRewards.winners;
+      
+      setUserData(prev => {
+        const otherPastSelections = prev.mySelections.past.filter(
+          (sel: SelectedFighter) => !tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+        );
+        
+        return {
+          ...prev,
           coins: newCoins,
-          lastUpdated: new Date().toISOString()
-        }).then((savedProfile) => {
-          // Обновляем только этот профиль в кэше
-          if (savedProfile) {
+          totalExp: newTotalExp,
+          level,
+          currentExp,
+          nextLevelExp,
+          mySelections: {
+            ...prev.mySelections,
+            past: [...otherPastSelections, ...tournamentSelections]
+          }
+        };
+      });
+      
+      setShowRewardsModal(false);
+      setPendingRewards(null);
+      setShowPastFighters(false);
+      
+      if (tournament) {
+        Promise.all([
+          saveUserProfile({
+            userId: telegramUser.id,
+            username: userData.username,
+            photoUrl: telegramUser.photoUrl,
+            level,
+            experience: newTotalExp,
+            coins: newCoins,
+            lastUpdated: new Date().toISOString()
+          }).then(() => {
             updateProfileInCache({
               userId: telegramUser.id,
               username: userData.username,
@@ -328,34 +314,33 @@ const acceptRewards = async () => {
               coins: newCoins,
               lastUpdated: new Date().toISOString()
             });
-          }
-        }),
-        
-        (async () => {
-          const currentResult = await loadUserResults(tournament.name, telegramUser.id);
-          if (currentResult) {
-            const updatedResult: UserResult = {
-              ...currentResult,
-              rewardsAccepted: true,
-              rewards: {
-                coins: pendingRewards.totalCoins,
-                experience: pendingRewards.totalExp
-              }
-            };
-            await saveUserResults(tournament.name, updatedResult);
-          }
-        })()
-      ]).catch(error => {
-        console.error('Фоновое сохранение ошибки:', error);
-      });
+          }),
+          
+          (async () => {
+            const currentResult = await loadUserResults(tournament.name, telegramUser.id);
+            if (currentResult) {
+              const updatedResult: UserResult = {
+                ...currentResult,
+                rewardsAccepted: true,
+                rewards: {
+                  coins: pendingRewards.totalCoins,
+                  experience: pendingRewards.totalExp
+                }
+              };
+              await saveUserResults(tournament.name, updatedResult);
+            }
+          })()
+        ]).catch(error => {
+          console.error('Фоновое сохранение ошибки:', error);
+        });
+      }
+      
+    } catch (error) {
+      console.error('Ошибка при получении наград:', error);
+    } finally {
+      setIsAcceptingRewards(false);
     }
-    
-  } catch (error) {
-    console.error('Ошибка при получении наград:', error);
-  } finally {
-    setIsAcceptingRewards(false);
-  }
-};
+  };
 
   // Функция загрузки данных для окна выбора
   const loadSelectionData = async (tournament: Tournament) => {
@@ -430,107 +415,123 @@ const acceptRewards = async () => {
   };
 
   // Инициализация Telegram WebApp
-useEffect(() => {
-  let isMounted = true;
-  
-  const initTelegram = async () => {
-    if (window.Telegram?.WebApp) {
-      const tg = window.Telegram.WebApp;
-      tg.ready();
-      
-      const user = tg.initDataUnsafe.user;
-      if (user && isMounted) {
-        const username = user.username || `${user.first_name} ${user.last_name || ''}`.trim();
-        const userId = `user_${user.id}`;
+  useEffect(() => {
+    let isMounted = true;
+    
+    const initTelegram = async () => {
+      if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
         
-        // Сначала устанавливаем базовые данные из Telegram
-        setTelegramUser({
-          id: userId,
-          username: username,
-          photoUrl: user.photo_url
-        });
-        
-        setLoadingProfile(true);
-        const profile = await loadUserProfile(userId);
-        
-        if (profile && isMounted) {
-          const totalExp = profile.experience || 0;
-          const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
+        const user = tg.initDataUnsafe.user;
+        if (user && isMounted) {
+          const username = user.username || `${user.first_name} ${user.last_name || ''}`.trim();
+          const userId = `user_${user.id}`;
           
-          // ВАЖНО: обновляем telegramUser с photoUrl из профиля (если в профиле есть фото, а в Telegram нет)
-          setTelegramUser(prev => ({
-            ...prev!,
-            photoUrl: profile.photoUrl || prev?.photoUrl
-          }));
-          
-          setUserData(prev => ({
-            ...prev,
-            username: profile.username,
-            level,
-            currentExp,
-            totalExp,
-            nextLevelExp,
-            coins: profile.coins,
-            myUserId: userId
-          }));
-          
-          // Обновляем профиль с актуальной аватаркой из Telegram
-          const updatedProfile = {
-            userId: userId,
-            username: profile.username,
-            photoUrl: user.photo_url || profile.photoUrl,
-            level: level,
-            experience: totalExp,
-            coins: profile.coins,
-            lastUpdated: new Date().toISOString()
-          };
-          
-          await saveUserProfile(updatedProfile);
-          
-          // Обновляем кэш
-          updateProfileInCache(updatedProfile);
-          
-        } else if (isMounted) {
-          const newProfile = {
-            userId: userId,
+          setTelegramUser({
+            id: userId,
             username: username,
-            photoUrl: user.photo_url,
-            level: 1,
-            experience: 0,
-            coins: 100,
-            lastUpdated: new Date().toISOString()
-          };
+            photoUrl: user.photo_url
+          });
           
-          const saved = await saveUserProfile(newProfile);
+          setLoadingProfile(true);
+          const profile = await loadUserProfile(userId);
           
-          if (saved) {
+          if (profile && isMounted) {
+            const totalExp = profile.experience || 0;
+            const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
+            
             setUserData(prev => ({
               ...prev,
-              username: username,
-              coins: 100,
+              username: profile.username,
+              level,
+              currentExp,
+              totalExp,
+              nextLevelExp,
+              coins: profile.coins,
               myUserId: userId
             }));
             
-            // Добавляем новый профиль в кэш
-            updateProfileInCache(newProfile);
+            // Обновляем профиль с актуальной аватаркой
+            const updatedProfile = {
+              userId: userId,
+              username: profile.username,
+              photoUrl: user.photo_url || profile.photoUrl,
+              level: level,
+              experience: totalExp,
+              coins: profile.coins,
+              lastUpdated: new Date().toISOString()
+            };
+            
+            await saveUserProfile(updatedProfile);
+            updateProfileInCache(updatedProfile);
+            
+          } else if (isMounted) {
+            const newProfile = {
+              userId: userId,
+              username: username,
+              photoUrl: user.photo_url,
+              level: 1,
+              experience: 0,
+              coins: 100,
+              lastUpdated: new Date().toISOString()
+            };
+            
+            const saved = await saveUserProfile(newProfile);
+            
+            if (saved) {
+              setUserData(prev => ({
+                ...prev,
+                username: username,
+                coins: 100,
+                myUserId: userId
+              }));
+              updateProfileInCache(newProfile);
+            }
+          }
+          
+          if (isMounted) {
+            setProfileLoaded(true);
+            setLoadingProfile(false);
           }
         }
+      } else {
+        console.log('⚠️ Telegram WebApp не обнаружен, работаем в тестовом режиме');
         
         if (isMounted) {
+          setTelegramUser({
+            id: 'user_123',
+            username: 'Test Player',
+            photoUrl: undefined
+          });
+          
+          const profile = await loadUserProfile('user_123');
+          if (profile && isMounted) {
+            const totalExp = profile.experience || 0;
+            const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
+            
+            setUserData(prev => ({
+              ...prev,
+              username: profile.username,
+              level,
+              currentExp,
+              totalExp,
+              nextLevelExp,
+              coins: profile.coins,
+              myUserId: 'user_123'
+            }));
+          }
+          
           setProfileLoaded(true);
           setLoadingProfile(false);
         }
       }
-    } else {
-      // Тестовый режим
-      // ... существующий код ...
-    }
-  };
-  
-  initTelegram();
-  
-  return () => { isMounted = false; };
-}, [updateProfileInCache]);
+    };
+    
+    initTelegram();
+    
+    return () => { isMounted = false; };
+  }, [updateProfileInCache]);
 
   // Загружаем результаты пользователя
   useEffect(() => {
@@ -648,8 +649,6 @@ useEffect(() => {
     };
     
     await saveUserProfile(updatedProfile);
-    
-    // Обновляем только этот профиль в кэше
     updateProfileInCache(updatedProfile);
   };
 
@@ -680,8 +679,6 @@ useEffect(() => {
       };
       
       await saveUserProfile(updatedProfile);
-      
-      // Обновляем только этот профиль в кэше
       updateProfileInCache(updatedProfile);
       
       setSelectedTournament(tournament);
