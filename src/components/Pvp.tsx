@@ -6,13 +6,13 @@ import { Tournament, SelectedFighter } from '../types';
 interface PvpProps {
   pastTournaments: Tournament[];
   userSelections: SelectedFighter[];
-  userAvatar?: string;  // ← добавляем пропс для аватарки
+  userAvatar?: string;
 }
 
 const Pvp: React.FC<PvpProps> = ({
   pastTournaments,
   userSelections,
-  userAvatar,  // ← получаем аватарку
+  userAvatar,
 }) => {
   // Функция для получения урона игрока в конкретном турнире
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
@@ -29,9 +29,6 @@ const Pvp: React.FC<PvpProps> = ({
     return Math.round(totalDamage);
   };
 
-  // Список лиг для пустых ячеек
-  const otherLeagues = ['PFL', 'ONE', 'Bellator'];
-
   // Получаем baseUrl
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
@@ -44,13 +41,13 @@ const Pvp: React.FC<PvpProps> = ({
 
       {/* Список турниров */}
       <div className="pvp-list">
-        {/* Сначала отображаем реальные турниры */}
+        {/* Отображаем только реальные турниры (без пустых слотов) */}
         {pastTournaments.slice(0, 3).map((tournament) => {
           const userDamage = getUserDamageForTournament(tournament);
           
           return (
             <div key={tournament.id} className="pvp-tournament-card">
-              {/* Верхняя часть (20%) - лига и название */}
+              {/* Верхняя часть (15%) - лига и название */}
               <div className="pvp-card-top">
                 <div className="pvp-card-league" style={{ backgroundColor: '#B20101' }}>
                   <span>{tournament.league || 'UFC'}</span>
@@ -60,7 +57,7 @@ const Pvp: React.FC<PvpProps> = ({
                 </div>
               </div>
 
-              {/* Средняя часть (50%) - аватарки и VS */}
+              {/* Средняя часть (60%) - аватарки и VS */}
               <div className="pvp-card-middle">
                 {/* Левая часть (45%) - аватарка игрока и его урон */}
                 <div className="pvp-middle-left">
@@ -99,7 +96,7 @@ const Pvp: React.FC<PvpProps> = ({
                 </div>
               </div>
 
-              {/* Нижняя часть (30%) - стоимость и кнопка */}
+              {/* Нижняя часть (25%) - стоимость и кнопка */}
               <div className="pvp-card-bottom">
                 <div className="pvp-card-cost">
                   Entry pass: <span className="pvp-cost-icon">🪙</span>50
@@ -114,17 +111,6 @@ const Pvp: React.FC<PvpProps> = ({
             </div>
           );
         })}
-
-        {/* Добавляем пустые ячейки до 3 штук */}
-        {pastTournaments.length < 3 && 
-          otherLeagues.slice(0, 3 - pastTournaments.length).map((league, index) => (
-            <div key={`empty-${league}`} className="pvp-empty-card">
-              <div className="pvp-empty-content">
-                {league}
-              </div>
-            </div>
-          ))
-        }
       </div>
     </div>
   );

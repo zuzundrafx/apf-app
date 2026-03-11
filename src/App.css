@@ -1221,9 +1221,9 @@ body {
 
 .pvp-list {
   flex: 1;
-  overflow-y: hidden;
-  display: grid;
-  grid-auto-rows: 32%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   gap: clamp(4px, 2vh, 6px);
   padding: 0;
   min-height: 0;
@@ -1234,15 +1234,17 @@ body {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  height: 48%; /* Увеличили с 32% до 48% */
+  min-height: 180px; /* Увеличили минимальную высоту */
   background: #313130;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
-/* ВЕРХНЯЯ ЧАСТЬ (20%) */
+/* ВЕРХНЯЯ ЧАСТЬ (15%) */
 .pvp-card-top {
   display: flex;
-  height: 20%;
+  height: 15%; /* Уменьшили с 20% до 15% */
   width: 100%;
   background: #3D3D3B;
   min-height: 0;
@@ -1277,10 +1279,10 @@ body {
   height: 100%;
 }
 
-/* СРЕДНЯЯ ЧАСТЬ (50%) */
+/* СРЕДНЯЯ ЧАСТЬ (60%) */
 .pvp-card-middle {
   display: flex;
-  height: 50%;
+  height: 60%; /* Увеличили с 50% до 60% */
   width: 100%;
   background: #2A2A2A;
   min-height: 0;
@@ -1380,10 +1382,10 @@ body {
   white-space: nowrap;
 }
 
-/* НИЖНЯЯ ЧАСТЬ (30%) */
+/* НИЖНЯЯ ЧАСТЬ (25%) */
 .pvp-card-bottom {
   display: flex;
-  height: 30%;
+  height: 25%; /* Уменьшили с 30% до 25% */
   width: 100%;
   background: #313130;
   border-top: 1px solid #4A4A48;
@@ -1433,26 +1435,6 @@ body {
   pointer-events: none;
 }
 
-/* Пустая карточка */
-.pvp-empty-card {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  background: #1B1C1D;
-  overflow: hidden;
-  align-items: center;
-  justify-content: center;
-}
-
-.pvp-empty-content {
-  color: #313130;
-  font-size: clamp(14px, 4vw, 18px);
-  font-weight: 600;
-  text-transform: uppercase;
-  text-align: center;
-}
-
 /* Адаптация для маленьких экранов */
 @media (max-width: 320px) {
   .pvp-card-league {
@@ -1474,5 +1456,4 @@ body {
   .pvp-rival-label {
     font-size: 7px;
   }
-
 }
