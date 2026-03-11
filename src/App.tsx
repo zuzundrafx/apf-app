@@ -4,6 +4,7 @@ import Pvp from './components/Pvp';
 import LeaderboardItem from './components/LeaderboardItem';
 import { Fighter, Tournament, SelectedFighter } from './types';
 import { useTournaments } from './hooks/useTournaments';
+import { loadExistingResults } from './api/yandexUpload'; // возможно уже есть
 import { groupFightersByWeight } from './data/loadFighters';
 import { 
   saveUserResults, 
@@ -184,6 +185,49 @@ function App() {
   
   // Кэш всех профилей для рейтинга (загружаем один раз)
   const [allProfiles, setAllProfiles] = useState<Map<string, UserProfile>>(new Map());
+
+  // Кэш данных турниров (весовые категории + результаты игроков)
+  const [tournamentDataCache, setTournamentDataCache] = useState<Map<string, {
+  weightClasses: string[];        // из tournament.data
+  results: UserResult[];          // из loadExistingResults
+  }>>(new Map());
+
+  // Функция для загрузки данных турнира (ленивая)
+const loadTournamentData = useCallback(async (tournamentName: string) => {
+  console.log(`📥 Загружаем данные для турнира: ${tournamentName}`);
+  
+  // Проверяем кэш
+  const cached = tournamentDataCache.get(tournamentName);
+  if (cached) {
+    console.log(`✅ Данные турнира ${tournamentName} взяты из кэша`);
+    return cached;
+  }
+
+  // Ищем турнир в pastTournaments
+  const tournament = pastTournaments.find(t => t.name === tournamentName);
+  
+  // Извлекаем уникальные весовые категории
+  const weightClasses = tournament?.data
+    ? [...new Set(tournament.data.map(f => f['Weight class']))]
+    : [];
+  
+  console.log(`📊 Найдено весовых категорий: ${weightClasses.length}`);
+
+  // Загружаем результаты игроков
+  const results = await loadExistingResults(tournamentName);
+  console.log(`👥 Загружено результатов игроков: ${results.length}`);
+
+  const data = { weightClasses, results };
+  
+  // Сохраняем в кэш
+  setTournamentDataCache(prev => {
+    const newMap = new Map(prev);
+    newMap.set(tournamentName, data);
+    return newMap;
+  });
+  
+  return data; // ← всегда возвращаем data, даже если weightClasses пустой
+}, [pastTournaments, tournamentDataCache]);
 
   // Состояния для окна наград
   const [showRewardsModal, setShowRewardsModal] = useState(false);
@@ -1217,7 +1261,10 @@ function App() {
   <Pvp
     pastTournaments={pastTournaments}
     userSelections={userData.mySelections.past}
-    userAvatar={telegramUser?.photoUrl}  // ← передаём аватарку
+    userAvatar={telegramUser?.photoUrl}
+    userId={telegramUser?.id}
+    allProfiles={allProfiles}
+    loadTournamentData={loadTournamentData}
   />
 )}
 

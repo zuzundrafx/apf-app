@@ -1,19 +1,38 @@
 // src/components/Pvp.tsx
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Tournament, SelectedFighter } from '../types';
+import { UserResult } from '../api/yandexUpload';
+import { UserProfile } from '../api/userProfiles';
+import PvpBattleModal from './PvpBattleModal';
 
 interface PvpProps {
   pastTournaments: Tournament[];
   userSelections: SelectedFighter[];
   userAvatar?: string;
+  userId?: string;
+  allProfiles: Map<string, UserProfile>;
+  loadTournamentData: (tournamentName: string) => Promise<{
+    weightClasses: string[];
+    results: UserResult[];
+  }>;
 }
 
 const Pvp: React.FC<PvpProps> = ({
   pastTournaments,
   userSelections,
   userAvatar,
+  userId,
+  allProfiles,
+  loadTournamentData,
 }) => {
+  // Состояния для модалки боя
+  const [isBattleModalOpen, setIsBattleModalOpen] = useState(false);
+  const [selectedTournamentForBattle, setSelectedTournamentForBattle] = useState<Tournament | null>(null);
+  const [searchStatus, setSearchStatus] = useState<'searching' | 'found' | 'no-rivals'>('searching');
+  const [rivalData, setRivalData] = useState<{ username: string; photoUrl?: string; totalDamage: number } | null>(null);
+  const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+  
   // Функция для получения урона игрока в конкретном турнире
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
     const tournamentSelections = userSelections.filter(sel => 
@@ -29,19 +48,86 @@ const Pvp: React.FC<PvpProps> = ({
     return Math.round(totalDamage);
   };
 
-  // Получаем baseUrl
+  // Обработчик нажатия на ENGAGE
+  const handleEngage = async (tournament: Tournament) => {
+    if (!userId) return;
+    
+    // Очищаем предыдущий таймаут
+    if (searchTimeout) clearTimeout(searchTimeout);
+    
+    // Открываем модалку
+    setIsBattleModalOpen(true);
+    setSelectedTournamentForBattle(tournament);
+    setSearchStatus('searching');
+    setRivalData(null);
+    
+    try {
+      // Загружаем данные турнира
+      const tournamentData = await loadTournamentData(tournament.name);
+      
+      // Ищем соперников (исключая себя)
+      const rivals = tournamentData.results.filter(r => r.userId !== userId);
+      
+      console.log(`🔍 Найдено соперников: ${rivals.length}`);
+      
+      // Таймаут 30 секунд
+      const timeout = setTimeout(() => {
+        if (rivals.length === 0) {
+          console.log('❌ Соперников нет');
+          setSearchStatus('no-rivals');
+        } else {
+          // Случайный выбор соперника
+          const randomIndex = Math.floor(Math.random() * rivals.length);
+          const selectedRival = rivals[randomIndex];
+          
+          console.log(`✅ Выбран соперник: ${selectedRival.username} (урон: ${selectedRival.totalDamage})`);
+          
+          // Получаем аватарку из allProfiles
+          const rivalProfile = allProfiles.get(selectedRival.userId);
+          
+          setRivalData({
+            username: selectedRival.username,
+            photoUrl: rivalProfile?.photoUrl,
+            totalDamage: selectedRival.totalDamage
+          });
+          setSearchStatus('found');
+        }
+      }, 30000); // 30 секунд
+      
+      setSearchTimeout(timeout);
+      
+    } catch (error) {
+      console.error('Ошибка при поиске соперника:', error);
+      setSearchStatus('no-rivals');
+    }
+  };
+
+  // Обработчик SURRENDER
+  const handleSurrender = () => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+      setSearchTimeout(null);
+    }
+    setIsBattleModalOpen(false);
+    setSelectedTournamentForBattle(null);
+    setSearchStatus('searching');
+    setRivalData(null);
+  };
+
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
   return (
     <div className="pvp-screen">
+      {/* Затемнение фона когда модалка открыта */}
+      {isBattleModalOpen && <div className="pvp-overlay" />}
+      
       {/* Заголовок Active Tournaments */}
       <div className="pvp-header">
         <div className="pvp-header-title">ACTIVE TOURNAMENTS</div>
       </div>
 
       {/* Список турниров */}
-      <div className="pvp-list">
-        {/* Отображаем только реальные турниры (без пустых слотов) */}
+      <div className={`pvp-list ${isBattleModalOpen ? 'blurred' : ''}`}>
         {pastTournaments.slice(0, 3).map((tournament) => {
           const userDamage = getUserDamageForTournament(tournament);
           
@@ -102,8 +188,9 @@ const Pvp: React.FC<PvpProps> = ({
                   Entry pass: <span className="pvp-cost-icon">🪙</span>50
                 </div>
                 <button 
-                  className="pvp-card-engage disabled"
-                  disabled
+                  className="pvp-card-engage"
+                  onClick={() => handleEngage(tournament)}
+                  disabled={isBattleModalOpen} // Блокируем кнопки если модалка открыта
                 >
                   ENGAGE
                 </button>
@@ -112,6 +199,19 @@ const Pvp: React.FC<PvpProps> = ({
           );
         })}
       </div>
+
+      {/* Модальное окно боя */}
+      {selectedTournamentForBattle && (
+        <PvpBattleModal
+          tournament={selectedTournamentForBattle}
+          userAvatar={userAvatar}
+          userDamage={getUserDamageForTournament(selectedTournamentForBattle)}
+          isOpen={isBattleModalOpen}
+          onSurrender={handleSurrender}
+          searchStatus={searchStatus}
+          rivalData={rivalData}
+        />
+      )}
     </div>
   );
 };
