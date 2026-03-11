@@ -1235,7 +1235,7 @@ body {
   flex-direction: column;
   width: 100%;
   height: 48%; /* Увеличили с 32% до 48% */
-  min-height: 180px; /* Увеличили минимальную высоту */
+  min-height: 100px; /* Увеличили минимальную высоту */
   background: #313130;
   overflow: hidden;
   flex-shrink: 0;
