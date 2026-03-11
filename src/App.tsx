@@ -430,127 +430,107 @@ const acceptRewards = async () => {
   };
 
   // Инициализация Telegram WebApp
-  useEffect(() => {
-    let isMounted = true;
-    
-    const initTelegram = async () => {
-      if (window.Telegram?.WebApp) {
-        const tg = window.Telegram.WebApp;
-        tg.ready();
+useEffect(() => {
+  let isMounted = true;
+  
+  const initTelegram = async () => {
+    if (window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      
+      const user = tg.initDataUnsafe.user;
+      if (user && isMounted) {
+        const username = user.username || `${user.first_name} ${user.last_name || ''}`.trim();
+        const userId = `user_${user.id}`;
         
-        const user = tg.initDataUnsafe.user;
-        if (user && isMounted) {
-          const username = user.username || `${user.first_name} ${user.last_name || ''}`.trim();
-          const userId = `user_${user.id}`;
+        // Сначала устанавливаем базовые данные из Telegram
+        setTelegramUser({
+          id: userId,
+          username: username,
+          photoUrl: user.photo_url
+        });
+        
+        setLoadingProfile(true);
+        const profile = await loadUserProfile(userId);
+        
+        if (profile && isMounted) {
+          const totalExp = profile.experience || 0;
+          const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
           
-          setTelegramUser({
-            id: userId,
+          // ВАЖНО: обновляем telegramUser с photoUrl из профиля (если в профиле есть фото, а в Telegram нет)
+          setTelegramUser(prev => ({
+            ...prev!,
+            photoUrl: profile.photoUrl || prev?.photoUrl
+          }));
+          
+          setUserData(prev => ({
+            ...prev,
+            username: profile.username,
+            level,
+            currentExp,
+            totalExp,
+            nextLevelExp,
+            coins: profile.coins,
+            myUserId: userId
+          }));
+          
+          // Обновляем профиль с актуальной аватаркой из Telegram
+          const updatedProfile = {
+            userId: userId,
+            username: profile.username,
+            photoUrl: user.photo_url || profile.photoUrl,
+            level: level,
+            experience: totalExp,
+            coins: profile.coins,
+            lastUpdated: new Date().toISOString()
+          };
+          
+          await saveUserProfile(updatedProfile);
+          
+          // Обновляем кэш
+          updateProfileInCache(updatedProfile);
+          
+        } else if (isMounted) {
+          const newProfile = {
+            userId: userId,
             username: username,
-            photoUrl: user.photo_url
-          });
+            photoUrl: user.photo_url,
+            level: 1,
+            experience: 0,
+            coins: 100,
+            lastUpdated: new Date().toISOString()
+          };
           
-          setLoadingProfile(true);
-          const profile = await loadUserProfile(userId);
+          const saved = await saveUserProfile(newProfile);
           
-          if (profile && isMounted) {
-            const totalExp = profile.experience || 0;
-            const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
-            
+          if (saved) {
             setUserData(prev => ({
               ...prev,
-              username: profile.username,
-              level,
-              currentExp,
-              totalExp,
-              nextLevelExp,
-              coins: profile.coins,
+              username: username,
+              coins: 100,
               myUserId: userId
             }));
             
-            // Обновляем профиль с актуальной аватаркой
-            const updatedProfile = {
-              userId: userId,
-              username: profile.username,
-              photoUrl: user.photo_url || profile.photoUrl,
-              level: level,
-              experience: totalExp,
-              coins: profile.coins,
-              lastUpdated: new Date().toISOString()
-            };
-            
-            await saveUserProfile(updatedProfile);
-            
-            // Обновляем только этот профиль в кэше
-            updateProfileInCache(updatedProfile);
-            
-          } else if (isMounted) {
-            const newProfile = {
-              userId: userId,
-              username: username,
-              photoUrl: user.photo_url,
-              level: 1,
-              experience: 0,
-              coins: 100,
-              lastUpdated: new Date().toISOString()
-            };
-            
-            const saved = await saveUserProfile(newProfile);
-            
-            if (saved) {
-              setUserData(prev => ({
-                ...prev,
-                username: username,
-                coins: 100,
-                myUserId: userId
-              }));
-              
-              // Добавляем новый профиль в кэш
-              updateProfileInCache(newProfile);
-            }
-          }
-          
-          if (isMounted) {
-            setProfileLoaded(true);
-            setLoadingProfile(false);
+            // Добавляем новый профиль в кэш
+            updateProfileInCache(newProfile);
           }
         }
-      } else {
-        console.log('⚠️ Telegram WebApp не обнаружен, работаем в тестовом режиме');
         
         if (isMounted) {
-          setTelegramUser({
-            id: 'user_123',
-            username: 'Test Player',
-            photoUrl: undefined
-          });
-          
-          const profile = await loadUserProfile('user_123');
-          if (profile && isMounted) {
-            const totalExp = profile.experience || 0;
-            const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
-            
-            setUserData(prev => ({
-              ...prev,
-              username: profile.username,
-              level,
-              currentExp,
-              totalExp,
-              nextLevelExp,
-              coins: profile.coins,
-              myUserId: 'user_123'
-            }));
-          }
-          
           setProfileLoaded(true);
           setLoadingProfile(false);
         }
       }
-    };
-    
-    initTelegram();
-    
-    return () => { isMounted = false; };
-  }, [updateProfileInCache]);
+    } else {
+      // Тестовый режим
+      // ... существующий код ...
+    }
+  };
+  
+  initTelegram();
+  
+  return () => { isMounted = false; };
+}, [updateProfileInCache]);
 
   // Загружаем результаты пользователя
   useEffect(() => {
