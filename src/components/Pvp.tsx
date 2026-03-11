@@ -31,8 +31,8 @@ const Pvp: React.FC<PvpProps> = ({
   const [selectedTournamentForBattle, setSelectedTournamentForBattle] = useState<Tournament | null>(null);
   const [searchStatus, setSearchStatus] = useState<'searching' | 'found' | 'no-rivals'>('searching');
   const [rivalData, setRivalData] = useState<{ username: string; photoUrl?: string; totalDamage: number } | null>(null);
-  const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
-  
+  /*const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);*/
+
   // Функция для получения урона игрока в конкретном турнире
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
     const tournamentSelections = userSelections.filter(sel => 
@@ -50,69 +50,61 @@ const Pvp: React.FC<PvpProps> = ({
 
   // Обработчик нажатия на ENGAGE
   const handleEngage = async (tournament: Tournament) => {
-    if (!userId) return;
+  if (!userId) return;
+  
+  // Открываем модалку
+  setIsBattleModalOpen(true);
+  setSelectedTournamentForBattle(tournament);
+  setSearchStatus('searching');
+  setRivalData(null);
+  
+  try {
+    // Загружаем данные турнира
+    const tournamentData = await loadTournamentData(tournament.name);
     
-    // Очищаем предыдущий таймаут
-    if (searchTimeout) clearTimeout(searchTimeout);
+    // Ищем соперников (исключая себя)
+    const rivals = tournamentData.results.filter(r => r.userId !== userId);
     
-    // Открываем модалку
-    setIsBattleModalOpen(true);
-    setSelectedTournamentForBattle(tournament);
-    setSearchStatus('searching');
-    setRivalData(null);
+    console.log(`🔍 Найдено соперников: ${rivals.length}`);
     
-    try {
-      // Загружаем данные турнира
-      const tournamentData = await loadTournamentData(tournament.name);
-      
-      // Ищем соперников (исключая себя)
-      const rivals = tournamentData.results.filter(r => r.userId !== userId);
-      
-      console.log(`🔍 Найдено соперников: ${rivals.length}`);
-      
-      // Таймаут 30 секунд
-      const timeout = setTimeout(() => {
-        if (rivals.length === 0) {
-          console.log('❌ Соперников нет');
-          setSearchStatus('no-rivals');
-        } else {
-          // Случайный выбор соперника
-          const randomIndex = Math.floor(Math.random() * rivals.length);
-          const selectedRival = rivals[randomIndex];
-          
-          console.log(`✅ Выбран соперник: ${selectedRival.username} (урон: ${selectedRival.totalDamage})`);
-          
-          // Получаем аватарку из allProfiles
-          const rivalProfile = allProfiles.get(selectedRival.userId);
-          
-          setRivalData({
-            username: selectedRival.username,
-            photoUrl: rivalProfile?.photoUrl,
-            totalDamage: selectedRival.totalDamage
-          });
-          setSearchStatus('found');
-        }
-      }, 30000); // 30 секунд
-      
-      setSearchTimeout(timeout);
-      
-    } catch (error) {
-      console.error('Ошибка при поиске соперника:', error);
+    // Ищем соперника СРАЗУ, без таймаута
+    if (rivals.length === 0) {
+      console.log('❌ Соперников нет');
       setSearchStatus('no-rivals');
+    } else {
+      // Случайный выбор соперника
+      const randomIndex = Math.floor(Math.random() * rivals.length);
+      const selectedRival = rivals[randomIndex];
+      
+      console.log(`✅ Выбран соперник: ${selectedRival.username} (урон: ${selectedRival.totalDamage})`);
+      
+      // Получаем аватарку из allProfiles
+      const rivalProfile = allProfiles.get(selectedRival.userId);
+      
+      setRivalData({
+        username: selectedRival.username,
+        photoUrl: rivalProfile?.photoUrl,
+        totalDamage: selectedRival.totalDamage
+      });
+      setSearchStatus('found');
     }
-  };
+    
+  } catch (error) {
+    console.error('Ошибка при поиске соперника:', error);
+    setSearchStatus('no-rivals');
+  }
+};
 
-  // Обработчик SURRENDER
-  const handleSurrender = () => {
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-      setSearchTimeout(null);
-    }
-    setIsBattleModalOpen(false);
-    setSelectedTournamentForBattle(null);
-    setSearchStatus('searching');
-    setRivalData(null);
-  };
+// Убираем searchTimeout из состояний - он больше не нужен
+// const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+
+// В handleSurrender убираем очистку таймаута
+const handleSurrender = () => {
+  setIsBattleModalOpen(false);
+  setSelectedTournamentForBattle(null);
+  setSearchStatus('searching');
+  setRivalData(null);
+};
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
