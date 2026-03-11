@@ -72,7 +72,7 @@ const Pvp: React.FC<PvpProps> = ({
                 <div className="pvp-card-bottom">
                   {/* Левая часть - стоимость */}
                   <div className="pvp-card-cost">
-                    Cost: 50 coins
+                  ENTRY PASS: <span className="pvp-cost-icon">🪙</span>50
                   </div>
                   
                   {/* Правая часть - кнопка ENGAGE (неактивная) */}

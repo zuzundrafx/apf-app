@@ -1335,6 +1335,12 @@ body {
   text-overflow: ellipsis;
 }
 
+/* Добавляем стиль для значка монеты */
+.pvp-cost-icon {
+  margin-right: 4px;
+  font-size: 1.1em;
+}
+
 .pvp-card-engage {
   width: 27%;
   height: 100%;
