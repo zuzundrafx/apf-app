@@ -1,6 +1,7 @@
-﻿﻿import { useState, useEffect } from 'react';
+﻿﻿﻿﻿import { useState, useEffect } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
+import LeaderboardItem from './components/LeaderboardItem';
 import { Fighter, Tournament, SelectedFighter } from './types';
 import { useTournaments } from './hooks/useTournaments';
 import { groupFightersByWeight } from './data/loadFighters';
@@ -13,7 +14,9 @@ import {
 } from './api/yandexUpload';
 import {
   loadUserProfile,
-  saveUserProfile
+  saveUserProfile,
+  loadAllProfiles,
+  UserProfile
 } from './api/userProfiles';
 import * as XLSX from 'xlsx';
 
@@ -178,6 +181,9 @@ function App() {
     photoUrl?: string;
   } | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  
+  // Кэш всех профилей для рейтинга
+  const [allProfiles, setAllProfiles] = useState<Map<string, UserProfile>>(new Map());
 
   // Состояния для окна наград
   const [showRewardsModal, setShowRewardsModal] = useState(false);
@@ -226,7 +232,22 @@ function App() {
     return roundDamage(total);
   };
 
-// ОПТИМИЗИРОВАННАЯ функция принятия наград
+  // Функция для обновления кэша профилей
+  const refreshProfilesCache = async () => {
+    const profiles = await loadAllProfiles();
+    const profilesMap = new Map();
+    profiles.forEach(profile => {
+      profilesMap.set(profile.userId, profile);
+    });
+    setAllProfiles(profilesMap);
+    console.log('📊 Кэш профилей обновлен, загружено:', profiles.length);
+  };
+
+  // Загружаем все профили при старте
+  useEffect(() => {
+    refreshProfilesCache();
+  }, []);
+
 // ОПТИМИЗИРОВАННАЯ функция принятия наград
 const acceptRewards = async () => {
   if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
@@ -243,13 +264,10 @@ const acceptRewards = async () => {
     const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
     
     // 3. Получаем текущие selections для этого турнира
-    // Они должны быть где-то сохранены! Где? 
-    // В момент показа модалки мы их очистили, но они есть в pendingRewards.winners
-    const tournamentSelections = pendingRewards.winners; // ← вот они!
+    const tournamentSelections = pendingRewards.winners;
     
     // 4. МГНОВЕННО обновляем UI
     setUserData(prev => {
-      // Оставляем другие прошедшие турниры, добавляем этот
       const otherPastSelections = prev.mySelections.past.filter(
         (sel: SelectedFighter) => !tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
       );
@@ -271,7 +289,7 @@ const acceptRewards = async () => {
     // 5. Закрываем модалку
     setShowRewardsModal(false);
     setPendingRewards(null);
-    setShowPastFighters(false); // Возвращаемся к карточкам турниров
+    setShowPastFighters(false);
     
     // 6. Параллельное выполнение запросов (фоном)
     if (tournament) {
@@ -279,11 +297,12 @@ const acceptRewards = async () => {
         saveUserProfile({
           userId: telegramUser.id,
           username: userData.username,
+          photoUrl: telegramUser.photoUrl,
           level,
           experience: newTotalExp,
           coins: newCoins,
           lastUpdated: new Date().toISOString()
-        }),
+        }).then(() => refreshProfilesCache()), // Обновляем кэш после сохранения
         
         (async () => {
           const currentResult = await loadUserResults(tournament.name, telegramUser.id);
@@ -374,7 +393,7 @@ const acceptRewards = async () => {
       }));
       
       setSelectionData(fighters);
-      tournament.data = fighters; // Кэшируем
+      tournament.data = fighters;
     } catch (error) {
       console.error('Ошибка загрузки данных для выбора:', error);
       setSelectionData(null);
@@ -421,6 +440,20 @@ const acceptRewards = async () => {
               myUserId: userId
             }));
             
+            // ВАЖНО: Обновляем профиль с актуальной аватаркой
+            await saveUserProfile({
+              userId: userId,
+              username: profile.username,
+              photoUrl: user.photo_url || profile.photoUrl,
+              level: level,
+              experience: totalExp,
+              coins: profile.coins,
+              lastUpdated: new Date().toISOString()
+            });
+            
+            // Обновляем кэш
+            refreshProfilesCache();
+            
           } else if (isMounted) {
             const newProfile = {
               userId: userId,
@@ -441,6 +474,9 @@ const acceptRewards = async () => {
                 coins: 100,
                 myUserId: userId
               }));
+              
+              // Обновляем кэш
+              refreshProfilesCache();
             }
           }
           
@@ -499,17 +535,14 @@ const acceptRewards = async () => {
       setSelectedPastTournament(null);
       setSelectedUpcomingTournament(null);
       
-      // Загружаем результаты для ВСЕХ прошедших турниров
       const pastResults = await Promise.all(
         pastTournaments.map((tournament: Tournament) => loadUserResults(tournament.name, telegramUser.id))
       );
       
-      // Загружаем результаты для ВСЕХ будущих турниров
       const upcomingResults = await Promise.all(
         upcomingTournaments.map((tournament: Tournament) => loadUserResults(tournament.name, telegramUser.id))
       );
       
-      // Собираем все ставки на прошедшие турниры
       const allPastSelections: SelectedFighter[] = [];
       pastResults.forEach((result: UserResult | null) => {
         if (result && result.selections.length > 0) {
@@ -517,7 +550,6 @@ const acceptRewards = async () => {
         }
       });
       
-      // Собираем все ставки на будущие турниры
       const allUpcomingSelections: SelectedFighter[] = [];
       upcomingResults.forEach((result: UserResult | null) => {
         if (result && result.selections.length > 0) {
@@ -534,7 +566,6 @@ const acceptRewards = async () => {
       }
       
       if (allPastSelections.length > 0 && isMounted) {
-        // Проверяем, есть ли неподтвержденные награды
         let hasPendingRewards = false;
         for (let i = 0; i < pastResults.length; i++) {
           const result = pastResults[i];
@@ -577,7 +608,6 @@ const acceptRewards = async () => {
   useEffect(() => {
     if (currentView === 'leaderboard' && pastTournaments.length > 0) {
       setLeaderboardLoading(true);
-      // Берем самый свежий прошедший турнир для рейтинга
       const latestPast = pastTournaments[0];
       loadLeaderboard(latestPast.name)
         .then(data => {
@@ -601,64 +631,61 @@ const acceptRewards = async () => {
     await saveUserProfile({
       userId: telegramUser.id,
       username: userData.username,
+      photoUrl: telegramUser.photoUrl,
       level: userData.level,
       experience: userData.totalExp,
       coins: newCoins,
       lastUpdated: new Date().toISOString()
     });
+    
+    // Обновляем кэш
+    refreshProfilesCache();
   };
 
-  // Функция для открытия окна выбора со списанием монет
   const openSelectionModal = async (tournament: Tournament) => {
-    // Защита от множественных нажатий
     if (!telegramUser || isOpeningSelection) return;
     
     setIsOpeningSelection(true);
     
     try {
-      // Проверяем, можно ли делать ставку
       if (!canPlaceBet(tournament, userData.coins)) {
         console.log('Cannot place bet');
         setIsOpeningSelection(false);
         return;
       }
       
-      // Списываем 100 монет
       const newCoins = userData.coins - 100;
       
-      // Обновляем состояние
       setUserData(prev => ({ ...prev, coins: newCoins }));
       
-      // Сохраняем в профиль
       await saveUserProfile({
         userId: telegramUser.id,
         username: userData.username,
-        photoUrl: telegramUser.photoUrl, // ← сохраняем как есть
+        photoUrl: telegramUser.photoUrl,
         level: userData.level,
         experience: userData.totalExp,
         coins: newCoins,
         lastUpdated: new Date().toISOString()
       });
       
-      // СНАЧАЛА открываем окно выбора (мгновенно)
+      // Обновляем кэш
+      refreshProfilesCache();
+      
       setSelectedTournament(tournament);
       setCurrentView('selection');
       setSelectedFighters(new Map());
       
-      // ПОТОМ загружаем данные (они отобразятся с лоадером)
       loadSelectionData(tournament);
       
     } catch (error) {
       console.error('Error opening selection:', error);
     } finally {
-      // Сбрасываем флаг через небольшую задержку, чтобы избежать двойных кликов
       setTimeout(() => {
         setIsOpeningSelection(false);
       }, 500);
     }
   };
 
-  // Обработчик для кнопки CLOSE с защитой от множественных нажатий
   const handleCloseClick = async () => {
     if (isClosing) return;
     
@@ -668,15 +695,12 @@ const acceptRewards = async () => {
     setIsClosing(false);
   };
 
-  // Обработчик клика по карточке прошедшего турнира
   const handlePastTournamentClick = (tournament: Tournament) => {
     setSelectedPastTournament(tournament.name);
     setShowPastFighters(true);
   };
 
-  // Обработчик клика по карточке будущего турнира
   const handleUpcomingTournamentClick = (tournament: Tournament) => {
-    // Защита от множественных нажатий
     if (isOpeningSelection) return;
     
     const hasBetForThisTournament = userData.mySelections.upcoming.some(
@@ -684,10 +708,8 @@ const acceptRewards = async () => {
     );
     
     if (hasBetForThisTournament) {
-      // Если есть ставка - показываем карточки бойцов
       setSelectedUpcomingTournament(tournament.name);
     } else {
-      // Если нет ставки - открываем окно выбора
       openSelectionModal(tournament);
     }
   };
@@ -776,7 +798,6 @@ const acceptRewards = async () => {
     }
   };
 
-  // Загрузочный экран с прогрессом
   if (loading || loadingProfile) {
     return (
       <div className="app">
@@ -834,7 +855,6 @@ const acceptRewards = async () => {
       <main className="main-content">
         {currentView === 'main' && (
           <div className="tournaments-container">
-            {/* ПРОШЕДШИЕ ТУРНИРЫ */}
             {pastTournaments.length > 0 ? (
               <section className="tournament-section past">
                 <div className="tournament-header">
@@ -860,7 +880,6 @@ const acceptRewards = async () => {
                   ) : hasPastBet ? (
                     <>
                       {!showPastFighters ? (
-                        // КАРТОЧКИ ПРОШЕДШИХ ТУРНИРОВ
                         <div className="tournament-cards-grid">
                           {pastTournaments.map((tournament: Tournament) => {
                             const tournamentTotal = calculateTotalDamage(
@@ -888,7 +907,6 @@ const acceptRewards = async () => {
                           })}
                         </div>
                       ) : (
-                        // КАРТОЧКИ БОЙЦОВ ВЫБРАННОГО ПРОШЕДШЕГО ТУРНИРА С ФУТЕРОМ
                         <>
                           <div className="selected-fighters-grid">
                             {userData.mySelections.past
@@ -920,7 +938,6 @@ const acceptRewards = async () => {
                               })}
                           </div>
                           
-                          {/* ФУТЕР ПРОШЕДШЕГО ТУРНИРА */}
                           <div className="tournament-footer">
                             <div className="footer-total-damage">
                               TOTAL DAMAGE: {calculateTotalDamage(
@@ -949,7 +966,6 @@ const acceptRewards = async () => {
               <TournamentSkeleton />
             )}
 
-            {/* БУДУЩИЕ ТУРНИРЫ */}
             {upcomingTournaments.length > 0 ? (
               <section className="tournament-section upcoming">
                 <div className="tournament-header">
@@ -974,7 +990,6 @@ const acceptRewards = async () => {
                   {loadingUserResults ? (
                     <div className="tournament-message">Loading...</div>
                   ) : selectedUpcomingTournament ? (
-                    // ПОКАЗЫВАЕМ КАРТОЧКИ БОЙЦОВ ДЛЯ ВЫБРАННОГО ТУРНИРА
                     <>
                       <div className="selected-fighters-grid">
                         {userData.mySelections.upcoming
@@ -1005,7 +1020,6 @@ const acceptRewards = async () => {
                           })}
                       </div>
                       
-                      {/* ФУТЕР БУДУЩЕГО ТУРНИРА */}
                       <div className="tournament-footer">
                         <div className="footer-total-damage">
                           TOTAL DAMAGE: {calculateTotalDamage(
@@ -1024,14 +1038,12 @@ const acceptRewards = async () => {
                       </div>
                     </>
                   ) : (
-                    // КАРТОЧКИ ВСЕХ БУДУЩИХ ТУРНИРОВ В СЕТКЕ
                     <div className="tournament-cards-grid">
                       {upcomingTournaments.map((tournament: Tournament) => {
                         const hasBetForThisTournament = userData.mySelections.upcoming.some(
                           (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
                         );
                         
-                        // Вычисляем TOTAL для этого турнира, если есть ставка
                         const tournamentTotal = hasBetForThisTournament 
                           ? calculateTotalDamage(
                               userData.mySelections.upcoming.filter(
@@ -1040,7 +1052,6 @@ const acceptRewards = async () => {
                             )
                           : null;
                         
-                        // Визуальное состояние при загрузке
                         const isLoading = isOpeningSelection;
                         
                         return (
@@ -1086,20 +1097,13 @@ const acceptRewards = async () => {
             ) : leaderboardData.length > 0 ? (
               <div className="leaderboard-list">
                 {leaderboardData.map((entry: LeaderboardEntry) => (
-                  <div key={entry.userId} className="leaderboard-item">
-                    <span className="leaderboard-rank">#{entry.rank}</span>
-                    <div className="leaderboard-user-info">
-                      <div className="leaderboard-avatar">
-                        {entry.userId === telegramUser?.id && telegramUser?.photoUrl ? (
-                          <img src={telegramUser.photoUrl} alt={entry.username} />
-                        ) : (
-                          <span>👤</span>
-                        )}
-                      </div>
-                      <span className="leaderboard-username">{entry.username}</span>
-                    </div>
-                    <span className="leaderboard-score">{entry.totalDamage}</span>
-                  </div>
+                  <LeaderboardItem
+                    key={entry.userId}
+                    entry={entry}
+                    currentUserId={telegramUser?.id}
+                    currentUserPhoto={telegramUser?.photoUrl}
+                    profile={allProfiles.get(entry.userId)}
+                  />
                 ))}
               </div>
             ) : (
@@ -1200,16 +1204,14 @@ const acceptRewards = async () => {
         )}
 
         {currentView === 'pvp' && (
-  <Pvp
-    pastTournaments={pastTournaments}
-    userSelections={userData.mySelections.past}
-    // Убираем все остальные пропсы - они больше не нужны
-  />
-)}
+          <Pvp
+            pastTournaments={pastTournaments}
+            userSelections={userData.mySelections.past}
+          />
+        )}
 
       </main>
 
-      {/* Модальное окно с наградами */}
       {showRewardsModal && pendingRewards && (
         <div className="rewards-modal">
           <div className="rewards-content">
@@ -1262,11 +1264,11 @@ const acceptRewards = async () => {
           <img src={`${BASE_URL}/Leadeship_button.png`} alt="Leaderboard" />
         </button>
         <button 
-  className={`nav-button ${currentView === 'pvp' ? 'active' : ''}`} 
-  onClick={() => setCurrentView('pvp')}
->
-  <img src={`${BASE_URL}/PvP_button.png`} alt="PvP" />
-</button>
+          className={`nav-button ${currentView === 'pvp' ? 'active' : ''}`} 
+          onClick={() => setCurrentView('pvp')}
+        >
+          <img src={`${BASE_URL}/PvP_button.png`} alt="PvP" />
+        </button>
         <button className="nav-button disabled">
           <img src={`${BASE_URL}/Shop_button.png`} alt="Shop" />
         </button>
