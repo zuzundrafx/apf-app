@@ -1233,7 +1233,7 @@ body {
 /* КАРТОЧКА ТУРНИРА С GRID */
 .pvp-tournament-card {
   display: grid;
-  grid-template-rows: 15% 60% 25%; /* Явно задаём пропорции */
+  grid-template-rows: 15% 60% 25%;
   width: 100%;
   height: 48%;
   min-height: 180px;
@@ -1293,19 +1293,22 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-evenly;
-  padding: 4px 0;
+  justify-content: flex-start; /* Изменено с space-evenly */
   background: #313130;
+  padding: 4px 0;
 }
 
 .pvp-player-avatar {
   width: 60%;
   aspect-ratio: 1 / 1;
+  height: auto;
+  flex: 0 0 80%; /* Занимает 80% высоты родителя */
   background: #3D3D3B;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 4px;
 }
 
 .pvp-player-avatar img {
@@ -1315,16 +1318,37 @@ body {
 }
 
 .pvp-player-damage {
-  width: 90%;
+  width: 60%; /* Равна ширине аватарки */
+  flex: 0 0 20%; /* Занимает 20% высоты родителя */
   background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   color: #000000;
-  padding: 4px 0;
   text-align: center;
-  font-size: calc(0.15 * 100%);
+  font-size: calc(0.5 * 100%);
+  white-space: nowrap;
+  padding: 0 2px;
+}
+
+.pvp-damage-label {
+  font-size: 0.7em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.pvp-damage-value {
+  font-size: 0.9em;
+  font-weight: 700;
+  line-height: 1;
+  margin-left: 2px;
+}
+
+.pvp-damage-na {
+  font-size: 0.6em;
+  color: #000000;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .pvp-middle-center {
@@ -1358,19 +1382,22 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-evenly;
-  padding: 4px 0;
+  justify-content: flex-start; /* Изменено с space-evenly */
   background: #313130;
+  padding: 4px 0;
 }
 
 .pvp-rival-avatar {
   width: 60%;
   aspect-ratio: 1 / 1;
+  height: auto;
+  flex: 0 0 80%; /* Занимает 80% высоты родителя */
   background: #3D3D3B;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 4px;
 }
 
 .pvp-rival-avatar img {
@@ -1380,12 +1407,17 @@ body {
 }
 
 .pvp-rival-label {
+  width: 60%; /* Равна ширине аватарки */
+  flex: 0 0 20%; /* Занимает 20% высоты родителя */
   color: #FFFFFF;
   font-size: clamp(8px, 2vw, 10px);
   font-weight: 500;
   text-transform: uppercase;
   text-align: center;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* НИЖНЯЯ ЧАСТЬ (25%) */
