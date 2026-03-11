@@ -4,12 +4,14 @@ import React, { useState } from 'react';
 import { Tournament, SelectedFighter } from '../types';
 import { UserResult } from '../api/yandexUpload';
 import { UserProfile } from '../api/userProfiles';
+import ArenaModal from './ArenaModal';
 
 interface PvpProps {
   pastTournaments: Tournament[];
   userSelections: SelectedFighter[];
   userAvatar?: string;
   userId?: string;
+  userName: string; // Добавляем имя пользователя
   allProfiles: Map<string, UserProfile>;
   loadTournamentData: (tournamentName: string) => Promise<{
     weightClasses: string[];
@@ -22,13 +24,21 @@ const Pvp: React.FC<PvpProps> = ({
   userSelections,
   userAvatar,
   userId,
+  userName,
   allProfiles,
   loadTournamentData,
 }) => {
-  // Состояния для режима боя
-  const [engagedTournamentId, setEngagedTournamentId] = useState<string | null>(null);
-  const [searchStatus, setSearchStatus] = useState<'searching' | 'found' | 'no-rivals'>('searching');
-  const [rivalData, setRivalData] = useState<{ username: string; photoUrl?: string; totalDamage: number } | null>(null);
+  // Состояния для модального окна арены
+  const [arenaData, setArenaData] = useState<{
+    tournament: Tournament;
+    weightClasses: string[];
+    rival: {
+      username: string;
+      photoUrl?: string;
+      totalDamage: number;
+      selections: SelectedFighter[];
+    };
+  } | null>(null);
 
   // Функция для получения урона игрока в конкретном турнире
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
@@ -49,11 +59,6 @@ const Pvp: React.FC<PvpProps> = ({
   const handleEngage = async (tournament: Tournament) => {
     if (!userId) return;
     
-    // Помечаем этот турнир как "в бою"
-    setEngagedTournamentId(tournament.id);
-    setSearchStatus('searching');
-    setRivalData(null);
-    
     try {
       // Загружаем данные турнира
       const tournamentData = await loadTournamentData(tournament.name);
@@ -64,52 +69,44 @@ const Pvp: React.FC<PvpProps> = ({
       console.log(`🔍 Найдено соперников: ${rivals.length}`);
       
       if (rivals.length === 0) {
-        console.log('❌ Соперников нет');
-        setSearchStatus('no-rivals');
-      } else {
-        // Случайный выбор соперника
-        const randomIndex = Math.floor(Math.random() * rivals.length);
-        const selectedRival = rivals[randomIndex];
-        
-        console.log(`✅ Выбран соперник: ${selectedRival.username} (урон: ${selectedRival.totalDamage})`);
-        
-        // Получаем аватарку из allProfiles
-        const rivalProfile = allProfiles.get(selectedRival.userId);
-        
-        setRivalData({
+        alert('No rivals available for this tournament');
+        return;
+      }
+      
+      // Случайный выбор соперника
+      const randomIndex = Math.floor(Math.random() * rivals.length);
+      const selectedRival = rivals[randomIndex];
+      const rivalProfile = allProfiles.get(selectedRival.userId);
+      
+      // Открываем арену
+      setArenaData({
+        tournament,
+        weightClasses: tournamentData.weightClasses,
+        rival: {
           username: selectedRival.username,
           photoUrl: rivalProfile?.photoUrl,
-          totalDamage: selectedRival.totalDamage
-        });
-        setSearchStatus('found');
-      }
+          totalDamage: selectedRival.totalDamage,
+          selections: selectedRival.selections
+        }
+      });
       
     } catch (error) {
       console.error('Ошибка при поиске соперника:', error);
-      setSearchStatus('no-rivals');
+      alert('Error finding rival');
     }
   };
 
-  // Обработчик SURRENDER
+  // Обработчик закрытия арены
   const handleSurrender = () => {
-    setEngagedTournamentId(null);
-    setSearchStatus('searching');
-    setRivalData(null);
+    setArenaData(null);
   };
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
   return (
     <div className="pvp-screen">
-      {/* Затемнение фона когда есть активный бой */}
-      {engagedTournamentId && <div className="pvp-overlay" />}
-      
-      {/* Кнопка SURRENDER (показывается только если есть активный бой) */}
-      {engagedTournamentId && (
-        <button className="pvp-surrender-button" onClick={handleSurrender}>
-          SURRENDER
-        </button>
-      )}
+      {/* Затемнение фона когда арена открыта */}
+      {arenaData && <div className="pvp-overlay" />}
       
       {/* Заголовок Active Tournaments */}
       <div className="pvp-header">
@@ -117,16 +114,12 @@ const Pvp: React.FC<PvpProps> = ({
       </div>
 
       {/* Список турниров */}
-      <div className={`pvp-list ${engagedTournamentId ? 'blurred' : ''}`}>
+      <div className={`pvp-list ${arenaData ? 'blurred' : ''}`}>
         {pastTournaments.slice(0, 3).map((tournament) => {
           const userDamage = getUserDamageForTournament(tournament);
-          const isEngaged = engagedTournamentId === tournament.id;
           
           return (
-            <div 
-              key={tournament.id} 
-              className={`pvp-tournament-card ${isEngaged ? 'engaged' : ''}`}
-            >
+            <div key={tournament.id} className="pvp-tournament-card">
               {/* Верхняя часть (15%) - лига и название */}
               <div className="pvp-card-top">
                 <div className="pvp-card-league" style={{ backgroundColor: '#B20101' }}>
@@ -167,39 +160,12 @@ const Pvp: React.FC<PvpProps> = ({
                   <span className="pvp-vs-text">VS</span>
                 </div>
 
-                {/* Правая часть (45%) - аватарка соперника или "Next RIVAL" */}
+                {/* Правая часть (45%) - "Next RIVAL" */}
                 <div className="pvp-middle-right">
-                  {isEngaged ? (
-                    // В режиме боя показываем соперника
-                    <>
-                      <div className="pvp-rival-avatar">
-                        <img 
-                          src={rivalData?.photoUrl || `${BASE_URL}/default-avatar.png`} 
-                          alt="rival"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`;
-                          }}
-                        />
-                      </div>
-                      <div className="pvp-rival-damage">
-                        {searchStatus === 'found' && rivalData ? (
-                          <div className="pvp-damage-value">{rivalData.totalDamage}</div>
-                        ) : searchStatus === 'no-rivals' ? (
-                          <div className="pvp-no-rivals-text">No rivals</div>
-                        ) : (
-                          <div className="pvp-searching-text">???</div>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    // В обычном режиме показываем "Next RIVAL"
-                    <>
-                      <div className="pvp-rival-avatar">
-                        <img src={`${BASE_URL}/default-avatar.png`} alt="rival" />
-                      </div>
-                      <div className="pvp-rival-label">Next RIVAL</div>
-                    </>
-                  )}
+                  <div className="pvp-rival-avatar">
+                    <img src={`${BASE_URL}/default-avatar.png`} alt="rival" />
+                  </div>
+                  <div className="pvp-rival-label">Next RIVAL</div>
                 </div>
               </div>
 
@@ -211,7 +177,7 @@ const Pvp: React.FC<PvpProps> = ({
                 <button 
                   className="pvp-card-engage"
                   onClick={() => handleEngage(tournament)}
-                  disabled={!!engagedTournamentId} // Блокируем все кнопки если есть активный бой
+                  disabled={!!arenaData} // Блокируем кнопки если арена открыта
                 >
                   ENGAGE
                 </button>
@@ -221,16 +187,22 @@ const Pvp: React.FC<PvpProps> = ({
         })}
       </div>
 
-      {/* Статус поиска под карточкой (только для engaged турнира) */}
-      {engagedTournamentId && (
-        <div className="pvp-battle-status">
-          {searchStatus === 'searching' && 'Searching for Rivals...'}
-          {searchStatus === 'no-rivals' && 'There are no Rivals... Try Later'}
-          {searchStatus === 'found' && rivalData && `Rival found: ${rivalData.username}`}
-        </div>
+      {/* Модальное окно арены */}
+      {arenaData && (
+        <ArenaModal
+          tournament={arenaData.tournament}
+          userSelections={userSelections}
+          userAvatar={userAvatar}
+          userDamage={getUserDamageForTournament(arenaData.tournament) || 0}
+          userName={userName}
+          rivalData={arenaData.rival}
+          weightClasses={arenaData.weightClasses}
+          isOpen={true}
+          onSurrender={handleSurrender}
+        />
       )}
     </div>
   );
 };
-/* checking */
+
 export default Pvp;

@@ -205,14 +205,12 @@ body {
 }
 
 /* ===== БАЗОВЫЕ СТИЛИ КАРТОЧКИ ТУРНИРА ===== */
-/* Эти стили применяются к карточке независимо от контекста */
-
 .tournament-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%; /* Берет ширину от родителя */
-  max-width: 120px; /* Максимальная ширина как у карточки бойца */
+  width: 100%;
+  max-width: 120px;
   background: #313130;
   cursor: pointer;
   transition: opacity 0.2s ease;
@@ -281,7 +279,7 @@ body {
   margin-top: auto;
 }
 
-/* ===== РЕЖИМ ОДНОЙ КАРТОЧКИ (центрирование) ===== */
+/* ===== РЕЖИМ ОДНОЙ КАРТОЧКИ ===== */
 .tournament-card-container {
   display: flex;
   justify-content: center;
@@ -293,11 +291,11 @@ body {
 }
 
 .tournament-card-container .tournament-card {
-  width: 33%; /* 33% как было изначально */
+  width: 33%;
   max-width: 120px;
 }
 
-/* ===== РЕЖИМ СЕТКИ (несколько карточек) ===== */
+/* ===== РЕЖИМ СЕТКИ ===== */
 .tournament-card-wrapper {
   display: flex;
   justify-content: center;
@@ -306,8 +304,8 @@ body {
 }
 
 .tournament-card-wrapper .tournament-card {
-  width: 100%; /* В сетке карточка занимает всю ширину ячейки */
-  max-width: 120px; /* Но не больше 120px */
+  width: 100%;
+  max-width: 120px;
 }
 
 .tournament-cards-grid {
@@ -319,9 +317,9 @@ body {
   padding: 0 2px;
   flex: 1;
   min-height: 0;
-  scrollbar-width: none; /* Скрываем скроллбар для Firefox */
-  -ms-overflow-style: none; /* Скрываем скроллбар для IE/Edge */
-  justify-content: center; /* Центрируем карточки по горизонтали */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  justify-content: center;
 }
 
 .tournament-cards-grid::-webkit-scrollbar {
@@ -356,7 +354,6 @@ body {
 }
 
 /* ===== СЕТКА КАРТОЧЕК БОЙЦОВ ===== */
-
 .selected-fighters-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -436,7 +433,6 @@ body {
 }
 
 /* ===== ФУТЕР ДЛЯ ТУРНИРОВ ===== */
-
 .tournament-footer {
   display: flex;
   width: calc(100% - clamp(16px, 8vw, 32px));
@@ -503,7 +499,6 @@ body {
 }
 
 /* ===== ОСТАЛЬНЫЕ СТИЛИ ===== */
-
 .selection-modal {
   position: fixed;
   top: 0;
@@ -720,7 +715,6 @@ body {
 }
 
 /* ===== НИЖНЯЯ НАВИГАЦИЯ ===== */
-
 .bottom-nav {
   display: flex;
   justify-content: space-between;
@@ -781,7 +775,6 @@ body {
 }
 
 /* ===== ЭКРАН РЕЙТИНГА ===== */
-
 .leaderboard-screen {
   background: #1C1D1F;
   height: 100%;
@@ -887,7 +880,6 @@ body {
 }
 
 /* ===== ЗАГРУЗОЧНЫЙ ЭКРАН ===== */
-
 .loading-screen {
   display: flex;
   flex-direction: column;
@@ -932,7 +924,6 @@ body {
 }
 
 /* ===== СКЕЛЕТОНЫ ===== */
-
 .tournament-section.skeleton {
   opacity: 0.7;
 }
@@ -972,7 +963,6 @@ body {
 }
 
 /* ===== ЭКРАН ОШИБКИ ===== */
-
 .error-screen {
   text-align: center;
   padding: clamp(20px, 10vh, 40px) clamp(10px, 5vw, 20px);
@@ -1003,7 +993,6 @@ body {
 }
 
 /* ===== МОДАЛЬНОЕ ОКНО С НАГРАДАМИ ===== */
-
 .rewards-modal {
   position: fixed;
   top: 0;
@@ -1166,7 +1155,6 @@ body {
 }
 
 /* ===== МЕДИА-ЗАПРОСЫ ===== */
-
 @media (max-width: 280px) {
   .tournament-card,
   .tournament-card-container .tournament-card,
@@ -1194,7 +1182,6 @@ body {
 }
 
 /* ===== PvP ЭКРАН ===== */
-
 .pvp-screen {
   display: flex;
   flex-direction: column;
@@ -1293,7 +1280,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* Изменено с space-evenly */
+  justify-content: flex-start;
   background: #313130;
   padding: 4px 0;
 }
@@ -1302,7 +1289,7 @@ body {
   width: 55%;
   aspect-ratio: 1 / 1;
   height: auto;
-  flex: 0 0 80%; /* Занимает 80% высоты родителя */
+  flex: 0 0 80%;
   background: #3D3D3B;
   overflow: hidden;
   display: flex;
@@ -1318,8 +1305,8 @@ body {
 }
 
 .pvp-player-damage {
-  width: 55%; /* Равна ширине аватарки */
-  flex: 0 0 20%; /* Занимает 20% высоты родителя */
+  width: 55%;
+  flex: 0 0 20%;
   background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
   display: flex;
   align-items: center;
@@ -1371,8 +1358,7 @@ body {
   width: 100%;
   height: 100%;
   background: linear-gradient(to top left, transparent 48%, #666D74 48%, #666D74 52%, transparent 52%);
-  /* Этот градиент создаёт диагональную линию */
-  pointer-events: none; /* ← чтобы линия не мешала кликам */
+  pointer-events: none;
 }
 
 .pvp-vs-text {
@@ -1389,7 +1375,7 @@ body {
   justify-content: center;
   width: 100%;
   height: 100%;
-  position: relative; /* ← чтобы текст был над линией */
+  position: relative;
   z-index: 1;
 }
 
@@ -1399,7 +1385,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* Изменено с space-evenly */
+  justify-content: flex-start;
   background: #313130;
   padding: 4px 0;
 }
@@ -1408,7 +1394,7 @@ body {
   width: 55%;
   aspect-ratio: 1 / 1;
   height: auto;
-  flex: 0 0 80%; /* Занимает 80% высоты родителя */
+  flex: 0 0 80%;
   background: #3D3D3B;
   overflow: hidden;
   display: flex;
@@ -1424,8 +1410,8 @@ body {
 }
 
 .pvp-rival-label {
-  width: 55%; /* Равна ширине аватарки */
-  flex: 0 0 20%; /* Занимает 20% высоты родителя */
+  width: 55%;
+  flex: 0 0 20%;
   color: #FFFFFF;
   font-size: clamp(8px, 2vw, 10px);
   font-weight: 500;
@@ -1490,104 +1476,350 @@ body {
   pointer-events: none;
 }
 
-/* ===== PVP БОЙ МОДАЛЬНОЕ ОКНО ===== */
-
-/* Затемнение и блюр */
-.pvp-overlay {
+/* ===== АРЕНА МОДАЛЬНОЕ ОКНО ===== */
+.arena-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  z-index: 1000; /* Уменьшили с 1500 до 1000 */
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
 }
 
-/* Поднятая карточка */
-.pvp-tournament-card.engaged {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.arena-modal {
   width: 90%;
   max-width: 375px;
-  height: auto;
-  aspect-ratio: 1 / 1.2;
-  z-index: 2000;
+  height: 90vh;
+  max-height: 700px;
+  background: #1C1D1F;
+  border: 2px solid #B20101;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  animation: floatUp 0.3s ease;
-
-  /* Сохраняем grid с теми же пропорциями */
-  display: grid;
-  grid-template-rows: 15% 60% 25%;
 }
 
-@keyframes floatUp {
-  from {
-    opacity: 0.5;
-    transform: translate(-50%, -30%);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%);
-  }
+.arena-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 18px;
+  font-weight: 600;
 }
 
-/* Кнопка SURRENDER */
-.pvp-surrender-button {
-  position: fixed;
-  top: 20px;
-  right: 20px;
+/* Верхняя шапка (8%) */
+.arena-header {
+  display: flex;
+  height: 8%;
+  min-height: 40px;
+  background: #B20101;
+}
+
+.arena-header-left {
+  width: 70%;
+  height: 100%;
+  background: #666D74;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arena-header-right {
+  width: 30%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arena-surrender-button {
+  width: 90%;
+  height: 80%;
   background: #B20101;
   border: 1px solid #FFFFFF;
   border-radius: 4px;
   color: #FFFFFF;
-  padding: 8px 16px;
-  font-size: 14px;
+  font-size: 10px;
   font-weight: 600;
   cursor: pointer;
   text-transform: uppercase;
-  z-index: 2500; /* Выше всего */
-  transition: background 0.2s ease;
 }
 
-/* Статус поиска под карточкой */
-.pvp-battle-status {
-  position: fixed;
-  bottom: 30px;
+/* Верхний контейнер (36%) - противник */
+.arena-top {
+  display: flex;
+  flex-direction: column;
+  height: 36%;
+  min-height: 180px;
+  background: #2A2A2A;
+  border-bottom: 1px solid #4A4A48;
+}
+
+/* Аватарка противника (28% от верхнего контейнера) */
+.arena-rival-avatar-container {
+  height: 28%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1C1D1F;
+}
+
+.arena-rival-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #3D3D3B;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arena-rival-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Шкала здоровья (8% от верхнего контейнера) */
+.arena-rival-health {
+  height: 8%;
+  min-height: 16px;
+  background: #1C1D1F;
+  padding: 2px 8px;
+}
+
+.arena-health-bar {
+  height: 100%;
+  width: 100%;
+  background: #1C1D1F;
+  border: 1px solid #3D3D3B;
+  position: relative;
+  overflow: hidden;
+}
+
+.arena-health-fill {
+  height: 100%;
+  background: #B20101;
+  transition: width 0.3s ease;
+}
+
+.arena-health-text {
+  position: absolute;
   left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
   color: #FFFFFF;
-  font-size: 14px;
+  font-size: 9px;
   font-weight: 500;
-  text-align: center;
-  z-index: 2500; /* Выше всего */
-  background: rgba(0, 0, 0, 0.7);
-  padding: 8px 16px;
-  border-radius: 20px;
   white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
+/* Карточки бойцов (50% от верхнего контейнера) */
+.arena-rival-fighters,
+.arena-player-fighters {
+  height: 50%;
+  min-height: 80px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: #1C1D1F;
+  padding: 2px 0;
+}
+
+.arena-fighter-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+  background: #313130;
+  overflow: hidden;
+}
+
+.arena-fighter-damage {
+  width: 80%;
+  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
+  color: #000000;
+  font-size: 8px;
+  font-weight: 600;
+  text-align: center;
+  padding: 1px 0;
+  border-radius: 2px;
+}
+
+.arena-fighter-avatar {
+  width: 60%;
+  aspect-ratio: 1 / 1;
+  background: #3D3D3B;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0;
+}
+
+.arena-fighter-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.arena-fighter-avatar span {
+  font-size: 12px;
+}
+
+.arena-fighter-name {
+  color: #FFFFFF;
+  font-size: 6px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  padding: 0 1px;
+}
+
+/* Текущий урон (8% от верхнего/нижнего контейнера) */
+.arena-rival-damage,
+.arena-player-damage {
+  height: 8%;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1C1D1F;
+  padding: 2px 8px;
+}
+
+.arena-damage-box {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
+  color: #000000;
+  font-size: 9px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  padding: 0 4px;
+  border-radius: 2px;
+}
+
+/* Средний контейнер (20%) - раунды */
+.arena-middle {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  height: 20%;
+  min-height: 100px;
+  background: #1C1D1F;
+  border-top: 1px solid #4A4A48;
+  border-bottom: 1px solid #4A4A48;
+}
+
+.arena-round-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #494948;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.arena-round-card:hover {
+  opacity: 0.9;
+}
+
+.arena-round-number {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.arena-round-digit {
+  color: #FFFFFF;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.arena-round-text {
+  color: #FFFFFF;
+  font-size: 8px;
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.arena-round-weight {
+  color: #FFFFFF;
+  font-size: 8px;
+  font-weight: 600;
+  text-align: center;
+  padding: 4px;
+  word-break: break-word;
+}
+
+/* Нижний контейнер (36%) - игрок */
+.arena-bottom {
+  display: flex;
+  flex-direction: column;
+  height: 36%;
+  min-height: 180px;
+  background: #2A2A2A;
+}
+
+.arena-player-health {
+  height: 8%;
+  min-height: 16px;
+  background: #1C1D1F;
+  padding: 2px 8px;
+}
 
 /* Адаптация для маленьких экранов */
 @media (max-width: 320px) {
-  .pvp-card-league {
-    font-size: 9px;
+  .arena-fighter-damage {
+    font-size: 6px;
   }
   
-  .pvp-card-name {
-    font-size: 9px;
+  .arena-fighter-name {
+    font-size: 5px;
   }
   
-  .pvp-card-cost {
-    font-size: 9px;
+  .arena-round-digit {
+    font-size: 16px;
   }
   
-  .pvp-vs-text {
-    font-size: 12px;
+  .arena-round-text {
+    font-size: 6px;
   }
   
-  .pvp-rival-label {
-    font-size: 7px;
+  .arena-round-weight {
+    font-size: 6px;
   }
 }

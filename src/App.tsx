@@ -1263,6 +1263,7 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
     userSelections={userData.mySelections.past}
     userAvatar={telegramUser?.photoUrl}
     userId={telegramUser?.id}
+    userName={userData.username} // ← добавить эту строку
     allProfiles={allProfiles}
     loadTournamentData={loadTournamentData}
   />
