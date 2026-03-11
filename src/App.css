@@ -1246,7 +1246,7 @@ body {
 .pvp-card-top {
   display: flex;
   width: 100%;
-  background: #3D3D3B;
+  background: #666D74;
   min-height: 0;
 }
 
@@ -1357,7 +1357,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1C1D1F;
+  background: #3D3D3B;
   position: relative;
   overflow: hidden;
 }
@@ -1370,9 +1370,9 @@ body {
   left: 0;
   width: 141%; /* Длинна диагонали = sqrt(2) ≈ 141% */
   height: 2px;
-  background: #FFFFFF;
-  transform: rotate(45deg);
-  transform-origin: top left; /* Поворачиваем от левого верхнего угла */
+  background: #666D74;
+  transform: rotate(-15deg);
+  transform-origin: top right; /* Поворачиваем от левого верхнего угла */
   pointer-events: none;
 }
 
@@ -1441,7 +1441,7 @@ body {
 .pvp-card-bottom {
   display: flex;
   width: 100%;
-  background: #313130;
+  background: #666D74;
   border-top: 1px solid #4A4A48;
   min-height: 0;
 }
