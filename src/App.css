@@ -1372,6 +1372,27 @@ body {
   width: 100%;
 }
 
+/* Пустая карточка для PvP */
+.pvp-empty-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%; /* Занимает всю ячейку grid */
+  background: #494948; /* Новый цвет фона */
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+}
+
+.pvp-empty-content {
+  color: #6F6F6C; /* Новый цвет текста */
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: 600;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+
 /* Адаптация для маленьких экранов */
 @media (max-width: 320px) {
   .pvp-tournament-card {
