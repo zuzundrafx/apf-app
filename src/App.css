@@ -1562,7 +1562,7 @@ body {
 .arena-top {
   display: flex;
   flex-direction: column;
-  height: 36%;
+  height: 40%;
   min-height: 200px;
   background: #2A2A2A;
   border-bottom: 1px solid #4A4A48;
@@ -1720,7 +1720,7 @@ body {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 1px;
-  height: 20%;
+  height: 12%;
   min-height: 120px;
   background: #1C1D1F;
   border-top: 1px solid #4A4A48;
@@ -1779,7 +1779,7 @@ body {
 .arena-bottom {
   display: flex;
   flex-direction: column;
-  height: 36%;
+  height: 40%;
   min-height: 200px;
   background: #2A2A2A;
 }
