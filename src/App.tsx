@@ -1214,11 +1214,12 @@ function App() {
         )}
 
         {currentView === 'pvp' && (
-          <Pvp
-            pastTournaments={pastTournaments}
-            userSelections={userData.mySelections.past}
-          />
-        )}
+  <Pvp
+    pastTournaments={pastTournaments}
+    userSelections={userData.mySelections.past}
+    userAvatar={telegramUser?.photoUrl}  // ← передаём аватарку
+  />
+)}
 
       </main>
 

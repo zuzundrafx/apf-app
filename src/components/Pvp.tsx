@@ -6,11 +6,13 @@ import { Tournament, SelectedFighter } from '../types';
 interface PvpProps {
   pastTournaments: Tournament[];
   userSelections: SelectedFighter[];
+  userAvatar?: string;  // ← добавляем пропс для аватарки
 }
 
 const Pvp: React.FC<PvpProps> = ({
   pastTournaments,
   userSelections,
+  userAvatar,  // ← получаем аватарку
 }) => {
   // Функция для получения урона игрока в конкретном турнире
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
@@ -30,7 +32,7 @@ const Pvp: React.FC<PvpProps> = ({
   // Список лиг для пустых ячеек
   const otherLeagues = ['PFL', 'ONE', 'Bellator'];
 
-  // Получаем baseUrl (нужно будет передать через props или использовать константу)
+  // Получаем baseUrl
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
   return (
@@ -63,7 +65,13 @@ const Pvp: React.FC<PvpProps> = ({
                 {/* Левая часть (45%) - аватарка игрока и его урон */}
                 <div className="pvp-middle-left">
                   <div className="pvp-player-avatar">
-                    <img src={`${BASE_URL}/Home_button.png`} alt="player" />
+                    <img 
+                      src={userAvatar || `${BASE_URL}/Home_button.png`} 
+                      alt="player"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
+                      }}
+                    />
                   </div>
                   <div className="pvp-player-damage">
                     {userDamage !== null ? (
