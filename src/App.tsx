@@ -425,6 +425,7 @@ const acceptRewards = async () => {
             const newProfile = {
               userId: userId,
               username: username,
+              photoUrl: user.photo_url,
               level: 1,
               experience: 0,
               coins: 100,
@@ -632,6 +633,7 @@ const acceptRewards = async () => {
       await saveUserProfile({
         userId: telegramUser.id,
         username: userData.username,
+        photoUrl: telegramUser.photoUrl, // ← сохраняем как есть
         level: userData.level,
         experience: userData.totalExp,
         coins: newCoins,

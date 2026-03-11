@@ -7,6 +7,7 @@ const PROFILES_FILENAME = "UFC_User_Profiles.xlsx";
 export interface UserProfile {
   userId: string;
   username: string;
+  photoUrl?: string;  // ← просто сохраняем ссылку из Telegram
   level: number;
   experience: number;
   coins: number;
@@ -201,6 +202,7 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
       return {
         userId: String(item['User ID'] || ''),
         username: String(item['Username'] || 'Anonymous'),
+        photoUrl: item['Photo URL'] ? String(item['Photo URL']) : undefined, // ← ЧИТАЕМ
         level: safeNumber(item['Level'], 1),
         experience: safeNumber(item['Experience'], 0),
         coins: safeNumber(item['Coins'], 100),
@@ -254,6 +256,7 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
       const row: any = {
         'User ID': profile.userId,
         'Username': profile.username,
+        'Photo URL': profile.photoUrl || '', // ← СОХРАНЯЕМ
         'Level': profile.level,
         'Experience': profile.experience,
         'Coins': profile.coins,
