@@ -1357,7 +1357,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #3D3D3B;
+  background: #313130;
   position: relative;
   overflow: hidden;
 }
@@ -1371,7 +1371,7 @@ body {
   width: 141%; /* Длинна диагонали = sqrt(2) ≈ 141% */
   height: 2px;
   background: #666D74;
-  transform: rotate(-15deg);
+  transform: rotate(-80deg);
   transform-origin: top right; /* Поворачиваем от левого верхнего угла */
   pointer-events: none;
 }
