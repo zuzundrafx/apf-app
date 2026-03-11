@@ -7,43 +7,42 @@ const PROFILES_FILENAME = "UFC_User_Profiles.xlsx";
 export interface UserProfile {
   userId: string;
   username: string;
-  photoUrl?: string;  // ← просто сохраняем ссылку из Telegram
+  photoUrl?: string;
   level: number;
   experience: number;
   coins: number;
   lastUpdated: string;
   processedTournaments?: {
-    coins: string[];  // массив ID турниров, за которые начислены монеты
-    exp: string[];    // массив ID турниров, за которые начислен опыт
+    coins: string[];
+    exp: string[];
   };
 }
 
-// Функция для проверки существования файла
-async function checkFileExists(filename: string): Promise<boolean> {
-  try {
-    console.log('🔍 Проверяем существование файла:', filename);
-    const response = await fetch(
-      `https://cloud-api.yandex.net/v1/disk/resources?path=app:/${PROFILES_FOLDER}/${filename}`,
-      {
-        headers: {
-          'Authorization': `OAuth ${YA_TOKEN}`
-        }
-      }
-    );
-    console.log('📁 Результат проверки:', response.status, response.ok);
-    return response.ok;
-  } catch (error) {
-    console.error('❌ Ошибка проверки файла:', error);
-    return false;
-  }
-}
+// Функция для проверки существования файла (закомментирована, т.к. не используется)
+// async function checkFileExists(filename: string): Promise<boolean> {
+//   try {
+//     console.log('🔍 Проверяем существование файла:', filename);
+//     const response = await fetch(
+//       `https://cloud-api.yandex.net/v1/disk/resources?path=app:/${PROFILES_FOLDER}/${filename}`,
+//       {
+//         headers: {
+//           'Authorization': `OAuth ${YA_TOKEN}`
+//         }
+//       }
+//     );
+//     console.log('📁 Результат проверки:', response.status, response.ok);
+//     return response.ok;
+//   } catch (error) {
+//     console.error('❌ Ошибка проверки файла:', error);
+//     return false;
+//   }
+// }
 
 // Функция для получения ссылки на загрузку файла
 async function getUploadLink(filename: string): Promise<string | null> {
   try {
     console.log('📤 Получаем ссылку для загрузки файла:', filename);
     
-    // НИЧЕГО НЕ УДАЛЯЕМ! Просим ссылку с overwrite=true
     const response = await fetch(
       `https://cloud-api.yandex.net/v1/disk/resources/upload?path=app:/${PROFILES_FOLDER}/${filename}&overwrite=true`,
       {
@@ -54,7 +53,6 @@ async function getUploadLink(filename: string): Promise<string | null> {
     );
     
     if (!response.ok) {
-      // Если файл заблокирован, пробуем еще раз
       if (response.status === 423) {
         console.log('⚠️ Файл заблокирован, пробуем через секунду...');
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -144,6 +142,42 @@ async function ensureFolderExists(): Promise<boolean> {
   }
 }
 
+/**
+ * Функция миграции: обновляет старый файл, добавляя колонку Photo URL
+ */
+async function migrateProfilesFile(oldData: any[]): Promise<any[]> {
+  console.log('🔄 Запущена миграция файла профилей...');
+  
+  // Определяем, есть ли уже колонка Photo URL
+  const hasPhotoUrlColumn = oldData.length > 0 && 'Photo URL' in oldData[0];
+  
+  if (hasPhotoUrlColumn) {
+    console.log('✅ Файл уже имеет колонку Photo URL, миграция не требуется');
+    return oldData;
+  }
+  
+  console.log('⚠️ Обнаружена старая версия файла без Photo URL. Выполняем миграцию...');
+  
+  // Создаем новый массив с добавленной колонкой Photo URL
+  const migratedData = oldData.map((item: any) => {
+    // Создаем новый объект с сохранением всех старых полей
+    const newItem: any = {};
+    
+    // Копируем все существующие поля
+    Object.keys(item).forEach(key => {
+      newItem[key] = item[key];
+    });
+    
+    // Добавляем колонку Photo URL (пустую для существующих записей)
+    newItem['Photo URL'] = '';
+    
+    return newItem;
+  });
+  
+  console.log(`✅ Миграция завершена. Обновлено ${migratedData.length} записей`);
+  return migratedData;
+}
+
 // Загрузка всех профилей пользователей
 export async function loadAllProfiles(): Promise<UserProfile[]> {
   try {
@@ -174,15 +208,39 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
     
     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = XLSX.utils.sheet_to_json(sheet);
+    let data = XLSX.utils.sheet_to_json(sheet) as any[]; // ← Явно указываем тип any[]
     
     console.log(`✅ Загружено ${data.length} профилей`);
+    
+    // Запускаем миграцию, если нужно
+    const needsMigration = data.length > 0 && !('Photo URL' in data[0]);
+    if (needsMigration) {
+      data = await migrateProfilesFile(data);
+      
+      // Сохраняем обновленный файл обратно на диск
+      console.log('💾 Сохраняем обновленный файл с миграцией...');
+      
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb, ws, 'Профили');
+      
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      
+      const uploadLink = await getUploadLink(PROFILES_FILENAME);
+      if (uploadLink) {
+        await fetch(uploadLink, {
+          method: 'PUT',
+          body: new Blob([wbout], { type: 'application/octet-stream' })
+        });
+        console.log('✅ Файл успешно обновлен после миграции');
+      }
+    }
     
     if (data.length > 0) {
       console.log('📊 Пример данных из файла:', data[0]);
     }
     
-    return data.map((item: any) => {
+    return data.map((item: any) => {  // ← item тоже any
       const safeNumber = (value: any, defaultValue: number): number => {
         if (typeof value === 'number') return value;
         if (value === undefined || value === null || value === '') return defaultValue;
@@ -202,7 +260,7 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
       return {
         userId: String(item['User ID'] || ''),
         username: String(item['Username'] || 'Anonymous'),
-        photoUrl: item['Photo URL'] ? String(item['Photo URL']) : undefined, // ← ЧИТАЕМ
+        photoUrl: item['Photo URL'] ? String(item['Photo URL']) : undefined,
         level: safeNumber(item['Level'], 1),
         experience: safeNumber(item['Experience'], 0),
         coins: safeNumber(item['Coins'], 100),
@@ -256,7 +314,7 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
       const row: any = {
         'User ID': profile.userId,
         'Username': profile.username,
-        'Photo URL': profile.photoUrl || '', // ← СОХРАНЯЕМ
+        'Photo URL': profile.photoUrl || '',
         'Level': profile.level,
         'Experience': profile.experience,
         'Coins': profile.coins,
