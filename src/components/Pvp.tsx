@@ -30,6 +30,9 @@ const Pvp: React.FC<PvpProps> = ({
   // Список лиг для пустых ячеек
   const otherLeagues = ['PFL', 'ONE', 'Bellator'];
 
+  // Получаем baseUrl (нужно будет передать через props или использовать константу)
+  const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
+
   return (
     <div className="pvp-screen">
       {/* Заголовок Active Tournaments */}
@@ -45,39 +48,54 @@ const Pvp: React.FC<PvpProps> = ({
           
           return (
             <div key={tournament.id} className="pvp-tournament-card">
-              {/* Верхняя часть карточки (65%) */}
+              {/* Верхняя часть (20%) - лига и название */}
               <div className="pvp-card-top">
-                {/* Левая часть - лига */}
                 <div className="pvp-card-league" style={{ backgroundColor: '#B20101' }}>
                   <span>{tournament.league || 'UFC'}</span>
                 </div>
-                
-                {/* Центральная часть - название турнира */}
                 <div className="pvp-card-name">
                   {tournament.name}
                 </div>
-                
-                {/* Правая часть - урон игрока */}
-                <div className="pvp-card-damage">
-                  {userDamage !== null ? (
-                    <>
-                      <div className="pvp-damage-label">Your Dmg:</div>
-                      <div className="pvp-damage-value">{userDamage}</div>
-                    </>
-                  ) : (
-                    <div className="pvp-damage-na">not available</div>
-                  )}
+              </div>
+
+              {/* Средняя часть (50%) - аватарки и VS */}
+              <div className="pvp-card-middle">
+                {/* Левая часть (45%) - аватарка игрока и его урон */}
+                <div className="pvp-middle-left">
+                  <div className="pvp-player-avatar">
+                    <img src={`${BASE_URL}/Home_button.png`} alt="player" />
+                  </div>
+                  <div className="pvp-player-damage">
+                    {userDamage !== null ? (
+                      <>
+                        <div className="pvp-damage-label">Your Dmg:</div>
+                        <div className="pvp-damage-value">{userDamage}</div>
+                      </>
+                    ) : (
+                      <div className="pvp-damage-na">not available</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Центральная часть (10%) - VS */}
+                <div className="pvp-middle-center">
+                  <span className="pvp-vs-text">VS</span>
+                </div>
+
+                {/* Правая часть (45%) - аватарка соперника и надпись */}
+                <div className="pvp-middle-right">
+                  <div className="pvp-rival-avatar">
+                    <img src={`${BASE_URL}/default-avatar.png`} alt="rival" />
+                  </div>
+                  <div className="pvp-rival-label">Next RIVAL</div>
                 </div>
               </div>
 
-              {/* Нижняя часть карточки (35%) */}
+              {/* Нижняя часть (30%) - стоимость и кнопка */}
               <div className="pvp-card-bottom">
-                {/* Левая часть - стоимость */}
                 <div className="pvp-card-cost">
                   Entry pass: <span className="pvp-cost-icon">🪙</span>50
                 </div>
-                
-                {/* Правая часть - кнопка ENGAGE (неактивная) */}
                 <button 
                   className="pvp-card-engage disabled"
                   disabled
