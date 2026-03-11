@@ -1430,7 +1430,7 @@ body {
 }
 
 .pvp-card-cost {
-  width: 66%;
+  width: 68%;
   height: 100%;
   display: flex;
   align-items: center;
@@ -1462,7 +1462,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  
+  align-self: center;
   transition: opacity 0.2s ease;
 }
 
