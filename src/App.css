@@ -1371,7 +1371,7 @@ body {
   width: 141%; /* Длинна диагонали = sqrt(2) ≈ 141% */
   height: 2px;
   background: #666D74;
-  transform: rotate(-80deg);
+  transform: rotate(-45deg);
   transform-origin: top right; /* Поворачиваем от левого верхнего угла */
   pointer-events: none;
 }
