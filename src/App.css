@@ -1529,36 +1529,6 @@ body {
   }
 }
 
-.pvp-list.blurred {
-  filter: blur(3px);
-  pointer-events: none;
-  opacity: 0.5;
-}
-
-/* PvP Battle Modal */
-.pvp-battle-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  pointer-events: none;
-}
-
-.pvp-battle-modal {
-  position: relative;
-  width: 90%;
-  max-width: 375px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  pointer-events: auto;
-}
-
 /* Кнопка SURRENDER */
 .pvp-surrender-button {
   position: fixed;
@@ -1575,10 +1545,6 @@ body {
   text-transform: uppercase;
   z-index: 2500; /* Выше всего */
   transition: background 0.2s ease;
-}
-
-.pvp-surrender-button:hover {
-  background: #8B0000;
 }
 
 /* Статус поиска под карточкой */
@@ -1598,49 +1564,6 @@ body {
   white-space: nowrap;
 }
 
-.pvp-battle-card {
-  display: grid;
-  grid-template-rows: 15% 60% 25%;
-  width: 100%;
-  /* Убираем height: 400px */
-  height: auto; /* Высота будет определяться содержимым */
-  aspect-ratio: 1 / 1.2; /* Добавляем соотношение сторон как у обычной карточки */
-  background: #313130;
-  overflow: hidden;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-}
-
-.pvp-rival-damage {
-  width: 55%;
-  flex: 0 0 20%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  padding: 4px 0;
-}
-
-.pvp-no-rivals-text,
-.pvp-searching-text {
-  color: #FFD966;
-  font-size: 12px;
-  font-weight: 500;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.pvp-search-status {
-  margin-top: 20px;
-  color: #FFFFFF;
-  font-size: 14px;
-  font-weight: 500;
-  text-align: center;
-  min-height: 20px;
-}
 
 /* Адаптация для маленьких экранов */
 @media (max-width: 320px) {
