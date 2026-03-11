@@ -1463,6 +1463,7 @@ body {
   align-items: center;
   justify-content: center;
   align-self: center;
+  border-radius: 5px;
   transition: opacity 0.2s ease;
 }
 
