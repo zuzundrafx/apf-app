@@ -1,4 +1,4 @@
-﻿﻿﻿﻿import { useState, useEffect } from 'react';
+﻿﻿﻿﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
 import LeaderboardItem from './components/LeaderboardItem';
@@ -184,6 +184,8 @@ function App() {
   
   // Кэш всех профилей для рейтинга
   const [allProfiles, setAllProfiles] = useState<Map<string, UserProfile>>(new Map());
+  // Флаг, что профили уже загружены
+  const profilesLoadedRef = useRef(false);
 
   // Состояния для окна наград
   const [showRewardsModal, setShowRewardsModal] = useState(false);
@@ -232,20 +234,32 @@ function App() {
     return roundDamage(total);
   };
 
-  // Функция для обновления кэша профилей
-  const refreshProfilesCache = async () => {
-    const profiles = await loadAllProfiles();
-    const profilesMap = new Map();
-    profiles.forEach(profile => {
-      profilesMap.set(profile.userId, profile);
-    });
-    setAllProfiles(profilesMap);
-    console.log('📊 Кэш профилей обновлен, загружено:', profiles.length);
-  };
-
-  // Загружаем все профили при старте
+  // Загружаем все профили ТОЛЬКО ОДИН РАЗ при старте
   useEffect(() => {
-    refreshProfilesCache();
+    const loadAllUserProfiles = async () => {
+      if (profilesLoadedRef.current) return;
+      
+      console.log('📥 Загружаем все профили для рейтинга (один раз)...');
+      const profiles = await loadAllProfiles();
+      const profilesMap = new Map();
+      profiles.forEach(profile => {
+        profilesMap.set(profile.userId, profile);
+      });
+      setAllProfiles(profilesMap);
+      profilesLoadedRef.current = true;
+      console.log(`✅ Загружено ${profiles.length} профилей`);
+    };
+    
+    loadAllUserProfiles();
+  }, []); // Пустой массив зависимостей - выполнится только один раз
+
+  // Функция для обновления одного профиля в кэше (без перезагрузки всех)
+  const updateProfileInCache = useCallback((updatedProfile: UserProfile) => {
+    setAllProfiles(prev => {
+      const newMap = new Map(prev);
+      newMap.set(updatedProfile.userId, updatedProfile);
+      return newMap;
+    });
   }, []);
 
 // ОПТИМИЗИРОВАННАЯ функция принятия наград
@@ -302,7 +316,20 @@ const acceptRewards = async () => {
           experience: newTotalExp,
           coins: newCoins,
           lastUpdated: new Date().toISOString()
-        }).then(() => refreshProfilesCache()), // Обновляем кэш после сохранения
+        }).then((savedProfile) => {
+          // Обновляем только этот профиль в кэше
+          if (savedProfile) {
+            updateProfileInCache({
+              userId: telegramUser.id,
+              username: userData.username,
+              photoUrl: telegramUser.photoUrl,
+              level,
+              experience: newTotalExp,
+              coins: newCoins,
+              lastUpdated: new Date().toISOString()
+            });
+          }
+        }),
         
         (async () => {
           const currentResult = await loadUserResults(tournament.name, telegramUser.id);
@@ -440,8 +467,8 @@ const acceptRewards = async () => {
               myUserId: userId
             }));
             
-            // ВАЖНО: Обновляем профиль с актуальной аватаркой
-            await saveUserProfile({
+            // Обновляем профиль с актуальной аватаркой
+            const updatedProfile = {
               userId: userId,
               username: profile.username,
               photoUrl: user.photo_url || profile.photoUrl,
@@ -449,10 +476,12 @@ const acceptRewards = async () => {
               experience: totalExp,
               coins: profile.coins,
               lastUpdated: new Date().toISOString()
-            });
+            };
             
-            // Обновляем кэш
-            refreshProfilesCache();
+            await saveUserProfile(updatedProfile);
+            
+            // Обновляем только этот профиль в кэше
+            updateProfileInCache(updatedProfile);
             
           } else if (isMounted) {
             const newProfile = {
@@ -475,8 +504,8 @@ const acceptRewards = async () => {
                 myUserId: userId
               }));
               
-              // Обновляем кэш
-              refreshProfilesCache();
+              // Добавляем новый профиль в кэш
+              updateProfileInCache(newProfile);
             }
           }
           
@@ -521,7 +550,7 @@ const acceptRewards = async () => {
     initTelegram();
     
     return () => { isMounted = false; };
-  }, []);
+  }, [updateProfileInCache]);
 
   // Загружаем результаты пользователя
   useEffect(() => {
@@ -628,7 +657,7 @@ const acceptRewards = async () => {
     
     setUserData(prev => ({ ...prev, coins: newCoins }));
     
-    await saveUserProfile({
+    const updatedProfile = {
       userId: telegramUser.id,
       username: userData.username,
       photoUrl: telegramUser.photoUrl,
@@ -636,10 +665,12 @@ const acceptRewards = async () => {
       experience: userData.totalExp,
       coins: newCoins,
       lastUpdated: new Date().toISOString()
-    });
+    };
     
-    // Обновляем кэш
-    refreshProfilesCache();
+    await saveUserProfile(updatedProfile);
+    
+    // Обновляем только этот профиль в кэше
+    updateProfileInCache(updatedProfile);
   };
 
   const openSelectionModal = async (tournament: Tournament) => {
@@ -658,7 +689,7 @@ const acceptRewards = async () => {
       
       setUserData(prev => ({ ...prev, coins: newCoins }));
       
-      await saveUserProfile({
+      const updatedProfile = {
         userId: telegramUser.id,
         username: userData.username,
         photoUrl: telegramUser.photoUrl,
@@ -666,10 +697,12 @@ const acceptRewards = async () => {
         experience: userData.totalExp,
         coins: newCoins,
         lastUpdated: new Date().toISOString()
-      });
+      };
       
-      // Обновляем кэш
-      refreshProfilesCache();
+      await saveUserProfile(updatedProfile);
+      
+      // Обновляем только этот профиль в кэше
+      updateProfileInCache(updatedProfile);
       
       setSelectedTournament(tournament);
       setCurrentView('selection');
