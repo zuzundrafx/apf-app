@@ -73,7 +73,7 @@ const Pvp: React.FC<PvpProps> = ({
                   <div className="pvp-player-damage">
                     {userDamage !== null ? (
                       <>
-                        <div className="pvp-damage-label">Your Dmg:</div>
+                        <div className="pvp-damage-label">Dmg:</div>
                         <div className="pvp-damage-value">{userDamage}</div>
                       </>
                     ) : (

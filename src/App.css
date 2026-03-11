@@ -1299,7 +1299,7 @@ body {
 }
 
 .pvp-player-avatar {
-  width: 60%;
+  width: 55%;
   aspect-ratio: 1 / 1;
   height: auto;
   flex: 0 0 80%; /* Занимает 80% высоты родителя */
@@ -1318,7 +1318,7 @@ body {
 }
 
 .pvp-player-damage {
-  width: 60%; /* Равна ширине аватарки */
+  width: 55%; /* Равна ширине аватарки */
   flex: 0 0 20%; /* Занимает 20% высоты родителя */
   background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
   display: flex;
@@ -1388,7 +1388,7 @@ body {
 }
 
 .pvp-rival-avatar {
-  width: 60%;
+  width: 55%;
   aspect-ratio: 1 / 1;
   height: auto;
   flex: 0 0 80%; /* Занимает 80% высоты родителя */
@@ -1407,7 +1407,7 @@ body {
 }
 
 .pvp-rival-label {
-  width: 60%; /* Равна ширине аватарки */
+  width: 55%; /* Равна ширине аватарки */
   flex: 0 0 20%; /* Занимает 20% высоты родителя */
   color: #FFFFFF;
   font-size: clamp(8px, 2vw, 10px);
@@ -1430,7 +1430,7 @@ body {
 }
 
 .pvp-card-cost {
-  width: 73%;
+  width: 66%;
   height: 100%;
   display: flex;
   align-items: center;
@@ -1450,8 +1450,8 @@ body {
 }
 
 .pvp-card-engage {
-  width: 27%;
-  height: 100%;
+  width: 30%;
+  height: 90%;
   background: linear-gradient(180deg, #C9FFCE 0%, #61FF63 100%);
   border: none;
   color: #000000;
@@ -1462,7 +1462,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  
   transition: opacity 0.2s ease;
 }
 
