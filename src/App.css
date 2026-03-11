@@ -1230,9 +1230,10 @@ body {
   height: 100%;
 }
 
+/* КАРТОЧКА ТУРНИРА С GRID */
 .pvp-tournament-card {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: 15% 60% 25%; /* Явно задаём пропорции */
   width: 100%;
   height: 48%;
   min-height: 180px;
@@ -1244,7 +1245,6 @@ body {
 /* ВЕРХНЯЯ ЧАСТЬ (15%) */
 .pvp-card-top {
   display: flex;
-  flex: 1.5; /* 15% */
   width: 100%;
   background: #3D3D3B;
   min-height: 0;
@@ -1282,7 +1282,6 @@ body {
 /* СРЕДНЯЯ ЧАСТЬ (60%) */
 .pvp-card-middle {
   display: flex;
-  flex: 6; /* 60% */
   width: 100%;
   background: #2A2A2A;
   min-height: 0;
@@ -1344,7 +1343,7 @@ body {
   text-transform: uppercase;
   transform: rotate(-90deg);
   white-space: nowrap;
-  line-height: 1; /* Добавляем для правильного центрирования */
+  line-height: 1;
   text-align: center;
   display: flex;
   align-items: center;
@@ -1392,7 +1391,6 @@ body {
 /* НИЖНЯЯ ЧАСТЬ (25%) */
 .pvp-card-bottom {
   display: flex;
-  flex: 2.5; /* 25% */
   width: 100%;
   background: #313130;
   border-top: 1px solid #4A4A48;
