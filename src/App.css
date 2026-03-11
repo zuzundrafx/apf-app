@@ -1492,13 +1492,10 @@ body {
 }
 
 .arena-modal {
-  width: 90%;
-  max-width: 375px;
-  height: 90vh;
-  max-height: 700px;
+  width: 100%;
+  height: 100vh;
   background: #1C1D1F;
   border: 2px solid #B20101;
-  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1566,7 +1563,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 36%;
-  min-height: 180px;
+  min-height: 200px;
   background: #2A2A2A;
   border-bottom: 1px solid #4A4A48;
 }
@@ -1574,7 +1571,7 @@ body {
 /* Аватарка противника (28% от верхнего контейнера) */
 .arena-rival-avatar-container {
   height: 28%;
-  min-height: 40px;
+  min-height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1582,8 +1579,8 @@ body {
 }
 
 .arena-rival-avatar {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: #3D3D3B;
   overflow: hidden;
@@ -1598,10 +1595,10 @@ body {
   object-fit: cover;
 }
 
-/* Шкала здоровья (8% от верхнего контейнера) */
+/* Шкала здоровья противника (8% от верхнего контейнера) */
 .arena-rival-health {
   height: 8%;
-  min-height: 16px;
+  min-height: 20px;
   background: #1C1D1F;
   padding: 2px 8px;
 }
@@ -1627,17 +1624,17 @@ body {
   top: 50%;
   transform: translate(-50%, -50%);
   color: #FFFFFF;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 500;
   white-space: nowrap;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* Карточки бойцов (50% от верхнего контейнера) */
+/* Карточки бойцов противника (50% от верхнего контейнера) */
 .arena-rival-fighters,
 .arena-player-fighters {
   height: 50%;
-  min-height: 80px;
+  min-height: 90px;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 1px;
@@ -1659,7 +1656,7 @@ body {
   width: 80%;
   background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
   color: #000000;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   text-align: center;
   padding: 1px 0;
@@ -1667,7 +1664,7 @@ body {
 }
 
 .arena-fighter-avatar {
-  width: 60%;
+  width: 70%;
   aspect-ratio: 1 / 1;
   background: #3D3D3B;
   overflow: hidden;
@@ -1684,12 +1681,12 @@ body {
 }
 
 .arena-fighter-avatar span {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .arena-fighter-name {
   color: #FFFFFF;
-  font-size: 6px;
+  font-size: 7px;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
@@ -1698,9 +1695,8 @@ body {
   padding: 0 1px;
 }
 
-/* Текущий урон (8% от верхнего/нижнего контейнера) */
-.arena-rival-damage,
-.arena-player-damage {
+/* Текущий урон противника (8% от верхнего контейнера) */
+.arena-rival-damage {
   height: 8%;
   min-height: 20px;
   display: flex;
@@ -1710,28 +1706,13 @@ body {
   padding: 2px 8px;
 }
 
-.arena-damage-box {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
-  color: #000000;
-  font-size: 9px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  padding: 0 4px;
-  border-radius: 2px;
-}
-
 /* Средний контейнер (20%) - раунды */
 .arena-middle {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 1px;
   height: 20%;
-  min-height: 100px;
+  min-height: 120px;
   background: #1C1D1F;
   border-top: 1px solid #4A4A48;
   border-bottom: 1px solid #4A4A48;
@@ -1763,14 +1744,14 @@ body {
 
 .arena-round-digit {
   color: #FFFFFF;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   line-height: 1;
 }
 
 .arena-round-text {
   color: #FFFFFF;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 500;
   text-transform: uppercase;
   margin-top: 2px;
@@ -1778,7 +1759,7 @@ body {
 
 .arena-round-weight {
   color: #FFFFFF;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   text-align: center;
   padding: 4px;
@@ -1790,15 +1771,80 @@ body {
   display: flex;
   flex-direction: column;
   height: 36%;
-  min-height: 180px;
+  min-height: 200px;
   background: #2A2A2A;
 }
 
-.arena-player-health {
+/* Текущий урон игрока (8% от нижнего контейнера) */
+.arena-player-damage {
   height: 8%;
-  min-height: 16px;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #1C1D1F;
   padding: 2px 8px;
+  order: 1;
+}
+
+.arena-damage-box {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
+  color: #000000;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  padding: 0 4px;
+  border-radius: 2px;
+}
+
+/* Карточки бойцов игрока (50% от нижнего контейнера) */
+.arena-player-fighters {
+  height: 50%;
+  min-height: 90px;
+  order: 2;
+}
+
+/* Аватарка игрока (28% от нижнего контейнера) */
+.arena-player-avatar-container {
+  height: 28%;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1C1D1F;
+  border-top: 1px solid #4A4A48;
+  order: 4;
+}
+
+.arena-player-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #3D3D3B;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arena-player-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Шкала здоровья игрока (8% от нижнего контейнера) */
+.arena-player-health {
+  height: 8%;
+  min-height: 20px;
+  background: #1C1D1F;
+  padding: 2px 8px;
+  order: 3;
 }
 
 /* Адаптация для маленьких экранов */
