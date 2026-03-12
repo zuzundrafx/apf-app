@@ -1580,7 +1580,7 @@ body {
 
 .arena-rival-avatar {
   aspect-ratio: 1 / 1;
-  height: 100%;
+  height: 95%;
   background: #3D3D3B;
   overflow: hidden;
   display: flex;
@@ -1722,7 +1722,7 @@ body {
   grid-template-columns: repeat(5, 1fr);
   gap: 1px;
   height: 12%;
-  min-height: 60px;
+  /*min-height: 60px;*/
   background: #1C1D1F;
   border-top: 1px solid #4A4A48;
   border-bottom: 1px solid #4A4A48;
@@ -1838,8 +1838,8 @@ body {
 }
 
 .arena-player-avatar {
-  width: 50px;
-  height: 50px;
+  aspect-ratio: 1 / 1;
+  height: 95%;
   background: #3D3D3B;
   overflow: hidden;
   display: flex;
