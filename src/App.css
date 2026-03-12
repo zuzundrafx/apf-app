@@ -1641,6 +1641,8 @@ body {
   gap: 1px;
   background: #1C1D1F;
   padding: 2px 0;
+  padding-left: 1%;
+  padding-right: 1%;
 }
 
 .arena-fighter-card {
@@ -1728,6 +1730,8 @@ body {
   background: #0055ff;
   border-top: 1px solid #4A4A48;
   border-bottom: 1px solid #4A4A48;
+  padding-left: 1%;
+  padding-right: 1%;
 }
 
 .arena-round-card {
