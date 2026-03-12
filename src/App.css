@@ -1894,3 +1894,91 @@ body {
     font-size: 6px;
   }
 }
+
+/* ===== БИТВА - ВСПЛЫВАЮЩИЕ НАДПИСИ ===== */
+.battle-overlay-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%;
+  height: 16%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  z-index: 3000;
+  pointer-events: none;
+  animation: fadeInOut 1s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -30%); }
+  20% { opacity: 1; transform: translate(-50%, -50%); }
+  80% { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -70%); }
+}
+
+/* ===== МОДАЛЬНОЕ ОКНО РЕЗУЛЬТАТА БОЯ ===== */
+.battle-result-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4000;
+  backdrop-filter: blur(4px);
+}
+
+.battle-result-modal {
+  background: #2A2A2A;
+  padding: 24px 32px;
+  max-width: 90%;
+  width: min(340px, 90vw);
+  text-align: center;
+  border: 2px solid #FFD700;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease;
+}
+
+.battle-result-title {
+  color: #FFD700;
+  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.battle-result-message {
+  color: #FFFFFF;
+  margin-bottom: 20px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.battle-result-button {
+  width: 100%;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, #C9FFCE 0%, #61FF63 100%);
+  border: none;
+  color: #000000;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.battle-result-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(97, 255, 99, 0.3);
+}
