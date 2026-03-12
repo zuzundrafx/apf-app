@@ -155,193 +155,199 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   };
 
   // Обработка раунда
-  const processRound = (round: number) => {
-    setBattlePhase('round-processing');
+const processRound = (round: number) => {
+  setBattlePhase('round-processing');
+  
+  // Вычисляем доступные категории (все - использованные)
+  const currentAvailable = weightClasses.filter(
+    wc => !usedWeightClasses.includes(wc)
+  );
+  
+  console.log(`🎯 Раунд ${round}, доступные категории:`, currentAvailable);
+  console.log(`📦 Использованные категории:`, usedWeightClasses);
+  
+  // Проверяем, есть ли доступные категории
+  if (currentAvailable.length === 0) {
+    console.error('❌ Нет доступных весовых категорий!');
+    return;
+  }
+  
+  // Выбираем случайную весовую категорию из доступных
+  const randomIndex = Math.floor(Math.random() * currentAvailable.length);
+  const selectedWeightClass = currentAvailable[randomIndex];
+  
+  console.log(`🎲 Раунд ${round}: выбрана категория ${selectedWeightClass}`);
+  
+  // Добавляем в использованные (используем функциональное обновление)
+  setUsedWeightClasses(prev => {
+    const newUsed = [...prev, selectedWeightClass];
+    console.log(`📝 Обновленные использованные:`, newUsed);
+    return newUsed;
+  });
+  
+  // Находим бойцов игрока с этой весовой категорией
+  const userFightersWithWeight = userSelections.filter(
+    sel => sel.weightClass === selectedWeightClass
+  );
+  
+  // Находим бойцов противника с этой весовой категорией
+  const rivalFightersWithWeight = rivalData.selections.filter(
+    sel => sel.weightClass === selectedWeightClass
+  );
+  
+  console.log(`👥 Найдено бойцов у игрока: ${userFightersWithWeight.length}, у противника: ${rivalFightersWithWeight.length}`);
+  
+  // Сохраняем текущие карты до обновления
+  const currentUserCards = [...userActiveCards];
+  const currentRivalCards = [...rivalActiveCards];
+  
+  // Рассчитываем, сколько новых карт добавится
+  const userSlots = 5 - currentUserCards.length;
+  const userCardsToAdd = userFightersWithWeight.slice(0, userSlots);
+  
+  const rivalSlots = 5 - currentRivalCards.length;
+  const rivalCardsToAdd = rivalFightersWithWeight.slice(0, rivalSlots);
+  
+  console.log(`📊 Добавляется карт игроку: ${userCardsToAdd.length}, противнику: ${rivalCardsToAdd.length}`);
+  
+  // Обновляем карты
+  let updatedUserCards = currentUserCards;
+  let updatedRivalCards = currentRivalCards;
+  
+  if (userCardsToAdd.length > 0) {
+    updatedUserCards = [...currentUserCards, ...userCardsToAdd];
+    setUserActiveCards(updatedUserCards);
+  }
+  
+  if (rivalCardsToAdd.length > 0) {
+    updatedRivalCards = [...currentRivalCards, ...rivalCardsToAdd];
+    setRivalActiveCards(updatedRivalCards);
+  }
+  
+  // РАССЧИТЫВАЕМ СУММАРНЫЙ УРОН ВСЕХ АКТИВНЫХ КАРТ!!!
+  const userTotalDamage = updatedUserCards.reduce(
+    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+  );
+  
+  const rivalTotalDamage = updatedRivalCards.reduce(
+    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+  );
+  
+  console.log(`💰 СУММАРНЫЙ урон игрока: ${userTotalDamage}, СУММАРНЫЙ урон противника: ${rivalTotalDamage}`);
+  
+  // Наносим урон
+  setTimeout(() => {
+    // Сначала игрок бьет противника
+    setRivalHealth(prev => {
+      const newHealth = Math.max(0, prev - userTotalDamage);
+      console.log(`💔 Здоровье противника: ${prev} -> ${newHealth} (урон ${userTotalDamage})`);
+      return newHealth;
+    });
     
-    // Вычисляем доступные категории (все - использованные)
-    const currentAvailable = weightClasses.filter(
-      wc => !usedWeightClasses.includes(wc)
-    );
-    
-    console.log(`🎯 Раунд ${round}, доступные категории:`, currentAvailable);
-    
-    // Проверяем, есть ли доступные категории
-    if (currentAvailable.length === 0) {
-      console.error('❌ Нет доступных весовых категорий!');
-      return;
-    }
-    
-    // Выбираем случайную весовую категорию из доступных
-    const randomIndex = Math.floor(Math.random() * currentAvailable.length);
-    const selectedWeightClass = currentAvailable[randomIndex];
-    
-    console.log(`🎲 Раунд ${round}: выбрана категория ${selectedWeightClass}`);
-    
-    // Добавляем в использованные
-    setUsedWeightClasses(prev => [...prev, selectedWeightClass]);
-    
-    // Находим бойцов игрока с этой весовой категорией
-    const userFightersWithWeight = userSelections.filter(
-      sel => sel.weightClass === selectedWeightClass
-    );
-    
-    // Находим бойцов противника с этой весовой категорией
-    const rivalFightersWithWeight = rivalData.selections.filter(
-      sel => sel.weightClass === selectedWeightClass
-    );
-    
-    console.log(`👥 Найдено бойцов у игрока: ${userFightersWithWeight.length}, у противника: ${rivalFightersWithWeight.length}`);
-    
-    // Сохраняем текущие карты до обновления
-    const currentUserCards = [...userActiveCards];
-    const currentRivalCards = [...rivalActiveCards];
-    
-    // Рассчитываем, сколько новых карт добавится
-    const userSlots = 5 - currentUserCards.length;
-    const userCardsToAdd = userFightersWithWeight.slice(0, userSlots);
-    
-    const rivalSlots = 5 - currentRivalCards.length;
-    const rivalCardsToAdd = rivalFightersWithWeight.slice(0, rivalSlots);
-    
-    console.log(`📊 Добавляется карт игроку: ${userCardsToAdd.length}, противнику: ${rivalCardsToAdd.length}`);
-    
-    // Обновляем карты
-    if (userCardsToAdd.length > 0) {
-      setUserActiveCards(prev => [...prev, ...userCardsToAdd]);
-    }
-    
-    if (rivalCardsToAdd.length > 0) {
-      setRivalActiveCards(prev => [...prev, ...rivalCardsToAdd]);
-    }
-    
-    // Рассчитываем урон на основе ТЕКУЩИХ карт + новых
-    const userCurrentDamage = currentUserCards.reduce(
-      (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-    ) + userCardsToAdd.reduce(
-      (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-    );
-    
-    const rivalCurrentDamage = currentRivalCards.reduce(
-      (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-    ) + rivalCardsToAdd.reduce(
-      (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-    );
-    
-    console.log(`💰 Урон игрока: ${userCurrentDamage}, Урон противника: ${rivalCurrentDamage}`);
-    
-    // Наносим урон
     setTimeout(() => {
-      // Сначала игрок бьет противника
-      setRivalHealth(prev => {
-        const newHealth = Math.max(0, prev - userCurrentDamage);
-        console.log(`💔 Здоровье противника: ${prev} -> ${newHealth} (урон ${userCurrentDamage})`);
+      // Потом противник бьет игрока
+      setUserHealth(prev => {
+        const newHealth = Math.max(0, prev - rivalTotalDamage);
+        console.log(`💔 Здоровье игрока: ${prev} -> ${newHealth} (урон ${rivalTotalDamage})`);
         return newHealth;
       });
       
       setTimeout(() => {
-        // Потом противник бьет игрока
-        setUserHealth(prev => {
-          const newHealth = Math.max(0, prev - rivalCurrentDamage);
-          console.log(`💔 Здоровье игрока: ${prev} -> ${newHealth} (урон ${rivalCurrentDamage})`);
-          return newHealth;
-        });
+        // Получаем актуальные значения здоровья
+        const newUserHealth = Math.max(0, userHealth - rivalTotalDamage);
+        const newRivalHealth = Math.max(0, rivalHealth - userTotalDamage);
         
-        setTimeout(() => {
-          // Получаем актуальные значения здоровья
-          const newUserHealth = Math.max(0, userHealth - rivalCurrentDamage);
-          const newRivalHealth = Math.max(0, rivalHealth - userCurrentDamage);
+        console.log(`🏥 После раунда ${round}: Игрок ${newUserHealth}, Противник ${newRivalHealth}`);
+        
+        // Досрочная победа/поражение
+        if (newRivalHealth <= 0 && newUserHealth > 0) {
+          console.log('🏆 Досрочная победа!');
+          setBattleResult({
+            isOpen: true,
+            result: 'win',
+            resultType: 'ko'
+          });
+          setBattlePhase('finished');
+          return;
+        }
+        
+        if (newUserHealth <= 0 && newRivalHealth > 0) {
+          console.log('💔 Досрочное поражение!');
+          setBattleResult({
+            isOpen: true,
+            result: 'loss',
+            resultType: 'ko'
+          });
+          setBattlePhase('finished');
+          return;
+        }
+        
+        if (newUserHealth <= 0 && newRivalHealth <= 0) {
+          console.log('🤝 Ничья!');
+          setBattleResult({
+            isOpen: true,
+            result: 'draw'
+          });
+          setBattlePhase('finished');
+          return;
+        }
+        
+        // Если бой не закончен и это не последний раунд
+        if (round < 5) {
+          console.log(`⏳ Переход к раунду ${round + 1}`);
+          setBattlePhase('round-end');
+          setTimeout(() => {
+            const nextRound = round + 1;
+            setCurrentRound(nextRound);
+            setBattlePhase('round-start');
+            startRound(nextRound);
+          }, 2000);
+        } else {
+          // Бой закончен, определяем победителя по решению
+          console.log('⚖️ Бой завершен, определение победителя по решению');
+          const healthDiff = Math.abs(newUserHealth - newRivalHealth);
           
-          console.log(`🏥 После раунда ${round}: Игрок ${newUserHealth}, Противник ${newRivalHealth}`);
-          
-          // Досрочная победа/поражение
-          if (newRivalHealth <= 0 && newUserHealth > 0) {
-            console.log('🏆 Досрочная победа!');
-            setBattleResult({
-              isOpen: true,
-              result: 'win',
-              resultType: 'ko'
-            });
-            setBattlePhase('finished');
-            return;
-          }
-          
-          if (newUserHealth <= 0 && newRivalHealth > 0) {
-            console.log('💔 Досрочное поражение!');
-            setBattleResult({
-              isOpen: true,
-              result: 'loss',
-              resultType: 'ko'
-            });
-            setBattlePhase('finished');
-            return;
-          }
-          
-          if (newUserHealth <= 0 && newRivalHealth <= 0) {
-            console.log('🤝 Ничья!');
+          if (newUserHealth > newRivalHealth) {
+            if (healthDiff >= 100) {
+              setBattleResult({
+                isOpen: true,
+                result: 'win',
+                resultType: 'decision-unanimous'
+              });
+            } else {
+              setBattleResult({
+                isOpen: true,
+                result: 'win',
+                resultType: 'decision-split'
+              });
+            }
+          } else if (newRivalHealth > newUserHealth) {
+            if (healthDiff >= 100) {
+              setBattleResult({
+                isOpen: true,
+                result: 'loss',
+                resultType: 'decision-unanimous'
+              });
+            } else {
+              setBattleResult({
+                isOpen: true,
+                result: 'loss',
+                resultType: 'decision-split'
+              });
+            }
+          } else {
             setBattleResult({
               isOpen: true,
               result: 'draw'
             });
-            setBattlePhase('finished');
-            return;
           }
           
-          // Если бой не закончен и это не последний раунд
-          if (round < 5) {
-            console.log(`⏳ Переход к раунду ${round + 1}`);
-            setBattlePhase('round-end');
-            setTimeout(() => {
-              const nextRound = round + 1;
-              setCurrentRound(nextRound);
-              setBattlePhase('round-start');
-              startRound(nextRound);
-            }, 2000);
-          } else {
-            // Бой закончен, определяем победителя по решению
-            console.log('⚖️ Бой завершен, определение победителя по решению');
-            const healthDiff = Math.abs(newUserHealth - newRivalHealth);
-            
-            if (newUserHealth > newRivalHealth) {
-              if (healthDiff >= 100) {
-                setBattleResult({
-                  isOpen: true,
-                  result: 'win',
-                  resultType: 'decision-unanimous'
-                });
-              } else {
-                setBattleResult({
-                  isOpen: true,
-                  result: 'win',
-                  resultType: 'decision-split'
-                });
-              }
-            } else if (newRivalHealth > newUserHealth) {
-              if (healthDiff >= 100) {
-                setBattleResult({
-                  isOpen: true,
-                  result: 'loss',
-                  resultType: 'decision-unanimous'
-                });
-              } else {
-                setBattleResult({
-                  isOpen: true,
-                  result: 'loss',
-                  resultType: 'decision-split'
-                });
-              }
-            } else {
-              setBattleResult({
-                isOpen: true,
-                result: 'draw'
-              });
-            }
-            
-            setBattlePhase('finished');
-          }
-        }, 2000);
+          setBattlePhase('finished');
+        }
       }, 2000);
     }, 2000);
-  };
+  }, 2000);
+};
 
   // Обработчик закрытия результата
   const handleResultClose = () => {
