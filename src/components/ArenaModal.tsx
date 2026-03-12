@@ -104,6 +104,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   // Инициализация при открытии
   useEffect(() => {
     if (isOpen) {
+      console.log('🎮 Арена открыта, весовые категории:', weightClasses);
       setAvailableWeightClasses([...weightClasses]);
       setUsedWeightClasses([]);
       setUserHealth(1000);
@@ -147,12 +148,19 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 const processRound = (round: number) => {
   setBattlePhase('round-processing');
   
+  console.log(`🎯 Раунд ${round}, доступные категории:`, availableWeightClasses);
+  
   // Получаем актуальный список доступных категорий
   const currentAvailable = [...availableWeightClasses];
   
   // Проверяем, есть ли доступные категории
   if (currentAvailable.length === 0) {
     console.error('❌ Нет доступных весовых категорий!');
+    console.log('📦 Текущее состояние:', {
+      availableWeightClasses,
+      usedWeightClasses,
+      weightClassesFromProps: weightClasses
+    });
     return;
   }
   
@@ -192,8 +200,13 @@ const processRound = (round: number) => {
   console.log(`📊 Добавляется карт игроку: ${userCardsToAdd.length}, противнику: ${rivalCardsToAdd.length}`);
   
   // Обновляем карты
-  setUserActiveCards(prev => [...prev, ...userCardsToAdd]);
-  setRivalActiveCards(prev => [...prev, ...rivalCardsToAdd]);
+  if (userCardsToAdd.length > 0) {
+    setUserActiveCards(prev => [...prev, ...userCardsToAdd]);
+  }
+  
+  if (rivalCardsToAdd.length > 0) {
+    setRivalActiveCards(prev => [...prev, ...rivalCardsToAdd]);
+  }
   
   // Рассчитываем урон на основе ТЕКУЩИХ карт + новых
   const userCurrentDamage = currentUserCards.reduce(
