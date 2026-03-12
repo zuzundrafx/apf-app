@@ -8,7 +8,7 @@ interface ArenaModalProps {
   tournament: Tournament;
   userSelections: SelectedFighter[];
   userAvatar?: string;
-  userDamage: number; // пока не используем, но оставим для совместимости
+  userDamage: number;
   userName: string;
   rivalData: {
     username: string;
@@ -67,13 +67,16 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   tournament,
   userSelections,
   userAvatar,
-  userDamage, // не используется, но оставляем для пропсов
+  userDamage,
   userName,
   rivalData,
   weightClasses,
   isOpen,
   onSurrender
 }) => {
+  // Состояние загрузки
+  const [isLoading, setIsLoading] = useState(true);
+  
   // Состояния для боя
   const [battlePhase, setBattlePhase] = useState<BattlePhase>('countdown');
   const [countdownStep, setCountdownStep] = useState<CountdownStep>('ready');
@@ -88,8 +91,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const [userActiveCards, setUserActiveCards] = useState<SelectedFighter[]>([]);
   const [rivalActiveCards, setRivalActiveCards] = useState<SelectedFighter[]>([]);
   
-  // Доступные весовые категории для раундов
-  const [availableWeightClasses, setAvailableWeightClasses] = useState<string[]>([]);
+  // Использованные весовые категории
   const [usedWeightClasses, setUsedWeightClasses] = useState<string[]>([]);
   
   // Результат боя
@@ -101,22 +103,30 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
-  // Инициализация при открытии
+  // Инициализация при открытии - СНАЧАЛА ЗАГРУЗКА, ПОТОМ БОЙ
   useEffect(() => {
     if (isOpen) {
-      console.log('🎮 Арена открыта, весовые категории:', weightClasses);
-      setAvailableWeightClasses([...weightClasses]);
+      console.log('🎮 Арена открыта, начинаем загрузку...');
+      console.log('📦 Весовые категории турнира:', weightClasses);
+      
+      // Сброс всех состояний
+      setIsLoading(true);
       setUsedWeightClasses([]);
       setUserHealth(1000);
       setRivalHealth(1000);
       setUserActiveCards([]);
       setRivalActiveCards([]);
-      setBattlePhase('countdown');
-      setCountdownStep('ready');
-      setCurrentRound(1);
+      setBattleResult(null);
       
-      // Запускаем обратный отсчет
-      startCountdown();
+      // Симуляция загрузки данных (1 секунда)
+      setTimeout(() => {
+        console.log('✅ Загрузка завершена, запускаем бой');
+        setIsLoading(false);
+        setBattlePhase('countdown');
+        setCountdownStep('ready');
+        setCurrentRound(1);
+        startCountdown();
+      }, 1000);
     }
   }, [isOpen]);
 
@@ -145,197 +155,193 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   };
 
   // Обработка раунда
-const processRound = (round: number) => {
-  setBattlePhase('round-processing');
-  
-  console.log(`🎯 Раунд ${round}, доступные категории:`, availableWeightClasses);
-  
-  // Получаем актуальный список доступных категорий
-  const currentAvailable = [...availableWeightClasses];
-  
-  // Проверяем, есть ли доступные категории
-  if (currentAvailable.length === 0) {
-    console.error('❌ Нет доступных весовых категорий!');
-    console.log('📦 Текущее состояние:', {
-      availableWeightClasses,
-      usedWeightClasses,
-      weightClassesFromProps: weightClasses
-    });
-    return;
-  }
-  
-  // Выбираем случайную весовую категорию из текущего списка
-  const randomIndex = Math.floor(Math.random() * currentAvailable.length);
-  const selectedWeightClass = currentAvailable[randomIndex];
-  
-  console.log(`🎲 Раунд ${round}: выбрана категория ${selectedWeightClass}`);
-  
-  // Добавляем в использованные и удаляем из доступных
-  setUsedWeightClasses(prev => [...prev, selectedWeightClass]);
-  setAvailableWeightClasses(prev => prev.filter((_, i) => i !== randomIndex));
-  
-  // Находим бойцов игрока с этой весовой категорией
-  const userFightersWithWeight = userSelections.filter(
-    sel => sel.weightClass === selectedWeightClass
-  );
-  
-  // Находим бойцов противника с этой весовой категорией
-  const rivalFightersWithWeight = rivalData.selections.filter(
-    sel => sel.weightClass === selectedWeightClass
-  );
-  
-  console.log(`👥 Найдено бойцов у игрока: ${userFightersWithWeight.length}, у противника: ${rivalFightersWithWeight.length}`);
-  
-  // Сохраняем текущие карты до обновления
-  const currentUserCards = [...userActiveCards];
-  const currentRivalCards = [...rivalActiveCards];
-  
-  // Рассчитываем, сколько новых карт добавится
-  const userSlots = 5 - currentUserCards.length;
-  const userCardsToAdd = userFightersWithWeight.slice(0, userSlots);
-  
-  const rivalSlots = 5 - currentRivalCards.length;
-  const rivalCardsToAdd = rivalFightersWithWeight.slice(0, rivalSlots);
-  
-  console.log(`📊 Добавляется карт игроку: ${userCardsToAdd.length}, противнику: ${rivalCardsToAdd.length}`);
-  
-  // Обновляем карты
-  if (userCardsToAdd.length > 0) {
-    setUserActiveCards(prev => [...prev, ...userCardsToAdd]);
-  }
-  
-  if (rivalCardsToAdd.length > 0) {
-    setRivalActiveCards(prev => [...prev, ...rivalCardsToAdd]);
-  }
-  
-  // Рассчитываем урон на основе ТЕКУЩИХ карт + новых
-  const userCurrentDamage = currentUserCards.reduce(
-    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-  ) + userCardsToAdd.reduce(
-    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-  );
-  
-  const rivalCurrentDamage = currentRivalCards.reduce(
-    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-  ) + rivalCardsToAdd.reduce(
-    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-  );
-  
-  console.log(`💰 Урон игрока: ${userCurrentDamage}, Урон противника: ${rivalCurrentDamage}`);
-  
-  // Наносим урон
-  setTimeout(() => {
-    // Сначала игрок бьет противника
-    setRivalHealth(prev => {
-      const newHealth = Math.max(0, prev - userCurrentDamage);
-      console.log(`💔 Здоровье противника: ${prev} -> ${newHealth} (урон ${userCurrentDamage})`);
-      return newHealth;
-    });
+  const processRound = (round: number) => {
+    setBattlePhase('round-processing');
     
+    // Вычисляем доступные категории (все - использованные)
+    const currentAvailable = weightClasses.filter(
+      wc => !usedWeightClasses.includes(wc)
+    );
+    
+    console.log(`🎯 Раунд ${round}, доступные категории:`, currentAvailable);
+    
+    // Проверяем, есть ли доступные категории
+    if (currentAvailable.length === 0) {
+      console.error('❌ Нет доступных весовых категорий!');
+      return;
+    }
+    
+    // Выбираем случайную весовую категорию из доступных
+    const randomIndex = Math.floor(Math.random() * currentAvailable.length);
+    const selectedWeightClass = currentAvailable[randomIndex];
+    
+    console.log(`🎲 Раунд ${round}: выбрана категория ${selectedWeightClass}`);
+    
+    // Добавляем в использованные
+    setUsedWeightClasses(prev => [...prev, selectedWeightClass]);
+    
+    // Находим бойцов игрока с этой весовой категорией
+    const userFightersWithWeight = userSelections.filter(
+      sel => sel.weightClass === selectedWeightClass
+    );
+    
+    // Находим бойцов противника с этой весовой категорией
+    const rivalFightersWithWeight = rivalData.selections.filter(
+      sel => sel.weightClass === selectedWeightClass
+    );
+    
+    console.log(`👥 Найдено бойцов у игрока: ${userFightersWithWeight.length}, у противника: ${rivalFightersWithWeight.length}`);
+    
+    // Сохраняем текущие карты до обновления
+    const currentUserCards = [...userActiveCards];
+    const currentRivalCards = [...rivalActiveCards];
+    
+    // Рассчитываем, сколько новых карт добавится
+    const userSlots = 5 - currentUserCards.length;
+    const userCardsToAdd = userFightersWithWeight.slice(0, userSlots);
+    
+    const rivalSlots = 5 - currentRivalCards.length;
+    const rivalCardsToAdd = rivalFightersWithWeight.slice(0, rivalSlots);
+    
+    console.log(`📊 Добавляется карт игроку: ${userCardsToAdd.length}, противнику: ${rivalCardsToAdd.length}`);
+    
+    // Обновляем карты
+    if (userCardsToAdd.length > 0) {
+      setUserActiveCards(prev => [...prev, ...userCardsToAdd]);
+    }
+    
+    if (rivalCardsToAdd.length > 0) {
+      setRivalActiveCards(prev => [...prev, ...rivalCardsToAdd]);
+    }
+    
+    // Рассчитываем урон на основе ТЕКУЩИХ карт + новых
+    const userCurrentDamage = currentUserCards.reduce(
+      (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+    ) + userCardsToAdd.reduce(
+      (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+    );
+    
+    const rivalCurrentDamage = currentRivalCards.reduce(
+      (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+    ) + rivalCardsToAdd.reduce(
+      (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+    );
+    
+    console.log(`💰 Урон игрока: ${userCurrentDamage}, Урон противника: ${rivalCurrentDamage}`);
+    
+    // Наносим урон
     setTimeout(() => {
-      // Потом противник бьет игрока
-      setUserHealth(prev => {
-        const newHealth = Math.max(0, prev - rivalCurrentDamage);
-        console.log(`💔 Здоровье игрока: ${prev} -> ${newHealth} (урон ${rivalCurrentDamage})`);
+      // Сначала игрок бьет противника
+      setRivalHealth(prev => {
+        const newHealth = Math.max(0, prev - userCurrentDamage);
+        console.log(`💔 Здоровье противника: ${prev} -> ${newHealth} (урон ${userCurrentDamage})`);
         return newHealth;
       });
       
       setTimeout(() => {
-        // Получаем актуальные значения здоровья
-        const newUserHealth = Math.max(0, userHealth - rivalCurrentDamage);
-        const newRivalHealth = Math.max(0, rivalHealth - userCurrentDamage);
+        // Потом противник бьет игрока
+        setUserHealth(prev => {
+          const newHealth = Math.max(0, prev - rivalCurrentDamage);
+          console.log(`💔 Здоровье игрока: ${prev} -> ${newHealth} (урон ${rivalCurrentDamage})`);
+          return newHealth;
+        });
         
-        console.log(`🏥 После раунда ${round}: Игрок ${newUserHealth}, Противник ${newRivalHealth}`);
-        
-        // Досрочная победа/поражение
-        if (newRivalHealth <= 0 && newUserHealth > 0) {
-          console.log('🏆 Досрочная победа!');
-          setBattleResult({
-            isOpen: true,
-            result: 'win',
-            resultType: 'ko'
-          });
-          setBattlePhase('finished');
-          return;
-        }
-        
-        if (newUserHealth <= 0 && newRivalHealth > 0) {
-          console.log('💔 Досрочное поражение!');
-          setBattleResult({
-            isOpen: true,
-            result: 'loss',
-            resultType: 'ko'
-          });
-          setBattlePhase('finished');
-          return;
-        }
-        
-        if (newUserHealth <= 0 && newRivalHealth <= 0) {
-          console.log('🤝 Ничья!');
-          setBattleResult({
-            isOpen: true,
-            result: 'draw'
-          });
-          setBattlePhase('finished');
-          return;
-        }
-        
-        // Если бой не закончен и это не последний раунд
-        if (round < 5) {
-          console.log(`⏳ Переход к раунду ${round + 1}`);
-          setBattlePhase('round-end');
-          setTimeout(() => {
-            const nextRound = round + 1;
-            setCurrentRound(nextRound);
-            setBattlePhase('round-start');
-            startRound(nextRound);
-          }, 2000);
-        } else {
-          // Бой закончен, определяем победителя по решению
-          console.log('⚖️ Бой завершен, определение победителя по решению');
-          const healthDiff = Math.abs(newUserHealth - newRivalHealth);
+        setTimeout(() => {
+          // Получаем актуальные значения здоровья
+          const newUserHealth = Math.max(0, userHealth - rivalCurrentDamage);
+          const newRivalHealth = Math.max(0, rivalHealth - userCurrentDamage);
           
-          if (newUserHealth > newRivalHealth) {
-            if (healthDiff >= 100) {
-              setBattleResult({
-                isOpen: true,
-                result: 'win',
-                resultType: 'decision-unanimous'
-              });
-            } else {
-              setBattleResult({
-                isOpen: true,
-                result: 'win',
-                resultType: 'decision-split'
-              });
-            }
-          } else if (newRivalHealth > newUserHealth) {
-            if (healthDiff >= 100) {
-              setBattleResult({
-                isOpen: true,
-                result: 'loss',
-                resultType: 'decision-unanimous'
-              });
-            } else {
-              setBattleResult({
-                isOpen: true,
-                result: 'loss',
-                resultType: 'decision-split'
-              });
-            }
-          } else {
+          console.log(`🏥 После раунда ${round}: Игрок ${newUserHealth}, Противник ${newRivalHealth}`);
+          
+          // Досрочная победа/поражение
+          if (newRivalHealth <= 0 && newUserHealth > 0) {
+            console.log('🏆 Досрочная победа!');
+            setBattleResult({
+              isOpen: true,
+              result: 'win',
+              resultType: 'ko'
+            });
+            setBattlePhase('finished');
+            return;
+          }
+          
+          if (newUserHealth <= 0 && newRivalHealth > 0) {
+            console.log('💔 Досрочное поражение!');
+            setBattleResult({
+              isOpen: true,
+              result: 'loss',
+              resultType: 'ko'
+            });
+            setBattlePhase('finished');
+            return;
+          }
+          
+          if (newUserHealth <= 0 && newRivalHealth <= 0) {
+            console.log('🤝 Ничья!');
             setBattleResult({
               isOpen: true,
               result: 'draw'
             });
+            setBattlePhase('finished');
+            return;
           }
           
-          setBattlePhase('finished');
-        }
+          // Если бой не закончен и это не последний раунд
+          if (round < 5) {
+            console.log(`⏳ Переход к раунду ${round + 1}`);
+            setBattlePhase('round-end');
+            setTimeout(() => {
+              const nextRound = round + 1;
+              setCurrentRound(nextRound);
+              setBattlePhase('round-start');
+              startRound(nextRound);
+            }, 2000);
+          } else {
+            // Бой закончен, определяем победителя по решению
+            console.log('⚖️ Бой завершен, определение победителя по решению');
+            const healthDiff = Math.abs(newUserHealth - newRivalHealth);
+            
+            if (newUserHealth > newRivalHealth) {
+              if (healthDiff >= 100) {
+                setBattleResult({
+                  isOpen: true,
+                  result: 'win',
+                  resultType: 'decision-unanimous'
+                });
+              } else {
+                setBattleResult({
+                  isOpen: true,
+                  result: 'win',
+                  resultType: 'decision-split'
+                });
+              }
+            } else if (newRivalHealth > newUserHealth) {
+              if (healthDiff >= 100) {
+                setBattleResult({
+                  isOpen: true,
+                  result: 'loss',
+                  resultType: 'decision-unanimous'
+                });
+              } else {
+                setBattleResult({
+                  isOpen: true,
+                  result: 'loss',
+                  resultType: 'decision-split'
+                });
+              }
+            } else {
+              setBattleResult({
+                isOpen: true,
+                result: 'draw'
+              });
+            }
+            
+            setBattlePhase('finished');
+          }
+        }, 2000);
       }, 2000);
     }, 2000);
-  }, 2000);
-};
+  };
 
   // Обработчик закрытия результата
   const handleResultClose = () => {
@@ -367,190 +373,196 @@ const processRound = (round: number) => {
   return (
     <div className="arena-modal-overlay">
       <div className="arena-modal">
-        {/* Всплывающие надписи */}
-        {countdownText && (
-          <div className="battle-overlay-text">
-            {countdownText}
-          </div>
-        )}
-        
-        {showRoundText && (
-          <div className="battle-overlay-text">
-            ROUND {currentRound}
-          </div>
-        )}
-        
-        {/* Верхняя шапка арены (8%) */}
-        <div className="arena-header">
-          <div className="arena-header-left">
-            {tournament.name}
-          </div>
-          <div className="arena-header-right">
-            <button className="arena-surrender-button" onClick={handleSurrender}>
-              SURRENDER
-            </button>
-          </div>
-        </div>
-
-        {/* Верхний контейнер (40%) - противник */}
-        <div className="arena-top">
-          {/* Аватарка противника (31%) */}
-          <div className="arena-rival-avatar-container">
-            <div className="arena-rival-avatar">
-              <img 
-                src={rivalData.photoUrl || `${BASE_URL}/default-avatar.png`}
-                alt="rival"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`;
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Шкала здоровья противника (8%) */}
-          <div className="arena-rival-health">
-            <div className="arena-health-bar">
-              <div 
-                className="arena-health-fill" 
-                style={{ width: `${(rivalHealth / 1000) * 100}%` }}
-              ></div>
-              <span className="arena-health-text">{rivalData.username} Health: {rivalHealth}</span>
-            </div>
-          </div>
-
-          {/* Карточки бойцов противника (53%) */}
-          <div className="arena-rival-fighters">
-            {Array(5).fill(null).map((_, index) => {
-              const card = rivalActiveCards[index];
-              return card ? (
-                <div 
-                  key={index} 
-                  className="arena-fighter-card"
-                  style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-                >
-                  <div className="arena-fighter-damage">
-                    {Math.round(card.fighter['Total Damage'])}
-                  </div>
-                  <div className="arena-fighter-avatar">
-                    <img 
-                      src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
-                      alt={card.fighter.Fighter}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                        const parent = (e.target as HTMLImageElement).parentElement;
-                        if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
-                      }}
-                    />
-                  </div>
-                  <div className="arena-fighter-name">{card.fighter.Fighter}</div>
-                </div>
-              ) : (
-                <div key={index} className="arena-fighter-card empty" />
-              );
-            })}
-          </div>
-
-          {/* Текущий урон противника (8%) */}
-          <div className="arena-rival-damage">
-            <div className="arena-damage-box">
-              CURRENT DAMAGE: {rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-            </div>
-          </div>
-        </div>
-
-        {/* Средний контейнер (12%) - раунды */}
-        <div className="arena-middle">
-          {[0, 1, 2, 3, 4].map((roundIndex) => {
-            const roundNumber = roundIndex + 1;
-            const isUsed = roundNumber <= usedWeightClasses.length;
-            const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
-            
-            return (
-              <div 
-                key={roundIndex} 
-                className="arena-round-card"
-                style={weightClass ? { 
-                  backgroundColor: getWeightClassColor(weightClass) 
-                } : {}}
-              >
-                {weightClass ? (
-                  <div className="arena-round-weight">{weightClass}</div>
-                ) : (
-                  <div className="arena-round-number">
-                    <div className="arena-round-digit">{roundNumber}</div>
-                    <div className="arena-round-text">ROUND</div>
-                  </div>
-                )}
+        {isLoading ? (
+          <div className="arena-loading">Loading arena data...</div>
+        ) : (
+          <>
+            {/* Всплывающие надписи */}
+            {countdownText && (
+              <div className="battle-overlay-text">
+                {countdownText}
               </div>
-            );
-          })}
-        </div>
-
-        {/* Нижний контейнер (40%) - игрок */}
-        <div className="arena-bottom">
-          {/* 1. Текущий урон игрока (8%) */}
-          <div className="arena-player-damage">
-            <div className="arena-damage-box">
-              CURRENT DAMAGE: {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+            )}
+            
+            {showRoundText && (
+              <div className="battle-overlay-text">
+                ROUND {currentRound}
+              </div>
+            )}
+            
+            {/* Верхняя шапка арены (8%) */}
+            <div className="arena-header">
+              <div className="arena-header-left">
+                {tournament.name}
+              </div>
+              <div className="arena-header-right">
+                <button className="arena-surrender-button" onClick={handleSurrender}>
+                  SURRENDER
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* 2. Карточки бойцов игрока (53%) */}
-          <div className="arena-player-fighters">
-            {Array(5).fill(null).map((_, index) => {
-              const card = userActiveCards[index];
-              return card ? (
-                <div 
-                  key={index} 
-                  className="arena-fighter-card"
-                  style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-                >
-                  <div className="arena-fighter-damage">
-                    {Math.round(card.fighter['Total Damage'])}
-                  </div>
-                  <div className="arena-fighter-avatar">
-                    <img 
-                      src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
-                      alt={card.fighter.Fighter}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                        const parent = (e.target as HTMLImageElement).parentElement;
-                        if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
-                      }}
-                    />
-                  </div>
-                  <div className="arena-fighter-name">{card.fighter.Fighter}</div>
+            {/* Верхний контейнер (40%) - противник */}
+            <div className="arena-top">
+              {/* Аватарка противника (31%) */}
+              <div className="arena-rival-avatar-container">
+                <div className="arena-rival-avatar">
+                  <img 
+                    src={rivalData.photoUrl || `${BASE_URL}/default-avatar.png`}
+                    alt="rival"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`;
+                    }}
+                  />
                 </div>
-              ) : (
-                <div key={index} className="arena-fighter-card empty" />
-              );
-            })}
-          </div>
+              </div>
 
-          {/* 3. Шкала здоровья игрока (8%) */}
-          <div className="arena-player-health">
-            <div className="arena-health-bar">
-              <div 
-                className="arena-health-fill" 
-                style={{ width: `${(userHealth / 1000) * 100}%` }}
-              ></div>
-              <span className="arena-health-text">{userName} Health: {userHealth}</span>
-            </div>
-          </div>
+              {/* Шкала здоровья противника (8%) */}
+              <div className="arena-rival-health">
+                <div className="arena-health-bar">
+                  <div 
+                    className="arena-health-fill" 
+                    style={{ width: `${(rivalHealth / 1000) * 100}%` }}
+                  ></div>
+                  <span className="arena-health-text">{rivalData.username} Health: {rivalHealth}</span>
+                </div>
+              </div>
 
-          {/* 4. Аватарка игрока (31%) */}
-          <div className="arena-player-avatar-container">
-            <div className="arena-player-avatar">
-              <img 
-                src={userAvatar || `${BASE_URL}/Home_button.png`}
-                alt="player"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
-                }}
-              />
+              {/* Карточки бойцов противника (53%) */}
+              <div className="arena-rival-fighters">
+                {Array(5).fill(null).map((_, index) => {
+                  const card = rivalActiveCards[index];
+                  return card ? (
+                    <div 
+                      key={index} 
+                      className="arena-fighter-card"
+                      style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
+                    >
+                      <div className="arena-fighter-damage">
+                        {Math.round(card.fighter['Total Damage'])}
+                      </div>
+                      <div className="arena-fighter-avatar">
+                        <img 
+                          src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
+                          alt={card.fighter.Fighter}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            const parent = (e.target as HTMLImageElement).parentElement;
+                            if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
+                          }}
+                        />
+                      </div>
+                      <div className="arena-fighter-name">{card.fighter.Fighter}</div>
+                    </div>
+                  ) : (
+                    <div key={index} className="arena-fighter-card empty" />
+                  );
+                })}
+              </div>
+
+              {/* Текущий урон противника (8%) */}
+              <div className="arena-rival-damage">
+                <div className="arena-damage-box">
+                  CURRENT DAMAGE: {rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+
+            {/* Средний контейнер (12%) - раунды */}
+            <div className="arena-middle">
+              {[0, 1, 2, 3, 4].map((roundIndex) => {
+                const roundNumber = roundIndex + 1;
+                const isUsed = roundNumber <= usedWeightClasses.length;
+                const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
+                
+                return (
+                  <div 
+                    key={roundIndex} 
+                    className="arena-round-card"
+                    style={weightClass ? { 
+                      backgroundColor: getWeightClassColor(weightClass) 
+                    } : {}}
+                  >
+                    {weightClass ? (
+                      <div className="arena-round-weight">{weightClass}</div>
+                    ) : (
+                      <div className="arena-round-number">
+                        <div className="arena-round-digit">{roundNumber}</div>
+                        <div className="arena-round-text">ROUND</div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Нижний контейнер (40%) - игрок */}
+            <div className="arena-bottom">
+              {/* 1. Текущий урон игрока (8%) */}
+              <div className="arena-player-damage">
+                <div className="arena-damage-box">
+                  CURRENT DAMAGE: {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+                </div>
+              </div>
+
+              {/* 2. Карточки бойцов игрока (53%) */}
+              <div className="arena-player-fighters">
+                {Array(5).fill(null).map((_, index) => {
+                  const card = userActiveCards[index];
+                  return card ? (
+                    <div 
+                      key={index} 
+                      className="arena-fighter-card"
+                      style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
+                    >
+                      <div className="arena-fighter-damage">
+                        {Math.round(card.fighter['Total Damage'])}
+                      </div>
+                      <div className="arena-fighter-avatar">
+                        <img 
+                          src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
+                          alt={card.fighter.Fighter}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            const parent = (e.target as HTMLImageElement).parentElement;
+                            if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
+                          }}
+                        />
+                      </div>
+                      <div className="arena-fighter-name">{card.fighter.Fighter}</div>
+                    </div>
+                  ) : (
+                    <div key={index} className="arena-fighter-card empty" />
+                  );
+                })}
+              </div>
+
+              {/* 3. Шкала здоровья игрока (8%) */}
+              <div className="arena-player-health">
+                <div className="arena-health-bar">
+                  <div 
+                    className="arena-health-fill" 
+                    style={{ width: `${(userHealth / 1000) * 100}%` }}
+                  ></div>
+                  <span className="arena-health-text">{userName} Health: {userHealth}</span>
+                </div>
+              </div>
+
+              {/* 4. Аватарка игрока (31%) */}
+              <div className="arena-player-avatar-container">
+                <div className="arena-player-avatar">
+                  <img 
+                    src={userAvatar || `${BASE_URL}/Home_button.png`}
+                    alt="player"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
       
       {/* Модальное окно результата боя */}
