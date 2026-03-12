@@ -1982,3 +1982,9 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(97, 255, 99, 0.3);
 }
+
+/* Пустая карта бойца */
+.arena-fighter-card.empty {
+  background: #2A2A2A;
+  border: 1px dashed #4A4A48;
+}
