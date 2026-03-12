@@ -1723,7 +1723,7 @@ body {
   gap: 1px;
   height: 12%;
   /*min-height: 60px;*/
-  background: #1C1D1F;
+  background: #0055ff;
   border-top: 1px solid #4A4A48;
   border-bottom: 1px solid #4A4A48;
 }
@@ -1853,14 +1853,7 @@ body {
   object-fit: cover;
 }
 
-/* Шкала здоровья игрока (8% от нижнего контейнера) */
-.arena-player-health {
-  height: 8%;
-  min-height: 20px;
-  background: #1C1D1F;
-  padding: 2px 8px;
-  order: 3;
-}
+
 
 /* Адаптация для маленьких экранов */
 @media (max-width: 320px) {
