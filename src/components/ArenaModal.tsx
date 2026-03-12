@@ -147,11 +147,20 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 const processRound = (round: number) => {
   setBattlePhase('round-processing');
   
-  // Выбираем случайную весовую категорию для этого раунда
-  if (availableWeightClasses.length === 0) return;
+  // Получаем актуальный список доступных категорий
+  const currentAvailable = [...availableWeightClasses];
   
-  const randomIndex = Math.floor(Math.random() * availableWeightClasses.length);
-  const selectedWeightClass = availableWeightClasses[randomIndex];
+  // Проверяем, есть ли доступные категории
+  if (currentAvailable.length === 0) {
+    console.error('❌ Нет доступных весовых категорий!');
+    return;
+  }
+  
+  // Выбираем случайную весовую категорию из текущего списка
+  const randomIndex = Math.floor(Math.random() * currentAvailable.length);
+  const selectedWeightClass = currentAvailable[randomIndex];
+  
+  console.log(`🎲 Раунд ${round}: выбрана категория ${selectedWeightClass}`);
   
   // Добавляем в использованные и удаляем из доступных
   setUsedWeightClasses(prev => [...prev, selectedWeightClass]);
@@ -167,6 +176,8 @@ const processRound = (round: number) => {
     sel => sel.weightClass === selectedWeightClass
   );
   
+  console.log(`👥 Найдено бойцов у игрока: ${userFightersWithWeight.length}, у противника: ${rivalFightersWithWeight.length}`);
+  
   // Сохраняем текущие карты до обновления
   const currentUserCards = [...userActiveCards];
   const currentRivalCards = [...rivalActiveCards];
@@ -177,6 +188,8 @@ const processRound = (round: number) => {
   
   const rivalSlots = 5 - currentRivalCards.length;
   const rivalCardsToAdd = rivalFightersWithWeight.slice(0, rivalSlots);
+  
+  console.log(`📊 Добавляется карт игроку: ${userCardsToAdd.length}, противнику: ${rivalCardsToAdd.length}`);
   
   // Обновляем карты
   setUserActiveCards(prev => [...prev, ...userCardsToAdd]);
