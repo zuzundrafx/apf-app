@@ -1728,8 +1728,8 @@ body {
   height: 12%;
   /*min-height: 60px;*/
   background: #1C1D1F;;
-  border-top: 1px solid #4A4A48;
-  border-bottom: 1px solid #4A4A48;
+  /*border-top: 1px solid #4A4A48;*/
+ /* border-bottom: 1px solid #4A4A48;*/
   padding-left: 1%;
   padding-right: 1%;
 }
