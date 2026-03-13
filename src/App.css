@@ -1785,6 +1785,10 @@ body {
   transform: rotateY(180deg);
 }
 
+.arena-round-card-back .arena-round-weight {
+  transform: rotateY(180deg); /* Поворачиваем текст обратно */
+}
+
 .arena-round-card-front .arena-round-number {
   background: rgba(0, 0, 0, 0.5);
   border-radius: 4px;
