@@ -1991,3 +1991,16 @@ body {
   background: #2A2A2A;
   border: 1px dashed #4A4A48;
 }
+
+.pvp-lock-icon {
+  margin-left: 4px;
+  font-size: 0.9em;
+  opacity: 0.7;
+}
+
+.pvp-card-engage.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #666D74; /* Цвет как у кнопки SURRENDER */
+  pointer-events: none;
+}

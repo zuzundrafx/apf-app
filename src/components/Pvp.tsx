@@ -11,7 +11,7 @@ interface PvpProps {
   userSelections: SelectedFighter[];
   userAvatar?: string;
   userId?: string;
-  userName: string; // Добавляем имя пользователя
+  userName: string;
   allProfiles: Map<string, UserProfile>;
   loadTournamentData: (tournamentName: string) => Promise<{
     weightClasses: string[];
@@ -39,6 +39,17 @@ const Pvp: React.FC<PvpProps> = ({
       selections: SelectedFighter[];
     };
   } | null>(null);
+  
+  // Состояние для блокировки кнопки во время загрузки
+  const [isEngaging, setIsEngaging] = useState(false);
+
+  // Функция для проверки наличия ставки у игрока в конкретном турнире
+  const hasUserBetOnTournament = (tournament: Tournament): boolean => {
+    // Проверяем, есть ли у игрока выбранные бойцы в этом турнире
+    return userSelections.some(sel => 
+      tournament.data?.some(f => f.Fighter === sel.fighter.Fighter)
+    );
+  };
 
   // Функция для получения урона игрока в конкретном турнире
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
@@ -57,7 +68,10 @@ const Pvp: React.FC<PvpProps> = ({
 
   // Обработчик нажатия на ENGAGE
   const handleEngage = async (tournament: Tournament) => {
-    if (!userId) return;
+    if (!userId || isEngaging) return;
+    
+    // Блокируем кнопку
+    setIsEngaging(true);
     
     try {
       // Загружаем данные турнира
@@ -70,6 +84,7 @@ const Pvp: React.FC<PvpProps> = ({
       
       if (rivals.length === 0) {
         alert('No rivals available for this tournament');
+        setIsEngaging(false);
         return;
       }
       
@@ -90,9 +105,13 @@ const Pvp: React.FC<PvpProps> = ({
         }
       });
       
+      // Разблокируем кнопку после открытия арены
+      setIsEngaging(false);
+      
     } catch (error) {
       console.error('Ошибка при поиске соперника:', error);
       alert('Error finding rival');
+      setIsEngaging(false);
     }
   };
 
@@ -117,6 +136,8 @@ const Pvp: React.FC<PvpProps> = ({
       <div className={`pvp-list ${arenaData ? 'blurred' : ''}`}>
         {pastTournaments.slice(0, 3).map((tournament) => {
           const userDamage = getUserDamageForTournament(tournament);
+          const hasBet = hasUserBetOnTournament(tournament);
+          const isDisabled = !!arenaData || !hasBet || isEngaging;
           
           return (
             <div key={tournament.id} className="pvp-tournament-card">
@@ -175,11 +196,11 @@ const Pvp: React.FC<PvpProps> = ({
                   Entry pass: <span className="pvp-cost-icon">🪙</span>50
                 </div>
                 <button 
-                  className="pvp-card-engage"
+                  className={`pvp-card-engage ${!hasBet ? 'disabled' : ''}`}
                   onClick={() => handleEngage(tournament)}
-                  disabled={!!arenaData} // Блокируем кнопки если арена открыта
+                  disabled={isDisabled}
                 >
-                  ENGAGE
+                  ENGAGE {!hasBet && <span className="pvp-lock-icon">🔒</span>}
                 </button>
               </div>
             </div>
