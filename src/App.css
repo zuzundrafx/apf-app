@@ -1736,23 +1736,47 @@ body {
   padding-right: 1%;
 }
 
-/* Анимация переворота карты - ОБНОВЛЯЕМ существующий .arena-round-card */
+/* Анимация переворота карты */
 .arena-round-card {
   display: flex;
   align-items: center;
   justify-content: center;
   background: #494948;
   cursor: pointer;
-  transition: background 0.2s ease;
   position: relative;
   overflow: hidden;
   height: 100%;
   min-width: 0;
   width: 100%;
-  
-  /* Добавляем свойства для 3D */
-  transform-style: preserve-3d;
+}
+
+/* Контейнер для двух сторон */
+.arena-round-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
   transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.arena-round-card.flipped .arena-round-card-inner {
+  transform: rotateY(180deg);
+}
+
+.arena-round-card-front {
+  background: #2A2A2A;
+  background-image: repeating-linear-gradient(45deg, #3D3D3B 0px, #3D3D3B 10px, #2A2A2A 10px, #2A2A2A 20px);
+}
+
+.arena-round-card-back {
+  transform: rotateY(180deg);
+}
+
+.arena-round-card-front .arena-round-number {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  padding: 4px 8px;
 }
 
 .arena-round-card.flipped {
@@ -1782,11 +1806,7 @@ body {
   transform: rotateY(180deg);
 }
 
-.arena-round-card .card-back .arena-round-number {
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 4px;
-  padding: 4px 8px;
-}
+
 
 .arena-round-card:hover {
   opacity: 0.9;

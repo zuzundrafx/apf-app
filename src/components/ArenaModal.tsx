@@ -513,31 +513,33 @@ useEffect(() => {
         key={roundIndex} 
         className={`arena-round-card ${isFlipped ? 'flipped' : ''}`}
       >
-        {/* Лицевая сторона (рубашка) - видна изначально */}
-        <div className="card-front">
-          <div className="arena-round-number">
-            <div className="arena-round-digit">{roundNumber}</div>
-            <div className="arena-round-text">ROUND</div>
+        <div className="arena-round-card-inner">
+          {/* Лицевая сторона (рубашка) */}
+          <div className="arena-round-card-front">
+            <div className="arena-round-number">
+              <div className="arena-round-digit">{roundNumber}</div>
+              <div className="arena-round-text">ROUND</div>
+            </div>
           </div>
-        </div>
-        
-        {/* Задняя сторона (цвет категории) - видна после переворота */}
-        <div 
-          className="card-back"
-          style={weightClass ? { 
-            backgroundColor: getWeightClassColor(weightClass) 
-          } : {}}
-        >
-          {weightClass && (
-            <div className="arena-round-weight">{weightClass}</div>
-          )}
+          
+          {/* Задняя сторона (цвет категории) */}
+          <div 
+            className="arena-round-card-back"
+            style={weightClass ? { 
+              backgroundColor: getWeightClassColor(weightClass) 
+            } : {}}
+          >
+            {weightClass && (
+              <div className="arena-round-weight">{weightClass}</div>
+            )}
+          </div>
         </div>
       </div>
     );
   })}
 </div>
 
-            {/* Нижний контейнер - игрок */}
+
             {/* Нижний контейнер - игрок */}
 <div className="arena-bottom">
   {/* 1. Текущий урон игрока (8%) */}
