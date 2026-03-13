@@ -300,30 +300,71 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   }, [currentEventIndex, isLoading, battleScript]);
 
   // Инициализация при открытии
-  useEffect(() => {
-    if (isOpen) {
-      console.log('🎮 Арена открыта, рассчитываем сценарий боя...');
-      
-      setIsLoading(true);
-      setCurrentEventIndex(0);
-      setUsedWeightClasses([]);
-      setUserHealth(1000);
-      setRivalHealth(1000);
-      setUserActiveCards([]);
-      setRivalActiveCards([]);
-      setBattleResult(null);
-      
-      // Рассчитываем весь сценарий заранее
-      const script = calculateBattleScript();
-      console.log('📜 Сценарий боя:', script);
-      setBattleScript(script);
-      
+useEffect(() => {
+  if (isOpen) {
+    console.log('🎮 Арена открыта, рассчитываем сценарий боя...');
+    
+    setIsLoading(true);
+    setCurrentEventIndex(0);
+    setUsedWeightClasses([]);
+    setUserHealth(1000);
+    setRivalHealth(1000);
+    setUserActiveCards([]);
+    setRivalActiveCards([]);
+    setBattleResult(null);
+    
+    // Рассчитываем весь сценарий заранее
+    const script = calculateBattleScript();
+    console.log('📜 Сценарий боя:', script);
+    setBattleScript(script);
+    
+    // ПРЕДЗАГРУЗКА: собираем все карты, которые появятся в бою
+    const allCardsThatWillAppear = new Set<string>();
+    
+    // Проходим по всем событиям сценария
+    script.forEach(event => {
+      if (event.type === 'card-appear') {
+        // Добавляем аватарки бойцов, которые появятся
+        event.userActiveCards?.forEach(card => {
+          allCardsThatWillAppear.add(
+            `${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`
+          );
+        });
+        event.rivalActiveCards?.forEach(card => {
+          allCardsThatWillAppear.add(
+            `${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`
+          );
+        });
+      }
+    });
+    
+    console.log('🖼️ Предзагружаем карточки:', Array.from(allCardsThatWillAppear));
+    
+    // Загружаем все изображения параллельно
+    const imagePromises = Array.from(allCardsThatWillAppear).map(src => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = src;
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+    });
+    
+    // Ждем загрузки всех изображений (но не больше 3 секунд)
+    Promise.allSettled(imagePromises).then(() => {
+      console.log('✅ Все карточки загружены');
       setTimeout(() => {
         console.log('✅ Загрузка завершена, запускаем бой');
         setIsLoading(false);
-      }, 1000);
-    }
-  }, [isOpen]);
+      }, 500); // Небольшая задержка для плавности
+    });
+    
+    // Таймаут на случай очень медленной загрузки
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+  }
+}, [isOpen]);
 
   // Обработчик закрытия результата
   const handleResultClose = () => {
