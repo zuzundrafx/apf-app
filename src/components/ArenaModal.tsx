@@ -468,66 +468,66 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             </div>
 
             {/* Нижний контейнер - игрок */}
-            <div className="arena-bottom">
-              <div className="arena-player-damage">
-                <div className="arena-damage-box">
-                  CURRENT DAMAGE: {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-                </div>
-              </div>
+            {/* Нижний контейнер - игрок */}
+<div className="arena-bottom">
+  {/* 1. Текущий урон игрока (8%) */}
+  <div className="arena-player-damage">
+    <div className="arena-damage-box">
+      CURRENT DAMAGE: {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+    </div>
+  </div>
 
-              <div className="arena-player-fighters">
-                {Array(5).fill(null).map((_, index) => {
-                  const card = userActiveCards[index];
-                  return card ? (
-                    <div 
-                      key={index} 
-                      className="arena-fighter-card"
-                      style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-                    >
-                      <div className="arena-fighter-damage">
-                        {Math.round(card.fighter['Total Damage'])}
-                      </div>
-                      <div className="arena-fighter-avatar">
-                        <img 
-                          src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
-                          alt={card.fighter.Fighter}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                            const parent = (e.target as HTMLImageElement).parentElement;
-                            if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
-                          }}
-                        />
-                      </div>
-                      <div className="arena-fighter-name">{card.fighter.Fighter}</div>
-                    </div>
-                  ) : (
-                    <div key={index} className="arena-fighter-card empty" />
-                  );
-                })}
-              </div>
+  {/* 2. Карточки бойцов игрока (53%) - ТОЖЕ ДИНАМИЧЕСКИЕ */}
+  <div className="arena-player-fighters">
+    {userActiveCards.map((card, index) => (
+      <div 
+        key={index} 
+        className="arena-fighter-card"
+        style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
+      >
+        <div className="arena-fighter-damage">
+          {Math.round(card.fighter['Total Damage'])}
+        </div>
+        <div className="arena-fighter-avatar">
+          <img 
+            src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
+            alt={card.fighter.Fighter}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              const parent = (e.target as HTMLImageElement).parentElement;
+              if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
+            }}
+          />
+        </div>
+        <div className="arena-fighter-name">{card.fighter.Fighter}</div>
+      </div>
+    ))}
+  </div>
 
-              <div className="arena-player-health">
-                <div className="arena-health-bar">
-                  <div 
-                    className="arena-health-fill" 
-                    style={{ width: `${(userHealth / 1000) * 100}%` }}
-                  ></div>
-                  <span className="arena-health-text">{userName} Health: {userHealth}</span>
-                </div>
-              </div>
+  {/* 3. Шкала здоровья игрока (8%) */}
+  <div className="arena-player-health">
+    <div className="arena-health-bar">
+      <div 
+        className="arena-health-fill" 
+        style={{ width: `${(userHealth / 1000) * 100}%` }}
+      ></div>
+      <span className="arena-health-text">{userName} Health: {userHealth}</span>
+    </div>
+  </div>
 
-              <div className="arena-player-avatar-container">
-                <div className="arena-player-avatar">
-                  <img 
-                    src={userAvatar || `${BASE_URL}/Home_button.png`}
-                    alt="player"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
+  {/* 4. Аватарка игрока (31%) */}
+  <div className="arena-player-avatar-container">
+    <div className="arena-player-avatar">
+      <img 
+        src={userAvatar || `${BASE_URL}/Home_button.png`}
+        alt="player"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
+        }}
+      />
+    </div>
+  </div>
+</div>
           </>
         )}
       </div>
