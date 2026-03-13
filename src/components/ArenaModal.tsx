@@ -297,12 +297,12 @@ const playNextEvent = () => {
     case 'damage':
       setRivalHealth(event.rivalHealthAfter!);
       setUserHealth(event.userHealthAfter!);
-      setTimeout(() => setCurrentEventIndex(prev => prev + 1), 2000);
+      setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1500);
       break;
 
     case 'round-end':
       setCurrentRound(prev => prev + 1);
-      setTimeout(() => setCurrentEventIndex(prev => prev + 1), 2000);
+      setTimeout(() => setCurrentEventIndex(prev => prev + 1), 500);
       break;
 
     case 'battle-end':
