@@ -101,6 +101,9 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   } | null>(null);
   const [countdownStep, setCountdownStep] = useState<'ready' | 'steady' | 'fight' | null>('ready');
 
+  // Добавить новое состояние
+const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false, false, false]);
+
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
   // Функция для расчета всего сценария боя
@@ -243,54 +246,70 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   };
 
   // Функция для выполнения следующего события
-  const playNextEvent = () => {
-    if (currentEventIndex >= battleScript.length) return;
+const playNextEvent = () => {
+  if (currentEventIndex >= battleScript.length) return;
 
-    const event = battleScript[currentEventIndex];
-    console.log('🎬 Событие:', event);
+  const event = battleScript[currentEventIndex];
+  console.log('🎬 Событие:', event);
 
-    switch (event.type) {
-      case 'countdown':
-        setCountdownStep('ready');
-        setTimeout(() => setCountdownStep('steady'), 1000);
-        setTimeout(() => setCountdownStep('fight'), 2000);
-        setTimeout(() => {
-          setCountdownStep(null);
-          setCurrentEventIndex(prev => prev + 1);
-        }, 3000);
-        break;
+  switch (event.type) {
+    case 'countdown':
+      setCountdownStep('ready');
+      setTimeout(() => setCountdownStep('steady'), 1000);
+      setTimeout(() => setCountdownStep('fight'), 2000);
+      setTimeout(() => {
+        setCountdownStep(null);
+        setCurrentEventIndex(prev => prev + 1);
+      }, 3000);
+      break;
 
-      case 'round-start':
-        setShowRoundText(true);
-        setTimeout(() => {
-          setShowRoundText(false);
-          setCurrentEventIndex(prev => prev + 1);
-        }, 1000);
-        break;
+    case 'round-start':
+      setShowRoundText(true);
+      setTimeout(() => {
+        setShowRoundText(false);
+        setCurrentEventIndex(prev => prev + 1);
+      }, 1000);
+      break;
 
-      case 'card-appear':
-        setUsedWeightClasses(prev => [...prev, event.weightClass!]);
+    case 'card-appear':
+      // Добавляем весовую категорию в использованные
+      setUsedWeightClasses(prev => [...prev, event.weightClass!]);
+      
+      // Запускаем анимацию переворота для карты этого раунда
+      const cardIndex = event.round! - 1;
+      setFlippedCards(prev => {
+        const newFlipped = [...prev];
+        newFlipped[cardIndex] = true;
+        return newFlipped;
+      });
+      
+      // Через 300мс показываем лицевую сторону карты и бойцов
+      setTimeout(() => {
+        // Обновляем карты бойцов
         setUserActiveCards(event.userActiveCards || []);
         setRivalActiveCards(event.rivalActiveCards || []);
-        setTimeout(() => setCurrentEventIndex(prev => prev + 1), 2000);
-        break;
+        
+        // Переходим к следующему событию через оставшееся время
+        setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1700);
+      }, 300);
+      break;
 
-      case 'damage':
-        setRivalHealth(event.rivalHealthAfter!);
-        setUserHealth(event.userHealthAfter!);
-        setTimeout(() => setCurrentEventIndex(prev => prev + 1), 2000);
-        break;
+    case 'damage':
+      setRivalHealth(event.rivalHealthAfter!);
+      setUserHealth(event.userHealthAfter!);
+      setTimeout(() => setCurrentEventIndex(prev => prev + 1), 2000);
+      break;
 
-      case 'round-end':
-        setCurrentRound(prev => prev + 1);
-        setTimeout(() => setCurrentEventIndex(prev => prev + 1), 2000);
-        break;
+    case 'round-end':
+      setCurrentRound(prev => prev + 1);
+      setTimeout(() => setCurrentEventIndex(prev => prev + 1), 2000);
+      break;
 
-      case 'battle-end':
-        setBattleResult(event.result);
-        break;
-    }
-  };
+    case 'battle-end':
+      setBattleResult(event.result);
+      break;
+  }
+};
 
   // Эффект для выполнения событий по порядку
   useEffect(() => {
@@ -307,6 +326,7 @@ useEffect(() => {
     setIsLoading(true);
     setCurrentEventIndex(0);
     setUsedWeightClasses([]);
+    setFlippedCards([false, false, false, false, false]); // ← добавить
     setUserHealth(1000);
     setRivalHealth(1000);
     setUserActiveCards([]);
@@ -480,33 +500,42 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Средний контейнер - раунды */}
-            <div className="arena-middle">
-              {[0, 1, 2, 3, 4].map((roundIndex) => {
-                const roundNumber = roundIndex + 1;
-                const isUsed = roundNumber <= usedWeightClasses.length;
-                const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
-                
-                return (
-                  <div 
-                    key={roundIndex} 
-                    className="arena-round-card"
-                    style={weightClass ? { 
-                      backgroundColor: getWeightClassColor(weightClass) 
-                    } : {}}
-                  >
-                    {weightClass ? (
-                      <div className="arena-round-weight">{weightClass}</div>
-                    ) : (
-                      <div className="arena-round-number">
-                        <div className="arena-round-digit">{roundNumber}</div>
-                        <div className="arena-round-text">ROUND</div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            {/* Средний контейнер (12%) - раунды */}
+<div className="arena-middle">
+  {[0, 1, 2, 3, 4].map((roundIndex) => {
+    const roundNumber = roundIndex + 1;
+    const isUsed = roundNumber <= usedWeightClasses.length;
+    const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
+    const isFlipped = flippedCards[roundIndex];
+    
+    return (
+      <div 
+        key={roundIndex} 
+        className={`arena-round-card ${isFlipped ? 'flipped' : ''} ${weightClass ? 'revealed' : ''}`}
+      >
+        {/* Задняя сторона (рубашка) */}
+        <div className="card-back">
+          <div className="arena-round-number">
+            <div className="arena-round-digit">{roundNumber}</div>
+            <div className="arena-round-text">ROUND</div>
+          </div>
+        </div>
+        
+        {/* Передняя сторона (лицевая) */}
+        <div 
+          className="card-front"
+          style={weightClass ? { 
+            backgroundColor: getWeightClassColor(weightClass) 
+          } : {}}
+        >
+          {weightClass && (
+            <div className="arena-round-weight">{weightClass}</div>
+          )}
+        </div>
+      </div>
+    );
+  })}
+</div>
 
             {/* Нижний контейнер - игрок */}
             {/* Нижний контейнер - игрок */}

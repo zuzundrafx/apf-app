@@ -1729,14 +1729,14 @@ body {
   grid-template-columns: repeat(5, 1fr);
   gap: 1px;
   height: 12%;
-  /*min-height: 60px;*/
-  background: #1C1D1F;;
-  /*border-top: 1px solid #4A4A48;*/
- /* border-bottom: 1px solid #4A4A48;*/
+  background: #1C1D1F;
+  border-top: 1px solid #4A4A48;
+  border-bottom: 1px solid #4A4A48;
   padding-left: 1%;
   padding-right: 1%;
 }
 
+/* Анимация переворота карты - ОБНОВЛЯЕМ существующий .arena-round-card */
 .arena-round-card {
   display: flex;
   align-items: center;
@@ -1747,9 +1747,43 @@ body {
   position: relative;
   overflow: hidden;
   height: 100%;
-  min-width: 0; /* ← ЭТО ВАЖНО! */
-  min-width: 0; /* Позволяет ячейке сжиматься */
-  width: 100%; /* Явно указываем ширину */
+  min-width: 0;
+  width: 100%;
+  
+  /* Добавляем свойства для 3D */
+  transform-style: preserve-3d;
+  transition: transform 0.6s;
+}
+
+.arena-round-card.flipped {
+  transform: rotateY(180deg);
+}
+
+.arena-round-card .card-front,
+.arena-round-card .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arena-round-card .card-back {
+  background: #2A2A2A;
+  background-image: repeating-linear-gradient(45deg, #3D3D3B 0px, #3D3D3B 10px, #2A2A2A 10px, #2A2A2A 20px);
+  transform: rotateY(0deg);
+}
+
+.arena-round-card .card-front {
+  transform: rotateY(180deg);
+}
+
+.arena-round-card .card-back .arena-round-number {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  padding: 4px 8px;
 }
 
 .arena-round-card:hover {
