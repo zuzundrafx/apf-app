@@ -511,19 +511,19 @@ useEffect(() => {
     return (
       <div 
         key={roundIndex} 
-        className={`arena-round-card ${isFlipped ? 'flipped' : ''} ${weightClass ? 'revealed' : ''}`}
+        className={`arena-round-card ${isFlipped ? 'flipped' : ''}`}
       >
-        {/* Задняя сторона (рубашка) */}
-        <div className="card-back">
+        {/* Лицевая сторона (рубашка) - видна изначально */}
+        <div className="card-front">
           <div className="arena-round-number">
             <div className="arena-round-digit">{roundNumber}</div>
             <div className="arena-round-text">ROUND</div>
           </div>
         </div>
         
-        {/* Передняя сторона (лицевая) */}
+        {/* Задняя сторона (цвет категории) - видна после переворота */}
         <div 
-          className="card-front"
+          className="card-back"
           style={weightClass ? { 
             backgroundColor: getWeightClassColor(weightClass) 
           } : {}}

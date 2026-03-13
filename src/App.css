@@ -1770,13 +1770,15 @@ body {
   justify-content: center;
 }
 
-.arena-round-card .card-back {
+/* Лицевая сторона (то, что видно изначально) - рубашка с номером */
+.arena-round-card .card-front {
   background: #2A2A2A;
   background-image: repeating-linear-gradient(45deg, #3D3D3B 0px, #3D3D3B 10px, #2A2A2A 10px, #2A2A2A 20px);
   transform: rotateY(0deg);
 }
 
-.arena-round-card .card-front {
+/* Задняя сторона (то, что видно после переворота) - цвет весовой категории */
+.arena-round-card .card-back {
   transform: rotateY(180deg);
 }
 
