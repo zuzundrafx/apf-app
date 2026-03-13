@@ -514,7 +514,7 @@ useEffect(() => {
         className={`arena-round-card ${isFlipped ? 'flipped' : ''}`}
       >
         <div className="arena-round-card-inner">
-          {/* Лицевая сторона (рубашка) */}
+          {/* Лицевая сторона - исходный вид */}
           <div className="arena-round-card-front">
             <div className="arena-round-number">
               <div className="arena-round-digit">{roundNumber}</div>
@@ -522,7 +522,7 @@ useEffect(() => {
             </div>
           </div>
           
-          {/* Задняя сторона (цвет категории) */}
+          {/* Задняя сторона - цвет весовой категории */}
           <div 
             className="arena-round-card-back"
             style={weightClass ? { 
