@@ -406,36 +406,31 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 </div>
               </div>
 
-              <div className="arena-rival-fighters">
-                {Array(5).fill(null).map((_, index) => {
-                  const card = rivalActiveCards[index];
-                  return card ? (
-                    <div 
-                      key={index} 
-                      className="arena-fighter-card"
-                      style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-                    >
-                      <div className="arena-fighter-damage">
-                        {Math.round(card.fighter['Total Damage'])}
-                      </div>
-                      <div className="arena-fighter-avatar">
-                        <img 
-                          src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
-                          alt={card.fighter.Fighter}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                            const parent = (e.target as HTMLImageElement).parentElement;
-                            if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
-                          }}
-                        />
-                      </div>
-                      <div className="arena-fighter-name">{card.fighter.Fighter}</div>
-                    </div>
-                  ) : (
-                    <div key={index} className="arena-fighter-card empty" />
-                  );
-                })}
-              </div>
+               <div className="arena-rival-fighters">
+    {rivalActiveCards.map((card, index) => (
+      <div 
+        key={index} 
+        className="arena-fighter-card"
+        style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
+      >
+        <div className="arena-fighter-damage">
+          {Math.round(card.fighter['Total Damage'])}
+        </div>
+        <div className="arena-fighter-avatar">
+          <img 
+            src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
+            alt={card.fighter.Fighter}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              const parent = (e.target as HTMLImageElement).parentElement;
+              if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
+            }}
+          />
+        </div>
+        <div className="arena-fighter-name">{card.fighter.Fighter}</div>
+      </div>
+    ))}
+  </div>
 
               <div className="arena-rival-damage">
                 <div className="arena-damage-box">
