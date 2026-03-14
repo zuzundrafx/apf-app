@@ -1227,7 +1227,7 @@ body {
   background: #313130;
   overflow: hidden;
   flex-shrink: 0;
-  border-radius: 3%;
+  border-radius: 1.5vw;
 }
 
 /* ВЕРХНЯЯ ЧАСТЬ (15%) */
