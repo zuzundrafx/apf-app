@@ -184,13 +184,13 @@ const Pvp: React.FC<PvpProps> = ({
 
                 <div className="pvp-bottom-right">
                   <button 
-                    className={`pvp-engage-button ${isDisabled ? 'disabled' : ''}`}
-                    onClick={() => handleEngage(tournament)}
-                    disabled={isDisabled}
-                  >
-                    ENTRY PASS: 50 <span className="pvp-cost-icon">🪙</span>
-                    {!hasBet && <span className="pvp-lock-icon">🔒</span>}
-                  </button>
+  className={`pvp-engage-button ${isEngaging ? 'loading' : ''} ${isDisabled ? 'disabled' : ''}`}
+  onClick={() => handleEngage(tournament)}
+  disabled={isDisabled}
+>
+  {isEngaging ? 'SEARCHING...' : `ENTRY PASS: 50 🪙`}
+  {!hasBet && <span className="pvp-lock-icon">🔒</span>}
+</button>
                 </div>
               </div>
             </div>
