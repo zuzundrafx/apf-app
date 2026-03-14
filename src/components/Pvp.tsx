@@ -28,7 +28,6 @@ const Pvp: React.FC<PvpProps> = ({
   allProfiles,
   loadTournamentData,
 }) => {
-  // Состояния для модального окна арены
   const [arenaData, setArenaData] = useState<{
     tournament: Tournament;
     weightClasses: string[];
@@ -40,18 +39,14 @@ const Pvp: React.FC<PvpProps> = ({
     };
   } | null>(null);
   
-  // Состояние для блокировки кнопки во время загрузки
   const [isEngaging, setIsEngaging] = useState(false);
 
-  // Функция для проверки наличия ставки у игрока в конкретном турнире
   const hasUserBetOnTournament = (tournament: Tournament): boolean => {
-    // Проверяем, есть ли у игрока выбранные бойцы в этом турнире
     return userSelections.some(sel => 
       tournament.data?.some(f => f.Fighter === sel.fighter.Fighter)
     );
   };
 
-  // Функция для получения урона игрока в конкретном турнире
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
     const tournamentSelections = userSelections.filter(sel => 
       tournament.data?.some(f => f.Fighter === sel.fighter.Fighter)
@@ -66,9 +61,8 @@ const Pvp: React.FC<PvpProps> = ({
     return Math.round(totalDamage);
   };
 
-  // Обработчик нажатия на ENGAGE
   const handleEngage = async (tournament: Tournament) => {
-    if (!userId || isEngaging) return;
+    if (!userId || isEngaging || arenaData) return; // Добавили проверку на arenaData
     
     setIsEngaging(true);
     
@@ -89,6 +83,7 @@ const Pvp: React.FC<PvpProps> = ({
       const selectedRival = rivals[randomIndex];
       const rivalProfile = allProfiles.get(selectedRival.userId);
       
+      // Открываем арену
       setArenaData({
         tournament,
         weightClasses: tournamentData.weightClasses,
@@ -100,17 +95,18 @@ const Pvp: React.FC<PvpProps> = ({
         }
       });
       
-      setIsEngaging(false);
+      // НЕ сбрасываем isEngaging здесь! Он сбросится когда арена закроется
       
     } catch (error) {
       console.error('Ошибка при поиске соперника:', error);
       alert('Error finding rival');
-      setIsEngaging(false);
+      setIsEngaging(false); // Сбрасываем только при ошибке
     }
   };
 
   const handleSurrender = () => {
     setArenaData(null);
+    setIsEngaging(false); // Разблокируем кнопки при закрытии арены
   };
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
@@ -127,11 +123,12 @@ const Pvp: React.FC<PvpProps> = ({
         {pastTournaments.slice(0, 3).map((tournament) => {
           const userDamage = getUserDamageForTournament(tournament);
           const hasBet = hasUserBetOnTournament(tournament);
-          const isDisabled = !!arenaData || !hasBet || isEngaging;
+          // Кнопка неактивна если: арена открыта ИЛИ идет загрузка ИЛИ нет ставки
+          const isDisabled = !!arenaData || isEngaging || !hasBet;
           
           return (
             <div key={tournament.id} className="pvp-tournament-card">
-              {/* Верхняя часть (15%) - лига и название */}
+              {/* Верхняя часть */}
               <div className="pvp-card-top">
                 <div className="pvp-card-league" style={{ backgroundColor: '#B20101' }}>
                   <span>{tournament.league || 'UFC'}</span>
@@ -141,9 +138,8 @@ const Pvp: React.FC<PvpProps> = ({
                 </div>
               </div>
 
-              {/* Средняя часть (60%) - аватарки и VS */}
+              {/* Средняя часть */}
               <div className="pvp-card-middle">
-                {/* Левая часть (43%) - только аватарка игрока */}
                 <div className="pvp-middle-left">
                   <div className="pvp-player-avatar">
                     <img 
@@ -156,7 +152,6 @@ const Pvp: React.FC<PvpProps> = ({
                   </div>
                 </div>
 
-                {/* Центральная часть (14%) - VS логотип */}
                 <div className="pvp-middle-center">
                   <img 
                     src={`${BASE_URL}/VS_logo.webp`} 
@@ -165,7 +160,6 @@ const Pvp: React.FC<PvpProps> = ({
                   />
                 </div>
 
-                {/* Правая часть (43%) - только аватарка противника */}
                 <div className="pvp-middle-right">
                   <div className="pvp-rival-avatar">
                     <img src={`${BASE_URL}/default-avatar.png`} alt="rival" />
@@ -173,9 +167,8 @@ const Pvp: React.FC<PvpProps> = ({
                 </div>
               </div>
 
-              {/* Нижняя часть (25%) - урон и кнопка */}
+              {/* Нижняя часть */}
               <div className="pvp-card-bottom">
-                {/* Левая часть - урон */}
                 <div className="pvp-bottom-left">
                   <div className={`pvp-damage-block ${!hasBet ? 'disabled' : ''}`}>
                     {userDamage !== null ? (
@@ -189,10 +182,9 @@ const Pvp: React.FC<PvpProps> = ({
                   </div>
                 </div>
 
-                {/* Правая часть - кнопка */}
                 <div className="pvp-bottom-right">
                   <button 
-                    className={`pvp-engage-button ${!hasBet ? 'disabled' : ''}`}
+                    className={`pvp-engage-button ${isDisabled ? 'disabled' : ''}`}
                     onClick={() => handleEngage(tournament)}
                     disabled={isDisabled}
                   >
