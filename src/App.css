@@ -1233,7 +1233,7 @@ body {
 .pvp-card-top {
   display: flex;
   width: 100%;
-  background: #666D74;
+  background: #484d52;
   min-height: 0;
 }
 
@@ -1367,7 +1367,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to top left, transparent 48%, #666D74 48%, #666D74 52%, transparent 52%);
+  background: linear-gradient(to top left, transparent 48%, #484d52 48%, #484d52 52%, transparent 52%);
   pointer-events: none;
    z-index: 0; /* Линия на заднем плане */
 }
@@ -1438,7 +1438,7 @@ body {
 .pvp-card-bottom {
   display: flex;
   width: 100%;
-  background: #666D74;
+  background: #484d52;
   border-top: 1px solid #4A4A48;
   min-height: 0;
 }
