@@ -178,8 +178,12 @@ const Pvp: React.FC<PvpProps> = ({
 
                 {/* Центральная часть (10%) - VS */}
                 <div className="pvp-middle-center">
-                  <span className="pvp-vs-text">VS</span>
-                </div>
+  <img 
+    src={`${BASE_URL}/VS_logo.webp`} 
+    alt="VS" 
+    className="pvp-vs-logo"
+  />
+</div>
 
                 {/* Правая часть (45%) - "Next RIVAL" */}
                 <div className="pvp-middle-right">

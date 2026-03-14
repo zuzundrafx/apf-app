@@ -1349,6 +1349,16 @@ body {
   overflow: hidden;
 }
 
+.pvp-vs-logo {
+  width: 80%; /* Относительно родительского контейнера */
+  height: auto;
+  aspect-ratio: 1 / 1; /* Квадратные пропорции */
+  object-fit: contain;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
 /* Создаём линию через псевдоэлемент */
 .pvp-middle-center::before {
   content: '';
@@ -1359,6 +1369,7 @@ body {
   height: 100%;
   background: linear-gradient(to top left, transparent 48%, #666D74 48%, #666D74 52%, transparent 52%);
   pointer-events: none;
+   z-index: 0; /* Линия на заднем плане */
 }
 
 .pvp-vs-text {
