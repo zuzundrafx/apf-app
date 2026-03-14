@@ -70,14 +70,11 @@ const Pvp: React.FC<PvpProps> = ({
   const handleEngage = async (tournament: Tournament) => {
     if (!userId || isEngaging) return;
     
-    // Блокируем кнопку
     setIsEngaging(true);
     
     try {
-      // Загружаем данные турнира
       const tournamentData = await loadTournamentData(tournament.name);
       
-      // Ищем соперников (исключая себя)
       const rivals = tournamentData.results.filter(r => r.userId !== userId);
       
       console.log(`🔍 Найдено соперников: ${rivals.length}`);
@@ -88,12 +85,10 @@ const Pvp: React.FC<PvpProps> = ({
         return;
       }
       
-      // Случайный выбор соперника
       const randomIndex = Math.floor(Math.random() * rivals.length);
       const selectedRival = rivals[randomIndex];
       const rivalProfile = allProfiles.get(selectedRival.userId);
       
-      // Открываем арену
       setArenaData({
         tournament,
         weightClasses: tournamentData.weightClasses,
@@ -105,7 +100,6 @@ const Pvp: React.FC<PvpProps> = ({
         }
       });
       
-      // Разблокируем кнопку после открытия арены
       setIsEngaging(false);
       
     } catch (error) {
@@ -115,7 +109,6 @@ const Pvp: React.FC<PvpProps> = ({
     }
   };
 
-  // Обработчик закрытия арены
   const handleSurrender = () => {
     setArenaData(null);
   };
@@ -124,15 +117,12 @@ const Pvp: React.FC<PvpProps> = ({
 
   return (
     <div className="pvp-screen">
-      {/* Затемнение фона когда арена открыта */}
       {arenaData && <div className="pvp-overlay" />}
       
-      {/* Заголовок Active Tournaments */}
       <div className="pvp-header">
         <div className="pvp-header-title">ACTIVE TOURNAMENTS</div>
       </div>
 
-      {/* Список турниров */}
       <div className={`pvp-list ${arenaData ? 'blurred' : ''}`}>
         {pastTournaments.slice(0, 3).map((tournament) => {
           const userDamage = getUserDamageForTournament(tournament);
@@ -153,7 +143,7 @@ const Pvp: React.FC<PvpProps> = ({
 
               {/* Средняя часть (60%) - аватарки и VS */}
               <div className="pvp-card-middle">
-                {/* Левая часть (45%) - аватарка игрока и его урон */}
+                {/* Левая часть (43%) - только аватарка игрока */}
                 <div className="pvp-middle-left">
                   <div className="pvp-player-avatar">
                     <img 
@@ -164,55 +154,58 @@ const Pvp: React.FC<PvpProps> = ({
                       }}
                     />
                   </div>
-                  <div className="pvp-player-damage">
-                    {userDamage !== null ? (
-                      <>
-                        <div className="pvp-damage-label">Dmg:</div>
-                        <div className="pvp-damage-value">{userDamage}</div>
-                      </>
-                    ) : (
-                      <div className="pvp-damage-na">not available</div>
-                    )}
-                  </div>
                 </div>
 
-                {/* Центральная часть (10%) - VS */}
+                {/* Центральная часть (14%) - VS логотип */}
                 <div className="pvp-middle-center">
-  <img 
-    src={`${BASE_URL}/VS_logo.webp`} 
-    alt="VS" 
-    className="pvp-vs-logo"
-  />
-</div>
+                  <img 
+                    src={`${BASE_URL}/VS_logo.webp`} 
+                    alt="VS" 
+                    className="pvp-vs-logo"
+                  />
+                </div>
 
-                {/* Правая часть (45%) - "Next RIVAL" */}
+                {/* Правая часть (43%) - только аватарка противника */}
                 <div className="pvp-middle-right">
                   <div className="pvp-rival-avatar">
                     <img src={`${BASE_URL}/default-avatar.png`} alt="rival" />
                   </div>
-                  <div className="pvp-rival-label">Next RIVAL</div>
                 </div>
               </div>
 
-              {/* Нижняя часть (25%) - стоимость и кнопка */}
+              {/* Нижняя часть (25%) - урон и кнопка */}
               <div className="pvp-card-bottom">
-                <div className="pvp-card-cost">
-                  Entry pass: <span className="pvp-cost-icon">🪙</span>50
+                {/* Левая часть - урон */}
+                <div className="pvp-bottom-left">
+                  <div className={`pvp-damage-block ${!hasBet ? 'disabled' : ''}`}>
+                    {userDamage !== null ? (
+                      <>
+                        <span className="pvp-damage-value">{userDamage}</span>
+                        <span className="pvp-fist-icon">👊</span>
+                      </>
+                    ) : (
+                      <span className="pvp-damage-na">not available</span>
+                    )}
+                  </div>
                 </div>
-                <button 
-                  className={`pvp-card-engage ${!hasBet ? 'disabled' : ''}`}
-                  onClick={() => handleEngage(tournament)}
-                  disabled={isDisabled}
-                >
-                  ENGAGE {!hasBet && <span className="pvp-lock-icon">🔒</span>}
-                </button>
+
+                {/* Правая часть - кнопка */}
+                <div className="pvp-bottom-right">
+                  <button 
+                    className={`pvp-engage-button ${!hasBet ? 'disabled' : ''}`}
+                    onClick={() => handleEngage(tournament)}
+                    disabled={isDisabled}
+                  >
+                    ENTRY PASS: 50 <span className="pvp-cost-icon">🪙</span>
+                    {!hasBet && <span className="pvp-lock-icon">🔒</span>}
+                  </button>
+                </div>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Модальное окно арены */}
       {arenaData && (
         <ArenaModal
           tournament={arenaData.tournament}
