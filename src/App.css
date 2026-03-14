@@ -1404,15 +1404,17 @@ body {
 
 /* Блок с уроном */
 .pvp-damage-block {
-  width: 80%;
-  height: 90%;
+  width: 60%;
+  height: 80%;
   background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #000000;
-  font-size: clamp(14px, 3vw, 18px);
-  font-weight: 600;
+  font-size: calc(0.6 * 100%);
+  line-height: 1;
+  white-space: nowrap;
+  font-weight: 700;
   border-radius: 4px;
 }
 
