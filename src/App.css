@@ -1296,6 +1296,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 5%;
 }
 
 .pvp-player-avatar img {
@@ -1303,12 +1304,6 @@ body {
   height: 100%;
   object-fit: cover;
 }
-
-
-
-
-
-
 
 .pvp-middle-center {
   width: 14%;
@@ -1411,7 +1406,7 @@ body {
   align-items: center;
   justify-content: center;
   color: #000000;
-  font-size: calc(1.4 * 100%);
+  font-size: calc(1.25 * 100%);
   line-height: 1;
   white-space: nowrap;
   font-weight: 700;
