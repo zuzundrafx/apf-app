@@ -1464,6 +1464,7 @@ body {
   transition: opacity 0.2s ease;
   white-space: nowrap;
   /*padding: 0 4px;*/
+  padding-right: 4%;
 }
 
 .pvp-engage-button.disabled {
