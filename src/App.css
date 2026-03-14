@@ -1390,7 +1390,7 @@ body {
   background: #484d52;
   border-top: 1px solid #4A4A48;
   min-height: 0;
-  padding: 0 2%;
+  /*padding: 0 2%;*/
 }
 
 /* Левая часть (43%) */
@@ -1451,7 +1451,7 @@ body {
 .pvp-engage-button {
   width: 80%;
   height: 90%;
-  background: linear-gradient(180deg, #C9FFCE 0%, #61FF63 100%);
+  background: linear-gradient(180deg, #C9FFCE 0%, #3ad63d 100%);
   border: none;
   color: #000000;
   font-size: clamp(10px, 2.2vw, 14px);
