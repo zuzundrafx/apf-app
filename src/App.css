@@ -1440,7 +1440,7 @@ body {
 /* Правая часть (57%) */
 .pvp-bottom-right {
   width: 57%;
-  height: 80%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: flex-end; /* Прижимаем к правому краю */
@@ -1449,7 +1449,7 @@ body {
 /* Новая кнопка ENTRY PASS */
 .pvp-engage-button {
   width: 80%;
-  height: 90%;
+  height: 80%;
   background: linear-gradient(180deg, #C9FFCE 0%, #3ad63d 100%);
   border: none;
   color: #000000;
@@ -1463,7 +1463,7 @@ body {
   border-radius: 5px;
   transition: opacity 0.2s ease;
   white-space: nowrap;
-  padding: 0 4px;
+  /*padding: 0 4px;*/
 }
 
 .pvp-engage-button.disabled {
@@ -1485,6 +1485,27 @@ body {
   font-size: 0.9em;
   opacity: 0.7;
 }
+
+.pvp-engage-button.loading {
+  position: relative;
+  color: transparent;
+}
+
+.pvp-engage-button.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #000000;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 
 /* ===== АРЕНА МОДАЛЬНОЕ ОКНО ===== */
 .arena-modal-overlay {
