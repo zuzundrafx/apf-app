@@ -1411,7 +1411,7 @@ body {
   align-items: center;
   justify-content: center;
   color: #000000;
-  font-size: calc(0.6 * 100%);
+  font-size: calc(2.5 * 100%);
   line-height: 1;
   white-space: nowrap;
   font-weight: 700;
