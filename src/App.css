@@ -1669,12 +1669,67 @@ body {
   width: 90%;
   height: 70%;
   background: linear-gradient(90deg, #1C1D1F 0%, #414141 100%);
-  /*border: 1px solid #959595;*/
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center; /* Центрируем по горизонтали */
   justify-content: center;
-  padding: 0% 0 0% 8%;
+  padding: 0% 0 0% 0%; /* Убираем отступ слева */
+  position: relative;
+}
+
+/* Никнейм - выравнивание влево */
+.arena-damage-display .damage-username {
+  color: #FFFFFF;
+  font-size: clamp(10px, 2.5vw, 14px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  align-self: flex-start; /* Выравнивание влево */
+  padding-left: 8%;
+  width: 100%;
+}
+
+/* Разделительная линия - на всю ширину */
+.arena-damage-display .damage-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #959595 20%,
+    #959595 80%,
+    transparent 100%
+  );
+  margin: 2px 0 4px 0;
+  opacity: 0.8;
+}
+
+/* DAMAGE label - центрирование */
+.arena-damage-display .damage-label {
+  color: #FFFFFF;
+  font-size: clamp(8px, 2vw, 10px);
+  font-weight: 500;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+  text-align: center;
+  width: 100%;
+}
+
+/* Значение урона - центрирование */
+.arena-damage-display .damage-value {
+  color: #FFD966;
+  font-size: clamp(12px, 5vw, 30px);
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  width: 100%;
 }
 
 /* Противник (верх) - прижат к верху, скруглен правый нижний */
@@ -1691,23 +1746,6 @@ body {
   border-right: 1px solid #959595;
   border-radius: 0 10px 0 0;
   margin-bottom: 0;
-}
-
-.damage-label {
-  color: #FFFFFF;
-  font-size: clamp(8px, 2vw, 10px);
-  font-weight: 500;
-  opacity: 0.8;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 2px;
-}
-
-.damage-value {
-  color: #FFD966;
-  font-size: clamp(12px, 5vw, 30px);
-  font-weight: 700;
-  line-height: 1;
 }
 
 /* Шкала здоровья противника (8% от верхнего контейнера) */
@@ -2000,16 +2038,16 @@ body {
 
 /* Адаптация для маленьких экранов */
 @media (max-width: 320px) {
-  .damage-username {
+  .arena-damage-display .damage-username {
     font-size: 8px;
     margin-bottom: 1px;
   }
   
-  .damage-divider {
+  .arena-damage-display .damage-divider {
     margin: 1px 0 2px 0;
   }
 
-    .arena-fighter-damage {
+  .arena-fighter-damage {
     font-size: 6px;
   }
   
@@ -2033,11 +2071,11 @@ body {
     min-height: 50px;
   }
   
-  .damage-label {
+  .arena-damage-display .damage-label {
     font-size: 6px;
   }
   
-  .damage-value {
+  .arena-damage-display .damage-value {
     font-size: 9px;
   }
 }
@@ -2147,63 +2185,4 @@ body {
   cursor: not-allowed;
   background: #666D74; /* Цвет как у кнопки SURRENDER */
   pointer-events: none;
-}
-
-/* ===== НОВЫЕ СТИЛИ ДЛЯ БЛОКА DAMAGE С НИКНЕЙМОМ ===== */
-
-/* Контейнер для никнейма и блока DAMAGE */
-.arena-damage-wrapper {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  /*justify-content: flex-start;*/
-}
-
-/* Стили для никнейма над DAMAGE */
-.damage-username {
-  color: #FFFFFF;
-  font-size: clamp(10px, 2.5vw, 14px);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  padding-left: 8%;
-}
-
-/* Разделительная линия с градиентной прозрачностью */
-.damage-divider {
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    #959595 20%,
-    #959595 80%,
-    transparent 100%
-  );
-  margin: 2px 0 4px 0;
-  opacity: 0.8;
-}
-
-/* Для противника (верх) - выравнивание текста и элементов */
-.arena-top .arena-damage-wrapper {
-  align-items: center;
-}
-
-.arena-top .damage-username {
-  text-align: left;
-}
-
-/* Для игрока (низ) - выравнивание текста и элементов */
-.arena-bottom .arena-damage-wrapper {
-  align-items: center;
-}
-
-.arena-bottom .damage-username {
-  text-align: left;
 }
