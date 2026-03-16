@@ -1730,7 +1730,7 @@ body {
 
 .arena-health-fill {
   height: 100%;
-  background: #B20101;
+  background: linear-gradient(0deg, #800101 0%, #B20101 100%);
   transition: width 0.3s ease;
 }
 
@@ -1741,9 +1741,10 @@ body {
   transform: translate(-50%, -50%);
   color: #FFFFFF;
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  z-index: 1;
 }
 
 /* Карточки бойцов противника (53% от верхнего контейнера) - КАК НА ГЛАВНОМ ЭКРАНЕ */
@@ -2191,7 +2192,7 @@ body {
 
 /* Для противника (верх) - выравнивание текста и элементов */
 .arena-top .arena-damage-wrapper {
-  align-items: flex-start;
+  align-items: center;
 }
 
 .arena-top .damage-username {
@@ -2200,7 +2201,7 @@ body {
 
 /* Для игрока (низ) - выравнивание текста и элементов */
 .arena-bottom .arena-damage-wrapper {
-  align-items: flex-start;
+  align-items: center;
 }
 
 .arena-bottom .damage-username {

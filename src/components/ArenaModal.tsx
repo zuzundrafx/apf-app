@@ -490,14 +490,14 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
 
               <div className="arena-rival-health">
-                <div className="arena-health-bar">
-                  <div 
-                    className="arena-health-fill" 
-                    style={{ width: `${(rivalHealth / 1000) * 100}%` }}
-                  ></div>
-                  <span className="arena-health-text">{rivalData.username} Health: {rivalHealth}</span>
-                </div>
-              </div>
+    <div className="arena-health-bar">
+      <div 
+        className="arena-health-fill" 
+        style={{ width: `${(rivalHealth / 1000) * 100}%` }}
+      ></div>
+      <span className="arena-health-text">HP {rivalHealth}/1000</span>
+    </div>
+  </div>
 
               <div className="arena-rival-fighters">
                 {rivalActiveCards.map((card, index) => (
@@ -596,14 +596,14 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
               {/* Шкала здоровья игрока */}
               <div className="arena-player-health">
-                <div className="arena-health-bar">
-                  <div 
-                    className="arena-health-fill" 
-                    style={{ width: `${(userHealth / 1000) * 100}%` }}
-                  ></div>
-                  <span className="arena-health-text">{userName} Health: {userHealth}</span>
-                </div>
-              </div>
+    <div className="arena-health-bar">
+      <div 
+        className="arena-health-fill" 
+        style={{ width: `${(userHealth / 1000) * 100}%` }}
+      ></div>
+      <span className="arena-health-text">HP {userHealth}/1000</span>
+    </div>
+  </div>
 
               {/* Контейнер с тремя колонками */}
               <div className="arena-avatar-container">
