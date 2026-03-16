@@ -610,14 +610,14 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 {/* Левый блок - DAMAGE игрока с никнеймом внутри */}
                 <div className="arena-avatar-left">
                   <div className="arena-damage-display player-damage">
-                    {/* Никнейм игрока внутри блока DAMAGE */}
-                    <div className="damage-username">{userName}</div>
-                    {/* Разделительная линия */}
-                    <div className="damage-divider"></div>
                     <span className="damage-label">DAMAGE</span>
                     <span className="damage-value">
                       {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
                     </span>
+                    {/* Разделительная линия */}
+                    <div className="damage-divider"></div>
+                    {/* Никнейм игрока внутри блока DAMAGE */}
+                    <div className="damage-username">{userName}</div>
                   </div>
                 </div>
                 
