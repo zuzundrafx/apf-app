@@ -458,20 +458,17 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             <div className="arena-top">
               {/* Контейнер с тремя колонками */}
               <div className="arena-avatar-container">
-                {/* Левый блок - DAMAGE противника (скругление правый нижний) */}
+                {/* Левый блок - DAMAGE противника с никнеймом внутри */}
                 <div className="arena-avatar-left">
-                  <div className="arena-damage-wrapper">
-                    {/* Никнейм противника над DAMAGE */}
+                  <div className="arena-damage-display rival-damage">
+                    {/* Никнейм противника внутри блока DAMAGE */}
                     <div className="damage-username">{rivalData.username}</div>
                     {/* Разделительная линия */}
                     <div className="damage-divider"></div>
-                    {/* Блок DAMAGE */}
-                    <div className="arena-damage-display rival-damage">
-                      <span className="damage-label">DAMAGE</span>
-                      <span className="damage-value">
-                        {rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-                      </span>
-                    </div>
+                    <span className="damage-label">DAMAGE</span>
+                    <span className="damage-value">
+                      {rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+                    </span>
                   </div>
                 </div>
                 
@@ -610,20 +607,17 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
               {/* Контейнер с тремя колонками */}
               <div className="arena-avatar-container">
-                {/* Левый блок - DAMAGE игрока (скругление правый верхний) */}
+                {/* Левый блок - DAMAGE игрока с никнеймом внутри */}
                 <div className="arena-avatar-left">
-                  <div className="arena-damage-wrapper">
-                    {/* Никнейм игрока над DAMAGE */}
+                  <div className="arena-damage-display player-damage">
+                    {/* Никнейм игрока внутри блока DAMAGE */}
                     <div className="damage-username">{userName}</div>
                     {/* Разделительная линия */}
                     <div className="damage-divider"></div>
-                    {/* Блок DAMAGE */}
-                    <div className="arena-damage-display player-damage">
-                      <span className="damage-label">DAMAGE</span>
-                      <span className="damage-value">
-                        {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-                      </span>
-                    </div>
+                    <span className="damage-label">DAMAGE</span>
+                    <span className="damage-value">
+                      {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+                    </span>
                   </div>
                 </div>
                 
