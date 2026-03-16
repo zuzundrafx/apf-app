@@ -1705,7 +1705,7 @@ body {
 
 .damage-value {
   color: #FFD966;
-  font-size: clamp(12px, 3vw, 16px);
+  font-size: clamp(12px, 5vw, 30px);
   font-weight: 700;
   line-height: 1;
 }
