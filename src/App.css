@@ -1619,6 +1619,16 @@ body {
   position: relative;
 }
 
+/* Противник (верх) - контейнер с прижатием к ВЕРХНЕМУ краю */
+.arena-top .arena-avatar-left {
+  justify-content: flex-start; /* контент прижат к верху */
+}
+
+/* Игрок (низ) - контейнер с прижатием к НИЖНЕМУ краю */
+.arena-bottom .arena-avatar-left {
+  justify-content: flex-end; /* контент прижат к низу */
+}
+
 /* Центральная колонка с аватаркой (24%) */
 .arena-avatar-center {
   width: 24%;
@@ -1652,6 +1662,8 @@ body {
   object-fit: cover;
 }
 
+
+
 /* Блок DAMAGE - общие стили */
 .arena-damage-display {
   width: 90%;
@@ -1667,14 +1679,14 @@ body {
 
 /* Противник (верх) - прижат к верху, скруглен правый нижний */
 .arena-damage-display.rival-damage {
-  justify-content: flex-start;
+  
   border-radius: 0 0 10px 0;
   margin-top: 0;
 }
 
 /* Игрок (низ) - прижат к низу, скруглен правый верхний */
 .arena-damage-display.player-damage {
-  justify-content: flex-end;
+  
   border-radius: 0 10px 0 0;
   margin-bottom: 0;
 }
