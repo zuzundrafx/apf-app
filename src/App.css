@@ -1600,33 +1600,95 @@ body {
   /*border-bottom: 1px solid #4A4A48;*/
 }
 
-/* Аватарка противника (31% от верхнего контейнера) - КВАДРАТНАЯ */
-.arena-rival-avatar-container {
-  height: 31%;
-  min-height: 50px;
+/* Контейнер для аватарки с тремя колонками */
+.arena-avatar-container {
+  display: flex;
+  width: 100%;
+  height: 39%; /* Было 31% + 8% от удаленных блоков */
+  min-height: 65px;
+  background: #1C1D1F;
+}
+
+/* Левая колонка (38%) - здесь будет DAMAGE у всех */
+.arena-avatar-left {
+  width: 38%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 2%;
+}
+
+/* Центральная колонка с аватаркой (24%) */
+.arena-avatar-center {
+  width: 24%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1C1D1F;
-  padding-top: 1%;
-  padding-bottom: 1%;
 }
 
-.arena-rival-avatar {
+/* Правая колонка (38%) - пока пустая */
+.arena-avatar-right {
+  width: 38%;
+  height: 100%;
+}
+
+/* Контейнер для аватарки (квадратная) */
+.arena-avatar {
   aspect-ratio: 1 / 1;
-  height: 95%;
+  height: 85%;
   background: #3D3D3B;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 2vw;
+  border-radius: 1vw;
 }
 
-.arena-rival-avatar img {
+.arena-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Блок DAMAGE - общие стили */
+.arena-damage-display {
+  width: 90%;
+  height: 70%;
+  background: linear-gradient(90deg, #1C1D1F 0%, #414141 100%);
+  border: 1px solid #959595;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Текст прижат к левому краю */
+  justify-content: center;
+  padding: 4% 0 4% 8%;
+}
+
+/* Скругления (подготовка для будущих изменений) */
+.arena-damage-display.rival-damage {
+  /* Здесь будет скругление правого нижнего угла */
+}
+
+.arena-damage-display.player-damage {
+  /* Здесь будет скругление правого верхнего угла */
+}
+
+.damage-label {
+  color: #FFFFFF;
+  font-size: clamp(8px, 2vw, 10px);
+  font-weight: 500;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+
+.damage-value {
+  color: #FFD966;
+  font-size: clamp(12px, 3vw, 16px);
+  font-weight: 700;
+  line-height: 1;
 }
 
 /* Шкала здоровья противника (8% от верхнего контейнера) */
@@ -1747,16 +1809,7 @@ body {
   word-break: break-word;
 }
 
-/* Текущий урон противника (8% от верхнего контейнера) */
-.arena-rival-damage {
-  height: 8%;
-  min-height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #1C1D1F;
-  padding: 2px 8px;
-}
+
 
 /* Средний контейнер (12%) - раунды */
 .arena-middle {
@@ -1910,31 +1963,9 @@ body {
   background: #2A2A2A;
 }
 
-/* Текущий урон игрока (8% от нижнего контейнера) - САМЫЙ ВЕРХНИЙ */
-.arena-player-damage {
-  height: 8%;
-  min-height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #1C1D1F;
-  padding: 2px 8px;
-}
 
-.arena-damage-box {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
-  color: #000000;
-  font-size: 10px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  padding: 0 4px;
-  border-radius: 2px;
-}
+
+
 
 /* Карточки бойцов игрока (53% от нижнего контейнера) - ВТОРОЙ СВЕРХУ */
 .arena-player-fighters {
@@ -1951,36 +1982,8 @@ body {
   border-top: 1px solid #4A4A48;
 }
 
-/* Аватарка игрока (31% от нижнего контейнера) - САМЫЙ НИЖНИЙ - КВАДРАТНАЯ */
-.arena-player-avatar-container {
-  height: 31%;
-  min-height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #1C1D1F;
-  border-top: 1px solid #4A4A48;
-  padding-top: 1%;
-  padding-bottom: 1%;
- 
-}
+/* Аватарка игрока (39% от нижнего контейнера) - САМЫЙ НИЖНИЙ - КВАДРАТНАЯ */
 
-.arena-player-avatar {
-  aspect-ratio: 1 / 1;
-  height: 95%;
-  background: #3D3D3B;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 1vw;
-}
-
-.arena-player-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
 
 
@@ -2005,6 +2008,21 @@ body {
   .arena-round-weight {
     font-size: 6px;
   }
+
+  .arena-avatar-container {
+    min-height: 50px;
+  }
+  
+  .damage-label {
+    font-size: 6px;
+  }
+  
+  .damage-value {
+    font-size: 9px;
+  }
+
+
+
 }
 
 /* ===== БИТВА - ВСПЛЫВАЮЩИЕ НАДПИСИ ===== */

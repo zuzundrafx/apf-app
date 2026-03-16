@@ -100,6 +100,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     resultType?: 'ko' | 'decision-unanimous' | 'decision-split';
   } | null>(null);
   const [countdownStep, setCountdownStep] = useState<'ready' | 'steady' | 'fight' | null>('ready');
+  const [damagePhase, setDamagePhase] = useState<'idle' | 'first' | 'second'>('idle');
 
   // Добавить новое состояние
 const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false, false, false]);
@@ -295,10 +296,22 @@ const playNextEvent = () => {
       break;
 
     case 'damage':
-      setRivalHealth(event.rivalHealthAfter!);
-      setUserHealth(event.userHealthAfter!);
-      setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1500);
-      break;
+  // ШАГ 1: Игрок бьет противника (здоровье противника уменьшается)
+  setDamagePhase('first');
+  setRivalHealth(event.rivalHealthAfter!);
+  
+  // Через 0.75 сек - ШАГ 2: Противник бьет игрока
+  setTimeout(() => {
+    setDamagePhase('second');
+    setUserHealth(event.userHealthAfter!);
+    
+    // Еще через 0.75 сек - переходим к следующему событию
+    setTimeout(() => {
+      setDamagePhase('idle');
+      setCurrentEventIndex(prev => prev + 1);
+    }, 750);
+  }, 750);
+  break;
 
     case 'round-end':
       setCurrentRound(prev => prev + 1);
@@ -444,18 +457,35 @@ useEffect(() => {
             </div>
 
             {/* Верхний контейнер - противник */}
-            <div className="arena-top">
-              <div className="arena-rival-avatar-container">
-                <div className="arena-rival-avatar">
-                  <img 
-                    src={rivalData.photoUrl || `${BASE_URL}/default-avatar.png`}
-                    alt="rival"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`;
-                    }}
-                  />
-                </div>
-              </div>
+<div className="arena-top">
+  {/* Новый контейнер с тремя колонками */}
+  <div className="arena-avatar-container">
+    {/* Левый блок - DAMAGE противника (скругление правый нижний) */}
+    <div className="arena-avatar-left">
+      <div className="arena-damage-display rival-damage">
+        <span className="damage-label">DAMAGE</span>
+        <span className="damage-value">
+          {rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+        </span>
+      </div>
+    </div>
+    
+    {/* Средний блок - аватарка противника */}
+    <div className="arena-avatar-center">
+      <div className="arena-avatar">
+        <img 
+          src={rivalData.photoUrl || `${BASE_URL}/default-avatar.png`}
+          alt="rival"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`;
+          }}
+        />
+      </div>
+    </div>
+    
+    {/* Правый блок - пустой (резерв) */}
+    <div className="arena-avatar-right"></div>
+  </div>
 
               <div className="arena-rival-health">
                 <div className="arena-health-bar">
@@ -493,11 +523,7 @@ useEffect(() => {
     ))}
   </div>
 
-              <div className="arena-rival-damage">
-                <div className="arena-damage-box">
-                  CURRENT DAMAGE: {rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-                </div>
-              </div>
+              
             </div>
 
             {/* Средний контейнер (12%) - раунды */}
@@ -539,16 +565,9 @@ useEffect(() => {
   })}
 </div>
 
-
             {/* Нижний контейнер - игрок */}
 <div className="arena-bottom">
-  {/* 1. Текущий урон игрока (8%) */}
-  <div className="arena-player-damage">
-    <div className="arena-damage-box">
-      CURRENT DAMAGE: {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-    </div>
-  </div>
-
+  
   {/* 2. Карточки бойцов игрока (53%) - ТОЖЕ ДИНАМИЧЕСКИЕ */}
   <div className="arena-player-fighters">
     {userActiveCards.map((card, index) => (
@@ -587,17 +606,33 @@ useEffect(() => {
     </div>
   </div>
 
-  {/* 4. Аватарка игрока (31%) */}
-  <div className="arena-player-avatar-container">
-    <div className="arena-player-avatar">
-      <img 
-        src={userAvatar || `${BASE_URL}/Home_button.png`}
-        alt="player"
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
-        }}
-      />
+  {/* Новый контейнер с тремя колонками */}
+  <div className="arena-avatar-container">
+    {/* Левый блок - DAMAGE игрока (скругление правый верхний) */}
+    <div className="arena-avatar-left">
+      <div className="arena-damage-display player-damage">
+        <span className="damage-label">DAMAGE</span>
+        <span className="damage-value">
+          {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+        </span>
+      </div>
     </div>
+    
+    {/* Средний блок - аватарка игрока */}
+    <div className="arena-avatar-center">
+      <div className="arena-avatar">
+        <img 
+          src={userAvatar || `${BASE_URL}/Home_button.png`}
+          alt="player"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
+          }}
+        />
+      </div>
+    </div>
+    
+    {/* Правый блок - пустой (резерв) */}
+    <div className="arena-avatar-right"></div>
   </div>
 </div>
           </>
