@@ -462,13 +462,13 @@ useEffect(() => {
   <div className="arena-avatar-container">
     {/* Левый блок - DAMAGE противника (скругление правый нижний) */}
     <div className="arena-avatar-left">
-      <div className="arena-damage-display rival-damage">
-        <span className="damage-label">DAMAGE</span>
-        <span className="damage-value">
-          {rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-        </span>
-      </div>
-    </div>
+  <div className="arena-damage-display rival-damage">
+    <span className="damage-label">DAMAGE</span>
+    <span className="damage-value">
+      {rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+    </span>
+  </div>
+</div>
     
     {/* Средний блок - аватарка противника */}
     <div className="arena-avatar-center">
@@ -610,13 +610,13 @@ useEffect(() => {
   <div className="arena-avatar-container">
     {/* Левый блок - DAMAGE игрока (скругление правый верхний) */}
     <div className="arena-avatar-left">
-      <div className="arena-damage-display player-damage">
-        <span className="damage-label">DAMAGE</span>
-        <span className="damage-value">
-          {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-        </span>
-      </div>
-    </div>
+  <div className="arena-damage-display player-damage">
+    <span className="damage-label">DAMAGE</span>
+    <span className="damage-value">
+      {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+    </span>
+  </div>
+</div>
     
     {/* Средний блок - аватарка игрока */}
     <div className="arena-avatar-center">

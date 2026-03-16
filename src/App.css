@@ -1614,9 +1614,9 @@ body {
   width: 38%;
   height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
+  flex-direction: column;
   padding-left: 2%;
+  position: relative;
 }
 
 /* Центральная колонка с аватаркой (24%) */
@@ -1660,18 +1660,23 @@ body {
   border: 1px solid #959595;
   display: flex;
   flex-direction: column;
-  align-items: flex-start; /* Текст прижат к левому краю */
+  align-items: flex-start;
   justify-content: center;
   padding: 4% 0 4% 8%;
 }
 
-/* Скругления (подготовка для будущих изменений) */
+/* Противник (верх) - прижат к верху, скруглен правый нижний */
 .arena-damage-display.rival-damage {
-  /* Здесь будет скругление правого нижнего угла */
+  align-self: flex-start;
+  border-radius: 0 0 10px 0;
+  margin-top: 0;
 }
 
+/* Игрок (низ) - прижат к низу, скруглен правый верхний */
 .arena-damage-display.player-damage {
-  /* Здесь будет скругление правого верхнего угла */
+  align-self: flex-end;
+  border-radius: 0 10px 0 0;
+  margin-bottom: 0;
 }
 
 .damage-label {
@@ -1963,10 +1968,6 @@ body {
   background: #2A2A2A;
 }
 
-
-
-
-
 /* Карточки бойцов игрока (53% от нижнего контейнера) - ВТОРОЙ СВЕРХУ */
 .arena-player-fighters {
   height: 53%;
@@ -1981,11 +1982,6 @@ body {
   padding: 2px 8px;
   border-top: 1px solid #4A4A48;
 }
-
-/* Аватарка игрока (39% от нижнего контейнера) - САМЫЙ НИЖНИЙ - КВАДРАТНАЯ */
-
-
-
 
 /* Адаптация для маленьких экранов */
 @media (max-width: 320px) {
