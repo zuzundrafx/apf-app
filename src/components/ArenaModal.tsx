@@ -101,9 +101,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   } | null>(null);
   const [countdownStep, setCountdownStep] = useState<'ready' | 'steady' | 'fight' | null>('ready');
   const [damagePhase, setDamagePhase] = useState<'idle' | 'first' | 'second'>('idle');
-
-  // Добавить новое состояние
-const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false, false, false]);
+  const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false, false, false]);
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
@@ -247,82 +245,82 @@ const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false
   };
 
   // Функция для выполнения следующего события
-const playNextEvent = () => {
-  if (currentEventIndex >= battleScript.length) return;
+  const playNextEvent = () => {
+    if (currentEventIndex >= battleScript.length) return;
 
-  const event = battleScript[currentEventIndex];
-  console.log('🎬 Событие:', event);
+    const event = battleScript[currentEventIndex];
+    console.log('🎬 Событие:', event);
 
-  switch (event.type) {
-    case 'countdown':
-      setCountdownStep('ready');
-      setTimeout(() => setCountdownStep('steady'), 1000);
-      setTimeout(() => setCountdownStep('fight'), 2000);
-      setTimeout(() => {
-        setCountdownStep(null);
-        setCurrentEventIndex(prev => prev + 1);
-      }, 3000);
-      break;
+    switch (event.type) {
+      case 'countdown':
+        setCountdownStep('ready');
+        setTimeout(() => setCountdownStep('steady'), 1000);
+        setTimeout(() => setCountdownStep('fight'), 2000);
+        setTimeout(() => {
+          setCountdownStep(null);
+          setCurrentEventIndex(prev => prev + 1);
+        }, 3000);
+        break;
 
-    case 'round-start':
-      setShowRoundText(true);
-      setTimeout(() => {
-        setShowRoundText(false);
-        setCurrentEventIndex(prev => prev + 1);
-      }, 1000);
-      break;
+      case 'round-start':
+        setShowRoundText(true);
+        setTimeout(() => {
+          setShowRoundText(false);
+          setCurrentEventIndex(prev => prev + 1);
+        }, 1000);
+        break;
 
-    case 'card-appear':
-      // Добавляем весовую категорию в использованные
-      setUsedWeightClasses(prev => [...prev, event.weightClass!]);
-      
-      // Запускаем анимацию переворота для карты этого раунда
-      const cardIndex = event.round! - 1;
-      setFlippedCards(prev => {
-        const newFlipped = [...prev];
-        newFlipped[cardIndex] = true;
-        return newFlipped;
-      });
-      
-      // Через 300мс показываем лицевую сторону карты и бойцов
-      setTimeout(() => {
-        // Обновляем карты бойцов
-        setUserActiveCards(event.userActiveCards || []);
-        setRivalActiveCards(event.rivalActiveCards || []);
+      case 'card-appear':
+        // Добавляем весовую категорию в использованные
+        setUsedWeightClasses(prev => [...prev, event.weightClass!]);
         
-        // Переходим к следующему событию через оставшееся время
-        setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1700);
-      }, 300);
-      break;
+        // Запускаем анимацию переворота для карты этого раунда
+        const cardIndex = event.round! - 1;
+        setFlippedCards(prev => {
+          const newFlipped = [...prev];
+          newFlipped[cardIndex] = true;
+          return newFlipped;
+        });
+        
+        // Через 300мс показываем лицевую сторону карты и бойцов
+        setTimeout(() => {
+          // Обновляем карты бойцов
+          setUserActiveCards(event.userActiveCards || []);
+          setRivalActiveCards(event.rivalActiveCards || []);
+          
+          // Переходим к следующему событию через оставшееся время
+          setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1700);
+        }, 300);
+        break;
 
-    case 'damage':
-  // ШАГ 1: Игрок бьет противника (здоровье противника уменьшается)
-  setDamagePhase('first');
-  setRivalHealth(event.rivalHealthAfter!);
-  
-  // Через 0.75 сек - ШАГ 2: Противник бьет игрока
-  setTimeout(() => {
-    setDamagePhase('second');
-    setUserHealth(event.userHealthAfter!);
-    
-    // Еще через 0.75 сек - переходим к следующему событию
-    setTimeout(() => {
-      setDamagePhase('idle');
-      setCurrentEventIndex(prev => prev + 1);
-    }, 750);
-  }, 750);
-  break;
+      case 'damage':
+        // ШАГ 1: Игрок бьет противника (здоровье противника уменьшается)
+        setDamagePhase('first');
+        setRivalHealth(event.rivalHealthAfter!);
+        
+        // Через 0.75 сек - ШАГ 2: Противник бьет игрока
+        setTimeout(() => {
+          setDamagePhase('second');
+          setUserHealth(event.userHealthAfter!);
+          
+          // Еще через 0.75 сек - переходим к следующему событию
+          setTimeout(() => {
+            setDamagePhase('idle');
+            setCurrentEventIndex(prev => prev + 1);
+          }, 750);
+        }, 750);
+        break;
 
-    case 'round-end':
-      setCurrentRound(prev => prev + 1);
-      setTimeout(() => setCurrentEventIndex(prev => prev + 1), 500);
-      break;
+      case 'round-end':
+        setCurrentRound(prev => prev + 1);
+        setTimeout(() => setCurrentEventIndex(prev => prev + 1), 500);
+        break;
 
-    case 'battle-end':
-      setBattleResult(event.result);
-      break;
-  }
-};
+      case 'battle-end':
+        setBattleResult(event.result);
+        break;
+    }
+  };
 
   // Эффект для выполнения событий по порядку
   useEffect(() => {
@@ -332,72 +330,72 @@ const playNextEvent = () => {
   }, [currentEventIndex, isLoading, battleScript]);
 
   // Инициализация при открытии
-useEffect(() => {
-  if (isOpen) {
-    console.log('🎮 Арена открыта, рассчитываем сценарий боя...');
-    
-    setIsLoading(true);
-    setCurrentEventIndex(0);
-    setUsedWeightClasses([]);
-    setFlippedCards([false, false, false, false, false]); // ← добавить
-    setUserHealth(1000);
-    setRivalHealth(1000);
-    setUserActiveCards([]);
-    setRivalActiveCards([]);
-    setBattleResult(null);
-    
-    // Рассчитываем весь сценарий заранее
-    const script = calculateBattleScript();
-    console.log('📜 Сценарий боя:', script);
-    setBattleScript(script);
-    
-    // ПРЕДЗАГРУЗКА: собираем все карты, которые появятся в бою
-    const allCardsThatWillAppear = new Set<string>();
-    
-    // Проходим по всем событиям сценария
-    script.forEach(event => {
-      if (event.type === 'card-appear') {
-        // Добавляем аватарки бойцов, которые появятся
-        event.userActiveCards?.forEach(card => {
-          allCardsThatWillAppear.add(
-            `${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`
-          );
-        });
-        event.rivalActiveCards?.forEach(card => {
-          allCardsThatWillAppear.add(
-            `${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`
-          );
-        });
-      }
-    });
-    
-    console.log('🖼️ Предзагружаем карточки:', Array.from(allCardsThatWillAppear));
-    
-    // Загружаем все изображения параллельно
-    const imagePromises = Array.from(allCardsThatWillAppear).map(src => {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = src;
-        img.onload = resolve;
-        img.onerror = reject;
+  useEffect(() => {
+    if (isOpen) {
+      console.log('🎮 Арена открыта, рассчитываем сценарий боя...');
+      
+      setIsLoading(true);
+      setCurrentEventIndex(0);
+      setUsedWeightClasses([]);
+      setFlippedCards([false, false, false, false, false]);
+      setUserHealth(1000);
+      setRivalHealth(1000);
+      setUserActiveCards([]);
+      setRivalActiveCards([]);
+      setBattleResult(null);
+      
+      // Рассчитываем весь сценарий заранее
+      const script = calculateBattleScript();
+      console.log('📜 Сценарий боя:', script);
+      setBattleScript(script);
+      
+      // ПРЕДЗАГРУЗКА: собираем все карты, которые появятся в бою
+      const allCardsThatWillAppear = new Set<string>();
+      
+      // Проходим по всем событиям сценария
+      script.forEach(event => {
+        if (event.type === 'card-appear') {
+          // Добавляем аватарки бойцов, которые появятся
+          event.userActiveCards?.forEach(card => {
+            allCardsThatWillAppear.add(
+              `${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`
+            );
+          });
+          event.rivalActiveCards?.forEach(card => {
+            allCardsThatWillAppear.add(
+              `${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`
+            );
+          });
+        }
       });
-    });
-    
-    // Ждем загрузки всех изображений (но не больше 3 секунд)
-    Promise.allSettled(imagePromises).then(() => {
-      console.log('✅ Все карточки загружены');
+      
+      console.log('🖼️ Предзагружаем карточки:', Array.from(allCardsThatWillAppear));
+      
+      // Загружаем все изображения параллельно
+      const imagePromises = Array.from(allCardsThatWillAppear).map(src => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.src = src;
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+      });
+      
+      // Ждем загрузки всех изображений (но не больше 3 секунд)
+      Promise.allSettled(imagePromises).then(() => {
+        console.log('✅ Все карточки загружены');
+        setTimeout(() => {
+          console.log('✅ Загрузка завершена, запускаем бой');
+          setIsLoading(false);
+        }, 500);
+      });
+      
+      // Таймаут на случай очень медленной загрузки
       setTimeout(() => {
-        console.log('✅ Загрузка завершена, запускаем бой');
         setIsLoading(false);
-      }, 500); // Небольшая задержка для плавности
-    });
-    
-    // Таймаут на случай очень медленной загрузки
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 3000);
-  }
-}, [isOpen]);
+      }, 3000);
+    }
+  }, [isOpen]);
 
   // Обработчик закрытия результата
   const handleResultClose = () => {
@@ -457,35 +455,42 @@ useEffect(() => {
             </div>
 
             {/* Верхний контейнер - противник */}
-<div className="arena-top">
-  {/* Новый контейнер с тремя колонками */}
-  <div className="arena-avatar-container">
-    {/* Левый блок - DAMAGE противника (скругление правый нижний) */}
-    <div className="arena-avatar-left">
-  <div className="arena-damage-display rival-damage">
-    <span className="damage-label">DAMAGE</span>
-    <span className="damage-value">
-      {rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-    </span>
-  </div>
-</div>
-    
-    {/* Средний блок - аватарка противника */}
-    <div className="arena-avatar-center">
-      <div className="arena-avatar">
-        <img 
-          src={rivalData.photoUrl || `${BASE_URL}/default-avatar.png`}
-          alt="rival"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`;
-          }}
-        />
-      </div>
-    </div>
-    
-    {/* Правый блок - пустой (резерв) */}
-    <div className="arena-avatar-right"></div>
-  </div>
+            <div className="arena-top">
+              {/* Контейнер с тремя колонками */}
+              <div className="arena-avatar-container">
+                {/* Левый блок - DAMAGE противника (скругление правый нижний) */}
+                <div className="arena-avatar-left">
+                  <div className="arena-damage-wrapper">
+                    {/* Никнейм противника над DAMAGE */}
+                    <div className="damage-username">{rivalData.username}</div>
+                    {/* Разделительная линия */}
+                    <div className="damage-divider"></div>
+                    {/* Блок DAMAGE */}
+                    <div className="arena-damage-display rival-damage">
+                      <span className="damage-label">DAMAGE</span>
+                      <span className="damage-value">
+                        {rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Средний блок - аватарка противника */}
+                <div className="arena-avatar-center">
+                  <div className="arena-avatar">
+                    <img 
+                      src={rivalData.photoUrl || `${BASE_URL}/default-avatar.png`}
+                      alt="rival"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`;
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                {/* Правый блок - пустой (резерв) */}
+                <div className="arena-avatar-right"></div>
+              </div>
 
               <div className="arena-rival-health">
                 <div className="arena-health-bar">
@@ -497,144 +502,148 @@ useEffect(() => {
                 </div>
               </div>
 
-               <div className="arena-rival-fighters">
-    {rivalActiveCards.map((card, index) => (
-      <div 
-        key={index} 
-        className="arena-fighter-card"
-        style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-      >
-        <div className="arena-fighter-damage">
-          {Math.round(card.fighter['Total Damage'])}
-        </div>
-        <div className="arena-fighter-avatar">
-          <img 
-            src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
-            alt={card.fighter.Fighter}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-              const parent = (e.target as HTMLImageElement).parentElement;
-              if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
-            }}
-          />
-        </div>
-        <div className="arena-fighter-name">{card.fighter.Fighter}</div>
-      </div>
-    ))}
-  </div>
-
-              
+              <div className="arena-rival-fighters">
+                {rivalActiveCards.map((card, index) => (
+                  <div 
+                    key={index} 
+                    className="arena-fighter-card"
+                    style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
+                  >
+                    <div className="arena-fighter-damage">
+                      {Math.round(card.fighter['Total Damage'])}
+                    </div>
+                    <div className="arena-fighter-avatar">
+                      <img 
+                        src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
+                        alt={card.fighter.Fighter}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          const parent = (e.target as HTMLImageElement).parentElement;
+                          if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
+                        }}
+                      />
+                    </div>
+                    <div className="arena-fighter-name">{card.fighter.Fighter}</div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Средний контейнер (12%) - раунды */}
-<div className="arena-middle">
-  {[0, 1, 2, 3, 4].map((roundIndex) => {
-    const roundNumber = roundIndex + 1;
-    const isUsed = roundNumber <= usedWeightClasses.length;
-    const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
-    const isFlipped = flippedCards[roundIndex];
-    
-    return (
-      <div 
-        key={roundIndex} 
-        className={`arena-round-card ${isFlipped ? 'flipped' : ''}`}
-      >
-        <div className="arena-round-card-inner">
-          {/* Лицевая сторона - исходный вид */}
-          <div className="arena-round-card-front">
-            <div className="arena-round-number">
-              <div className="arena-round-digit">{roundNumber}</div>
-              <div className="arena-round-text">ROUND</div>
+            <div className="arena-middle">
+              {[0, 1, 2, 3, 4].map((roundIndex) => {
+                const roundNumber = roundIndex + 1;
+                const isUsed = roundNumber <= usedWeightClasses.length;
+                const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
+                const isFlipped = flippedCards[roundIndex];
+                
+                return (
+                  <div 
+                    key={roundIndex} 
+                    className={`arena-round-card ${isFlipped ? 'flipped' : ''}`}
+                  >
+                    <div className="arena-round-card-inner">
+                      {/* Лицевая сторона - исходный вид */}
+                      <div className="arena-round-card-front">
+                        <div className="arena-round-number">
+                          <div className="arena-round-digit">{roundNumber}</div>
+                          <div className="arena-round-text">ROUND</div>
+                        </div>
+                      </div>
+                      
+                      {/* Задняя сторона - цвет весовой категории */}
+                      <div 
+                        className="arena-round-card-back"
+                        style={weightClass ? { 
+                          backgroundColor: getWeightClassColor(weightClass) 
+                        } : {}}
+                      >
+                        {weightClass && (
+                          <div className="arena-round-weight">{weightClass}</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-          
-          {/* Задняя сторона - цвет весовой категории */}
-          <div 
-            className="arena-round-card-back"
-            style={weightClass ? { 
-              backgroundColor: getWeightClassColor(weightClass) 
-            } : {}}
-          >
-            {weightClass && (
-              <div className="arena-round-weight">{weightClass}</div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  })}
-</div>
 
             {/* Нижний контейнер - игрок */}
-<div className="arena-bottom">
-  
-  {/* 2. Карточки бойцов игрока (53%) - ТОЖЕ ДИНАМИЧЕСКИЕ */}
-  <div className="arena-player-fighters">
-    {userActiveCards.map((card, index) => (
-      <div 
-        key={index} 
-        className="arena-fighter-card"
-        style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-      >
-        <div className="arena-fighter-damage">
-          {Math.round(card.fighter['Total Damage'])}
-        </div>
-        <div className="arena-fighter-avatar">
-          <img 
-            src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
-            alt={card.fighter.Fighter}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-              const parent = (e.target as HTMLImageElement).parentElement;
-              if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
-            }}
-          />
-        </div>
-        <div className="arena-fighter-name">{card.fighter.Fighter}</div>
-      </div>
-    ))}
-  </div>
+            <div className="arena-bottom">
+              {/* Карточки бойцов игрока */}
+              <div className="arena-player-fighters">
+                {userActiveCards.map((card, index) => (
+                  <div 
+                    key={index} 
+                    className="arena-fighter-card"
+                    style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
+                  >
+                    <div className="arena-fighter-damage">
+                      {Math.round(card.fighter['Total Damage'])}
+                    </div>
+                    <div className="arena-fighter-avatar">
+                      <img 
+                        src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
+                        alt={card.fighter.Fighter}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          const parent = (e.target as HTMLImageElement).parentElement;
+                          if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
+                        }}
+                      />
+                    </div>
+                    <div className="arena-fighter-name">{card.fighter.Fighter}</div>
+                  </div>
+                ))}
+              </div>
 
-  {/* 3. Шкала здоровья игрока (8%) */}
-  <div className="arena-player-health">
-    <div className="arena-health-bar">
-      <div 
-        className="arena-health-fill" 
-        style={{ width: `${(userHealth / 1000) * 100}%` }}
-      ></div>
-      <span className="arena-health-text">{userName} Health: {userHealth}</span>
-    </div>
-  </div>
+              {/* Шкала здоровья игрока */}
+              <div className="arena-player-health">
+                <div className="arena-health-bar">
+                  <div 
+                    className="arena-health-fill" 
+                    style={{ width: `${(userHealth / 1000) * 100}%` }}
+                  ></div>
+                  <span className="arena-health-text">{userName} Health: {userHealth}</span>
+                </div>
+              </div>
 
-  {/* Новый контейнер с тремя колонками */}
-  <div className="arena-avatar-container">
-    {/* Левый блок - DAMAGE игрока (скругление правый верхний) */}
-    <div className="arena-avatar-left">
-  <div className="arena-damage-display player-damage">
-    <span className="damage-label">DAMAGE</span>
-    <span className="damage-value">
-      {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-    </span>
-  </div>
-</div>
-    
-    {/* Средний блок - аватарка игрока */}
-    <div className="arena-avatar-center">
-      <div className="arena-avatar">
-        <img 
-          src={userAvatar || `${BASE_URL}/Home_button.png`}
-          alt="player"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
-          }}
-        />
-      </div>
-    </div>
-    
-    {/* Правый блок - пустой (резерв) */}
-    <div className="arena-avatar-right"></div>
-  </div>
-</div>
+              {/* Контейнер с тремя колонками */}
+              <div className="arena-avatar-container">
+                {/* Левый блок - DAMAGE игрока (скругление правый верхний) */}
+                <div className="arena-avatar-left">
+                  <div className="arena-damage-wrapper">
+                    {/* Никнейм игрока над DAMAGE */}
+                    <div className="damage-username">{userName}</div>
+                    {/* Разделительная линия */}
+                    <div className="damage-divider"></div>
+                    {/* Блок DAMAGE */}
+                    <div className="arena-damage-display player-damage">
+                      <span className="damage-label">DAMAGE</span>
+                      <span className="damage-value">
+                        {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Средний блок - аватарка игрока */}
+                <div className="arena-avatar-center">
+                  <div className="arena-avatar">
+                    <img 
+                      src={userAvatar || `${BASE_URL}/Home_button.png`}
+                      alt="player"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                {/* Правый блок - пустой (резерв) */}
+                <div className="arena-avatar-right"></div>
+              </div>
+            </div>
           </>
         )}
       </div>

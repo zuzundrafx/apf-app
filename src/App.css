@@ -1999,7 +1999,16 @@ body {
 
 /* Адаптация для маленьких экранов */
 @media (max-width: 320px) {
-  .arena-fighter-damage {
+  .damage-username {
+    font-size: 8px;
+    margin-bottom: 1px;
+  }
+  
+  .damage-divider {
+    margin: 1px 0 2px 0;
+  }
+
+    .arena-fighter-damage {
     font-size: 6px;
   }
   
@@ -2030,9 +2039,6 @@ body {
   .damage-value {
     font-size: 9px;
   }
-
-
-
 }
 
 /* ===== БИТВА - ВСПЛЫВАЮЩИЕ НАДПИСИ ===== */
@@ -2140,4 +2146,63 @@ body {
   cursor: not-allowed;
   background: #666D74; /* Цвет как у кнопки SURRENDER */
   pointer-events: none;
+}
+
+/* ===== НОВЫЕ СТИЛИ ДЛЯ БЛОКА DAMAGE С НИКНЕЙМОМ ===== */
+
+/* Контейнер для никнейма и блока DAMAGE */
+.arena-damage-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  justify-content: flex-start;
+}
+
+/* Стили для никнейма над DAMAGE */
+.damage-username {
+  color: #FFFFFF;
+  font-size: clamp(10px, 2.5vw, 14px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  padding-left: 8%;
+}
+
+/* Разделительная линия с градиентной прозрачностью */
+.damage-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #959595 20%,
+    #959595 80%,
+    transparent 100%
+  );
+  margin: 2px 0 4px 0;
+  opacity: 0.8;
+}
+
+/* Для противника (верх) - выравнивание текста и элементов */
+.arena-top .arena-damage-wrapper {
+  align-items: flex-start;
+}
+
+.arena-top .damage-username {
+  text-align: left;
+}
+
+/* Для игрока (низ) - выравнивание текста и элементов */
+.arena-bottom .arena-damage-wrapper {
+  align-items: flex-start;
+}
+
+.arena-bottom .damage-username {
+  text-align: left;
 }
