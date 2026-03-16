@@ -1669,24 +1669,26 @@ body {
   width: 90%;
   height: 70%;
   background: linear-gradient(90deg, #1C1D1F 0%, #414141 100%);
-  border: 1px solid #959595;
+  /*border: 1px solid #959595;*/
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  padding: 4% 0 4% 8%;
+  padding: 0% 0 0% 0%;
 }
 
 /* Противник (верх) - прижат к верху, скруглен правый нижний */
 .arena-damage-display.rival-damage {
-  
+  border-bottom: 1px solid #959595;
+  border-left: 1px solid #959595;
   border-radius: 0 0 10px 0;
   margin-top: 0;
 }
 
 /* Игрок (низ) - прижат к низу, скруглен правый верхний */
 .arena-damage-display.player-damage {
-  
+  border-top: 1px solid #959595;
+  border-left: 1px solid #959595;
   border-radius: 0 10px 0 0;
   margin-bottom: 0;
 }
