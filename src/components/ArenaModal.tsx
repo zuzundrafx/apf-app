@@ -288,7 +288,15 @@ const [showDamageIncrease, setShowDamageIncrease] = useState<{ player: boolean; 
     return newFlipped;
   });
   
-  // Рассчитываем новый урон до обновления карт
+  // ТЕКУЩИЙ урон до обновления
+  const currentPlayerDamage = userActiveCards.reduce(
+    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+  );
+  const currentRivalDamage = rivalActiveCards.reduce(
+    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+  );
+  
+  // НОВЫЙ урон после добавления карты
   const newPlayerDamage = (event.userActiveCards || []).reduce(
     (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
   );
@@ -296,17 +304,24 @@ const [showDamageIncrease, setShowDamageIncrease] = useState<{ player: boolean; 
     (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
   );
   
+  // Проверяем, увеличился ли урон
+  const playerDamageIncreased = newPlayerDamage > currentPlayerDamage;
+  const rivalDamageIncreased = newRivalDamage > currentRivalDamage;
+  
   // Через 300мс показываем лицевую сторону карты и бойцов
   setTimeout(() => {
     // Обновляем карты бойцов
     setUserActiveCards(event.userActiveCards || []);
     setRivalActiveCards(event.rivalActiveCards || []);
     
-    // Анимируем увеличение урона
+    // Анимируем увеличение урона ТОЛЬКО если он действительно вырос
     setAnimatedDamage({ player: newPlayerDamage, rival: newRivalDamage });
     
-    // Показываем эффект увеличения
-    setShowDamageIncrease({ player: true, rival: true });
+    // Показываем эффект увеличения только для тех, у кого урон вырос
+    setShowDamageIncrease({ 
+      player: playerDamageIncreased, 
+      rival: rivalDamageIncreased 
+    });
     
     // Через 500мс убираем эффект
     setTimeout(() => {
@@ -314,7 +329,7 @@ const [showDamageIncrease, setShowDamageIncrease] = useState<{ player: boolean; 
     }, 500);
     
     // Переходим к следующему событию через оставшееся время
-    setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1200); // 1700 - 500 = 1200
+    setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1200);
   }, 300);
   break;
 
