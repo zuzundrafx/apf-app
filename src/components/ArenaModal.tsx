@@ -105,13 +105,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
   const [animatedDamage, setAnimatedDamage] = useState<{ player: number; rival: number }>({ player: 0, rival: 0 });
   const [showDamageIncrease, setShowDamageIncrease] = useState<{ player: boolean; rival: boolean }>({ 
-  player: false, 
-  rival: false 
+    player: false, 
+    rival: false 
   });
   const [showDamageNumber, setShowDamageNumber] = useState<{ 
-  player: number | null; 
-  rival: number | null 
-}>({ player: null, rival: null });
+    player: number | null; 
+    rival: number | null 
+  }>({ player: null, rival: null });
 
   const [shakeScreen, setShakeScreen] = useState(false);
   const [healthFlash, setHealthFlash] = useState<'player' | 'rival' | null>(null);
@@ -284,131 +284,131 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         break;
 
       case 'card-appear':
-  // Добавляем весовую категорию в использованные
-  setUsedWeightClasses(prev => [...prev, event.weightClass!]);
-  
-  // Запускаем анимацию переворота для карты этого раунда
-  const cardIndex = event.round! - 1;
-  setFlippedCards(prev => {
-    const newFlipped = [...prev];
-    newFlipped[cardIndex] = true;
-    return newFlipped;
-  });
-  
-  // ТЕКУЩИЙ урон до обновления
-  const currentPlayerDamage = userActiveCards.reduce(
-    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-  );
-  const currentRivalDamage = rivalActiveCards.reduce(
-    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-  );
-  
-  // НОВЫЙ урон после добавления карты
-  const newPlayerDamage = (event.userActiveCards || []).reduce(
-    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-  );
-  const newRivalDamage = (event.rivalActiveCards || []).reduce(
-    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-  );
-  
-  // Проверяем, увеличился ли урон
-  const playerDamageIncreased = newPlayerDamage > currentPlayerDamage;
-  const rivalDamageIncreased = newRivalDamage > currentRivalDamage;
-  
-  // Через 300мс показываем лицевую сторону карты и бойцов
-  setTimeout(() => {
-    // Обновляем карты бойцов
-    setUserActiveCards(event.userActiveCards || []);
-    setRivalActiveCards(event.rivalActiveCards || []);
-    
-    // Анимируем увеличение урона ТОЛЬКО если он действительно вырос
-    setAnimatedDamage({ player: newPlayerDamage, rival: newRivalDamage });
-    
-    // Показываем эффект увеличения только для тех, у кого урон вырос
-    setShowDamageIncrease({ 
-      player: playerDamageIncreased, 
-      rival: rivalDamageIncreased 
-    });
-    
-    // Через 500мс убираем эффект
-    setTimeout(() => {
-      setShowDamageIncrease({ player: false, rival: false });
-    }, 500);
-    
-    // Переходим к следующему событию через оставшееся время
-    setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1200);
-  }, 300);
-  break;
+        // Добавляем весовую категорию в использованные
+        setUsedWeightClasses(prev => [...prev, event.weightClass!]);
+        
+        // Запускаем анимацию переворота для карты этого раунда
+        const cardIndex = event.round! - 1;
+        setFlippedCards(prev => {
+          const newFlipped = [...prev];
+          newFlipped[cardIndex] = true;
+          return newFlipped;
+        });
+        
+        // ТЕКУЩИЙ урон до обновления
+        const currentPlayerDamage = userActiveCards.reduce(
+          (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+        );
+        const currentRivalDamage = rivalActiveCards.reduce(
+          (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+        );
+        
+        // НОВЫЙ урон после добавления карты
+        const newPlayerDamage = (event.userActiveCards || []).reduce(
+          (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+        );
+        const newRivalDamage = (event.rivalActiveCards || []).reduce(
+          (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+        );
+        
+        // Проверяем, увеличился ли урон
+        const playerDamageIncreased = newPlayerDamage > currentPlayerDamage;
+        const rivalDamageIncreased = newRivalDamage > currentRivalDamage;
+        
+        // Через 300мс показываем лицевую сторону карты и бойцов
+        setTimeout(() => {
+          // Обновляем карты бойцов
+          setUserActiveCards(event.userActiveCards || []);
+          setRivalActiveCards(event.rivalActiveCards || []);
+          
+          // Анимируем увеличение урона ТОЛЬКО если он действительно вырос
+          setAnimatedDamage({ player: newPlayerDamage, rival: newRivalDamage });
+          
+          // Показываем эффект увеличения только для тех, у кого урон вырос
+          setShowDamageIncrease({ 
+            player: playerDamageIncreased, 
+            rival: rivalDamageIncreased 
+          });
+          
+          // Через 500мс убираем эффект
+          setTimeout(() => {
+            setShowDamageIncrease({ player: false, rival: false });
+          }, 500);
+          
+          // Переходим к следующему событию через оставшееся время
+          setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1200);
+        }, 300);
+        break;
 
       case 'damage':
-  // Получаем значения урона из события
-  const playerDamageDealt = event.rivalDamage || 0; // Урон, который игрок нанес противнику
-  const rivalDamageDealt = event.userDamage || 0;   // Урон, который противник нанес игроку
-  
-  // ШАГ 1: Игрок бьет противника
-  setDamagePhase('first');
-  setRivalHealth(event.rivalHealthAfter!);
-  
-  // Показываем всплывающее число урона для противника
-  if (playerDamageDealt > 0) {
-    setShowDamageNumber({ player: null, rival: playerDamageDealt });
-    
-    // Добавляем эффекты для противника
-    setHealthFlash('rival');
-    
-    // Тряска экрана для больших значений урона (> 50)
-    if (playerDamageDealt > 50) {
-      setShakeScreen(true);
-      setTimeout(() => setShakeScreen(false), 400);
-    }
-    
-    // Добавляем класс урона для аватарки противника
-    const rivalAvatar = document.querySelector('.arena-top .arena-avatar');
-    if (rivalAvatar) {
-      rivalAvatar.classList.add('damage-taken');
-      setTimeout(() => rivalAvatar.classList.remove('damage-taken'), 300);
-    }
-  }
-  
-  // Через 0.75 сек - ШАГ 2: Противник бьет игрока
-  setTimeout(() => {
-    setDamagePhase('second');
-    setUserHealth(event.userHealthAfter!);
-    
-    // Показываем всплывающее число урона для игрока
-    if (rivalDamageDealt > 0) {
-      setShowDamageNumber({ player: rivalDamageDealt, rival: null });
-      
-      // Добавляем эффекты для игрока
-      setHealthFlash('player');
-      
-      // Тряска экрана для больших значений урона
-      if (rivalDamageDealt > 50) {
-        setShakeScreen(true);
-        setTimeout(() => setShakeScreen(false), 400);
-      }
-      
-      // Добавляем класс урона для аватарки игрока
-      const playerAvatar = document.querySelector('.arena-bottom .arena-avatar');
-      if (playerAvatar) {
-        playerAvatar.classList.add('damage-taken');
-        setTimeout(() => playerAvatar.classList.remove('damage-taken'), 300);
-      }
-    }
-    
-    // Убираем всплывающие числа через 1 сек
-    setTimeout(() => {
-      setShowDamageNumber({ player: null, rival: null });
-      setHealthFlash(null);
-    }, 1000);
-    
-    // Еще через 0.75 сек - переходим к следующему событию
-    setTimeout(() => {
-      setDamagePhase('idle');
-      setCurrentEventIndex(prev => prev + 1);
-    }, 750);
-  }, 750);
-  break;
+        // Получаем значения урона из события
+        const playerDamageDealt = event.rivalDamage || 0; // Урон, который игрок нанес противнику
+        const rivalDamageDealt = event.userDamage || 0;   // Урон, который противник нанес игроку
+        
+        // ШАГ 1: Игрок бьет противника
+        setDamagePhase('first');
+        setRivalHealth(event.rivalHealthAfter!);
+        
+        // Показываем всплывающее число урона для противника
+        if (playerDamageDealt > 0) {
+          setShowDamageNumber({ player: null, rival: playerDamageDealt });
+          
+          // Добавляем эффекты для противника
+          setHealthFlash('rival');
+          
+          // Тряска экрана для больших значений урона (> 50)
+          if (playerDamageDealt > 50) {
+            setShakeScreen(true);
+            setTimeout(() => setShakeScreen(false), 400);
+          }
+          
+          // Добавляем класс урона для аватарки противника
+          const rivalAvatar = document.querySelector('.arena-top .arena-avatar');
+          if (rivalAvatar) {
+            rivalAvatar.classList.add('damage-taken');
+            setTimeout(() => rivalAvatar.classList.remove('damage-taken'), 300);
+          }
+        }
+        
+        // Через 0.75 сек - ШАГ 2: Противник бьет игрока
+        setTimeout(() => {
+          setDamagePhase('second');
+          setUserHealth(event.userHealthAfter!);
+          
+          // Показываем всплывающее число урона для игрока
+          if (rivalDamageDealt > 0) {
+            setShowDamageNumber({ player: rivalDamageDealt, rival: null });
+            
+            // Добавляем эффекты для игрока
+            setHealthFlash('player');
+            
+            // Тряска экрана для больших значений урона
+            if (rivalDamageDealt > 50) {
+              setShakeScreen(true);
+              setTimeout(() => setShakeScreen(false), 400);
+            }
+            
+            // Добавляем класс урона для аватарки игрока
+            const playerAvatar = document.querySelector('.arena-bottom .arena-avatar');
+            if (playerAvatar) {
+              playerAvatar.classList.add('damage-taken');
+              setTimeout(() => playerAvatar.classList.remove('damage-taken'), 300);
+            }
+          }
+          
+          // Убираем всплывающие числа через 1 сек
+          setTimeout(() => {
+            setShowDamageNumber({ player: null, rival: null });
+            setHealthFlash(null);
+          }, 1000);
+          
+          // Еще через 0.75 сек - переходим к следующему событию
+          setTimeout(() => {
+            setDamagePhase('idle');
+            setCurrentEventIndex(prev => prev + 1);
+          }, 750);
+        }, 750);
+        break;
 
       case 'round-end':
         setCurrentRound(prev => prev + 1);
@@ -523,8 +523,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
   return (
     <div className="arena-modal-overlay">
-      <div className="arena-modal">
-        <div className={`arena-modal ${shakeScreen ? 'shake' : ''}`}></div>
+      <div className={`arena-modal ${shakeScreen ? 'shake' : ''}`}>
         {isLoading ? (
           <div className="arena-loading">Loading arena data...</div>
         ) : (
@@ -560,16 +559,16 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               <div className="arena-avatar-container">
                 {/* Левый блок - DAMAGE противника с никнеймом внутри */}
                 <div className="arena-avatar-left">
-  <div className="arena-damage-display rival-damage">
-    <div className="damage-username">{rivalData.username}</div>
-    <div className="damage-divider"></div>
-    <span className="damage-label">DAMAGE</span>
-    <span className={`damage-value ${showDamageIncrease.rival ? 'damage-increase' : ''}`}>
-      {animatedDamage.rival > 0 ? animatedDamage.rival : 
-        rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-    </span>
-  </div>
-</div>
+                  <div className="arena-damage-display rival-damage">
+                    <div className="damage-username">{rivalData.username}</div>
+                    <div className="damage-divider"></div>
+                    <span className="damage-label">DAMAGE</span>
+                    <span className={`damage-value ${showDamageIncrease.rival ? 'damage-increase' : ''}`}>
+                      {animatedDamage.rival > 0 ? animatedDamage.rival : 
+                        rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+                    </span>
+                  </div>
+                </div>
                 
                 {/* Средний блок - аватарка противника */}
                 <div className="arena-avatar-center">
@@ -584,32 +583,27 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   </div>
                 </div>
                 
-                {/* Всплывающие числа урона */}
-{showDamageNumber.rival && (
-  <div className="damage-number rival-damage">
-    -{showDamageNumber.rival}
-  </div>
-)}
-{showDamageNumber.player && (
-  <div className="damage-number player-damage">
-    -{showDamageNumber.player}
-  </div>
-)}
-
-
                 {/* Правый блок - пустой (резерв) */}
                 <div className="arena-avatar-right"></div>
               </div>
 
+              {/* Всплывающие числа урона для противника - вне flex контейнера */}
+              {showDamageNumber.rival && (
+                <div className="damage-number rival-damage">
+                  -{showDamageNumber.rival}
+                </div>
+              )}
+
               <div className="arena-rival-health">
-  <div className={`arena-health-bar ${healthFlash === 'rival' ? 'damage-flash' : ''}`}>
-    <div 
-      className="arena-health-fill" 
-      style={{ width: `${(rivalHealth / 1000) * 100}%` }}
-    ></div>
-    <span className="arena-health-text">HP {rivalHealth}/1000</span>
-  </div>
-</div>
+                <div className={`arena-health-bar ${healthFlash === 'rival' ? 'damage-flash' : ''}`}>
+                  <div 
+                    className="arena-health-fill" 
+                    style={{ width: `${(rivalHealth / 1000) * 100}%` }}
+                  ></div>
+                  <span className="arena-health-text">HP {rivalHealth}/1000</span>
+                </div>
+              </div>
+
               <div className="arena-rival-fighters">
                 {rivalActiveCards.map((card, index) => (
                   <div 
@@ -707,29 +701,27 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
               {/* Шкала здоровья игрока */}
               <div className="arena-player-health">
-  <div className={`arena-health-bar ${healthFlash === 'player' ? 'damage-flash' : ''}`}>
-    <div 
-      className="arena-health-fill" 
-      style={{ width: `${(userHealth / 1000) * 100}%` }}
-    ></div>
-    <span className="arena-health-text">HP {userHealth}/1000</span>
-  </div>
-</div>
+                <div className={`arena-health-bar ${healthFlash === 'player' ? 'damage-flash' : ''}`}>
+                  <div 
+                    className="arena-health-fill" 
+                    style={{ width: `${(userHealth / 1000) * 100}%` }}
+                  ></div>
+                  <span className="arena-health-text">HP {userHealth}/1000</span>
+                </div>
+              </div>
 
               {/* Контейнер с тремя колонками */}
               <div className="arena-avatar-container">
                 {/* Левый блок - DAMAGE игрока с никнеймом внутри */}
                 <div className="arena-avatar-left">
                   <div className="arena-damage-display player-damage">
+                    <div className="damage-username">{userName}</div>
+                    <div className="damage-divider"></div>
                     <span className="damage-label">DAMAGE</span>
                     <span className={`damage-value ${showDamageIncrease.player ? 'damage-increase' : ''}`}>
-  {animatedDamage.player > 0 ? animatedDamage.player : 
-    userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-</span>
-                    {/* Разделительная линия */}
-                    <div className="damage-divider"></div>
-                    {/* Никнейм игрока внутри блока DAMAGE */}
-                    <div className="damage-username">{userName}</div>
+                      {animatedDamage.player > 0 ? animatedDamage.player : 
+                        userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+                    </span>
                   </div>
                 </div>
                 
@@ -749,6 +741,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 {/* Правый блок - пустой (резерв) */}
                 <div className="arena-avatar-right"></div>
               </div>
+
+              {/* Всплывающие числа урона для игрока - вне flex контейнера */}
+              {showDamageNumber.player && (
+                <div className="damage-number player-damage">
+                  -{showDamageNumber.player}
+                </div>
+              )}
             </div>
           </>
         )}
