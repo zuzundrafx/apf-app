@@ -341,74 +341,76 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         break;
 
       case 'damage':
-        // Получаем значения урона из события
-        const playerDamageDealt = event.rivalDamage || 0; // Урон, который игрок нанес противнику
-        const rivalDamageDealt = event.userDamage || 0;   // Урон, который противник нанес игроку
-        
-        // ШАГ 1: Игрок бьет противника
-        setDamagePhase('first');
-        setRivalHealth(event.rivalHealthAfter!);
-        
-        // Показываем всплывающее число урона для противника
-        if (playerDamageDealt > 0) {
-          setShowDamageNumber({ player: null, rival: playerDamageDealt });
-          
-          // Добавляем эффекты для противника
-          setHealthFlash('rival');
-          
-          // Тряска экрана для больших значений урона (> 50)
-          if (playerDamageDealt > 50) {
-            setShakeScreen(true);
-            setTimeout(() => setShakeScreen(false), 400);
-          }
-          
-          // Добавляем класс урона для аватарки противника
-          const rivalAvatar = document.querySelector('.arena-top .arena-avatar');
-          if (rivalAvatar) {
-            rivalAvatar.classList.add('damage-taken');
-            setTimeout(() => rivalAvatar.classList.remove('damage-taken'), 300);
-          }
-        }
-        
-        // Через 0.75 сек - ШАГ 2: Противник бьет игрока
-        setTimeout(() => {
-          setDamagePhase('second');
-          setUserHealth(event.userHealthAfter!);
-          
-          // Показываем всплывающее число урона для игрока
-          if (rivalDamageDealt > 0) {
-            setShowDamageNumber({ player: rivalDamageDealt, rival: null });
-            
-            // Добавляем эффекты для игрока
-            setHealthFlash('player');
-            
-            // Тряска экрана для больших значений урона
-            if (rivalDamageDealt > 50) {
-              setShakeScreen(true);
-              setTimeout(() => setShakeScreen(false), 400);
-            }
-            
-            // Добавляем класс урона для аватарки игрока
-            const playerAvatar = document.querySelector('.arena-bottom .arena-avatar');
-            if (playerAvatar) {
-              playerAvatar.classList.add('damage-taken');
-              setTimeout(() => playerAvatar.classList.remove('damage-taken'), 300);
-            }
-          }
-          
-          // Убираем всплывающие числа через 1 сек
-          setTimeout(() => {
-            setShowDamageNumber({ player: null, rival: null });
-            setHealthFlash(null);
-          }, 1000);
-          
-          // Еще через 0.75 сек - переходим к следующему событию
-          setTimeout(() => {
-            setDamagePhase('idle');
-            setCurrentEventIndex(prev => prev + 1);
-          }, 750);
-        }, 750);
-        break;
+  // Получаем значения урона из события
+  const playerDamageDealt = event.userDamage || 0;  // Урон, который нанес ИГРОК (своими картами)
+  const rivalDamageDealt = event.rivalDamage || 0;  // Урон, который нанес ПРОТИВНИК (своими картами)
+  
+  console.log('💥 Урон:', { playerDamageDealt, rivalDamageDealt });
+  
+  // ШАГ 1: Игрок бьет противника
+  setDamagePhase('first');
+  setRivalHealth(event.rivalHealthAfter!);
+  
+  // Показываем всплывающее число урона для ПРОТИВНИКА (урон от игрока)
+  if (playerDamageDealt > 0) {
+    setShowDamageNumber({ player: null, rival: playerDamageDealt });
+    
+    // Добавляем эффекты для противника
+    setHealthFlash('rival');
+    
+    // Тряска экрана для больших значений урона (> 50)
+    if (playerDamageDealt > 50) {
+      setShakeScreen(true);
+      setTimeout(() => setShakeScreen(false), 400);
+    }
+    
+    // Добавляем класс урона для аватарки противника
+    const rivalAvatar = document.querySelector('.arena-top .arena-avatar');
+    if (rivalAvatar) {
+      rivalAvatar.classList.add('damage-taken');
+      setTimeout(() => rivalAvatar.classList.remove('damage-taken'), 300);
+    }
+  }
+  
+  // Через 0.75 сек - ШАГ 2: Противник бьет игрока
+  setTimeout(() => {
+    setDamagePhase('second');
+    setUserHealth(event.userHealthAfter!);
+    
+    // Показываем всплывающее число урона для ИГРОКА (урон от противника)
+    if (rivalDamageDealt > 0) {
+      setShowDamageNumber({ player: rivalDamageDealt, rival: null });
+      
+      // Добавляем эффекты для игрока
+      setHealthFlash('player');
+      
+      // Тряска экрана для больших значений урона
+      if (rivalDamageDealt > 50) {
+        setShakeScreen(true);
+        setTimeout(() => setShakeScreen(false), 400);
+      }
+      
+      // Добавляем класс урона для аватарки игрока
+      const playerAvatar = document.querySelector('.arena-bottom .arena-avatar');
+      if (playerAvatar) {
+        playerAvatar.classList.add('damage-taken');
+        setTimeout(() => playerAvatar.classList.remove('damage-taken'), 300);
+      }
+    }
+    
+    // Убираем всплывающие числа через 1 сек
+    setTimeout(() => {
+      setShowDamageNumber({ player: null, rival: null });
+      setHealthFlash(null);
+    }, 1000);
+    
+    // Еще через 0.75 сек - переходим к следующему событию
+    setTimeout(() => {
+      setDamagePhase('idle');
+      setCurrentEventIndex(prev => prev + 1);
+    }, 750);
+  }, 750);
+  break;
 
       case 'round-end':
         setCurrentRound(prev => prev + 1);
