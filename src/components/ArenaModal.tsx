@@ -103,6 +103,12 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const [damagePhase, setDamagePhase] = useState<'idle' | 'first' | 'second'>('idle');
   const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false, false, false]);
 
+  const [animatedDamage, setAnimatedDamage] = useState<{ player: number; rival: number }>({ player: 0, rival: 0 });
+const [showDamageIncrease, setShowDamageIncrease] = useState<{ player: boolean; rival: boolean }>({ 
+  player: false, 
+  rival: false 
+});
+
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
   // Функция для расчета всего сценария боя
@@ -271,27 +277,46 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         break;
 
       case 'card-appear':
-        // Добавляем весовую категорию в использованные
-        setUsedWeightClasses(prev => [...prev, event.weightClass!]);
-        
-        // Запускаем анимацию переворота для карты этого раунда
-        const cardIndex = event.round! - 1;
-        setFlippedCards(prev => {
-          const newFlipped = [...prev];
-          newFlipped[cardIndex] = true;
-          return newFlipped;
-        });
-        
-        // Через 300мс показываем лицевую сторону карты и бойцов
-        setTimeout(() => {
-          // Обновляем карты бойцов
-          setUserActiveCards(event.userActiveCards || []);
-          setRivalActiveCards(event.rivalActiveCards || []);
-          
-          // Переходим к следующему событию через оставшееся время
-          setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1700);
-        }, 300);
-        break;
+  // Добавляем весовую категорию в использованные
+  setUsedWeightClasses(prev => [...prev, event.weightClass!]);
+  
+  // Запускаем анимацию переворота для карты этого раунда
+  const cardIndex = event.round! - 1;
+  setFlippedCards(prev => {
+    const newFlipped = [...prev];
+    newFlipped[cardIndex] = true;
+    return newFlipped;
+  });
+  
+  // Рассчитываем новый урон до обновления карт
+  const newPlayerDamage = (event.userActiveCards || []).reduce(
+    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+  );
+  const newRivalDamage = (event.rivalActiveCards || []).reduce(
+    (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
+  );
+  
+  // Через 300мс показываем лицевую сторону карты и бойцов
+  setTimeout(() => {
+    // Обновляем карты бойцов
+    setUserActiveCards(event.userActiveCards || []);
+    setRivalActiveCards(event.rivalActiveCards || []);
+    
+    // Анимируем увеличение урона
+    setAnimatedDamage({ player: newPlayerDamage, rival: newRivalDamage });
+    
+    // Показываем эффект увеличения
+    setShowDamageIncrease({ player: true, rival: true });
+    
+    // Через 500мс убираем эффект
+    setTimeout(() => {
+      setShowDamageIncrease({ player: false, rival: false });
+    }, 500);
+    
+    // Переходим к следующему событию через оставшееся время
+    setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1200); // 1700 - 500 = 1200
+  }, 300);
+  break;
 
       case 'damage':
         // ШАГ 1: Игрок бьет противника (здоровье противника уменьшается)
@@ -460,17 +485,16 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               <div className="arena-avatar-container">
                 {/* Левый блок - DAMAGE противника с никнеймом внутри */}
                 <div className="arena-avatar-left">
-                  <div className="arena-damage-display rival-damage">
-                    {/* Никнейм противника внутри блока DAMAGE */}
-                    <div className="damage-username">{rivalData.username}</div>
-                    {/* Разделительная линия */}
-                    <div className="damage-divider"></div>
-                    <span className="damage-label">DAMAGE</span>
-                    <span className="damage-value">
-                      {rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-                    </span>
-                  </div>
-                </div>
+  <div className="arena-damage-display rival-damage">
+    <div className="damage-username">{rivalData.username}</div>
+    <div className="damage-divider"></div>
+    <span className="damage-label">DAMAGE</span>
+    <span className={`damage-value ${showDamageIncrease.rival ? 'damage-increase' : ''}`}>
+      {animatedDamage.rival > 0 ? animatedDamage.rival : 
+        rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+    </span>
+  </div>
+</div>
                 
                 {/* Средний блок - аватарка противника */}
                 <div className="arena-avatar-center">
@@ -611,9 +635,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 <div className="arena-avatar-left">
                   <div className="arena-damage-display player-damage">
                     <span className="damage-label">DAMAGE</span>
-                    <span className="damage-value">
-                      {userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
-                    </span>
+                    <span className={`damage-value ${showDamageIncrease.player ? 'damage-increase' : ''}`}>
+  {animatedDamage.player > 0 ? animatedDamage.player : 
+    userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+</span>
                     {/* Разделительная линия */}
                     <div className="damage-divider"></div>
                     {/* Никнейм игрока внутри блока DAMAGE */}
