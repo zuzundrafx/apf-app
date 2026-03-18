@@ -187,18 +187,22 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
       );
 
-      // Сохраняем урон в событиях, но НЕ наносим его сразу
+      // Наносим урон
+      currentRivalHealth = Math.max(0, currentRivalHealth - userTotalDamage);
+      currentUserHealth = Math.max(0, currentUserHealth - rivalTotalDamage);
+
+      // Событие нанесения урона
       events.push({
         type: 'damage',
         round,
         userDamage: userTotalDamage,
         rivalDamage: rivalTotalDamage,
-        userHealthAfter: currentUserHealth - rivalTotalDamage, // Здоровье после урона противника
-        rivalHealthAfter: currentRivalHealth - userTotalDamage // Здоровье после урона игрока
+        userHealthAfter: currentUserHealth,
+        rivalHealthAfter: currentRivalHealth
       });
 
-      // Проверка на досрочное окончание (используем текущее здоровье)
-      if (currentRivalHealth - userTotalDamage <= 0 && currentUserHealth - rivalTotalDamage > 0) {
+      // Проверка на досрочное окончание
+      if (currentRivalHealth <= 0 && currentUserHealth > 0) {
         events.push({
           type: 'battle-end',
           result: { isOpen: true, result: 'win', resultType: 'ko' }
@@ -206,7 +210,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         return events;
       }
       
-      if (currentUserHealth - rivalTotalDamage <= 0 && currentRivalHealth - userTotalDamage > 0) {
+      if (currentUserHealth <= 0 && currentRivalHealth > 0) {
         events.push({
           type: 'battle-end',
           result: { isOpen: true, result: 'loss', resultType: 'ko' }
@@ -214,17 +218,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         return events;
       }
       
-      if (currentUserHealth - rivalTotalDamage <= 0 && currentRivalHealth - userTotalDamage <= 0) {
+      if (currentUserHealth <= 0 && currentRivalHealth <= 0) {
         events.push({
           type: 'battle-end',
           result: { isOpen: true, result: 'draw' }
         });
         return events;
       }
-
-      // Обновляем здоровье для следующего раунда
-      currentUserHealth = Math.max(0, currentUserHealth - rivalTotalDamage);
-      currentRivalHealth = Math.max(0, currentRivalHealth - userTotalDamage);
 
       // Конец раунда
       if (round < 5) {
@@ -341,131 +341,76 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         break;
 
       case 'damage':
-        // Получаем карты, которые сейчас на столе
-        const playerCards = [...userActiveCards];
-        const rivalCards = [...rivalActiveCards];
-        
-        // Получаем общий урон из события
-        const playerTotalDamage = event.userDamage || 0;
-        const rivalTotalDamage = event.rivalDamage || 0;
-        
-        console.log('💥 Наносим урон:', { 
-          playerCardsCount: playerCards.length, 
-          rivalCardsCount: rivalCards.length,
-          playerTotalDamage,
-          rivalTotalDamage
-        });
-        
-        // Если нет карт, просто переходим к следующему событию
-        if (playerCards.length === 0 && rivalCards.length === 0) {
-          setCurrentEventIndex(prev => prev + 1);
-          break;
-        }
-        
-        // Запускаем процесс нанесения урона
-        setDamagePhase('first');
-        
-        let playerIndex = 0;
-        let rivalIndex = 0;
-        let currentRivalHealth = rivalHealth;
-        let currentUserHealth = userHealth;
-        
-        // Функция для нанесения урона от одной карты игрока
-        const applyPlayerHit = () => {
-          if (playerIndex < playerCards.length) {
-            // Урон от текущей карты
-            const damage = Math.round(playerCards[playerIndex].fighter['Total Damage']);
-            
-            // Обновляем здоровье противника
-            currentRivalHealth = Math.max(0, currentRivalHealth - damage);
-            setRivalHealth(currentRivalHealth);
-            
-            // Показываем всплывающее число
-            setShowDamageNumber({ player: null, rival: damage });
-            
-            // Эффект на шкале здоровья
-            setHealthFlash('rival');
-            
-            // Эффект на карте
-            const cardElements = document.querySelectorAll('.arena-player-fighters .arena-fighter-card');
-            if (cardElements[playerIndex]) {
-              cardElements[playerIndex].classList.add('card-attacking');
-              setTimeout(() => cardElements[playerIndex].classList.remove('card-attacking'), 200);
-            }
-            
-            // Эффект на аватарке
-            const rivalAvatar = document.querySelector('.arena-top .arena-avatar');
-            if (rivalAvatar) {
-              rivalAvatar.classList.add('damage-taken');
-              setTimeout(() => rivalAvatar.classList.remove('damage-taken'), 200);
-            }
-            
-            playerIndex++;
-            
-            // Если есть еще карты, планируем следующий удар
-            if (playerIndex < playerCards.length) {
-              setTimeout(applyPlayerHit, 200);
-            } else {
-              // Все удары игрока нанесены, начинаем удары противника
-              setTimeout(() => {
-                setShowDamageNumber({ player: null, rival: null });
-                setHealthFlash(null);
-                applyRivalHit();
-              }, 300);
-            }
-          }
-        };
-        
-        // Функция для нанесения урона от одной карты противника
-        const applyRivalHit = () => {
-          if (rivalIndex < rivalCards.length) {
-            // Урон от текущей карты
-            const damage = Math.round(rivalCards[rivalIndex].fighter['Total Damage']);
-            
-            // Обновляем здоровье игрока
-            currentUserHealth = Math.max(0, currentUserHealth - damage);
-            setUserHealth(currentUserHealth);
-            
-            // Показываем всплывающее число
-            setShowDamageNumber({ player: damage, rival: null });
-            
-            // Эффект на шкале здоровья
-            setHealthFlash('player');
-            
-            // Эффект на карте
-            const cardElements = document.querySelectorAll('.arena-rival-fighters .arena-fighter-card');
-            if (cardElements[rivalIndex]) {
-              cardElements[rivalIndex].classList.add('card-attacking');
-              setTimeout(() => cardElements[rivalIndex].classList.remove('card-attacking'), 200);
-            }
-            
-            // Эффект на аватарке
-            const playerAvatar = document.querySelector('.arena-bottom .arena-avatar');
-            if (playerAvatar) {
-              playerAvatar.classList.add('damage-taken');
-              setTimeout(() => playerAvatar.classList.remove('damage-taken'), 200);
-            }
-            
-            rivalIndex++;
-            
-            // Если есть еще карты, планируем следующий удар
-            if (rivalIndex < rivalCards.length) {
-              setTimeout(applyRivalHit, 200);
-            } else {
-              // Все удары завершены
-              setTimeout(() => {
-                setShowDamageNumber({ player: null, rival: null });
-                setHealthFlash(null);
-                setDamagePhase('idle');
-                setCurrentEventIndex(prev => prev + 1);
-              }, 500);
-            }
-          }
-        };
-        
-        // Запускаем первую фазу - удары игрока
-        setTimeout(applyPlayerHit, 100);
-        break;
+  // Получаем значения урона из события
+  const playerDamageDealt = event.userDamage || 0;  // Урон, который нанес ИГРОК (своими картами)
+  const rivalDamageDealt = event.rivalDamage || 0;  // Урон, который нанес ПРОТИВНИК (своими картами)
+  
+  console.log('💥 Урон:', { playerDamageDealt, rivalDamageDealt });
+  
+  // ШАГ 1: Игрок бьет противника
+  setDamagePhase('first');
+  setRivalHealth(event.rivalHealthAfter!);
+  
+  // Показываем всплывающее число урона для ПРОТИВНИКА (урон от игрока)
+  if (playerDamageDealt > 0) {
+    setShowDamageNumber({ player: null, rival: playerDamageDealt });
+    
+    // Добавляем эффекты для противника
+    setHealthFlash('rival');
+    
+    // Тряска экрана для больших значений урона (> 50)
+    if (playerDamageDealt > 50) {
+      setShakeScreen(true);
+      setTimeout(() => setShakeScreen(false), 400);
+    }
+    
+    // Добавляем класс урона для аватарки противника
+    const rivalAvatar = document.querySelector('.arena-top .arena-avatar');
+    if (rivalAvatar) {
+      rivalAvatar.classList.add('damage-taken');
+      setTimeout(() => rivalAvatar.classList.remove('damage-taken'), 300);
+    }
+  }
+  
+  // Через 0.75 сек - ШАГ 2: Противник бьет игрока
+  setTimeout(() => {
+    setDamagePhase('second');
+    setUserHealth(event.userHealthAfter!);
+    
+    // Показываем всплывающее число урона для ИГРОКА (урон от противника)
+    if (rivalDamageDealt > 0) {
+      setShowDamageNumber({ player: rivalDamageDealt, rival: null });
+      
+      // Добавляем эффекты для игрока
+      setHealthFlash('player');
+      
+      // Тряска экрана для больших значений урона
+      if (rivalDamageDealt > 50) {
+        setShakeScreen(true);
+        setTimeout(() => setShakeScreen(false), 400);
+      }
+      
+      // Добавляем класс урона для аватарки игрока
+      const playerAvatar = document.querySelector('.arena-bottom .arena-avatar');
+      if (playerAvatar) {
+        playerAvatar.classList.add('damage-taken');
+        setTimeout(() => playerAvatar.classList.remove('damage-taken'), 300);
+      }
+    }
+    
+    // Убираем всплывающие числа через 1 сек
+    setTimeout(() => {
+      setShowDamageNumber({ player: null, rival: null });
+      setHealthFlash(null);
+    }, 1000);
+    
+    // Еще через 0.75 сек - переходим к следующему событию
+    setTimeout(() => {
+      setDamagePhase('idle');
+      setCurrentEventIndex(prev => prev + 1);
+    }, 750);
+  }, 750);
+  break;
 
       case 'round-end':
         setCurrentRound(prev => prev + 1);
