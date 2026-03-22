@@ -2026,8 +2026,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(6px, 1.8vw, 11px);
-  font-weight: 500;
+  font-size: clamp(5px, 1.7vw, 11px);
+  font-weight: 400;
   color: #FFFFFF;
   text-transform: uppercase;
   text-align: center;
