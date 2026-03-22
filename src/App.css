@@ -2026,14 +2026,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(6px, 2.0vw, 11px);
+  font-size: clamp(6px, 1.8vw, 11px);
   font-weight: 500;
   color: #FFFFFF;
   text-transform: uppercase;
   text-align: center;
   padding: 2% 4%;
   word-break: break-word;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 /* Цветовые классы для карточек и линий */
