@@ -1604,11 +1604,11 @@ body {
   text-transform: uppercase;
 }
 
-/* Верхний контейнер (40%) - противник */
+/* Верхний контейнер (38%) - противник */
 .arena-top {
   display: flex;
   flex-direction: column;
-  height: 40%;
+  height: 38%;
   min-height: 200px;
   background: #2A2A2A;
   /*border-bottom: 1px solid #4A4A48;*/
@@ -1882,12 +1882,12 @@ body {
 
 
 
-/* Средний контейнер (12%) - раунды */
+/* Средний контейнер (16%) - раунды */
 .arena-middle {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 1%;
-  height: 12%;
+  height: 16%;
   background: #1C1D1F;
   padding-left: 1%;
   padding-right: 1%;
@@ -2164,11 +2164,11 @@ body {
   min-width: 0;
 }
 
-/* Нижний контейнер (40%) - игрок */
+/* Нижний контейнер (38%) - игрок */
 .arena-bottom {
   display: flex;
   flex-direction: column;
-  height: 40%;
+  height: 38%;
   min-height: 200px;
   background: #2A2A2A;
 }
