@@ -43,18 +43,18 @@ const getAvatarFilename = (weightClass: string): string => {
 // Функция для получения цвета весовой категории
 const getWeightClassColor = (weightClass: string): string => {
   const colors: { [key: string]: string } = {
-    'Flyweight': '#168760',
-    'Bantamweight': '#446E87',
-    'Featherweight': '#424A87',
-    'Lightweight': '#5F3A87',
-    'Welterweight': '#813D87',
-    'Middleweight': '#87863B',
-    'Light Heavyweight': '#876A0B',
-    'Heavyweight': '#870000',
-    "Women's Strawweight": '#A6125F',
-    "Women's Flyweight": '#58C467',
-    "Women's Bantamweight": '#66A4C9',
-    "Catch Weight": '#666666'
+    'Flyweight': '#00FFA3',
+    'Bantamweight': '#00E0FF',
+    'Featherweight': '#0075FF',
+    'Lightweight': '#AD00FF',
+    'Welterweight': '#FF00D6',
+    'Middleweight': '#FFD700',
+    'Light Heavyweight': '#FF5C00',
+    'Heavyweight': '#FF0000',
+    "Women's Strawweight": '#FF6B9D',
+    "Women's Flyweight": '#5EEAD4',
+    "Women's Bantamweight": '#818CF8',
+    "Catch Weight": '#94A3B8'
   };
   return colors[weightClass] || '#666666';
 };
