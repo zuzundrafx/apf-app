@@ -1962,8 +1962,8 @@ body {
 
 /* Внутренний контейнер карточки (фон #191a1f) */
 .weight-card-inner {
-  width: 95%;
-  height: 82%;
+  width: 97%;
+  height: 90%;
   background: #191a1f;
   border-radius: 1.5vw;
   display: flex;
@@ -2026,8 +2026,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(8px, 2.5vw, 11px);
-  font-weight: 600;
+  font-size: clamp(6px, 2.0vw, 11px);
+  font-weight: 500;
   color: #FFFFFF;
   text-transform: uppercase;
   text-align: center;
