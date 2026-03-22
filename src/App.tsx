@@ -1194,13 +1194,20 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
                     const selectedFighter = selectedFighters.get(weightClass);
 
                     return (
-                      <div key={weightClass} className="weight-section">
-                        <div className="weight-header" style={{ backgroundColor: getWeightClassColor(weightClass) }}>
-                          <span>{weightClass}</span>
-                          {isWeightSelected && (
-                            <span className="selected-badge">{selectedFighter?.Fighter}</span>
-                          )}
-                        </div>
+                      <div 
+  key={weightClass} 
+  className="weight-section"
+>
+  <div 
+    className="weight-header" 
+    data-weight={weightClass}
+    style={{ backgroundColor: getWeightClassColor(weightClass) }}
+  >
+    <span>{weightClass}</span>
+    {isWeightSelected && (
+      <span className="selected-badge">{selectedFighter?.Fighter}</span>
+    )}
+  </div>
 
                         {pairs.map((pair, idx) => (
                           <div key={idx} className="fight-pair">

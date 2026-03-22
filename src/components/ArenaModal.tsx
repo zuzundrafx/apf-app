@@ -634,43 +634,110 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             </div>
 
             {/* Средний контейнер (12%) - раунды */}
-            <div className="arena-middle">
-              {[0, 1, 2, 3, 4].map((roundIndex) => {
-                const roundNumber = roundIndex + 1;
-                const isUsed = roundNumber <= usedWeightClasses.length;
-                const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
-                const isFlipped = flippedCards[roundIndex];
-                
-                return (
-                  <div 
-                    key={roundIndex} 
-                    className={`arena-round-card ${isFlipped ? 'flipped' : ''}`}
-                  >
-                    <div className="arena-round-card-inner">
-                      {/* Лицевая сторона - исходный вид */}
-                      <div className="arena-round-card-front">
-                        <div className="arena-round-number">
-                          <div className="arena-round-digit">{roundNumber}</div>
-                          <div className="arena-round-text">ROUND</div>
-                        </div>
-                      </div>
-                      
-                      {/* Задняя сторона - цвет весовой категории */}
-                      <div 
-                        className="arena-round-card-back"
-                        style={weightClass ? { 
-                          backgroundColor: getWeightClassColor(weightClass) 
-                        } : {}}
-                      >
-                        {weightClass && (
-                          <div className="arena-round-weight">{weightClass}</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+<div className="arena-middle">
+  {[0, 1, 2, 3, 4].map((roundIndex) => {
+    const roundNumber = roundIndex + 1;
+    const isUsed = roundNumber <= usedWeightClasses.length;
+    const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
+    const isFlipped = flippedCards[roundIndex];
+    
+    // Определяем CSS класс для цвета категории
+    const getWeightCardClass = (weightClass: string | null): string => {
+      if (!weightClass) return '';
+      
+      const classMap: { [key: string]: string } = {
+        'Flyweight': 'weight-card-flyweight',
+        'Bantamweight': 'weight-card-bantamweight',
+        'Featherweight': 'weight-card-featherweight',
+        'Lightweight': 'weight-card-lightweight',
+        'Welterweight': 'weight-card-welterweight',
+        'Middleweight': 'weight-card-middleweight',
+        'Light Heavyweight': 'weight-card-light-heavyweight',
+        'Heavyweight': 'weight-card-heavyweight',
+        "Women's Strawweight": 'weight-card-womens-strawweight',
+        "Women's Flyweight": 'weight-card-womens-flyweight',
+        "Women's Bantamweight": 'weight-card-womens-bantamweight',
+        "Catch Weight": 'weight-card-catch-weight'
+      };
+      
+      return classMap[weightClass] || '';
+    };
+    
+    // Функция для получения имени файла иконки
+    const getWeightClassIcon = (weightClass: string | null): string => {
+      if (!weightClass) return '';
+      
+      const iconMap: { [key: string]: string } = {
+        'Flyweight': 'Flyweight_icon.webp',
+        'Bantamweight': 'Bantamweight_icon.webp',
+        'Featherweight': 'Featherweight_icon.webp',
+        'Lightweight': 'Lightweight_icon.webp',
+        'Welterweight': 'Welterweight_icon.webp',
+        'Middleweight': 'Middleweight_icon.webp',
+        'Light Heavyweight': 'Ligh_Heavyweight_icon.webp',
+        'Heavyweight': 'Heavyweight_icon.webp',
+        "Women's Strawweight": "Women's_Strawweight_icon.webp",
+        "Women's Flyweight": "Women's_Flyweight_icon.webp",
+        "Women's Bantamweight": "Women's_Bantamweight_icon.webp",
+        "Catch Weight": 'Catch_weight_icon.webp'
+      };
+      
+      return iconMap[weightClass] || 'default_icon.webp';
+    };
+    
+    return (
+      <div 
+        key={roundIndex} 
+        className={`arena-round-card ${isFlipped ? 'flipped' : ''}`}
+      >
+        <div className="arena-round-card-inner">
+          {/* Лицевая сторона - исходный вид */}
+          <div className="arena-round-card-front">
+            <div className="arena-round-number">
+              <div className="arena-round-digit">{roundNumber}</div>
+              <div className="arena-round-text">ROUND</div>
             </div>
+          </div>
+          
+          {/* Задняя сторона - новая карточка с иконкой */}
+          <div 
+            className={`arena-round-card-back ${getWeightCardClass(weightClass)}`}
+          >
+            <div className="weight-card-inner">
+              {/* Верхний контейнер с иконкой */}
+              <div className="weight-card-icon-container">
+                {weightClass && (
+                  <img 
+                    src={`${BASE_URL}/icons/${getWeightClassIcon(weightClass)}`}
+                    alt={weightClass}
+                    className="weight-card-icon"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      const parent = (e.target as HTMLImageElement).parentElement;
+                      if (parent) {
+                        parent.innerHTML = weightClass.substring(0, 2);
+                        parent.style.fontSize = '20px';
+                        parent.style.fontWeight = 'bold';
+                      }
+                    }}
+                  />
+                )}
+              </div>
+              
+              {/* Средний контейнер - градиентная линия */}
+              <div className="weight-card-divider"></div>
+              
+              {/* Нижний контейнер с названием */}
+              <div className="weight-card-name">
+                {weightClass || 'TBD'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  })}
+</div>
 
             {/* Нижний контейнер - игрок */}
             <div className="arena-bottom">

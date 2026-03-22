@@ -590,6 +590,20 @@ body {
   width: 100%;
 }
 
+/* Цвета для весовых категорий в окне выбора */
+.weight-header[data-weight="Flyweight"] { background: #00FFA3; }
+.weight-header[data-weight="Bantamweight"] { background: #00E0FF; }
+.weight-header[data-weight="Featherweight"] { background: #0075FF; }
+.weight-header[data-weight="Lightweight"] { background: #AD00FF; }
+.weight-header[data-weight="Welterweight"] { background: #FF00D6; }
+.weight-header[data-weight="Middleweight"] { background: #FFD700; }
+.weight-header[data-weight="Light Heavyweight"] { background: #FF5C00; }
+.weight-header[data-weight="Heavyweight"] { background: #FF0000; }
+.weight-header[data-weight="Women's Strawweight"] { background: #FF6B9D; }
+.weight-header[data-weight="Women's Flyweight"] { background: #5EEAD4; }
+.weight-header[data-weight="Women's Bantamweight"] { background: #818CF8; }
+.weight-header[data-weight="Catch Weight"] { background: #94A3B8; }
+
 .selected-badge {
   background: #4CAF50;
   padding: 2px 8px;
@@ -1604,7 +1618,7 @@ body {
 .arena-avatar-container {
   display: flex;
   width: 100%;
-  height: 39%; /* Было 31% + 8% от удаленных блоков */
+  height: 39%;
   min-height: 65px;
   background: #1C1D1F;
 }
@@ -1621,12 +1635,12 @@ body {
 
 /* Противник (верх) - контейнер с прижатием к ВЕРХНЕМУ краю */
 .arena-top .arena-avatar-left {
-  justify-content: flex-start; /* контент прижат к верху */
+  justify-content: flex-start;
 }
 
 /* Игрок (низ) - контейнер с прижатием к НИЖНЕМУ краю */
 .arena-bottom .arena-avatar-left {
-  justify-content: flex-end; /* контент прижат к низу */
+  justify-content: flex-end;
 }
 
 /* Центральная колонка с аватаркой (24%) */
@@ -1671,9 +1685,9 @@ body {
   background: linear-gradient(90deg, #1C1D1F 0%, #414141 100%);
   display: flex;
   flex-direction: column;
-  align-items: center; /* Центрируем по горизонтали */
+  align-items: center;
   justify-content: center;
-  padding: 0% 0 0% 0%; /* Убираем отступ слева */
+  padding: 0% 0 0% 0%;
   position: relative;
 }
 
@@ -1689,7 +1703,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
-  align-self: flex-start; /* Выравнивание влево */
+  align-self: flex-start;
   padding-left: 8%;
   width: 100%;
 }
@@ -1785,7 +1799,7 @@ body {
   z-index: 1;
 }
 
-/* Карточки бойцов противника (53% от верхнего контейнера) - КАК НА ГЛАВНОМ ЭКРАНЕ */
+/* Карточки бойцов противника (53% от верхнего контейнера) */
 .arena-rival-fighters,
 .arena-player-fighters {
   display: flex;
@@ -1807,9 +1821,8 @@ body {
   padding: 1% 0;
   background: #313130;
   overflow: hidden;
-  width: 18%; /* Процент от родителя */
+  width: 18%;
   max-width: 18%;
-  /*aspect-ratio: 1 / 1.2;*/
   height: 93%;
   flex-shrink: 0;
   border-radius: 1vw;
@@ -1876,29 +1889,30 @@ body {
   gap: 1%;
   height: 12%;
   background: #1C1D1F;
-  /*border-top: 1px solid #4A4A48;*/
-  /*border-bottom: 1px solid #4A4A48;*/
   padding-left: 1%;
   padding-right: 1%;
 }
 
-/* Анимация переворота карты */
+/* ===== НОВЫЕ СТИЛИ ДЛЯ КАРТОЧЕК ВЕСОВЫХ КАТЕГОРИЙ ===== */
+
+/* Основная карточка весовой категории для арены */
 .arena-round-card {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #494948;
+  background: transparent;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   height: 100%;
   min-width: 0;
   width: 100%;
-  perspective: 1000px; /* Добавить */
+  perspective: 1000px;
   border-radius: 2vw;
+  filter: drop-shadow(0 0 1% rgba(0, 0, 0, 0.6));
 }
 
-/* Контейнер для двух сторон */
+/* Внутренний контейнер карточки */
 .arena-round-card-inner {
   position: relative;
   width: 100%;
@@ -1906,19 +1920,15 @@ body {
   text-align: center;
   transition: transform 0.6s;
   transform-style: preserve-3d;
+  border-radius: 2vw;
 }
 
 .arena-round-card.flipped .arena-round-card-inner {
   transform: rotateY(180deg);
 }
 
+/* Лицевая сторона (рубашка) */
 .arena-round-card-front {
-  background: #2A2A2A;
-  background-image: repeating-linear-gradient(45deg, #3D3D3B 0px, #3D3D3B 10px, #2A2A2A 10px, #2A2A2A 20px);
-}
-
-.arena-round-card-front,
-.arena-round-card-back {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -1926,14 +1936,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.arena-round-card-back {
-  transform: rotateY(180deg);
-}
-
-.arena-round-card-back .arena-round-weight {
-  transform: rotateY(180deg); /* Поворачиваем текст обратно */
+  background: #2A2A2A;
+  background-image: repeating-linear-gradient(45deg, #3D3D3B 0px, #3D3D3B 10px, #2A2A2A 10px, #2A2A2A 20px);
+  border-radius: 2vw;
 }
 
 .arena-round-card-front .arena-round-number {
@@ -1942,12 +1947,8 @@ body {
   padding: 4px 8px;
 }
 
-.arena-round-card.flipped {
-  transform: rotateY(180deg);
-}
-
-.arena-round-card .card-front,
-.arena-round-card .card-back {
+/* Задняя сторона (содержимое категории) */
+.arena-round-card-back {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -1955,18 +1956,169 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* Лицевая сторона (то, что видно изначально) - рубашка с номером */
-.arena-round-card .card-front {
-  background: #2A2A2A;
-  background-image: repeating-linear-gradient(45deg, #3D3D3B 0px, #3D3D3B 10px, #2A2A2A 10px, #2A2A2A 20px);
-  transform: rotateY(0deg);
-}
-
-/* Задняя сторона (то, что видно после переворота) - цвет весовой категории */
-.arena-round-card .card-back {
   transform: rotateY(180deg);
+  border-radius: 2vw;
+}
+
+/* Внутренний контейнер карточки (фон #191a1f) */
+.weight-card-inner {
+  width: 95%;
+  height: 82%;
+  background: #191a1f;
+  border-radius: 1.5vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+/* Верхний контейнер для иконки (75% высоты) */
+.weight-card-icon-container {
+  width: 100%;
+  height: 75%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5% 0;
+}
+
+/* Иконка весовой категории */
+.weight-card-icon {
+  width: 80%;
+  height: auto;
+  max-height: 90%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 0.5vw rgba(255, 215, 0, 0.5));
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0% {
+    filter: drop-shadow(0 0 0.3vw rgba(255, 215, 0, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 1vw rgba(255, 215, 0, 0.8));
+  }
+  100% {
+    filter: drop-shadow(0 0 0.3vw rgba(255, 215, 0, 0.3));
+  }
+}
+
+/* Средний контейнер - градиентная линия (2% высоты) */
+.weight-card-divider {
+  width: 100%;
+  height: 2%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    currentColor 20%,
+    currentColor 80%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0.9;
+}
+
+/* Нижний контейнер для названия категории (23% высоты) */
+.weight-card-name {
+  width: 100%;
+  height: 23%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(8px, 2.5vw, 11px);
+  font-weight: 600;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 2% 4%;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+/* Цветовые классы для карточек и линий */
+.weight-card-flyweight {
+  background-color: #00FFA3;
+}
+.weight-card-flyweight .weight-card-divider {
+  color: #00FFA3;
+}
+
+.weight-card-bantamweight {
+  background-color: #00E0FF;
+}
+.weight-card-bantamweight .weight-card-divider {
+  color: #00E0FF;
+}
+
+.weight-card-featherweight {
+  background-color: #0075FF;
+}
+.weight-card-featherweight .weight-card-divider {
+  color: #0075FF;
+}
+
+.weight-card-lightweight {
+  background-color: #AD00FF;
+}
+.weight-card-lightweight .weight-card-divider {
+  color: #AD00FF;
+}
+
+.weight-card-welterweight {
+  background-color: #FF00D6;
+}
+.weight-card-welterweight .weight-card-divider {
+  color: #FF00D6;
+}
+
+.weight-card-middleweight {
+  background-color: #FFD700;
+}
+.weight-card-middleweight .weight-card-divider {
+  color: #FFD700;
+}
+
+.weight-card-light-heavyweight {
+  background-color: #FF5C00;
+}
+.weight-card-light-heavyweight .weight-card-divider {
+  color: #FF5C00;
+}
+
+.weight-card-heavyweight {
+  background-color: #FF0000;
+}
+.weight-card-heavyweight .weight-card-divider {
+  color: #FF0000;
+}
+
+.weight-card-womens-strawweight {
+  background-color: #FF6B9D;
+}
+.weight-card-womens-strawweight .weight-card-divider {
+  color: #FF6B9D;
+}
+
+.weight-card-womens-flyweight {
+  background-color: #5EEAD4;
+}
+.weight-card-womens-flyweight .weight-card-divider {
+  color: #5EEAD4;
+}
+
+.weight-card-womens-bantamweight {
+  background-color: #818CF8;
+}
+.weight-card-womens-bantamweight .weight-card-divider {
+  color: #818CF8;
+}
+
+.weight-card-catch-weight {
+  background-color: #94A3B8;
+}
+.weight-card-catch-weight .weight-card-divider {
+  color: #94A3B8;
 }
 
 .arena-round-card:hover {
@@ -1980,7 +2132,7 @@ body {
   justify-content: center;
   width: 100%;
   height: 100%;
-  min-width: 0; /* Важно для дочерних элементов */
+  min-width: 0;
 }
 
 .arena-round-digit {
@@ -1988,7 +2140,7 @@ body {
   font-size: 22px;
   font-weight: 700;
   line-height: 1;
-  white-space: nowrap; /* Не переносить цифру */
+  white-space: nowrap;
 }
 
 .arena-round-text {
@@ -1997,7 +2149,7 @@ body {
   font-weight: 500;
   text-transform: uppercase;
   margin-top: 2px;
-  white-space: nowrap; /* Не переносить ROUND */
+  white-space: nowrap;
 }
 
 .arena-round-weight {
@@ -2007,7 +2159,7 @@ body {
   text-align: center;
   padding: 4px;
   word-break: break-word;
-  white-space: normal; /* ← добавляем */
+  white-space: normal;
   width: 100%;
   min-width: 0;
 }
@@ -2021,13 +2173,13 @@ body {
   background: #2A2A2A;
 }
 
-/* Карточки бойцов игрока (53% от нижнего контейнера) - ВТОРОЙ СВЕРХУ */
+/* Карточки бойцов игрока (53% от нижнего контейнера) */
 .arena-player-fighters {
   height: 53%;
   min-height: 90px;
 }
 
-/* Шкала здоровья игрока (8% от нижнего контейнера) - ТРЕТИЙ СВЕРХУ */
+/* Шкала здоровья игрока (8% от нижнего контейнера) */
 .arena-player-health {
   height: 8%;
   min-height: 20px;
@@ -2183,7 +2335,7 @@ body {
 .pvp-card-engage.disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: #666D74; /* Цвет как у кнопки SURRENDER */
+  background: #666D74;
   pointer-events: none;
 }
 
@@ -2210,7 +2362,7 @@ body {
 
 .damage-value.damage-increase {
   animation: damagePulse 0.5s ease-out forwards;
-  display: inline-block; /* Важно для transform */
+  display: inline-block;
   transform-origin: center;
 }
 
