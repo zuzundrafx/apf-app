@@ -229,43 +229,40 @@ function App() {
   const [tournamentDataCache, setTournamentDataCache] = useState<Map<string, {
   weightClasses: string[];        // из tournament.data
   results: UserResult[];          // из loadExistingResults
+  fightersData: Fighter[];  // ← добавить
   }>>(new Map());
 
   // Функция для загрузки данных турнира (ленивая)
 const loadTournamentData = useCallback(async (tournamentName: string) => {
   console.log(`📥 Загружаем данные для турнира: ${tournamentName}`);
   
-  // Проверяем кэш
   const cached = tournamentDataCache.get(tournamentName);
   if (cached) {
     console.log(`✅ Данные турнира ${tournamentName} взяты из кэша`);
     return cached;
   }
 
-  // Ищем турнир в pastTournaments
   const tournament = pastTournaments.find(t => t.name === tournamentName);
   
-  // Извлекаем уникальные весовые категории
+  // Получаем полные данные бойцов из файла турнира
+  const fightersData = tournament?.data || [];
+  
   const weightClasses = tournament?.data
     ? [...new Set(tournament.data.map(f => f['Weight class']))]
     : [];
   
-  console.log(`📊 Найдено весовых категорий: ${weightClasses.length}`);
-
-  // Загружаем результаты игроков
   const results = await loadExistingResults(tournamentName);
   console.log(`👥 Загружено результатов игроков: ${results.length}`);
 
-  const data = { weightClasses, results };
+  const data = { weightClasses, results, fightersData };
   
-  // Сохраняем в кэш
   setTournamentDataCache(prev => {
     const newMap = new Map(prev);
     newMap.set(tournamentName, data);
     return newMap;
   });
   
-  return data; // ← всегда возвращаем data, даже если weightClasses пустой
+  return data;
 }, [pastTournaments, tournamentDataCache]);
 
   // Состояния для окна наград

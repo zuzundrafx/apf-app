@@ -1,7 +1,7 @@
 // src/components/Pvp.tsx
 
 import React, { useState } from 'react';
-import { Tournament, SelectedFighter } from '../types';
+import { Tournament, SelectedFighter, Fighter } from '../types';
 import { UserResult } from '../api/yandexUpload';
 import { UserProfile } from '../api/userProfiles';
 import ArenaModal from './ArenaModal';
@@ -16,6 +16,7 @@ interface PvpProps {
   loadTournamentData: (tournamentName: string) => Promise<{
     weightClasses: string[];
     results: UserResult[];
+    fightersData: Fighter[];  // ← добавили fightersData
   }>;
 }
 
@@ -62,12 +63,24 @@ const Pvp: React.FC<PvpProps> = ({
   };
 
   const handleEngage = async (tournament: Tournament) => {
-    if (!userId || isEngaging || arenaData) return; // Добавили проверку на arenaData
+    if (!userId || isEngaging || arenaData) return;
     
     setIsEngaging(true);
     
     try {
       const tournamentData = await loadTournamentData(tournament.name);
+      
+      // Создаем карту бойцов для быстрого поиска по имени
+      const fightersMap = new Map<string, Fighter>();
+      tournamentData.fightersData.forEach((fighter: Fighter) => {
+        fightersMap.set(fighter.Fighter, fighter);
+      });
+      
+      // Обогащаем выборы пользователя полной статистикой
+      const enrichedUserSelections = userSelections.map(sel => ({
+        ...sel,
+        fighter: fightersMap.get(sel.fighter.Fighter) || sel.fighter
+      }));
       
       const rivals = tournamentData.results.filter(r => r.userId !== userId);
       
@@ -83,7 +96,13 @@ const Pvp: React.FC<PvpProps> = ({
       const selectedRival = rivals[randomIndex];
       const rivalProfile = allProfiles.get(selectedRival.userId);
       
-      // Открываем арену
+      // Обогащаем выборы соперника полной статистикой
+      const enrichedRivalSelections = selectedRival.selections.map(sel => ({
+        ...sel,
+        fighter: fightersMap.get(sel.fighter.Fighter) || sel.fighter
+      }));
+      
+      // Открываем арену с обогащенными данными
       setArenaData({
         tournament,
         weightClasses: tournamentData.weightClasses,
@@ -91,22 +110,20 @@ const Pvp: React.FC<PvpProps> = ({
           username: selectedRival.username,
           photoUrl: rivalProfile?.photoUrl,
           totalDamage: selectedRival.totalDamage,
-          selections: selectedRival.selections
+          selections: enrichedRivalSelections
         }
       });
-      
-      // НЕ сбрасываем isEngaging здесь! Он сбросится когда арена закроется
       
     } catch (error) {
       console.error('Ошибка при поиске соперника:', error);
       alert('Error finding rival');
-      setIsEngaging(false); // Сбрасываем только при ошибке
+      setIsEngaging(false);
     }
   };
 
   const handleSurrender = () => {
     setArenaData(null);
-    setIsEngaging(false); // Разблокируем кнопки при закрытии арены
+    setIsEngaging(false);
   };
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
@@ -123,7 +140,6 @@ const Pvp: React.FC<PvpProps> = ({
         {pastTournaments.slice(0, 3).map((tournament) => {
           const userDamage = getUserDamageForTournament(tournament);
           const hasBet = hasUserBetOnTournament(tournament);
-          // Кнопка неактивна если: арена открыта ИЛИ идет загрузка ИЛИ нет ставки
           const isDisabled = !!arenaData || isEngaging || !hasBet;
           
           return (
@@ -184,13 +200,13 @@ const Pvp: React.FC<PvpProps> = ({
 
                 <div className="pvp-bottom-right">
                   <button 
-  className={`pvp-engage-button ${isEngaging ? 'loading' : ''} ${isDisabled ? 'disabled' : ''}`}
-  onClick={() => handleEngage(tournament)}
-  disabled={isDisabled}
->
-  {isEngaging ? 'SEARCHING...' : `ENTRY PASS: 50 🪙`}
-  {!hasBet && <span className="pvp-lock-icon">🔒</span>}
-</button>
+                    className={`pvp-engage-button ${isEngaging ? 'loading' : ''} ${isDisabled ? 'disabled' : ''}`}
+                    onClick={() => handleEngage(tournament)}
+                    disabled={isDisabled}
+                  >
+                    {isEngaging ? 'SEARCHING...' : `ENTRY PASS: 50 🪙`}
+                    {!hasBet && <span className="pvp-lock-icon">🔒</span>}
+                  </button>
                 </div>
               </div>
             </div>
