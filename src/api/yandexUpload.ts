@@ -284,6 +284,10 @@ export async function saveUserResults(
         row[`Method ${num}`] = sel.fighter['Method'] || '';
         row[`Round ${num}`] = sel.fighter['Round'] || 0;
         row[`Time ${num}`] = sel.fighter['Time'] || '';
+        row[`Str ${num}`] = sel.fighter.Str || 0;
+        row[`Td ${num}`] = sel.fighter.Td || 0;
+        row[`Sub ${num}`] = sel.fighter.Sub || 0;
+
       });
       
       return row;
