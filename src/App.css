@@ -2830,3 +2830,41 @@ body {
   z-index: 10;
   position: relative;
 }
+
+/* Фоновая подложка-октагон */
+.arena-background-octagon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    /* Адаптивный размер: берет 95% от ширины контейнера, но не больше 400px */
+    width: clamp(280px, 95%, 420px);
+    aspect-ratio: 1 / 1;
+    
+    background-color: #1a1d21; /* Тот самый светлый серый пол */
+    clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+    
+    /* Слой ПОД карточками */
+    z-index: 0; 
+}
+
+/* Внутренняя рамка (сетка) */
+.arena-background-octagon::before {
+    content: "";
+    position: absolute;
+    inset: 2px; /* отступ рамки */
+    border: 1px solid #3a3f47;
+    clip-path: inherit;
+}
+
+/* Контейнер, где происходит бой (в ArenaModal.tsx) */
+/* Убедись, что у родительского дива, где лежат команды, есть этот класс */
+.arena-battle-zone {
+    position: relative; /* Чтобы абсолютный фон привязался к центру */
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    min-height: 350px; /* или сколько у тебя сейчас */
+}
