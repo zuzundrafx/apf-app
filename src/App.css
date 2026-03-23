@@ -1908,8 +1908,8 @@ body {
   padding: 0;
   background: #313130;
   overflow: visible;
-  width: 18%;
-  max-width: 18%;
+  width: 19%;
+  max-width: 19%;
   height: 93%;
   flex-shrink: 0;
   border-radius: 1vw;
@@ -1939,13 +1939,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5% 0;
+  padding: 2% 0;
 }
 
 /* Иконка стиля бойца */
 .fighter-style-icon {
-  width: 100%;
-  height: auto;
+  width: 95%;
+  aspect-ratio: 1 / 1;
   max-height: 90%;
   object-fit: contain;
   /*filter: drop-shadow(0 0 0.5vw rgba(255, 215, 0, 0.5));*/
@@ -2079,7 +2079,7 @@ body {
 }
 
 .arena-fighter-avatar {
-  width: 100%;
+  width: 95%;
   aspect-ratio: 1 / 1;
   background: #3D3D3B;
   overflow: hidden;
