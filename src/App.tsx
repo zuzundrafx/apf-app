@@ -132,6 +132,10 @@ function getFighterStyle(fighter: SelectedFighter): string {
   const td = Number(fighter.fighter.Td) || 0;
   const sub = Number(fighter.fighter.Sub) || 0;
   const tdSubSum = td + sub;
+
+  // Временный лог для диагностики
+  console.log('Боец:', fighter.fighter.Fighter);
+  console.log('Str:', str, 'Td:', td, 'Sub:', sub, 'Сумма TD+SUB:', tdSubSum);
   
   // Grappler: TD+SUB >= 2 и STR < 50
   if (tdSubSum >= 2 && str < 50) {
