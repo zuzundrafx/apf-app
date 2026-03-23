@@ -77,11 +77,7 @@ const Pvp: React.FC<PvpProps> = ({
       });
       
       // Обогащаем выборы пользователя полной статистикой
-      const enrichedUserSelections = userSelections.map(sel => ({
-        ...sel,
-        fighter: fightersMap.get(sel.fighter.Fighter) || sel.fighter
-      }));
-      
+            
       const rivals = tournamentData.results.filter(r => r.userId !== userId);
       
       console.log(`🔍 Найдено соперников: ${rivals.length}`);
