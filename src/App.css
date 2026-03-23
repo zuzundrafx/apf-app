@@ -2405,12 +2405,12 @@ body {
   flex-direction: column;
   height: 38%;
   min-height: 200px;
-  background: #2A2A2A;
+  background: #1C1D1F;
 }
 
 /* Карточки бойцов игрока (53% от нижнего контейнера) */
 .arena-player-fighters {
-  height: 53%;
+  height: 54%;
   min-height: 90px;
 }
 
