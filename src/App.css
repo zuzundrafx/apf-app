@@ -1850,11 +1850,12 @@ body {
 
 /* Шкала здоровья противника (8% от верхнего контейнера) */
 .arena-rival-health {
-  height: 8%;
-  min-height: 20px;
+  height: 7%;
+  min-height: 10px;
   background: #1C1D1F;
   padding: 2px 8px;
   border-bottom: 1px solid #4A4A48;
+  border-radius: 2vh;
 }
 
 .arena-health-bar {
@@ -1868,7 +1869,7 @@ body {
 
 .arena-health-fill {
   height: 100%;
-  background: linear-gradient(0deg, #800101 0%, #B20101 100%);
+  background: linear-gradient(0deg, #800101 0%, #df0303 100%);
   transition: width 0.3s ease;
 }
 
@@ -1929,7 +1930,7 @@ body {
   justify-content: center;
   overflow: hidden;
   position: relative;
-  margin-top: 4%;
+ /* margin-top: 4%;*/
 }
 
 /* Верхний контейнер для иконки стиля (75% высоты) */
@@ -1939,14 +1940,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2% 0;
+  padding: 0% 0;
 }
 
 /* Иконка стиля бойца */
 .fighter-style-icon {
   width: 95%;
   aspect-ratio: 1 / 1;
-  max-height: 90%;
+  /*max-height: 90%;*/
   object-fit: contain;
   /*filter: drop-shadow(0 0 0.5vw rgba(255, 215, 0, 0.5));*/
   /*animation: iconPulse 2s ease-in-out infinite;*/
@@ -1977,7 +1978,7 @@ body {
   font-weight: 500;
   color: #FFFFFF;
   text-align: center;
-  padding: 2% 4%;
+  padding: 2% 2%;
   word-break: break-word;
   line-height: 1.2;
 }
@@ -2224,8 +2225,8 @@ body {
   height: auto;
   max-height: 90%;
   object-fit: contain;
-  filter: drop-shadow(0 0 0.5vw rgba(255, 215, 0, 0.5));
-  animation: iconPulse 2s ease-in-out infinite;
+  /*filter: drop-shadow(0 0 0.5vw rgba(255, 215, 0, 0.5));*/
+  /*animation: iconPulse 2s ease-in-out infinite;*/
 }
 
 @keyframes iconPulse {
@@ -2416,11 +2417,12 @@ body {
 
 /* Шкала здоровья игрока (8% от нижнего контейнера) */
 .arena-player-health {
-  height: 8%;
-  min-height: 20px;
+  height: 7%;
+  min-height: 10px;
   background: #1C1D1F;
   padding: 2px 8px;
   border-top: 1px solid #4A4A48;
+  border-radius: 2vh;
 }
 
 /* Адаптация для маленьких экранов */
