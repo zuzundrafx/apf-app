@@ -1696,8 +1696,8 @@ body {
   flex-direction: column;
   height: 38%;
   min-height: 200px;
-  background: #2A2A2A;
-  /*border-bottom: 1px solid #4A4A48;*/
+  background: #1C1D1F;
+ 
 }
 
 /* Контейнер для аватарки с тремя колонками */
@@ -1761,8 +1761,6 @@ body {
   height: 100%;
   object-fit: cover;
 }
-
-
 
 /* Блок DAMAGE - общие стили */
 .arena-damage-display {
