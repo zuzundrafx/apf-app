@@ -66,6 +66,11 @@ const getFighterStyle = (fighter: SelectedFighter): string => {
   const td = Number(fighter.fighter.Td) || 0;
   const sub = Number(fighter.fighter.Sub) || 0;
   const tdSubSum = td + sub;
+
+  console.log('🔍 ArenaModal - Боец:', fighter.fighter.Fighter);
+  console.log('   Str:', fighter.fighter.Str, '→ число:', str);
+  console.log('   Td:', fighter.fighter.Td, '→ число:', td);
+  console.log('   Sub:', fighter.fighter.Sub, '→ число:', sub);
   
   // Grappler: TD+SUB >= 2 и STR < 50
   if (tdSubSum >= 2 && str < 50) {
