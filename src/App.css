@@ -2560,7 +2560,7 @@ body {
 /* Пустая карта бойца */
 .arena-fighter-card.empty {
   background: #2A2A2A;
-  border: 1px dashed #4A4A48;
+  /*border: 1px dashed #4A4A48;*/
 }
 
 .pvp-lock-icon {
