@@ -1885,14 +1885,14 @@ body {
   z-index: 1;
 }
 
-/* Карточки бойцов противника (53% от верхнего контейнера) */
+/* Карточки бойцов противника (54% от верхнего контейнера) */
 .arena-rival-fighters,
 .arena-player-fighters {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: clamp(2px, 0.5vw, 4px);
-  height: 53%;
+  height: 54%;
   min-height: 90px;
   background: #1C1D1F;
   padding: 0 clamp(1%, 1vw, 2%);
