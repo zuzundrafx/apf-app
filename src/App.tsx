@@ -962,35 +962,63 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
                         </div>
                       ) : (
                         <>
-                          <div className="selected-fighters-grid">
-                            {userData.mySelections.past
-                              .filter((sel: SelectedFighter) => {
-                                const tournament = pastTournaments.find((t: Tournament) => t.name === selectedPastTournament);
-                                return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
-                              })
-                              .map((sel: SelectedFighter, idx: number) => {
-                                const isWinner = sel.fighter['W/L'] === 'win';
-                                return (
-                                  <div key={idx} className="selected-fighter-card" 
-                                       style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-                                    <div className="selected-fighter-damage-box">
-                                      {roundDamage(sel.fighter['Total Damage'])}
-                                    </div>
-                                    <div className="selected-fighter-avatar-square">
-                                      <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`} 
-                                           alt={sel.fighter.Fighter}
-                                           onError={(e) => {
-                                             (e.target as HTMLImageElement).style.display = 'none';
-                                             const parent = (e.target as HTMLImageElement).parentElement;
-                                             if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
-                                           }} />
-                                    </div>
-                                    <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
-                                    {isWinner && <span className="winner-crown">👑</span>}
-                                  </div>
-                                );
-                              })}
-                          </div>
+                          {/* Для прошедших турниров (past) */}
+<div className="selected-fighters-grid">
+  {userData.mySelections.past
+    .filter((sel: SelectedFighter) => {
+      const tournament = pastTournaments.find((t: Tournament) => t.name === selectedPastTournament);
+      return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
+    })
+    .map((sel: SelectedFighter, idx: number) => {
+      const isWinner = sel.fighter['W/L'] === 'win';
+      return (
+        <div 
+          key={idx} 
+          className="selected-fighter-card" 
+          data-weight={sel.weightClass}
+          style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}
+        >
+          {/* Блок с уроном в правом верхнем углу */}
+          <div className="selected-fighter-damage-box">
+            {roundDamage(sel.fighter['Total Damage'])}
+          </div>
+          
+          {/* Внутренний контейнер карточки */}
+          <div className="selected-fighter-inner">
+            {/* Верхний контейнер с иконкой стиля */}
+            <div className="selected-fighter-icon-container">
+              <img 
+                src={`${BASE_URL}/icons/fighter_style_default.webp`}
+                alt="style"
+                className="selected-fighter-icon"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const parent = (e.target as HTMLImageElement).parentElement;
+                  if (parent) {
+                    parent.innerHTML = '⚡';
+                    parent.style.fontSize = '20px';
+                  }
+                }}
+              />
+            </div>
+            
+            {/* Средний контейнер - градиентная линия */}
+            <div 
+              className="selected-fighter-divider"
+              style={{ color: getWeightClassColor(sel.weightClass) }}
+            ></div>
+            
+            {/* Нижний контейнер с именем бойца */}
+            <div className="selected-fighter-name">
+              {sel.fighter.Fighter}
+            </div>
+          </div>
+          
+          {isWinner && <span className="winner-crown">👑</span>}
+        </div>
+      );
+    })}
+</div>
                           
                           <div className="tournament-footer">
                             <div className="footer-total-damage">
@@ -1045,34 +1073,61 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
                     <div className="tournament-message">Loading...</div>
                   ) : selectedUpcomingTournament ? (
                     <>
-                      <div className="selected-fighters-grid">
-                        {userData.mySelections.upcoming
-                          .filter((sel: SelectedFighter) => {
-                            const tournament = upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament);
-                            return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
-                          })
-                          .map((sel: SelectedFighter, idx: number) => {
-                            const hasResult = sel.fighter['W/L'] !== null;
-                            return (
-                              <div key={idx} className="selected-fighter-card"
-                                   style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-                                <div className="selected-fighter-damage-box">
-                                  {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
-                                </div>
-                                <div className="selected-fighter-avatar-square">
-                                  <img src={`${BASE_URL}/avatars/${getAvatarFilename(sel.weightClass)}`}
-                                       alt={sel.fighter.Fighter}
-                                       onError={(e) => {
-                                         (e.target as HTMLImageElement).style.display = 'none';
-                                         const parent = (e.target as HTMLImageElement).parentElement;
-                                         if (parent) parent.innerHTML = sel.weightClass.includes("Women") ? "👩" : "👤";
-                                       }} />
-                                </div>
-                                <span className="selected-fighter-name">{sel.fighter.Fighter}</span>
-                              </div>
-                            );
-                          })}
-                      </div>
+                      {/* Для будущих турниров (upcoming) */}
+<div className="selected-fighters-grid">
+  {userData.mySelections.upcoming
+    .filter((sel: SelectedFighter) => {
+      const tournament = upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament);
+      return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
+    })
+    .map((sel: SelectedFighter, idx: number) => {
+      const hasResult = sel.fighter['W/L'] !== null;
+      return (
+        <div 
+          key={idx} 
+          className="selected-fighter-card" 
+          data-weight={sel.weightClass}
+          style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}
+        >
+          {/* Блок с уроном в правом верхнем углу */}
+          <div className="selected-fighter-damage-box">
+            {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
+          </div>
+          
+          {/* Внутренний контейнер карточки */}
+          <div className="selected-fighter-inner">
+            {/* Верхний контейнер с иконкой стиля */}
+            <div className="selected-fighter-icon-container">
+              <img 
+                src={`${BASE_URL}/icons/fighter_style_default.webp`}
+                alt="style"
+                className="selected-fighter-icon"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const parent = (e.target as HTMLImageElement).parentElement;
+                  if (parent) {
+                    parent.innerHTML = '⚡';
+                    parent.style.fontSize = '20px';
+                  }
+                }}
+              />
+            </div>
+            
+            {/* Средний контейнер - градиентная линия */}
+            <div 
+              className="selected-fighter-divider"
+              style={{ color: getWeightClassColor(sel.weightClass) }}
+            ></div>
+            
+            {/* Нижний контейнер с именем бойца */}
+            <div className="selected-fighter-name">
+              {sel.fighter.Fighter}
+            </div>
+          </div>
+        </div>
+      );
+    })}
+</div>
                       
                       <div className="tournament-footer">
                         <div className="footer-total-damage">

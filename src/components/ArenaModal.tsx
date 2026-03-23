@@ -607,30 +607,51 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
 
               <div className="arena-rival-fighters">
-                {rivalActiveCards.map((card, index) => (
-                  <div 
-                    key={index} 
-                    className="arena-fighter-card"
-                    style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-                  >
-                    <div className="arena-fighter-damage">
-                      {Math.round(card.fighter['Total Damage'])}
-                    </div>
-                    <div className="arena-fighter-avatar">
-                      <img 
-                        src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
-                        alt={card.fighter.Fighter}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                          const parent = (e.target as HTMLImageElement).parentElement;
-                          if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
-                        }}
-                      />
-                    </div>
-                    <div className="arena-fighter-name">{card.fighter.Fighter}</div>
-                  </div>
-                ))}
-              </div>
+  {rivalActiveCards.map((card, index) => (
+    <div 
+      key={index} 
+      className="arena-fighter-card"
+      data-weight={card.weightClass}
+      style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
+    >
+      {/* Блок с уроном в правом верхнем углу */}
+      <div className="fighter-damage-block">
+        {Math.round(card.fighter['Total Damage'])}
+      </div>
+      
+      {/* Внутренний контейнер карточки */}
+      <div className="fighter-card-inner">
+        {/* Верхний контейнер с иконкой стиля (пока заглушка) */}
+        <div className="fighter-icon-container">
+          <img 
+            src={`${BASE_URL}/icons/fighter_style_default.webp`}
+            alt="style"
+            className="fighter-style-icon"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              const parent = (e.target as HTMLImageElement).parentElement;
+              if (parent) {
+                parent.innerHTML = '⚡';
+                parent.style.fontSize = '24px';
+              }
+            }}
+          />
+        </div>
+        
+        {/* Средний контейнер - градиентная линия */}
+        <div 
+          className="fighter-divider"
+          style={{ color: getWeightClassColor(card.weightClass) }}
+        ></div>
+        
+        {/* Нижний контейнер с именем бойца */}
+        <div className="fighter-name-container">
+          {card.fighter.Fighter}
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
             </div>
 
             {/* Средний контейнер (12%) - раунды */}
@@ -743,30 +764,51 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             <div className="arena-bottom">
               {/* Карточки бойцов игрока */}
               <div className="arena-player-fighters">
-                {userActiveCards.map((card, index) => (
-                  <div 
-                    key={index} 
-                    className="arena-fighter-card"
-                    style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-                  >
-                    <div className="arena-fighter-damage">
-                      {Math.round(card.fighter['Total Damage'])}
-                    </div>
-                    <div className="arena-fighter-avatar">
-                      <img 
-                        src={`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`}
-                        alt={card.fighter.Fighter}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                          const parent = (e.target as HTMLImageElement).parentElement;
-                          if (parent) parent.innerHTML = card.weightClass.includes("Women") ? "👩" : "👤";
-                        }}
-                      />
-                    </div>
-                    <div className="arena-fighter-name">{card.fighter.Fighter}</div>
-                  </div>
-                ))}
-              </div>
+  {userActiveCards.map((card, index) => (
+    <div 
+      key={index} 
+      className="arena-fighter-card"
+      data-weight={card.weightClass}
+      style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
+    >
+      {/* Блок с уроном в правом верхнем углу */}
+      <div className="fighter-damage-block">
+        {Math.round(card.fighter['Total Damage'])}
+      </div>
+      
+      {/* Внутренний контейнер карточки */}
+      <div className="fighter-card-inner">
+        {/* Верхний контейнер с иконкой стиля (пока заглушка) */}
+        <div className="fighter-icon-container">
+          <img 
+            src={`${BASE_URL}/icons/fighter_style_default.webp`}
+            alt="style"
+            className="fighter-style-icon"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              const parent = (e.target as HTMLImageElement).parentElement;
+              if (parent) {
+                parent.innerHTML = '⚡';
+                parent.style.fontSize = '24px';
+              }
+            }}
+          />
+        </div>
+        
+        {/* Средний контейнер - градиентная линия */}
+        <div 
+          className="fighter-divider"
+          style={{ color: getWeightClassColor(card.weightClass) }}
+        ></div>
+        
+        {/* Нижний контейнер с именем бойца */}
+        <div className="fighter-name-container">
+          {card.fighter.Fighter}
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
 
               {/* Шкала здоровья игрока */}
               <div className="arena-player-health">
