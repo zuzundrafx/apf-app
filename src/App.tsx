@@ -125,6 +125,41 @@ function getWeightClassColor(weightClass: string): string {
   return colors[weightClass] || '#666666';
 }
 
+/// Функция для определения стиля бойца
+function getFighterStyle(fighter: SelectedFighter): string {
+  // Приводим значения к числу, так как они могут быть string или number
+  const str = Number(fighter.fighter.Str) || 0;
+  const td = Number(fighter.fighter.Td) || 0;
+  const sub = Number(fighter.fighter.Sub) || 0;
+  const tdSubSum = td + sub;
+  
+  // Grappler: TD+SUB >= 2 и STR < 50
+  if (tdSubSum >= 2 && str < 50) {
+    return 'Grappler';
+  }
+  // Striker: STR >= 50 и TD+SUB < 2
+  if (str >= 50 && tdSubSum < 2) {
+    return 'Striker';
+  }
+  // Universal: STR >= 50 и TD+SUB >= 2
+  if (str >= 50 && tdSubSum >= 2) {
+    return 'Universal';
+  }
+  // Simple: TD+SUB < 2 и STR < 50 (по умолчанию)
+  return 'Simple';
+}
+
+// Функция для получения имени файла иконки стиля
+function getStyleIconFilename(style: string): string {
+  const icons: { [key: string]: string } = {
+    'Grappler': 'Grappler_style_icon.webp',
+    'Striker': 'Striker_style_icon.webp',
+    'Universal': 'Universal_style_icon.webp',
+    'Simple': 'Simple_style_icon.webp'
+  };
+  return icons[style] || 'Simple_style_icon.webp';
+}
+
 // Компонент скелетона для загрузки
 const TournamentSkeleton = () => (
   <section className="tournament-section skeleton">
@@ -971,6 +1006,9 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
     })
     .map((sel: SelectedFighter, idx: number) => {
       const isWinner = sel.fighter['W/L'] === 'win';
+      const style = getFighterStyle(sel);
+      const styleIcon = getStyleIconFilename(style);
+      
       return (
         <div 
           key={idx} 
@@ -988,14 +1026,16 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
             {/* Верхний контейнер с иконкой стиля */}
             <div className="selected-fighter-icon-container">
               <img 
-                src={`${BASE_URL}/icons/fighter_style_default.webp`}
-                alt="style"
+                src={`${BASE_URL}/icons/${styleIcon}`}
+                alt={style}
                 className="selected-fighter-icon"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                   const parent = (e.target as HTMLImageElement).parentElement;
                   if (parent) {
-                    parent.innerHTML = '⚡';
+                    parent.innerHTML = style === 'Striker' ? '👊' : 
+                                      style === 'Grappler' ? '🤼' : 
+                                      style === 'Universal' ? '⚡' : '👤';
                     parent.style.fontSize = '20px';
                   }
                 }}
@@ -1082,6 +1122,9 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
     })
     .map((sel: SelectedFighter, idx: number) => {
       const hasResult = sel.fighter['W/L'] !== null;
+      const style = getFighterStyle(sel);
+      const styleIcon = getStyleIconFilename(style);
+      
       return (
         <div 
           key={idx} 
@@ -1099,14 +1142,16 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
             {/* Верхний контейнер с иконкой стиля */}
             <div className="selected-fighter-icon-container">
               <img 
-                src={`${BASE_URL}/icons/fighter_style_default.webp`}
-                alt="style"
+                src={`${BASE_URL}/icons/${styleIcon}`}
+                alt={style}
                 className="selected-fighter-icon"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                   const parent = (e.target as HTMLImageElement).parentElement;
                   if (parent) {
-                    parent.innerHTML = '⚡';
+                    parent.innerHTML = style === 'Striker' ? '👊' : 
+                                      style === 'Grappler' ? '🤼' : 
+                                      style === 'Universal' ? '⚡' : '👤';
                     parent.style.fontSize = '20px';
                   }
                 }}

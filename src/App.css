@@ -1984,7 +1984,7 @@ body {
   top: 0;
   right: 0;
   width: 50%;
-  height: 13%;
+  height: 15%;
   background: #3e3e3e;
   border: 1px solid currentColor;
   border-radius: 0 1vw 0 1vw;
@@ -1996,6 +1996,44 @@ body {
   font-weight: 700;
   color: #FFD966;
   text-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
+}
+
+/* Цветовые классы для обводки блока урона на арене */
+.arena-fighter-card[data-weight="Flyweight"] .fighter-damage-block {
+  border-color: #00FFA3;
+}
+.arena-fighter-card[data-weight="Bantamweight"] .fighter-damage-block {
+  border-color: #00E0FF;
+}
+.arena-fighter-card[data-weight="Featherweight"] .fighter-damage-block {
+  border-color: #0075FF;
+}
+.arena-fighter-card[data-weight="Lightweight"] .fighter-damage-block {
+  border-color: #AD00FF;
+}
+.arena-fighter-card[data-weight="Welterweight"] .fighter-damage-block {
+  border-color: #FF00D6;
+}
+.arena-fighter-card[data-weight="Middleweight"] .fighter-damage-block {
+  border-color: #FFD700;
+}
+.arena-fighter-card[data-weight="Light Heavyweight"] .fighter-damage-block {
+  border-color: #FF5C00;
+}
+.arena-fighter-card[data-weight="Heavyweight"] .fighter-damage-block {
+  border-color: #FF0000;
+}
+.arena-fighter-card[data-weight="Women's Strawweight"] .fighter-damage-block {
+  border-color: #FF6B9D;
+}
+.arena-fighter-card[data-weight="Women's Flyweight"] .fighter-damage-block {
+  border-color: #5EEAD4;
+}
+.arena-fighter-card[data-weight="Women's Bantamweight"] .fighter-damage-block {
+  border-color: #818CF8;
+}
+.arena-fighter-card[data-weight="Catch Weight"] .fighter-damage-block {
+  border-color: #94A3B8;
 }
 
 /* Цветовые классы для карточек бойцов (обводка блока урона) */
