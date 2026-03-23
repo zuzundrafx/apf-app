@@ -1848,14 +1848,14 @@ body {
   margin-bottom: 0;
 }
 
-/* Шкала здоровья противника (8% от верхнего контейнера) */
+/* Шкала здоровья противника (7% от верхнего контейнера) */
 .arena-rival-health {
   height: 7%;
-  min-height: 10px;
+  min-height: 15px;
   background: #1C1D1F;
   padding: 2px 8px;
   border-bottom: 1px solid #4A4A48;
-  border-radius: 2vh;
+ 
 }
 
 .arena-health-bar {
@@ -1865,6 +1865,7 @@ body {
   border: 1px solid #3D3D3B;
   position: relative;
   overflow: hidden;
+  border-radius: 1vw;
 }
 
 .arena-health-fill {
@@ -2415,14 +2416,13 @@ body {
   min-height: 90px;
 }
 
-/* Шкала здоровья игрока (8% от нижнего контейнера) */
+/* Шкала здоровья игрока (7% от нижнего контейнера) */
 .arena-player-health {
   height: 7%;
-  min-height: 10px;
+  min-height: 15px;
   background: #1C1D1F;
   padding: 2px 8px;
   border-top: 1px solid #4A4A48;
-  border-radius: 2vh;
 }
 
 /* Адаптация для маленьких экранов */
