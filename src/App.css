@@ -422,12 +422,12 @@ body {
 
 /* Верхний контейнер для иконки стиля */
 .selected-fighter-icon-container {
-  width: 100%;
-  height: 75%;
+  width: 95%;
+  aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5% 0;
+  padding: 2% 0;
 }
 
 /* Иконка стиля бойца */
@@ -437,7 +437,7 @@ body {
   max-height: 90%;
   object-fit: contain;
   filter: drop-shadow(0 0 0.5vw rgba(255, 215, 0, 0.5));
-  animation: iconPulse 2s ease-in-out infinite;
+  /*animation: iconPulse 2s ease-in-out infinite;*/
 }
 
 /* Разделительная линия */
