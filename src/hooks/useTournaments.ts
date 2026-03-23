@@ -115,6 +115,7 @@ export function useTournaments() {
           tournament.data = cached.data;
         } else {
           const data = await downloadTournamentFile(file.name);
+          console.log('📊 ПЕРВЫЙ БОЕЦ ИЗ ФАЙЛА:', data?.[0]);
           tournament.data = data;
           
           if (data) {
