@@ -186,11 +186,11 @@ export async function loadExistingResults(
             'Round': Number(item[`Round ${i}`]) || 0,
             'Time': String(item[`Time ${i}`] || ''),
             'Weight class': String(item[`Вес ${i}`] || ''),
+            'Str': Number(item[`Str ${i}`]) || 0,    // ← ДОБАВИТЬ
+            'Td': Number(item[`Td ${i}`]) || 0,      // ← ДОБАВИТЬ
+            'Sub': Number(item[`Sub ${i}`]) || 0,    // ← ДОБАВИТЬ
             'Fight_ID': 0,
             'Kd': 0,
-            'Str': 0,
-            'Td': 0,
-            'Sub': 0,
             'Head': 0,
             'Body': 0,
             'Leg': 0,
