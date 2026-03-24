@@ -2846,13 +2846,23 @@ body {
   width: 95%;
   aspect-ratio: 1 / 1;
   z-index: 0;
-  opacity: 0;
-  transition: opacity 0.5s ease-out;
   pointer-events: none;
 }
 
-.arena-octagon.visible {
-  opacity: 1;
+/* Режим боя - меняем размеры (когда загрузка закончена) */
+.arena-modal.battle-loaded .arena-octagon {
+  width: auto;
+  height: 114%;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  aspect-ratio: 1 / 1;
+}
+
+.arena-modal.battle-loaded .octagon-image {
+  width: auto;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Изображение октагона */
@@ -2862,30 +2872,12 @@ body {
   object-fit: contain;
 }
 
-/* ===== РЕЖИМ БОЯ - масштабируем октагон ===== */
-/* Используем класс, который добавляется при начале боя и не удаляется */
-.arena-modal.battle-active .arena-octagon {
-  width: auto;
-  height: 114%;
-  top: 8%;
-  left: 50%;
-  transform: translateX(-50%);
-  aspect-ratio: 1 / 1;
-}
-
-.arena-modal.battle-active .octagon-image {
-  width: auto;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Все содержимое арены должно быть поверх октагона */
+/* Все содержимое арены поверх октагона */
 .arena-header,
 .arena-top,
 .arena-middle,
 .arena-bottom,
-.arena-loading,
-.battle-overlay-text {
+.arena-loading {
   position: relative;
   z-index: 1;
 }
@@ -2895,10 +2887,16 @@ body {
   .arena-octagon {
     width: 92%;
   }
+  .arena-modal.battle-loaded .arena-octagon {
+    width: auto;
+  }
 }
 
 @media (max-width: 280px) {
   .arena-octagon {
     width: 90%;
+  }
+  .arena-modal.battle-loaded .arena-octagon {
+    width: auto;
   }
 }

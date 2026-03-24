@@ -158,9 +158,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
-  const [showOctagon, setShowOctagon] = useState(false);
-
-  const [isBattleActive, setIsBattleActive] = useState(false);
+  const [isBattleLoaded, setIsBattleLoaded] = useState(false);
 
   // Функция для расчета всего сценария боя
   const calculateBattleScript = (): BattleEvent[] => {
@@ -315,7 +313,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         setTimeout(() => setCountdownStep('fight'), 2000);
         setTimeout(() => {
           setCountdownStep(null);
-          setIsBattleActive(true);
+          
           setCurrentEventIndex(prev => prev + 1);
         }, 3000);
         break;
@@ -481,7 +479,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       console.log('🎮 Арена открыта, рассчитываем сценарий боя...');
       
       setIsLoading(true);
-      setShowOctagon(false);  // ← сбрасываем при открытии
+      setIsBattleLoaded(true);
       setCurrentEventIndex(0);
       setUsedWeightClasses([]);
       setFlippedCards([false, false, false, false, false]);
@@ -534,14 +532,14 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         setTimeout(() => {
           console.log('✅ Загрузка завершена, запускаем бой');
           setIsLoading(false);
-          setShowOctagon(true);  // ← ПОКАЗЫВАЕМ ОКТАГОН
+          
         }, 500);
       });
       
       // Таймаут на случай очень медленной загрузки
       setTimeout(() => {
         setIsLoading(false);
-        setShowOctagon(true);    // ← ПОКАЗЫВАЕМ ОКТАГОН
+        
       }, 3000);
     }
   }, [isOpen]);
@@ -573,13 +571,16 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
   return (
     <div className="arena-modal-overlay">
-      <div className={`arena-modal ${shakeScreen ? 'shake' : ''} ${isBattleActive ? 'battle-active' : ''}`}>
+      <div className={`arena-modal ${shakeScreen ? 'shake' : ''} ${isBattleLoaded ? 'battle-loaded' : ''}`}>
+  <div className="arena-octagon">
+    <img src={`${BASE_URL}/backgrounds/Arena_1_bg.webp`} alt="Octagon" className="octagon-image" />
+  </div>
         {isLoading ? (
           <div className="arena-loading">Loading arena data...</div>
         ) : (
           <>
             {/* Изображение октагона */}
-            <div className={`arena-octagon ${showOctagon ? 'visible' : ''}`}>
+            <div className="arena-octagon">
               <img 
                 src={`${BASE_URL}/backgrounds/Arena_1_bg.webp`}
                 alt="Octagon"
