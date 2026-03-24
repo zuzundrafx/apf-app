@@ -478,6 +478,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       console.log('🎮 Арена открыта, рассчитываем сценарий боя...');
       
       setIsLoading(true);
+      setShowOctagon(false);  // ← сбрасываем при открытии
       setCurrentEventIndex(0);
       setUsedWeightClasses([]);
       setFlippedCards([false, false, false, false, false]);
@@ -530,12 +531,14 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         setTimeout(() => {
           console.log('✅ Загрузка завершена, запускаем бой');
           setIsLoading(false);
+          setShowOctagon(true);  // ← ПОКАЗЫВАЕМ ОКТАГОН
         }, 500);
       });
       
       // Таймаут на случай очень медленной загрузки
       setTimeout(() => {
         setIsLoading(false);
+        setShowOctagon(true);    // ← ПОКАЗЫВАЕМ ОКТАГОН
       }, 3000);
     }
   }, [isOpen]);
