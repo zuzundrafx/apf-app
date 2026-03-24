@@ -160,6 +160,46 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
   const [isBattleLoaded, setIsBattleLoaded] = useState(false);
 
+  // Функция для применения эффекта удара к аватарке
+  const applyHitEffect = (target: 'player' | 'rival', damage: number) => {
+    // Получаем элемент аватарки
+    const avatarElement = document.querySelector(
+      target === 'player' ? '.arena-bottom .arena-avatar' : '.arena-top .arena-avatar'
+    );
+    
+    if (!avatarElement) return;
+    
+    // Определяем цвет свечения в зависимости от урона
+    let glowColor = '';
+    if (damage < 50) {
+      glowColor = 'rgba(255, 255, 255, 0.3)'; // Белый, 30% прозрачности
+    } else if (damage >= 50 && damage < 150) {
+      glowColor = 'rgba(255, 255, 0, 0.3)'; // Желтый, 30% прозрачности
+    } else {
+      glowColor = 'rgba(255, 0, 0, 0.3)'; // Красный, 30% прозрачности
+    }
+    
+    // Удаляем старые классы, если есть
+    avatarElement.classList.remove('avatar-hit', 'avatar-glow');
+    
+    // Принудительно перезапускаем анимацию (через reflow)
+    void (avatarElement as HTMLElement).offsetHeight;
+    
+    // Добавляем класс для анимации увеличения
+    avatarElement.classList.add('avatar-hit');
+    
+    // Устанавливаем цвет свечения через inline style (чтобы можно было динамически менять)
+    (avatarElement as HTMLElement).style.setProperty('--glow-color', glowColor);
+    avatarElement.classList.add('avatar-glow');
+    
+    // Убираем классы после завершения анимации
+    setTimeout(() => {
+      avatarElement.classList.remove('avatar-hit');
+      avatarElement.classList.remove('avatar-glow');
+      (avatarElement as HTMLElement).style.removeProperty('--glow-color');
+    }, 300);
+  };
+
   // Функция для расчета всего сценария боя
   const calculateBattleScript = (): BattleEvent[] => {
     const events: BattleEvent[] = [];
@@ -384,76 +424,68 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         break;
 
       case 'damage':
-  // Получаем значения урона из события
-  const playerDamageDealt = event.userDamage || 0;  // Урон, который нанес ИГРОК (своими картами)
-  const rivalDamageDealt = event.rivalDamage || 0;  // Урон, который нанес ПРОТИВНИК (своими картами)
-  
-  console.log('💥 Урон:', { playerDamageDealt, rivalDamageDealt });
-  
-  // ШАГ 1: Игрок бьет противника
-  setDamagePhase('first');
-  setRivalHealth(event.rivalHealthAfter!);
-  
-  // Показываем всплывающее число урона для ПРОТИВНИКА (урон от игрока)
-  if (playerDamageDealt > 0) {
-    setShowDamageNumber({ player: null, rival: playerDamageDealt });
-    
-    // Добавляем эффекты для противника
-    setHealthFlash('rival');
-    
-    // Тряска экрана для больших значений урона (> 50)
-    if (playerDamageDealt > 50) {
-      setShakeScreen(true);
-      setTimeout(() => setShakeScreen(false), 400);
-    }
-    
-    // Добавляем класс урона для аватарки противника
-    const rivalAvatar = document.querySelector('.arena-top .arena-avatar');
-    if (rivalAvatar) {
-      rivalAvatar.classList.add('damage-taken');
-      setTimeout(() => rivalAvatar.classList.remove('damage-taken'), 300);
-    }
-  }
-  
-  // Через 0.75 сек - ШАГ 2: Противник бьет игрока
-  setTimeout(() => {
-    setDamagePhase('second');
-    setUserHealth(event.userHealthAfter!);
-    
-    // Показываем всплывающее число урона для ИГРОКА (урон от противника)
-    if (rivalDamageDealt > 0) {
-      setShowDamageNumber({ player: rivalDamageDealt, rival: null });
-      
-      // Добавляем эффекты для игрока
-      setHealthFlash('player');
-      
-      // Тряска экрана для больших значений урона
-      if (rivalDamageDealt > 50) {
-        setShakeScreen(true);
-        setTimeout(() => setShakeScreen(false), 400);
-      }
-      
-      // Добавляем класс урона для аватарки игрока
-      const playerAvatar = document.querySelector('.arena-bottom .arena-avatar');
-      if (playerAvatar) {
-        playerAvatar.classList.add('damage-taken');
-        setTimeout(() => playerAvatar.classList.remove('damage-taken'), 300);
-      }
-    }
-    
-    // Убираем всплывающие числа через 1 сек
-    setTimeout(() => {
-      setShowDamageNumber({ player: null, rival: null });
-      setHealthFlash(null);
-    }, 1000);
-    
-    // Еще через 0.75 сек - переходим к следующему событию
-    setTimeout(() => {
-      setDamagePhase('idle');
-      setCurrentEventIndex(prev => prev + 1);
-    }, 750);
-  }, 750);
-  break;
+        // Получаем значения урона из события
+        const playerDamageDealt = event.userDamage || 0;  // Урон, который нанес ИГРОК (своими картами)
+        const rivalDamageDealt = event.rivalDamage || 0;  // Урон, который нанес ПРОТИВНИК (своими картами)
+        
+        console.log('💥 Урон:', { playerDamageDealt, rivalDamageDealt });
+        
+        // ШАГ 1: Игрок бьет противника
+        setDamagePhase('first');
+        setRivalHealth(event.rivalHealthAfter!);
+        
+        // Показываем всплывающее число урона для ПРОТИВНИКА (урон от игрока)
+        if (playerDamageDealt > 0) {
+          setShowDamageNumber({ player: null, rival: playerDamageDealt });
+          
+          // Добавляем эффекты для противника
+          setHealthFlash('rival');
+          
+          // Применяем анимацию удара к аватарке противника
+          applyHitEffect('rival', playerDamageDealt);
+          
+          // Тряска экрана для больших значений урона (> 50)
+          if (playerDamageDealt > 50) {
+            setShakeScreen(true);
+            setTimeout(() => setShakeScreen(false), 400);
+          }
+        }
+        
+        // Через 0.75 сек - ШАГ 2: Противник бьет игрока
+        setTimeout(() => {
+          setDamagePhase('second');
+          setUserHealth(event.userHealthAfter!);
+          
+          // Показываем всплывающее число урона для ИГРОКА (урон от противника)
+          if (rivalDamageDealt > 0) {
+            setShowDamageNumber({ player: rivalDamageDealt, rival: null });
+            
+            // Добавляем эффекты для игрока
+            setHealthFlash('player');
+            
+            // Применяем анимацию удара к аватарке игрока
+            applyHitEffect('player', rivalDamageDealt);
+            
+            // Тряска экрана для больших значений урона
+            if (rivalDamageDealt > 50) {
+              setShakeScreen(true);
+              setTimeout(() => setShakeScreen(false), 400);
+            }
+          }
+          
+          // Убираем всплывающие числа через 1 сек
+          setTimeout(() => {
+            setShowDamageNumber({ player: null, rival: null });
+            setHealthFlash(null);
+          }, 1000);
+          
+          // Еще через 0.75 сек - переходим к следующему событию
+          setTimeout(() => {
+            setDamagePhase('idle');
+            setCurrentEventIndex(prev => prev + 1);
+          }, 750);
+        }, 750);
+        break;
 
       case 'round-end':
         setCurrentRound(prev => prev + 1);
@@ -572,9 +604,9 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   return (
     <div className="arena-modal-overlay">
       <div className={`arena-modal ${shakeScreen ? 'shake' : ''} ${isBattleLoaded ? 'battle-loaded' : ''}`}>
-  <div className="arena-octagon">
-    <img src={`${BASE_URL}/backgrounds/Arena_1_bg.webp`} alt="Octagon" className="octagon-image" />
-  </div>
+        <div className="arena-octagon">
+          <img src={`${BASE_URL}/backgrounds/Arena_1_bg.webp`} alt="Octagon" className="octagon-image" />
+        </div>
         {isLoading ? (
           <div className="arena-loading">Loading arena data...</div>
         ) : (
@@ -660,222 +692,222 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
 
               <div className="arena-rival-fighters">
-  {rivalActiveCards.map((card, index) => {
-    const style = getFighterStyle(card);
-    const styleIcon = getStyleIconFilename(style);
-    
-    return (
-      <div 
-        key={index} 
-        className="arena-fighter-card"
-        data-weight={card.weightClass}
-        style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-      >
-        {/* Блок с уроном в правом верхнем углу */}
-        <div className="fighter-damage-block">
-          {Math.round(card.fighter['Total Damage'])}
-        </div>
-        
-        {/* Внутренний контейнер карточки */}
-        <div className="fighter-card-inner">
-          {/* Верхний контейнер с иконкой стиля */}
-          <div className="fighter-icon-container">
-            <img 
-              src={`${BASE_URL}/icons/${styleIcon}`}
-              alt={style}
-              className="fighter-style-icon"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-                const parent = (e.target as HTMLImageElement).parentElement;
-                if (parent) {
-                  parent.innerHTML = style === 'Striker' ? '👊' : 
-                                    style === 'Grappler' ? '🤼' : 
-                                    style === 'Universal' ? '⚡' : '👤';
-                  parent.style.fontSize = '24px';
-                }
-              }}
-            />
-          </div>
-          
-          {/* Средний контейнер - градиентная линия */}
-          <div 
-            className="fighter-divider"
-            style={{ color: getWeightClassColor(card.weightClass) }}
-          ></div>
-          
-          {/* Нижний контейнер с именем бойца */}
-          <div className="fighter-name-container">
-            {card.fighter.Fighter}
-          </div>
-        </div>
-      </div>
-    );
-  })}
-</div>
+                {rivalActiveCards.map((card, index) => {
+                  const style = getFighterStyle(card);
+                  const styleIcon = getStyleIconFilename(style);
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className="arena-fighter-card"
+                      data-weight={card.weightClass}
+                      style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
+                    >
+                      {/* Блок с уроном в правом верхнем углу */}
+                      <div className="fighter-damage-block">
+                        {Math.round(card.fighter['Total Damage'])}
+                      </div>
+                      
+                      {/* Внутренний контейнер карточки */}
+                      <div className="fighter-card-inner">
+                        {/* Верхний контейнер с иконкой стиля */}
+                        <div className="fighter-icon-container">
+                          <img 
+                            src={`${BASE_URL}/icons/${styleIcon}`}
+                            alt={style}
+                            className="fighter-style-icon"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              const parent = (e.target as HTMLImageElement).parentElement;
+                              if (parent) {
+                                parent.innerHTML = style === 'Striker' ? '👊' : 
+                                                  style === 'Grappler' ? '🤼' : 
+                                                  style === 'Universal' ? '⚡' : '👤';
+                                parent.style.fontSize = '24px';
+                              }
+                            }}
+                          />
+                        </div>
+                        
+                        {/* Средний контейнер - градиентная линия */}
+                        <div 
+                          className="fighter-divider"
+                          style={{ color: getWeightClassColor(card.weightClass) }}
+                        ></div>
+                        
+                        {/* Нижний контейнер с именем бойца */}
+                        <div className="fighter-name-container">
+                          {card.fighter.Fighter}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Средний контейнер (12%) - раунды */}
-<div className="arena-middle">
-  {[0, 1, 2, 3, 4].map((roundIndex) => {
-    const roundNumber = roundIndex + 1;
-    const isUsed = roundNumber <= usedWeightClasses.length;
-    const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
-    const isFlipped = flippedCards[roundIndex];
-    
-    // Определяем CSS класс для цвета категории
-    const getWeightCardClass = (weightClass: string | null): string => {
-      if (!weightClass) return '';
-      
-      const classMap: { [key: string]: string } = {
-        'Flyweight': 'weight-card-flyweight',
-        'Bantamweight': 'weight-card-bantamweight',
-        'Featherweight': 'weight-card-featherweight',
-        'Lightweight': 'weight-card-lightweight',
-        'Welterweight': 'weight-card-welterweight',
-        'Middleweight': 'weight-card-middleweight',
-        'Light Heavyweight': 'weight-card-light-heavyweight',
-        'Heavyweight': 'weight-card-heavyweight',
-        "Women's Strawweight": 'weight-card-womens-strawweight',
-        "Women's Flyweight": 'weight-card-womens-flyweight',
-        "Women's Bantamweight": 'weight-card-womens-bantamweight',
-        "Catch Weight": 'weight-card-catch-weight'
-      };
-      
-      return classMap[weightClass] || '';
-    };
-    
-    // Функция для получения имени файла иконки
-    const getWeightClassIcon = (weightClass: string | null): string => {
-      if (!weightClass) return '';
-      
-      const iconMap: { [key: string]: string } = {
-        'Flyweight': 'Flyweight_icon.webp',
-        'Bantamweight': 'Bantamweight_icon.webp',
-        'Featherweight': 'Featherweight_icon.webp',
-        'Lightweight': 'Lightweight_icon.webp',
-        'Welterweight': 'Welterweight_icon.webp',
-        'Middleweight': 'Middleweight_icon.webp',
-        'Light Heavyweight': 'Ligh_Heavyweight_icon.webp',
-        'Heavyweight': 'Heavyweight_icon.webp',
-        "Women's Strawweight": "Women's_Strawweight_icon.webp",
-        "Women's Flyweight": "Women's_Flyweight_icon.webp",
-        "Women's Bantamweight": "Women's_Bantamweight_icon.webp",
-        "Catch Weight": 'Catch_weight_icon.webp'
-      };
-      
-      return iconMap[weightClass] || 'default_icon.webp';
-    };
-    
-    return (
-      <div 
-        key={roundIndex} 
-        className={`arena-round-card ${isFlipped ? 'flipped' : ''}`}
-      >
-        <div className="arena-round-card-inner">
-          {/* Лицевая сторона - исходный вид */}
-          <div className="arena-round-card-front">
-            <div className="arena-round-number">
-              <div className="arena-round-digit">{roundNumber}</div>
-              <div className="arena-round-text">ROUND</div>
+            <div className="arena-middle">
+              {[0, 1, 2, 3, 4].map((roundIndex) => {
+                const roundNumber = roundIndex + 1;
+                const isUsed = roundNumber <= usedWeightClasses.length;
+                const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
+                const isFlipped = flippedCards[roundIndex];
+                
+                // Определяем CSS класс для цвета категории
+                const getWeightCardClass = (weightClass: string | null): string => {
+                  if (!weightClass) return '';
+                  
+                  const classMap: { [key: string]: string } = {
+                    'Flyweight': 'weight-card-flyweight',
+                    'Bantamweight': 'weight-card-bantamweight',
+                    'Featherweight': 'weight-card-featherweight',
+                    'Lightweight': 'weight-card-lightweight',
+                    'Welterweight': 'weight-card-welterweight',
+                    'Middleweight': 'weight-card-middleweight',
+                    'Light Heavyweight': 'weight-card-light-heavyweight',
+                    'Heavyweight': 'weight-card-heavyweight',
+                    "Women's Strawweight": 'weight-card-womens-strawweight',
+                    "Women's Flyweight": 'weight-card-womens-flyweight',
+                    "Women's Bantamweight": 'weight-card-womens-bantamweight',
+                    "Catch Weight": 'weight-card-catch-weight'
+                  };
+                  
+                  return classMap[weightClass] || '';
+                };
+                
+                // Функция для получения имени файла иконки
+                const getWeightClassIcon = (weightClass: string | null): string => {
+                  if (!weightClass) return '';
+                  
+                  const iconMap: { [key: string]: string } = {
+                    'Flyweight': 'Flyweight_icon.webp',
+                    'Bantamweight': 'Bantamweight_icon.webp',
+                    'Featherweight': 'Featherweight_icon.webp',
+                    'Lightweight': 'Lightweight_icon.webp',
+                    'Welterweight': 'Welterweight_icon.webp',
+                    'Middleweight': 'Middleweight_icon.webp',
+                    'Light Heavyweight': 'Ligh_Heavyweight_icon.webp',
+                    'Heavyweight': 'Heavyweight_icon.webp',
+                    "Women's Strawweight": "Women's_Strawweight_icon.webp",
+                    "Women's Flyweight": "Women's_Flyweight_icon.webp",
+                    "Women's Bantamweight": "Women's_Bantamweight_icon.webp",
+                    "Catch Weight": 'Catch_weight_icon.webp'
+                  };
+                  
+                  return iconMap[weightClass] || 'default_icon.webp';
+                };
+                
+                return (
+                  <div 
+                    key={roundIndex} 
+                    className={`arena-round-card ${isFlipped ? 'flipped' : ''}`}
+                  >
+                    <div className="arena-round-card-inner">
+                      {/* Лицевая сторона - исходный вид */}
+                      <div className="arena-round-card-front">
+                        <div className="arena-round-number">
+                          <div className="arena-round-digit">{roundNumber}</div>
+                          <div className="arena-round-text">ROUND</div>
+                        </div>
+                      </div>
+                      
+                      {/* Задняя сторона - новая карточка с иконкой */}
+                      <div 
+                        className={`arena-round-card-back ${getWeightCardClass(weightClass)}`}
+                      >
+                        <div className="weight-card-inner">
+                          {/* Верхний контейнер с иконкой */}
+                          <div className="weight-card-icon-container">
+                            {weightClass && (
+                              <img 
+                                src={`${BASE_URL}/icons/${getWeightClassIcon(weightClass)}`}
+                                alt={weightClass}
+                                className="weight-card-icon"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                  const parent = (e.target as HTMLImageElement).parentElement;
+                                  if (parent) {
+                                    parent.innerHTML = weightClass.substring(0, 2);
+                                    parent.style.fontSize = '20px';
+                                    parent.style.fontWeight = 'bold';
+                                  }
+                                }}
+                              />
+                            )}
+                          </div>
+                          
+                          {/* Средний контейнер - градиентная линия */}
+                          <div className="weight-card-divider"></div>
+                          
+                          {/* Нижний контейнер с названием */}
+                          <div className="weight-card-name">
+                            {weightClass || 'TBD'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-          
-          {/* Задняя сторона - новая карточка с иконкой */}
-          <div 
-            className={`arena-round-card-back ${getWeightCardClass(weightClass)}`}
-          >
-            <div className="weight-card-inner">
-              {/* Верхний контейнер с иконкой */}
-              <div className="weight-card-icon-container">
-                {weightClass && (
-                  <img 
-                    src={`${BASE_URL}/icons/${getWeightClassIcon(weightClass)}`}
-                    alt={weightClass}
-                    className="weight-card-icon"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      const parent = (e.target as HTMLImageElement).parentElement;
-                      if (parent) {
-                        parent.innerHTML = weightClass.substring(0, 2);
-                        parent.style.fontSize = '20px';
-                        parent.style.fontWeight = 'bold';
-                      }
-                    }}
-                  />
-                )}
-              </div>
-              
-              {/* Средний контейнер - градиентная линия */}
-              <div className="weight-card-divider"></div>
-              
-              {/* Нижний контейнер с названием */}
-              <div className="weight-card-name">
-                {weightClass || 'TBD'}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  })}
-</div>
 
             {/* Нижний контейнер - игрок */}
             <div className="arena-bottom">
               {/* Карточки бойцов игрока */}
               <div className="arena-player-fighters">
-  {userActiveCards.map((card, index) => {
-    const style = getFighterStyle(card);
-    const styleIcon = getStyleIconFilename(style);
-    
-    return (
-      <div 
-        key={index} 
-        className="arena-fighter-card"
-        data-weight={card.weightClass}
-        style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-      >
-        {/* Блок с уроном в правом верхнем углу */}
-        <div className="fighter-damage-block">
-          {Math.round(card.fighter['Total Damage'])}
-        </div>
-        
-        {/* Внутренний контейнер карточки */}
-        <div className="fighter-card-inner">
-          {/* Верхний контейнер с иконкой стиля */}
-          <div className="fighter-icon-container">
-            <img 
-              src={`${BASE_URL}/icons/${styleIcon}`}
-              alt={style}
-              className="fighter-style-icon"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-                const parent = (e.target as HTMLImageElement).parentElement;
-                if (parent) {
-                  parent.innerHTML = style === 'Striker' ? '👊' : 
-                                    style === 'Grappler' ? '🤼' : 
-                                    style === 'Universal' ? '⚡' : '👤';
-                  parent.style.fontSize = '24px';
-                }
-              }}
-            />
-          </div>
-          
-          {/* Средний контейнер - градиентная линия */}
-          <div 
-            className="fighter-divider"
-            style={{ color: getWeightClassColor(card.weightClass) }}
-          ></div>
-          
-          {/* Нижний контейнер с именем бойца */}
-          <div className="fighter-name-container">
-            {card.fighter.Fighter}
-          </div>
-        </div>
-      </div>
-    );
-  })}
-</div>
+                {userActiveCards.map((card, index) => {
+                  const style = getFighterStyle(card);
+                  const styleIcon = getStyleIconFilename(style);
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className="arena-fighter-card"
+                      data-weight={card.weightClass}
+                      style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
+                    >
+                      {/* Блок с уроном в правом верхнем углу */}
+                      <div className="fighter-damage-block">
+                        {Math.round(card.fighter['Total Damage'])}
+                      </div>
+                      
+                      {/* Внутренний контейнер карточки */}
+                      <div className="fighter-card-inner">
+                        {/* Верхний контейнер с иконкой стиля */}
+                        <div className="fighter-icon-container">
+                          <img 
+                            src={`${BASE_URL}/icons/${styleIcon}`}
+                            alt={style}
+                            className="fighter-style-icon"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              const parent = (e.target as HTMLImageElement).parentElement;
+                              if (parent) {
+                                parent.innerHTML = style === 'Striker' ? '👊' : 
+                                                  style === 'Grappler' ? '🤼' : 
+                                                  style === 'Universal' ? '⚡' : '👤';
+                                parent.style.fontSize = '24px';
+                              }
+                            }}
+                          />
+                        </div>
+                        
+                        {/* Средний контейнер - градиентная линия */}
+                        <div 
+                          className="fighter-divider"
+                          style={{ color: getWeightClassColor(card.weightClass) }}
+                        ></div>
+                        
+                        {/* Нижний контейнер с именем бойца */}
+                        <div className="fighter-name-container">
+                          {card.fighter.Fighter}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
               {/* Шкала здоровья игрока */}
               <div className="arena-player-health">

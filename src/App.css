@@ -2903,3 +2903,47 @@ body {
   }
 }
 
+/* ===== НОВЫЕ ЭФФЕКТЫ УДАРА ===== */
+
+/* Анимация увеличения/сжатия аватарки */
+@keyframes avatarHit {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.avatar-hit {
+  animation: avatarHit 0.3s ease-out forwards;
+}
+
+/* Эффект свечения аватарки (цвет задается через CSS переменную) */
+@keyframes avatarGlow {
+  0% {
+    filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+  }
+  20% {
+    filter: drop-shadow(0 0 20px var(--glow-color));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px var(--glow-color));
+  }
+  80% {
+    filter: drop-shadow(0 0 8px var(--glow-color));
+  }
+  100% {
+    filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+  }
+}
+
+.avatar-glow {
+  animation: avatarGlow 0.3s ease-out forwards;
+}
