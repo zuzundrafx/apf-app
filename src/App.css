@@ -2840,7 +2840,7 @@ body {
 /* Контейнер для октагона - режим загрузки */
 .arena-octagon {
   position: absolute;
-  top: 0%;
+  top: 8%;
   left: 50%;
   transform: translateX(-50%);
   width: 95%;
@@ -2849,7 +2849,7 @@ body {
   pointer-events: none;
 }
 
-/* Изображение октагона */
+/* Изображение октагона - режим загрузки */
 .octagon-image {
   width: 100%;
   height: 100%;
@@ -2860,14 +2860,14 @@ body {
 .arena-modal.battle-loaded .arena-octagon {
   width: auto;
   height: 114%;
-  top: 0%;
+  top: 8%;
   left: 50%;
   transform: translateX(-50%);
   aspect-ratio: 1 / 1;
 }
 
 .arena-modal.battle-loaded .octagon-image {
-  width: 100%;
+  width: auto;
   height: 100%;
   object-fit: cover;
 }
@@ -2889,6 +2889,7 @@ body {
   }
   .arena-modal.battle-loaded .arena-octagon {
     width: auto;
+    height: 114%;
   }
 }
 
@@ -2898,5 +2899,6 @@ body {
   }
   .arena-modal.battle-loaded .arena-octagon {
     width: auto;
+    height: 114%;
   }
 }

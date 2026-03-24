@@ -479,7 +479,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       console.log('🎮 Арена открыта, рассчитываем сценарий боя...');
       
       setIsLoading(true);
-      setIsBattleLoaded(true);
+      
       setCurrentEventIndex(0);
       setUsedWeightClasses([]);
       setFlippedCards([false, false, false, false, false]);
@@ -532,14 +532,14 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         setTimeout(() => {
           console.log('✅ Загрузка завершена, запускаем бой');
           setIsLoading(false);
-          
+          setIsBattleLoaded(true);
         }, 500);
       });
       
       // Таймаут на случай очень медленной загрузки
       setTimeout(() => {
         setIsLoading(false);
-        
+        setIsBattleLoaded(true);
       }, 3000);
     }
   }, [isOpen]);
@@ -579,15 +579,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           <div className="arena-loading">Loading arena data...</div>
         ) : (
           <>
-            {/* Изображение октагона */}
-            <div className="arena-octagon">
-              <img 
-                src={`${BASE_URL}/backgrounds/Arena_1_bg.webp`}
-                alt="Octagon"
-                className="octagon-image"
-              />
-            </div>
-
+            
             {/* Всплывающие надписи */}
             {countdownText && (
               <div className="battle-overlay-text">
