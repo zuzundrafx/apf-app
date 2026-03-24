@@ -2860,9 +2860,9 @@ body {
 .arena-modal.battle-loaded .arena-octagon {
   width: auto;
   height: 114%;
-  top: 8%;
+  top: 54%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   aspect-ratio: 1 / 1;
 }
 
