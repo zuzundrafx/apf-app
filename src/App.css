@@ -2859,7 +2859,7 @@ body {
 /* Режим боя - меняем размеры (когда загрузка закончена) */
 .arena-modal.battle-loaded .arena-octagon {
   width: auto;
-  height: 114%;
+  height: 108%;
   top: 54%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -2889,7 +2889,7 @@ body {
   }
   .arena-modal.battle-loaded .arena-octagon {
     width: auto;
-    height: 114%;
+    height: 108%;
   }
 }
 
@@ -2899,6 +2899,6 @@ body {
   }
   .arena-modal.battle-loaded .arena-octagon {
     width: auto;
-    height: 114%;
+    height: 108%;
   }
 }
