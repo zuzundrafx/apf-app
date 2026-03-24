@@ -160,6 +160,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
   const [showOctagon, setShowOctagon] = useState(false);
 
+  const [isBattleActive, setIsBattleActive] = useState(false);
+
   // Функция для расчета всего сценария боя
   const calculateBattleScript = (): BattleEvent[] => {
     const events: BattleEvent[] = [];
@@ -313,6 +315,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         setTimeout(() => setCountdownStep('fight'), 2000);
         setTimeout(() => {
           setCountdownStep(null);
+          setIsBattleActive(true);
           setCurrentEventIndex(prev => prev + 1);
         }, 3000);
         break;
@@ -570,7 +573,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
   return (
     <div className="arena-modal-overlay">
-      <div className={`arena-modal ${shakeScreen ? 'shake' : ''}`}>
+      <div className={`arena-modal ${shakeScreen ? 'shake' : ''} ${isBattleActive ? 'battle-active' : ''}`}>
         {isLoading ? (
           <div className="arena-loading">Loading arena data...</div>
         ) : (
