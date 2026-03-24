@@ -153,58 +153,98 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   // Refs для эффектов
   const effectsContainerRef = useRef<HTMLDivElement>(null);
 
-  // Функция создания эффекта удара (красная вспышка + разлетающиеся точки)
-  const createHitEffect = (x: number, y: number, damage: number, side: 'player' | 'rival') => {
+  // Комбинированный эффект удара (вариант 5)
+  const createPunchEffect = (x: number, y: number, damage: number, side: 'player' | 'rival') => {
     const container = effectsContainerRef.current;
     if (!container) return;
     
-    // 1. Красная вспышка
-    const flash = document.createElement('div');
-    flash.style.cssText = `
+    const direction = side === 'rival' ? 1 : -1;
+    const startX = x - 20 * direction;
+    const startY = y;
+    
+    // 1. Ударная волна (шок)
+    const shockwave = document.createElement('div');
+    shockwave.style.cssText = `
       position: absolute;
-      left: ${x - 30}px;
-      top: ${y - 30}px;
-      width: 60px;
-      height: 60px;
-      background: radial-gradient(circle, rgba(255, 60, 60, 0.9) 0%, rgba(255, 0, 0, 0.4) 50%, rgba(255, 0, 0, 0) 80%);
+      left: ${x - 40}px;
+      top: ${y - 40}px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 200, 100, 0.9) 0%, rgba(255, 100, 0, 0.6) 50%, rgba(255, 0, 0, 0) 80%);
       pointer-events: none;
       z-index: 100;
-      animation: hitFlash 0.25s ease-out forwards;
+      animation: shockwave 0.3s ease-out forwards;
     `;
-    container.appendChild(flash);
-    setTimeout(() => flash.remove(), 250);
+    container.appendChild(shockwave);
+    setTimeout(() => shockwave.remove(), 300);
     
-    // 2. Разлетающиеся точки (как в Street Fighter)
-    const spotCount = Math.min(6 + Math.floor(damage / 20), 15);
-    const baseAngle = side === 'rival' ? -Math.PI / 3 : Math.PI * 2 / 3;
-    
-    for (let i = 0; i < spotCount; i++) {
-      const spread = (Math.random() - 0.5) * Math.PI / 1.5;
-      const angle = baseAngle + spread;
-      const distance = 25 + Math.random() * 50;
-      const tx = Math.cos(angle) * distance;
-      const ty = Math.sin(angle) * distance - 15 + Math.random() * 30;
-      const size = 3 + Math.random() * 6;
-      
-      const spot = document.createElement('div');
-      spot.style.cssText = `
+    // 2. След кулака (только для сильных ударов > 30)
+    if (damage > 30) {
+      const trail = document.createElement('div');
+      const tx = 40 * direction;
+      const ty = -15;
+      trail.style.cssText = `
         position: absolute;
-        left: ${x - size/2}px;
-        top: ${y - size/2}px;
-        width: ${size}px;
-        height: ${size}px;
-        background: #B22222;
+        left: ${startX}px;
+        top: ${startY}px;
+        width: 35px;
+        height: 35px;
+        background: radial-gradient(circle, #FFD966 0%, #FFA500 60%, #FF4500 100%);
         border-radius: 50%;
+        clip-path: polygon(50% 0%, 80% 30%, 70% 70%, 50% 100%, 30% 70%, 20% 30%);
         pointer-events: none;
         z-index: 101;
-        animation: bloodSpotFly 0.45s ease-out forwards;
-        transform: translate(${tx}px, ${ty}px);
-        opacity: 0.85;
-        box-shadow: 0 0 2px rgba(255, 100, 100, 0.5);
+        animation: fistTrail 0.25s ease-out forwards;
+        --tx: ${tx}px;
+        --ty: ${ty}px;
+        --tx2: ${tx * 1.8}px;
+        --ty2: ${ty * 1.5}px;
       `;
-      container.appendChild(spot);
-      setTimeout(() => spot.remove(), 450);
+      container.appendChild(trail);
+      setTimeout(() => trail.remove(), 250);
+    }
+    
+    // 3. Эффект разрыва воздуха (для критических ударов > 80)
+    if (damage > 80) {
+      const airTear = document.createElement('div');
+      airTear.style.cssText = `
+        position: absolute;
+        left: ${x - 30}px;
+        top: ${y - 10}px;
+        width: 60px;
+        height: 20px;
+        background: linear-gradient(90deg, transparent, #FFD966, #FFA500, #FF4500, transparent);
+        border-radius: 50%;
+        filter: blur(3px);
+        pointer-events: none;
+        z-index: 99;
+        animation: airTear 0.25s ease-out forwards;
+        transform: rotate(${side === 'rival' ? '-15deg' : '15deg'});
+      `;
+      container.appendChild(airTear);
+      setTimeout(() => airTear.remove(), 250);
+    }
+    
+    // 4. Эффект "POW!" (для нокаутов > 100)
+    if (damage > 100) {
+      const comicText = document.createElement('div');
+      comicText.textContent = side === 'rival' ? 'POW!' : 'BAM!';
+      comicText.style.cssText = `
+        position: absolute;
+        left: ${x - 25}px;
+        top: ${y - 35}px;
+        font-size: 32px;
+        font-weight: 900;
+        color: #FFD966;
+        text-shadow: 2px 2px 0 #FF4500, 4px 4px 0 #000000;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 102;
+        animation: comicPunch 0.4s ease-out forwards;
+      `;
+      container.appendChild(comicText);
+      setTimeout(() => comicText.remove(), 400);
     }
   };
 
@@ -463,9 +503,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setTimeout(() => setShakeScreen(false), 400);
           }
           
-          // Эффект удара по противнику
           const rivalPos = getHitPosition('rival', playerDamageDealt);
-          createHitEffect(rivalPos.x, rivalPos.y, playerDamageDealt, 'rival');
+          createPunchEffect(rivalPos.x, rivalPos.y, playerDamageDealt, 'rival');
           flashAvatar('rival');
         }
         
@@ -482,9 +521,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               setTimeout(() => setShakeScreen(false), 400);
             }
             
-            // Эффект удара по игроку
             const playerPos = getHitPosition('player', rivalDamageDealt);
-            createHitEffect(playerPos.x, playerPos.y, rivalDamageDealt, 'player');
+            createPunchEffect(playerPos.x, playerPos.y, rivalDamageDealt, 'player');
             flashAvatar('player');
           }
           
