@@ -2840,9 +2840,9 @@ body {
 /* Контейнер для октагона - режим загрузки */
 .arena-octagon {
   position: absolute;
-  top: 8%;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   width: 95%;
   aspect-ratio: 1 / 1;
   z-index: 0;
