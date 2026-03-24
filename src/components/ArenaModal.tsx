@@ -583,6 +583,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
             )}
             
+            
             {/* Верхняя шапка арены */}
             <div className="arena-header">
               <div className="arena-header-left">
@@ -595,8 +596,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
             </div>
 
-            {/* Это новый пол для арены */}
-            <div className="octagon-bg-overlay"></div> 
+            
            
             {/* Верхний контейнер - противник */}
             <div className="arena-top">

@@ -1623,6 +1623,7 @@ body {
   backdrop-filter: blur(4px);
 }
 
+/* Контейнер для арены с октагоном */
 .arena-modal {
   width: 100%;
   height: 100vh;
@@ -1632,6 +1633,102 @@ body {
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+/* Псевдоэлемент для октагона (фон) */
+.arena-modal::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 92%;
+  height: 92%;
+  background: radial-gradient(ellipse at center, 
+    #3D2A1C 0%,      /* Центр — темно-коричневый (пол) */
+    #2A1F15 40%,     /* Средняя зона — темнее */
+    #1C1D1F 80%      /* Края — сливаются с фоном */
+  );
+  clip-path: polygon(
+    30% 0%, 70% 0%,
+    100% 30%, 100% 70%,
+    70% 100%, 30% 100%,
+    0% 70%, 0% 30%
+  );
+  z-index: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(178, 1, 1, 0.3);
+}
+
+/* Добавляем текстуру пола (легкий градиент и шум) */
+.arena-modal::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 92%;
+  height: 92%;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 200, 100, 0.03) 0px,
+    rgba(255, 200, 100, 0.03) 2px,
+    transparent 2px,
+    transparent 8px
+  );
+  clip-path: polygon(
+    30% 0%, 70% 0%,
+    100% 30%, 100% 70%,
+    70% 100%, 30% 100%,
+    0% 70%, 0% 30%
+  );
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Все содержимое арены должно быть поверх октагона */
+.arena-header,
+.arena-top,
+.arena-middle,
+.arena-bottom,
+.arena-loading {
+  position: relative;
+  z-index: 1;
+}
+
+/* Добавляем световой эффект по краям октагона */
+@keyframes octagonGlow {
+  0% {
+    box-shadow: inset 0 0 20px rgba(178, 1, 1, 0.2), 0 0 10px rgba(178, 1, 1, 0.3);
+  }
+  50% {
+    box-shadow: inset 0 0 35px rgba(178, 1, 1, 0.4), 0 0 20px rgba(178, 1, 1, 0.5);
+  }
+  100% {
+    box-shadow: inset 0 0 20px rgba(178, 1, 1, 0.2), 0 0 10px rgba(178, 1, 1, 0.3);
+  }
+}
+
+.arena-modal::before {
+  animation: octagonGlow 3s ease-in-out infinite;
+}
+
+/* Адаптация для маленьких экранов */
+@media (max-width: 320px) {
+  .arena-modal::before,
+  .arena-modal::after {
+    width: 90%;
+    height: 90%;
+  }
+}
+
+@media (max-width: 280px) {
+  .arena-modal::before,
+  .arena-modal::after {
+    width: 88%;
+    height: 88%;
+  }
 }
 
 .arena-loading {
@@ -2831,40 +2928,4 @@ body {
   position: relative;
 }
 
-/* Фоновая подложка-октагон */
-.arena-background-octagon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    
-    /* Адаптивный размер: берет 95% от ширины контейнера, но не больше 400px */
-    width: clamp(280px, 95%, 420px);
-    aspect-ratio: 1 / 1;
-    
-    background-color: #1a1d21; /* Тот самый светлый серый пол */
-    clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
-    
-    /* Слой ПОД карточками */
-    z-index: 0; 
-}
-
-/* Внутренняя рамка (сетка) */
-.arena-background-octagon::before {
-    content: "";
-    position: absolute;
-    inset: 2px; /* отступ рамки */
-    border: 1px solid #3a3f47;
-    clip-path: inherit;
-}
-
-/* Контейнер, где происходит бой (в ArenaModal.tsx) */
-/* Убедись, что у родительского дива, где лежат команды, есть этот класс */
-.arena-battle-zone {
-    position: relative; /* Чтобы абсолютный фон привязался к центру */
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    min-height: 350px; /* или сколько у тебя сейчас */
-}
+  
