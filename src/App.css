@@ -2901,4 +2901,63 @@ body {
   position: relative;
 }
 
-  
+ /* Контейнер для октагона */
+.arena-octagon {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 95%;
+  aspect-ratio: 1 / 1;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+  pointer-events: none;
+}
+
+.arena-octagon.visible {
+  opacity: 1;
+}
+
+/* Изображение октагона */
+.octagon-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+} 
+
+.arena-modal:has(.battle-overlay-text) .octagon-image,
+.arena-modal:has(.arena-round-card.flipped) .octagon-image {
+  width: auto;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Все содержимое арены должно быть поверх октагона */
+.arena-header,
+.arena-top,
+.arena-middle,
+.arena-bottom,
+.arena-loading,
+.battle-overlay-text {
+  position: relative;
+  z-index: 1;
+}
+
+/* Убираем старый псевдоэлемент октагона */
+.arena-modal::before {
+  display: none;
+}
+
+/* Адаптация для маленьких экранов */
+@media (max-width: 320px) {
+  .arena-octagon {
+    width: 92%;
+  }
+}
+
+@media (max-width: 280px) {
+  .arena-octagon {
+    width: 90%;
+  }
+}

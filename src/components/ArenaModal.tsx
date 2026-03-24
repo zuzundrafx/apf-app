@@ -158,6 +158,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
+  const [showOctagon, setShowOctagon] = useState(false);
+
   // Функция для расчета всего сценария боя
   const calculateBattleScript = (): BattleEvent[] => {
     const events: BattleEvent[] = [];
@@ -570,6 +572,15 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           <div className="arena-loading">Loading arena data...</div>
         ) : (
           <>
+            {/* Изображение октагона */}
+            <div className={`arena-octagon ${showOctagon ? 'visible' : ''}`}>
+              <img 
+                src={`${BASE_URL}/backgrounds/Arena_1_bg.webp`}
+                alt="Octagon"
+                className="octagon-image"
+              />
+            </div>
+
             {/* Всплывающие надписи */}
             {countdownText && (
               <div className="battle-overlay-text">
