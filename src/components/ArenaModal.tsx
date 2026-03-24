@@ -1,6 +1,6 @@
 // src/components/ArenaModal.tsx
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Tournament, SelectedFighter } from '../types';
 import BattleResultModal from './BattleResultModal';
 
@@ -61,20 +61,30 @@ const getWeightClassColor = (weightClass: string): string => {
 
 // Функция для определения стиля бойца
 const getFighterStyle = (fighter: SelectedFighter): string => {
+  // Приводим значения к числу, так как они могут быть string или number
   const str = Number(fighter.fighter.Str) || 0;
   const td = Number(fighter.fighter.Td) || 0;
   const sub = Number(fighter.fighter.Sub) || 0;
   const tdSubSum = td + sub;
 
+  console.log('🔍 ArenaModal - Боец:', fighter.fighter.Fighter);
+  console.log('   Str:', fighter.fighter.Str, '→ число:', str);
+  console.log('   Td:', fighter.fighter.Td, '→ число:', td);
+  console.log('   Sub:', fighter.fighter.Sub, '→ число:', sub);
+  
+  // Grappler: TD+SUB >= 2 и STR < 50
   if (tdSubSum >= 2 && str < 50) {
     return 'Grappler';
   }
+  // Striker: STR >= 50 и TD+SUB < 2
   if (str >= 50 && tdSubSum < 2) {
     return 'Striker';
   }
+  // Universal: STR >= 50 и TD+SUB >= 2
   if (str >= 50 && tdSubSum >= 2) {
     return 'Universal';
   }
+  // Simple: TD+SUB < 2 и STR < 50 (по умолчанию)
   return 'Simple';
 };
 
@@ -149,144 +159,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
   const [isBattleLoaded, setIsBattleLoaded] = useState(false);
-  
-  // Refs для эффектов
-  const effectsContainerRef = useRef<HTMLDivElement>(null);
-
-  // Комбинированный эффект удара (вариант 5)
-  const createPunchEffect = (x: number, y: number, damage: number, side: 'player' | 'rival') => {
-    const container = effectsContainerRef.current;
-    if (!container) return;
-    
-    const direction = side === 'rival' ? 1 : -1;
-    const startX = x - 20 * direction;
-    const startY = y;
-    
-    // 1. Ударная волна (шок)
-    const shockwave = document.createElement('div');
-    shockwave.style.cssText = `
-      position: absolute;
-      left: ${x - 40}px;
-      top: ${y - 40}px;
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 200, 100, 0.9) 0%, rgba(255, 100, 0, 0.6) 50%, rgba(255, 0, 0, 0) 80%);
-      pointer-events: none;
-      z-index: 100;
-      animation: shockwave 0.3s ease-out forwards;
-    `;
-    container.appendChild(shockwave);
-    setTimeout(() => shockwave.remove(), 300);
-    
-    // 2. След кулака (только для сильных ударов > 30)
-    if (damage > 30) {
-      const trail = document.createElement('div');
-      const tx = 40 * direction;
-      const ty = -15;
-      trail.style.cssText = `
-        position: absolute;
-        left: ${startX}px;
-        top: ${startY}px;
-        width: 35px;
-        height: 35px;
-        background: radial-gradient(circle, #FFD966 0%, #FFA500 60%, #FF4500 100%);
-        border-radius: 50%;
-        clip-path: polygon(50% 0%, 80% 30%, 70% 70%, 50% 100%, 30% 70%, 20% 30%);
-        pointer-events: none;
-        z-index: 101;
-        animation: fistTrail 0.25s ease-out forwards;
-        --tx: ${tx}px;
-        --ty: ${ty}px;
-        --tx2: ${tx * 1.8}px;
-        --ty2: ${ty * 1.5}px;
-      `;
-      container.appendChild(trail);
-      setTimeout(() => trail.remove(), 250);
-    }
-    
-    // 3. Эффект разрыва воздуха (для критических ударов > 80)
-    if (damage > 80) {
-      const airTear = document.createElement('div');
-      airTear.style.cssText = `
-        position: absolute;
-        left: ${x - 30}px;
-        top: ${y - 10}px;
-        width: 60px;
-        height: 20px;
-        background: linear-gradient(90deg, transparent, #FFD966, #FFA500, #FF4500, transparent);
-        border-radius: 50%;
-        filter: blur(3px);
-        pointer-events: none;
-        z-index: 99;
-        animation: airTear 0.25s ease-out forwards;
-        transform: rotate(${side === 'rival' ? '-15deg' : '15deg'});
-      `;
-      container.appendChild(airTear);
-      setTimeout(() => airTear.remove(), 250);
-    }
-    
-    // 4. Эффект "POW!" (для нокаутов > 100)
-    if (damage > 100) {
-      const comicText = document.createElement('div');
-      comicText.textContent = side === 'rival' ? 'POW!' : 'BAM!';
-      comicText.style.cssText = `
-        position: absolute;
-        left: ${x - 25}px;
-        top: ${y - 35}px;
-        font-size: 32px;
-        font-weight: 900;
-        color: #FFD966;
-        text-shadow: 2px 2px 0 #FF4500, 4px 4px 0 #000000;
-        white-space: nowrap;
-        pointer-events: none;
-        z-index: 102;
-        animation: comicPunch 0.4s ease-out forwards;
-      `;
-      container.appendChild(comicText);
-      setTimeout(() => comicText.remove(), 400);
-    }
-  };
-
-  // Функция для определения позиции удара
-  const getHitPosition = (side: 'player' | 'rival', damage: number): { x: number, y: number } => {
-    const container = effectsContainerRef.current;
-    if (!container) return { x: 0, y: 0 };
-    
-    let avatarElement: Element | null = null;
-    
-    if (side === 'rival') {
-      avatarElement = document.querySelector('.arena-top .arena-avatar');
-    } else {
-      avatarElement = document.querySelector('.arena-bottom .arena-avatar');
-    }
-    
-    if (!avatarElement) return { x: container.clientWidth / 2, y: container.clientHeight / 2 };
-    
-    const rect = avatarElement.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    
-    const randomOffset = damage / 60;
-    const offsetX = (Math.random() - 0.5) * randomOffset * 15;
-    const offsetY = (Math.random() - 0.5) * randomOffset * 15;
-    
-    return {
-      x: rect.left + rect.width / 2 + offsetX - containerRect.left,
-      y: rect.top + rect.height / 2 + offsetY - containerRect.top
-    };
-  };
-
-  // Функция для анимации аватарки (красная вспышка на самом аватаре)
-  const flashAvatar = (side: 'player' | 'rival') => {
-    const avatar = side === 'rival' 
-      ? document.querySelector('.arena-top .arena-avatar')
-      : document.querySelector('.arena-bottom .arena-avatar');
-    
-    if (avatar) {
-      avatar.classList.add('hit');
-      setTimeout(() => avatar.classList.remove('hit'), 200);
-    }
-  };
 
   // Функция для расчета всего сценария боя
   const calculateBattleScript = (): BattleEvent[] => {
@@ -298,11 +170,15 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     let availableClasses = [...weightClasses];
     let usedClasses: string[] = [];
 
+    // Добавляем отсчет
     events.push({ type: 'countdown' });
 
+    // 5 раундов
     for (let round = 1; round <= 5; round++) {
+      // Начало раунда
       events.push({ type: 'round-start', round });
 
+      // Выбираем случайную весовую категорию
       if (availableClasses.length === 0) break;
       
       const randomIndex = Math.floor(Math.random() * availableClasses.length);
@@ -310,6 +186,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       usedClasses.push(selectedClass);
       availableClasses = availableClasses.filter((_, i) => i !== randomIndex);
 
+      // Находим новых бойцов
       const newUserFighters = userSelections.filter(
         sel => sel.weightClass === selectedClass && !currentUserCards.includes(sel)
       );
@@ -318,12 +195,14 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         sel => sel.weightClass === selectedClass && !currentRivalCards.includes(sel)
       );
 
+      // Добавляем новых бойцов
       const userSlots = 5 - currentUserCards.length;
       const userCardsToAdd = newUserFighters.slice(0, userSlots);
       
       const rivalSlots = 5 - currentRivalCards.length;
       const rivalCardsToAdd = newRivalFighters.slice(0, rivalSlots);
 
+      // Обновляем карты
       if (userCardsToAdd.length > 0) {
         currentUserCards = [...currentUserCards, ...userCardsToAdd];
       }
@@ -332,6 +211,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         currentRivalCards = [...currentRivalCards, ...rivalCardsToAdd];
       }
 
+      // Событие появления карт
       events.push({
         type: 'card-appear',
         round,
@@ -340,6 +220,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         rivalActiveCards: [...currentRivalCards]
       });
 
+      // Рассчитываем суммарный урон
       const userTotalDamage = currentUserCards.reduce(
         (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
       );
@@ -348,9 +229,11 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
       );
 
+      // Наносим урон
       currentRivalHealth = Math.max(0, currentRivalHealth - userTotalDamage);
       currentUserHealth = Math.max(0, currentUserHealth - rivalTotalDamage);
 
+      // Событие нанесения урона
       events.push({
         type: 'damage',
         round,
@@ -360,6 +243,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         rivalHealthAfter: currentRivalHealth
       });
 
+      // Проверка на досрочное окончание
       if (currentRivalHealth <= 0 && currentUserHealth > 0) {
         events.push({
           type: 'battle-end',
@@ -384,11 +268,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         return events;
       }
 
+      // Конец раунда
       if (round < 5) {
         events.push({ type: 'round-end', round });
       }
     }
 
+    // Если бой дошел до конца, определяем победителя по решению
     const healthDiff = Math.abs(currentUserHealth - currentRivalHealth);
     let result;
 
@@ -427,6 +313,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         setTimeout(() => setCountdownStep('fight'), 2000);
         setTimeout(() => {
           setCountdownStep(null);
+          
           setCurrentEventIndex(prev => prev + 1);
         }, 3000);
         break;
@@ -440,8 +327,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         break;
 
       case 'card-appear':
+        // Добавляем весовую категорию в использованные
         setUsedWeightClasses(prev => [...prev, event.weightClass!]);
         
+        // Запускаем анимацию переворота для карты этого раунда
         const cardIndex = event.round! - 1;
         setFlippedCards(prev => {
           const newFlipped = [...prev];
@@ -449,6 +338,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           return newFlipped;
         });
         
+        // ТЕКУЩИЙ урон до обновления
         const currentPlayerDamage = userActiveCards.reduce(
           (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
         );
@@ -456,6 +346,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
         );
         
+        // НОВЫЙ урон после добавления карты
         const newPlayerDamage = (event.userActiveCards || []).reduce(
           (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
         );
@@ -463,80 +354,106 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
         );
         
+        // Проверяем, увеличился ли урон
         const playerDamageIncreased = newPlayerDamage > currentPlayerDamage;
         const rivalDamageIncreased = newRivalDamage > currentRivalDamage;
         
+        // Через 300мс показываем лицевую сторону карты и бойцов
         setTimeout(() => {
+          // Обновляем карты бойцов
           setUserActiveCards(event.userActiveCards || []);
           setRivalActiveCards(event.rivalActiveCards || []);
           
+          // Анимируем увеличение урона ТОЛЬКО если он действительно вырос
           setAnimatedDamage({ player: newPlayerDamage, rival: newRivalDamage });
           
+          // Показываем эффект увеличения только для тех, у кого урон вырос
           setShowDamageIncrease({ 
             player: playerDamageIncreased, 
             rival: rivalDamageIncreased 
           });
           
+          // Через 500мс убираем эффект
           setTimeout(() => {
             setShowDamageIncrease({ player: false, rival: false });
           }, 500);
           
+          // Переходим к следующему событию через оставшееся время
           setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1200);
         }, 300);
         break;
 
       case 'damage':
-        const playerDamageDealt = event.userDamage || 0;
-        const rivalDamageDealt = event.rivalDamage || 0;
-        
-        console.log('💥 Урон:', { playerDamageDealt, rivalDamageDealt });
-        
-        setDamagePhase('first');
-        setRivalHealth(event.rivalHealthAfter!);
-        
-        if (playerDamageDealt > 0) {
-          setShowDamageNumber({ player: null, rival: playerDamageDealt });
-          setHealthFlash('rival');
-          
-          if (playerDamageDealt > 50) {
-            setShakeScreen(true);
-            setTimeout(() => setShakeScreen(false), 400);
-          }
-          
-          const rivalPos = getHitPosition('rival', playerDamageDealt);
-          createPunchEffect(rivalPos.x, rivalPos.y, playerDamageDealt, 'rival');
-          flashAvatar('rival');
-        }
-        
-        setTimeout(() => {
-          setDamagePhase('second');
-          setUserHealth(event.userHealthAfter!);
-          
-          if (rivalDamageDealt > 0) {
-            setShowDamageNumber({ player: rivalDamageDealt, rival: null });
-            setHealthFlash('player');
-            
-            if (rivalDamageDealt > 50) {
-              setShakeScreen(true);
-              setTimeout(() => setShakeScreen(false), 400);
-            }
-            
-            const playerPos = getHitPosition('player', rivalDamageDealt);
-            createPunchEffect(playerPos.x, playerPos.y, rivalDamageDealt, 'player');
-            flashAvatar('player');
-          }
-          
-          setTimeout(() => {
-            setShowDamageNumber({ player: null, rival: null });
-            setHealthFlash(null);
-          }, 1000);
-          
-          setTimeout(() => {
-            setDamagePhase('idle');
-            setCurrentEventIndex(prev => prev + 1);
-          }, 750);
-        }, 750);
-        break;
+  // Получаем значения урона из события
+  const playerDamageDealt = event.userDamage || 0;  // Урон, который нанес ИГРОК (своими картами)
+  const rivalDamageDealt = event.rivalDamage || 0;  // Урон, который нанес ПРОТИВНИК (своими картами)
+  
+  console.log('💥 Урон:', { playerDamageDealt, rivalDamageDealt });
+  
+  // ШАГ 1: Игрок бьет противника
+  setDamagePhase('first');
+  setRivalHealth(event.rivalHealthAfter!);
+  
+  // Показываем всплывающее число урона для ПРОТИВНИКА (урон от игрока)
+  if (playerDamageDealt > 0) {
+    setShowDamageNumber({ player: null, rival: playerDamageDealt });
+    
+    // Добавляем эффекты для противника
+    setHealthFlash('rival');
+    
+    // Тряска экрана для больших значений урона (> 50)
+    if (playerDamageDealt > 50) {
+      setShakeScreen(true);
+      setTimeout(() => setShakeScreen(false), 400);
+    }
+    
+    // Добавляем класс урона для аватарки противника
+    const rivalAvatar = document.querySelector('.arena-top .arena-avatar');
+    if (rivalAvatar) {
+      rivalAvatar.classList.add('damage-taken');
+      setTimeout(() => rivalAvatar.classList.remove('damage-taken'), 300);
+    }
+  }
+  
+  // Через 0.75 сек - ШАГ 2: Противник бьет игрока
+  setTimeout(() => {
+    setDamagePhase('second');
+    setUserHealth(event.userHealthAfter!);
+    
+    // Показываем всплывающее число урона для ИГРОКА (урон от противника)
+    if (rivalDamageDealt > 0) {
+      setShowDamageNumber({ player: rivalDamageDealt, rival: null });
+      
+      // Добавляем эффекты для игрока
+      setHealthFlash('player');
+      
+      // Тряска экрана для больших значений урона
+      if (rivalDamageDealt > 50) {
+        setShakeScreen(true);
+        setTimeout(() => setShakeScreen(false), 400);
+      }
+      
+      // Добавляем класс урона для аватарки игрока
+      const playerAvatar = document.querySelector('.arena-bottom .arena-avatar');
+      if (playerAvatar) {
+        playerAvatar.classList.add('damage-taken');
+        setTimeout(() => playerAvatar.classList.remove('damage-taken'), 300);
+      }
+    }
+    
+    // Убираем всплывающие числа через 1 сек
+    setTimeout(() => {
+      setShowDamageNumber({ player: null, rival: null });
+      setHealthFlash(null);
+    }, 1000);
+    
+    // Еще через 0.75 сек - переходим к следующему событию
+    setTimeout(() => {
+      setDamagePhase('idle');
+      setCurrentEventIndex(prev => prev + 1);
+    }, 750);
+  }, 750);
+  break;
 
       case 'round-end':
         setCurrentRound(prev => prev + 1);
@@ -549,12 +466,14 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     }
   };
 
+  // Эффект для выполнения событий по порядку
   useEffect(() => {
     if (!isLoading && battleScript.length > 0) {
       playNextEvent();
     }
   }, [currentEventIndex, isLoading, battleScript]);
 
+  // Инициализация при открытии
   useEffect(() => {
     if (isOpen) {
       console.log('🎮 Арена открыта, рассчитываем сценарий боя...');
@@ -570,14 +489,18 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       setRivalActiveCards([]);
       setBattleResult(null);
       
+      // Рассчитываем весь сценарий заранее
       const script = calculateBattleScript();
       console.log('📜 Сценарий боя:', script);
       setBattleScript(script);
       
+      // ПРЕДЗАГРУЗКА: собираем все карты, которые появятся в бою
       const allCardsThatWillAppear = new Set<string>();
       
+      // Проходим по всем событиям сценария
       script.forEach(event => {
         if (event.type === 'card-appear') {
+          // Добавляем аватарки бойцов, которые появятся
           event.userActiveCards?.forEach(card => {
             allCardsThatWillAppear.add(
               `${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`
@@ -593,6 +516,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       
       console.log('🖼️ Предзагружаем карточки:', Array.from(allCardsThatWillAppear));
       
+      // Загружаем все изображения параллельно
       const imagePromises = Array.from(allCardsThatWillAppear).map(src => {
         return new Promise((resolve, reject) => {
           const img = new Image();
@@ -602,6 +526,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         });
       });
       
+      // Ждем загрузки всех изображений (но не больше 3 секунд)
       Promise.allSettled(imagePromises).then(() => {
         console.log('✅ Все карточки загружены');
         setTimeout(() => {
@@ -611,6 +536,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         }, 500);
       });
       
+      // Таймаут на случай очень медленной загрузки
       setTimeout(() => {
         setIsLoading(false);
         setIsBattleLoaded(true);
@@ -618,11 +544,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     }
   }, [isOpen]);
 
+  // Обработчик закрытия результата
   const handleResultClose = () => {
     setBattleResult(null);
     onSurrender();
   };
 
+  // Обработчик SURRENDER
   const handleSurrender = () => {
     setBattleResult({
       isOpen: true,
@@ -644,29 +572,15 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   return (
     <div className="arena-modal-overlay">
       <div className={`arena-modal ${shakeScreen ? 'shake' : ''} ${isBattleLoaded ? 'battle-loaded' : ''}`}>
-        {/* Контейнер для эффектов */}
-        <div 
-          ref={effectsContainerRef}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            pointerEvents: 'none',
-            zIndex: 100,
-            overflow: 'hidden'
-          }}
-        />
-        
-        <div className="arena-octagon">
-          <img src={`${BASE_URL}/backgrounds/Arena_1_bg.webp`} alt="Octagon" className="octagon-image" />
-        </div>
-        
+  <div className="arena-octagon">
+    <img src={`${BASE_URL}/backgrounds/Arena_1_bg.webp`} alt="Octagon" className="octagon-image" />
+  </div>
         {isLoading ? (
           <div className="arena-loading">Loading arena data...</div>
         ) : (
           <>
+            
+            {/* Всплывающие надписи */}
             {countdownText && (
               <div className="battle-overlay-text">
                 {countdownText}
@@ -679,6 +593,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
             )}
             
+            
+            {/* Верхняя шапка арены */}
             <div className="arena-header">
               <div className="arena-header-left">
                 {tournament.name}
@@ -690,8 +606,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
             </div>
 
+            
+           
+            {/* Верхний контейнер - противник */}
             <div className="arena-top">
+              {/* Контейнер с тремя колонками */}
               <div className="arena-avatar-container">
+                {/* Левый блок - DAMAGE противника с никнеймом внутри */}
                 <div className="arena-avatar-left">
                   <div className="arena-damage-display rival-damage">
                     <div className="damage-username">{rivalData.username}</div>
@@ -704,6 +625,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   </div>
                 </div>
                 
+                {/* Средний блок - аватарка противника */}
                 <div className="arena-avatar-center">
                   <div className="arena-avatar">
                     <img 
@@ -716,9 +638,11 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   </div>
                 </div>
                 
+                {/* Правый блок - пустой (резерв) */}
                 <div className="arena-avatar-right"></div>
               </div>
 
+              {/* Всплывающие числа урона для противника - вне flex контейнера */}
               {showDamageNumber.rival && (
                 <div className="damage-number rival-damage">
                   -{showDamageNumber.rival}
@@ -736,203 +660,224 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
 
               <div className="arena-rival-fighters">
-                {rivalActiveCards.map((card, index) => {
-                  const style = getFighterStyle(card);
-                  const styleIcon = getStyleIconFilename(style);
-                  
-                  return (
-                    <div 
-                      key={index} 
-                      className="arena-fighter-card"
-                      data-weight={card.weightClass}
-                      style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-                    >
-                      <div className="fighter-damage-block">
-                        {Math.round(card.fighter['Total Damage'])}
-                      </div>
-                      
-                      <div className="fighter-card-inner">
-                        <div className="fighter-icon-container">
-                          <img 
-                            src={`${BASE_URL}/icons/${styleIcon}`}
-                            alt={style}
-                            className="fighter-style-icon"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                              const parent = (e.target as HTMLImageElement).parentElement;
-                              if (parent) {
-                                parent.innerHTML = style === 'Striker' ? '👊' : 
-                                                  style === 'Grappler' ? '🤼' : 
-                                                  style === 'Universal' ? '⚡' : '👤';
-                                parent.style.fontSize = '24px';
-                              }
-                            }}
-                          />
-                        </div>
-                        
-                        <div 
-                          className="fighter-divider"
-                          style={{ color: getWeightClassColor(card.weightClass) }}
-                        ></div>
-                        
-                        <div className="fighter-name-container">
-                          {card.fighter.Fighter}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+  {rivalActiveCards.map((card, index) => {
+    const style = getFighterStyle(card);
+    const styleIcon = getStyleIconFilename(style);
+    
+    return (
+      <div 
+        key={index} 
+        className="arena-fighter-card"
+        data-weight={card.weightClass}
+        style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
+      >
+        {/* Блок с уроном в правом верхнем углу */}
+        <div className="fighter-damage-block">
+          {Math.round(card.fighter['Total Damage'])}
+        </div>
+        
+        {/* Внутренний контейнер карточки */}
+        <div className="fighter-card-inner">
+          {/* Верхний контейнер с иконкой стиля */}
+          <div className="fighter-icon-container">
+            <img 
+              src={`${BASE_URL}/icons/${styleIcon}`}
+              alt={style}
+              className="fighter-style-icon"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+                const parent = (e.target as HTMLImageElement).parentElement;
+                if (parent) {
+                  parent.innerHTML = style === 'Striker' ? '👊' : 
+                                    style === 'Grappler' ? '🤼' : 
+                                    style === 'Universal' ? '⚡' : '👤';
+                  parent.style.fontSize = '24px';
+                }
+              }}
+            />
+          </div>
+          
+          {/* Средний контейнер - градиентная линия */}
+          <div 
+            className="fighter-divider"
+            style={{ color: getWeightClassColor(card.weightClass) }}
+          ></div>
+          
+          {/* Нижний контейнер с именем бойца */}
+          <div className="fighter-name-container">
+            {card.fighter.Fighter}
+          </div>
+        </div>
+      </div>
+    );
+  })}
+</div>
+            </div>
+
+            {/* Средний контейнер (12%) - раунды */}
+<div className="arena-middle">
+  {[0, 1, 2, 3, 4].map((roundIndex) => {
+    const roundNumber = roundIndex + 1;
+    const isUsed = roundNumber <= usedWeightClasses.length;
+    const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
+    const isFlipped = flippedCards[roundIndex];
+    
+    // Определяем CSS класс для цвета категории
+    const getWeightCardClass = (weightClass: string | null): string => {
+      if (!weightClass) return '';
+      
+      const classMap: { [key: string]: string } = {
+        'Flyweight': 'weight-card-flyweight',
+        'Bantamweight': 'weight-card-bantamweight',
+        'Featherweight': 'weight-card-featherweight',
+        'Lightweight': 'weight-card-lightweight',
+        'Welterweight': 'weight-card-welterweight',
+        'Middleweight': 'weight-card-middleweight',
+        'Light Heavyweight': 'weight-card-light-heavyweight',
+        'Heavyweight': 'weight-card-heavyweight',
+        "Women's Strawweight": 'weight-card-womens-strawweight',
+        "Women's Flyweight": 'weight-card-womens-flyweight',
+        "Women's Bantamweight": 'weight-card-womens-bantamweight',
+        "Catch Weight": 'weight-card-catch-weight'
+      };
+      
+      return classMap[weightClass] || '';
+    };
+    
+    // Функция для получения имени файла иконки
+    const getWeightClassIcon = (weightClass: string | null): string => {
+      if (!weightClass) return '';
+      
+      const iconMap: { [key: string]: string } = {
+        'Flyweight': 'Flyweight_icon.webp',
+        'Bantamweight': 'Bantamweight_icon.webp',
+        'Featherweight': 'Featherweight_icon.webp',
+        'Lightweight': 'Lightweight_icon.webp',
+        'Welterweight': 'Welterweight_icon.webp',
+        'Middleweight': 'Middleweight_icon.webp',
+        'Light Heavyweight': 'Ligh_Heavyweight_icon.webp',
+        'Heavyweight': 'Heavyweight_icon.webp',
+        "Women's Strawweight": "Women's_Strawweight_icon.webp",
+        "Women's Flyweight": "Women's_Flyweight_icon.webp",
+        "Women's Bantamweight": "Women's_Bantamweight_icon.webp",
+        "Catch Weight": 'Catch_weight_icon.webp'
+      };
+      
+      return iconMap[weightClass] || 'default_icon.webp';
+    };
+    
+    return (
+      <div 
+        key={roundIndex} 
+        className={`arena-round-card ${isFlipped ? 'flipped' : ''}`}
+      >
+        <div className="arena-round-card-inner">
+          {/* Лицевая сторона - исходный вид */}
+          <div className="arena-round-card-front">
+            <div className="arena-round-number">
+              <div className="arena-round-digit">{roundNumber}</div>
+              <div className="arena-round-text">ROUND</div>
+            </div>
+          </div>
+          
+          {/* Задняя сторона - новая карточка с иконкой */}
+          <div 
+            className={`arena-round-card-back ${getWeightCardClass(weightClass)}`}
+          >
+            <div className="weight-card-inner">
+              {/* Верхний контейнер с иконкой */}
+              <div className="weight-card-icon-container">
+                {weightClass && (
+                  <img 
+                    src={`${BASE_URL}/icons/${getWeightClassIcon(weightClass)}`}
+                    alt={weightClass}
+                    className="weight-card-icon"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      const parent = (e.target as HTMLImageElement).parentElement;
+                      if (parent) {
+                        parent.innerHTML = weightClass.substring(0, 2);
+                        parent.style.fontSize = '20px';
+                        parent.style.fontWeight = 'bold';
+                      }
+                    }}
+                  />
+                )}
+              </div>
+              
+              {/* Средний контейнер - градиентная линия */}
+              <div className="weight-card-divider"></div>
+              
+              {/* Нижний контейнер с названием */}
+              <div className="weight-card-name">
+                {weightClass || 'TBD'}
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  })}
+</div>
 
-            <div className="arena-middle">
-              {[0, 1, 2, 3, 4].map((roundIndex) => {
-                const roundNumber = roundIndex + 1;
-                const isUsed = roundNumber <= usedWeightClasses.length;
-                const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
-                const isFlipped = flippedCards[roundIndex];
-                
-                const getWeightCardClass = (weightClass: string | null): string => {
-                  if (!weightClass) return '';
-                  
-                  const classMap: { [key: string]: string } = {
-                    'Flyweight': 'weight-card-flyweight',
-                    'Bantamweight': 'weight-card-bantamweight',
-                    'Featherweight': 'weight-card-featherweight',
-                    'Lightweight': 'weight-card-lightweight',
-                    'Welterweight': 'weight-card-welterweight',
-                    'Middleweight': 'weight-card-middleweight',
-                    'Light Heavyweight': 'weight-card-light-heavyweight',
-                    'Heavyweight': 'weight-card-heavyweight',
-                    "Women's Strawweight": 'weight-card-womens-strawweight',
-                    "Women's Flyweight": 'weight-card-womens-flyweight',
-                    "Women's Bantamweight": 'weight-card-womens-bantamweight',
-                    "Catch Weight": 'weight-card-catch-weight'
-                  };
-                  
-                  return classMap[weightClass] || '';
-                };
-                
-                const getWeightClassIcon = (weightClass: string | null): string => {
-                  if (!weightClass) return '';
-                  
-                  const iconMap: { [key: string]: string } = {
-                    'Flyweight': 'Flyweight_icon.webp',
-                    'Bantamweight': 'Bantamweight_icon.webp',
-                    'Featherweight': 'Featherweight_icon.webp',
-                    'Lightweight': 'Lightweight_icon.webp',
-                    'Welterweight': 'Welterweight_icon.webp',
-                    'Middleweight': 'Middleweight_icon.webp',
-                    'Light Heavyweight': 'Ligh_Heavyweight_icon.webp',
-                    'Heavyweight': 'Heavyweight_icon.webp',
-                    "Women's Strawweight": "Women's_Strawweight_icon.webp",
-                    "Women's Flyweight": "Women's_Flyweight_icon.webp",
-                    "Women's Bantamweight": "Women's_Bantamweight_icon.webp",
-                    "Catch Weight": 'Catch_weight_icon.webp'
-                  };
-                  
-                  return iconMap[weightClass] || 'default_icon.webp';
-                };
-                
-                return (
-                  <div 
-                    key={roundIndex} 
-                    className={`arena-round-card ${isFlipped ? 'flipped' : ''}`}
-                  >
-                    <div className="arena-round-card-inner">
-                      <div className="arena-round-card-front">
-                        <div className="arena-round-number">
-                          <div className="arena-round-digit">{roundNumber}</div>
-                          <div className="arena-round-text">ROUND</div>
-                        </div>
-                      </div>
-                      
-                      <div 
-                        className={`arena-round-card-back ${getWeightCardClass(weightClass)}`}
-                      >
-                        <div className="weight-card-inner">
-                          <div className="weight-card-icon-container">
-                            {weightClass && (
-                              <img 
-                                src={`${BASE_URL}/icons/${getWeightClassIcon(weightClass)}`}
-                                alt={weightClass}
-                                className="weight-card-icon"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                  const parent = (e.target as HTMLImageElement).parentElement;
-                                  if (parent) {
-                                    parent.innerHTML = weightClass.substring(0, 2);
-                                    parent.style.fontSize = '20px';
-                                    parent.style.fontWeight = 'bold';
-                                  }
-                                }}
-                              />
-                            )}
-                          </div>
-                          
-                          <div className="weight-card-divider"></div>
-                          
-                          <div className="weight-card-name">
-                            {weightClass || 'TBD'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
+            {/* Нижний контейнер - игрок */}
             <div className="arena-bottom">
+              {/* Карточки бойцов игрока */}
               <div className="arena-player-fighters">
-                {userActiveCards.map((card, index) => {
-                  const style = getFighterStyle(card);
-                  const styleIcon = getStyleIconFilename(style);
-                  
-                  return (
-                    <div 
-                      key={index} 
-                      className="arena-fighter-card"
-                      data-weight={card.weightClass}
-                      style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-                    >
-                      <div className="fighter-damage-block">
-                        {Math.round(card.fighter['Total Damage'])}
-                      </div>
-                      
-                      <div className="fighter-card-inner">
-                        <div className="fighter-icon-container">
-                          <img 
-                            src={`${BASE_URL}/icons/${styleIcon}`}
-                            alt={style}
-                            className="fighter-style-icon"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                              const parent = (e.target as HTMLImageElement).parentElement;
-                              if (parent) {
-                                parent.innerHTML = style === 'Striker' ? '👊' : 
-                                                  style === 'Grappler' ? '🤼' : 
-                                                  style === 'Universal' ? '⚡' : '👤';
-                                parent.style.fontSize = '24px';
-                              }
-                            }}
-                          />
-                        </div>
-                        
-                        <div 
-                          className="fighter-divider"
-                          style={{ color: getWeightClassColor(card.weightClass) }}
-                        ></div>
-                        
-                        <div className="fighter-name-container">
-                          {card.fighter.Fighter}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+  {userActiveCards.map((card, index) => {
+    const style = getFighterStyle(card);
+    const styleIcon = getStyleIconFilename(style);
+    
+    return (
+      <div 
+        key={index} 
+        className="arena-fighter-card"
+        data-weight={card.weightClass}
+        style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
+      >
+        {/* Блок с уроном в правом верхнем углу */}
+        <div className="fighter-damage-block">
+          {Math.round(card.fighter['Total Damage'])}
+        </div>
+        
+        {/* Внутренний контейнер карточки */}
+        <div className="fighter-card-inner">
+          {/* Верхний контейнер с иконкой стиля */}
+          <div className="fighter-icon-container">
+            <img 
+              src={`${BASE_URL}/icons/${styleIcon}`}
+              alt={style}
+              className="fighter-style-icon"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+                const parent = (e.target as HTMLImageElement).parentElement;
+                if (parent) {
+                  parent.innerHTML = style === 'Striker' ? '👊' : 
+                                    style === 'Grappler' ? '🤼' : 
+                                    style === 'Universal' ? '⚡' : '👤';
+                  parent.style.fontSize = '24px';
+                }
+              }}
+            />
+          </div>
+          
+          {/* Средний контейнер - градиентная линия */}
+          <div 
+            className="fighter-divider"
+            style={{ color: getWeightClassColor(card.weightClass) }}
+          ></div>
+          
+          {/* Нижний контейнер с именем бойца */}
+          <div className="fighter-name-container">
+            {card.fighter.Fighter}
+          </div>
+        </div>
+      </div>
+    );
+  })}
+</div>
 
+              {/* Шкала здоровья игрока */}
               <div className="arena-player-health">
                 <div className={`arena-health-bar ${healthFlash === 'player' ? 'damage-flash' : ''}`}>
                   <div 
@@ -943,7 +888,9 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 </div>
               </div>
 
+              {/* Контейнер с тремя колонками */}
               <div className="arena-avatar-container">
+                {/* Левый блок - DAMAGE игрока с никнеймом внутри */}
                 <div className="arena-avatar-left">
                   <div className="arena-damage-display player-damage">
                     <div className="damage-username">{userName}</div>
@@ -956,6 +903,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   </div>
                 </div>
                 
+                {/* Средний блок - аватарка игрока */}
                 <div className="arena-avatar-center">
                   <div className="arena-avatar">
                     <img 
@@ -968,9 +916,11 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   </div>
                 </div>
                 
+                {/* Правый блок - пустой (резерв) */}
                 <div className="arena-avatar-right"></div>
               </div>
 
+              {/* Всплывающие числа урона для игрока - вне flex контейнера */}
               {showDamageNumber.player && (
                 <div className="damage-number player-damage">
                   -{showDamageNumber.player}
