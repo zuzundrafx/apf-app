@@ -11,6 +11,8 @@ export interface UserProfile {
   level: number;
   experience: number;
   coins: number;
+  tickets: number;      // ← НОВОЕ: билеты
+  ton: number;          // ← НОВОЕ: TON
   lastUpdated: string;
   processedTournaments?: {
     coins: string[];
@@ -240,13 +242,13 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
       console.log('📊 Пример данных из файла:', data[0]);
     }
     
-    return data.map((item: any) => {  // ← item тоже any
-      const safeNumber = (value: any, defaultValue: number): number => {
-        if (typeof value === 'number') return value;
-        if (value === undefined || value === null || value === '') return defaultValue;
-        const parsed = Number(value);
-        return isNaN(parsed) ? defaultValue : parsed;
-      };
+    return data.map((item: any) => {
+  const safeNumber = (value: any, defaultValue: number): number => {
+    if (typeof value === 'number') return value;
+    if (value === undefined || value === null || value === '') return defaultValue;
+    const parsed = Number(value);
+    return isNaN(parsed) ? defaultValue : parsed;
+  };
 
       // Парсим processedTournaments
       let processedTournaments = undefined;
@@ -258,16 +260,19 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
       }
 
       return {
-        userId: String(item['User ID'] || ''),
-        username: String(item['Username'] || 'Anonymous'),
-        photoUrl: item['Photo URL'] ? String(item['Photo URL']) : undefined,
-        level: safeNumber(item['Level'], 1),
-        experience: safeNumber(item['Experience'], 0),
-        coins: safeNumber(item['Coins'], 100),
-        lastUpdated: String(item['Last Updated'] || new Date().toISOString()),
-        processedTournaments: processedTournaments
-      };
-    });
+    userId: String(item['User ID'] || ''),
+    username: String(item['Username'] || 'Anonymous'),
+    photoUrl: item['Photo URL'] ? String(item['Photo URL']) : undefined,
+    level: safeNumber(item['Level'], 1),
+    experience: safeNumber(item['Experience'], 0),
+    coins: safeNumber(item['Coins'], 100),
+    tickets: safeNumber(item['Tickets'], 0),      // ← НОВОЕ
+    ton: safeNumber(item['TON'], 0),              // ← НОВОЕ
+    lastUpdated: String(item['Last Updated'] || new Date().toISOString()),
+    processedTournaments: processedTournaments
+  };
+});
+
   } catch (error) {
     console.error('❌ Ошибка загрузки профилей:', error);
     return [];
@@ -318,6 +323,8 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
         'Level': profile.level,
         'Experience': profile.experience,
         'Coins': profile.coins,
+        'Tickets': profile.tickets,      // ← НОВОЕ
+        'TON': profile.ton,              // ← НОВОЕ
         'Last Updated': profile.lastUpdated
       };
       

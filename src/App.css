@@ -2947,3 +2947,30 @@ body {
 .avatar-glow {
   animation: avatarGlow 0.3s ease-out forwards;
 }
+
+/* ===== ВАЛЮТЫ В ПРОФИЛЕ ===== */
+
+.profile-currencies {
+  display: flex;
+  gap: 5%;
+  margin-top: 2%;
+  justify-content: flex-end;
+}
+
+.currency-item {
+  display: flex;
+  align-items: center;
+  gap: 2%;
+}
+
+.currency-icon {
+  width: auto;
+  height: 1em;  /* Высота иконки равна высоте текста */
+  object-fit: contain;
+}
+
+.currency-value {
+  font-size: clamp(12px, 3.5vw, 14px);
+  color: #FFFFFF;
+  font-weight: 500;
+}

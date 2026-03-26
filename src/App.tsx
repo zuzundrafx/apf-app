@@ -297,6 +297,8 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
     totalExp: 0,
     nextLevelExp: 5,
     coins: 100,
+    tickets: 0,      // ← НОВОЕ
+    ton: 0,          // ← НОВОЕ
     mySelections: {
       upcoming: [] as SelectedFighter[],
       past: [] as SelectedFighter[]
@@ -339,88 +341,92 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
 
   // ОПТИМИЗИРОВАННАЯ функция принятия наград
   const acceptRewards = async () => {
-    if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
+  if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
+  
+  setIsAcceptingRewards(true);
+  
+  try {
+    const newCoins = userData.coins + pendingRewards.totalCoins;
+    const newTotalExp = userData.totalExp + pendingRewards.totalExp;
+    const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
     
-    setIsAcceptingRewards(true);
+    const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
+    const tournamentSelections = pendingRewards.winners;
     
-    try {
-      const newCoins = userData.coins + pendingRewards.totalCoins;
-      const newTotalExp = userData.totalExp + pendingRewards.totalExp;
-      const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
+    setUserData(prev => {
+      const otherPastSelections = prev.mySelections.past.filter(
+        (sel: SelectedFighter) => !tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+      );
       
-      const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
-      const tournamentSelections = pendingRewards.winners;
-      
-      setUserData(prev => {
-        const otherPastSelections = prev.mySelections.past.filter(
-          (sel: SelectedFighter) => !tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
-        );
-        
-        return {
-          ...prev,
-          coins: newCoins,
-          totalExp: newTotalExp,
+      return {
+        ...prev,
+        coins: newCoins,
+        totalExp: newTotalExp,
+        level,
+        currentExp,
+        nextLevelExp,
+        mySelections: {
+          ...prev.mySelections,
+          past: [...otherPastSelections, ...tournamentSelections]
+        }
+      };
+    });
+    
+    setShowRewardsModal(false);
+    setPendingRewards(null);
+    setShowPastFighters(false);
+    
+    if (tournament) {
+      Promise.all([
+        saveUserProfile({
+          userId: telegramUser.id,
+          username: userData.username,
+          photoUrl: telegramUser.photoUrl,
           level,
-          currentExp,
-          nextLevelExp,
-          mySelections: {
-            ...prev.mySelections,
-            past: [...otherPastSelections, ...tournamentSelections]
-          }
-        };
-      });
-      
-      setShowRewardsModal(false);
-      setPendingRewards(null);
-      setShowPastFighters(false);
-      
-      if (tournament) {
-        Promise.all([
-          saveUserProfile({
+          experience: newTotalExp,
+          coins: newCoins,
+          tickets: userData.tickets,     // ← ДОБАВЛЯЕМ
+          ton: userData.ton,             // ← ДОБАВЛЯЕМ
+          lastUpdated: new Date().toISOString()
+        }).then(() => {
+          updateProfileInCache({
             userId: telegramUser.id,
             username: userData.username,
             photoUrl: telegramUser.photoUrl,
             level,
             experience: newTotalExp,
             coins: newCoins,
+            tickets: userData.tickets,   // ← ДОБАВЛЯЕМ
+            ton: userData.ton,           // ← ДОБАВЛЯЕМ
             lastUpdated: new Date().toISOString()
-          }).then(() => {
-            updateProfileInCache({
-              userId: telegramUser.id,
-              username: userData.username,
-              photoUrl: telegramUser.photoUrl,
-              level,
-              experience: newTotalExp,
-              coins: newCoins,
-              lastUpdated: new Date().toISOString()
-            });
-          }),
-          
-          (async () => {
-            const currentResult = await loadUserResults(tournament.name, telegramUser.id);
-            if (currentResult) {
-              const updatedResult: UserResult = {
-                ...currentResult,
-                rewardsAccepted: true,
-                rewards: {
-                  coins: pendingRewards.totalCoins,
-                  experience: pendingRewards.totalExp
-                }
-              };
-              await saveUserResults(tournament.name, updatedResult);
-            }
-          })()
-        ]).catch(error => {
-          console.error('Фоновое сохранение ошибки:', error);
-        });
-      }
-      
-    } catch (error) {
-      console.error('Ошибка при получении наград:', error);
-    } finally {
-      setIsAcceptingRewards(false);
+          });
+        }),
+        
+        (async () => {
+          const currentResult = await loadUserResults(tournament.name, telegramUser.id);
+          if (currentResult) {
+            const updatedResult: UserResult = {
+              ...currentResult,
+              rewardsAccepted: true,
+              rewards: {
+                coins: pendingRewards.totalCoins,
+                experience: pendingRewards.totalExp
+              }
+            };
+            await saveUserResults(tournament.name, updatedResult);
+          }
+        })()
+      ]).catch(error => {
+        console.error('Фоновое сохранение ошибки:', error);
+      });
     }
-  };
+    
+  } catch (error) {
+    console.error('Ошибка при получении наград:', error);
+  } finally {
+    setIsAcceptingRewards(false);
+  }
+};
 
   // Функция загрузки данных для окна выбора
   const loadSelectionData = async (tournament: Tournament) => {
@@ -496,122 +502,99 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
 
   // Инициализация Telegram WebApp
   useEffect(() => {
-    let isMounted = true;
-    
-    const initTelegram = async () => {
-      if (window.Telegram?.WebApp) {
-        const tg = window.Telegram.WebApp;
-        tg.ready();
+  let isMounted = true;
+  
+  const initTelegram = async () => {
+    if (window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      
+      const user = tg.initDataUnsafe.user;
+      if (user && isMounted) {
+        const username = user.username || `${user.first_name} ${user.last_name || ''}`.trim();
+        const userId = `user_${user.id}`;
         
-        const user = tg.initDataUnsafe.user;
-        if (user && isMounted) {
-          const username = user.username || `${user.first_name} ${user.last_name || ''}`.trim();
-          const userId = `user_${user.id}`;
+        setTelegramUser({
+          id: userId,
+          username: username,
+          photoUrl: user.photo_url
+        });
+        
+        setLoadingProfile(true);
+        const profile = await loadUserProfile(userId);
+        
+        if (profile && isMounted) {
+          const totalExp = profile.experience || 0;
+          const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
           
-          setTelegramUser({
-            id: userId,
+          setUserData(prev => ({
+            ...prev,
+            username: profile.username,
+            level,
+            currentExp,
+            totalExp,
+            nextLevelExp,
+            coins: profile.coins,
+            tickets: profile.tickets || 0,
+            ton: profile.ton || 0,
+            myUserId: userId
+          }));
+          
+          const updatedProfile = {
+            userId: userId,
+            username: profile.username,
+            photoUrl: user.photo_url || profile.photoUrl,
+            level: level,
+            experience: totalExp,
+            coins: profile.coins,
+            tickets: profile.tickets || 0,
+            ton: profile.ton || 0,
+            lastUpdated: new Date().toISOString()
+          };
+          
+          await saveUserProfile(updatedProfile);
+          updateProfileInCache(updatedProfile);
+          
+        } else if (isMounted) {
+          const newProfile = {
+            userId: userId,
             username: username,
-            photoUrl: user.photo_url
-          });
+            photoUrl: user.photo_url,
+            level: 1,
+            experience: 0,
+            coins: 100,
+            tickets: 0,
+            ton: 0,
+            lastUpdated: new Date().toISOString()
+          };
           
-          setLoadingProfile(true);
-          const profile = await loadUserProfile(userId);
+          const saved = await saveUserProfile(newProfile);
           
-          if (profile && isMounted) {
-            const totalExp = profile.experience || 0;
-            const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
-            
+          if (saved) {
             setUserData(prev => ({
               ...prev,
-              username: profile.username,
-              level,
-              currentExp,
-              totalExp,
-              nextLevelExp,
-              coins: profile.coins,
+              username: username,
+              coins: 100,
+              tickets: 0,
+              ton: 0,
               myUserId: userId
             }));
-            
-            // Обновляем профиль с актуальной аватаркой
-            const updatedProfile = {
-              userId: userId,
-              username: profile.username,
-              photoUrl: user.photo_url || profile.photoUrl,
-              level: level,
-              experience: totalExp,
-              coins: profile.coins,
-              lastUpdated: new Date().toISOString()
-            };
-            
-            await saveUserProfile(updatedProfile);
-            updateProfileInCache(updatedProfile);
-            
-          } else if (isMounted) {
-            const newProfile = {
-              userId: userId,
-              username: username,
-              photoUrl: user.photo_url,
-              level: 1,
-              experience: 0,
-              coins: 100,
-              lastUpdated: new Date().toISOString()
-            };
-            
-            const saved = await saveUserProfile(newProfile);
-            
-            if (saved) {
-              setUserData(prev => ({
-                ...prev,
-                username: username,
-                coins: 100,
-                myUserId: userId
-              }));
-              updateProfileInCache(newProfile);
-            }
-          }
-          
-          if (isMounted) {
-            setProfileLoaded(true);
-            setLoadingProfile(false);
+            updateProfileInCache(newProfile);
           }
         }
-      } else {
-        console.log('⚠️ Telegram WebApp не обнаружен, работаем в тестовом режиме');
         
         if (isMounted) {
-          setTelegramUser({
-            id: 'user_123',
-            username: 'Test Player',
-            photoUrl: undefined
-          });
-          
-          const profile = await loadUserProfile('user_123');
-          if (profile && isMounted) {
-            const totalExp = profile.experience || 0;
-            const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
-            
-            setUserData(prev => ({
-              ...prev,
-              username: profile.username,
-              level,
-              currentExp,
-              totalExp,
-              nextLevelExp,
-              coins: profile.coins,
-              myUserId: 'user_123'
-            }));
-          }
-          
           setProfileLoaded(true);
           setLoadingProfile(false);
         }
       }
-    };
-    
-    initTelegram();
-    
-    return () => { isMounted = false; };
-  }, [updateProfileInCache]);
+    }
+  };
+  
+  initTelegram();
+  
+  return () => { isMounted = false; };
+}, [updateProfileInCache]);
 
   // Загружаем результаты пользователя
   useEffect(() => {
@@ -725,6 +708,8 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
       level: userData.level,
       experience: userData.totalExp,
       coins: newCoins,
+      tickets: userData.tickets,    // ← НОВОЕ: сохраняем текущее значение
+      ton: userData.ton,            // ← НОВОЕ: сохраняем текущее значение
       lastUpdated: new Date().toISOString()
     };
     
@@ -755,6 +740,8 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
         level: userData.level,
         experience: userData.totalExp,
         coins: newCoins,
+        tickets: userData.tickets,     // ← ДОБАВЛЯЕМ
+        ton: userData.ton,             // ← ДОБАВЛЯЕМ
         lastUpdated: new Date().toISOString()
       };
       
@@ -920,27 +907,40 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
   return (
     <div className="app">
       <header className="profile-header">
-        <div className="profile-avatar">
-          {telegramUser?.photoUrl ? (
-            <img src={telegramUser.photoUrl} alt="avatar" />
-          ) : (
-            <img src={`${BASE_URL}/Home_button.png`} alt="avatar" />
-          )}
-        </div>
-        <div className="profile-info">
-          <div className="profile-name">{userData.username}</div>
-          <div className="level-bar">
-            <div 
-              className="level-progress" 
-              style={{ width: `${(userData.currentExp / userData.nextLevelExp) * 100}%` }}
-            ></div>
-            <span className="level-text">
-              Lvl {userData.level} • {userData.currentExp}/{userData.nextLevelExp}
-            </span>
-          </div>
-          <div className="profile-coins">🪙 {userData.coins}</div>
-        </div>
-      </header>
+  <div className="profile-avatar">
+    {telegramUser?.photoUrl ? (
+      <img src={telegramUser.photoUrl} alt="avatar" />
+    ) : (
+      <img src={`${BASE_URL}/Home_button.png`} alt="avatar" />
+    )}
+  </div>
+  <div className="profile-info">
+    <div className="profile-name">{userData.username}</div>
+    <div className="level-bar">
+      <div 
+        className="level-progress" 
+        style={{ width: `${(userData.currentExp / userData.nextLevelExp) * 100}%` }}
+      ></div>
+      <span className="level-text">
+        Lvl {userData.level} • {userData.currentExp}/{userData.nextLevelExp}
+      </span>
+    </div>
+    <div className="profile-currencies">
+      <div className="currency-item">
+        <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="currency-icon" />
+        <span className="currency-value">{userData.coins}</span>
+      </div>
+      <div className="currency-item">
+        <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="currency-icon" />
+        <span className="currency-value">{userData.tickets}</span>
+      </div>
+      <div className="currency-item">
+        <img src={`${BASE_URL}/icons/Ton_icon.webp`} alt="TON" className="currency-icon" />
+        <span className="currency-value">{userData.ton}</span>
+      </div>
+    </div>
+  </div>
+</header>
 
       <main className="main-content">
         {currentView === 'main' && (
