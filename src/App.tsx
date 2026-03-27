@@ -733,6 +733,7 @@ function App() {
 
         if (!showNotEnoughCoins) {
         setShowNotEnoughCoins(true);
+        setTimeout(() => setShowNotEnoughCoins(false), 1000);
         } else {
         console.log('🚫 Надпись уже показывается, игнорируем');
       }
@@ -1201,10 +1202,7 @@ function App() {
                       </div>
                       
                       {showNotEnoughCoins && (
-  <div 
-    className="upcoming-overlay-text"
-    onAnimationEnd={() => setShowNotEnoughCoins(false)}
-  >
+  <div className="upcoming-overlay-text">
     Not enough coins...
   </div>
 )}
