@@ -715,6 +715,10 @@ function App() {
   };
 
   const handleUpcomingTournamentClick = (tournament: Tournament) => {
+    
+    console.log('🔴 Клик по турниру:', tournament.name);
+    console.log('💰 Монет:', userData.coins);
+
     const hasBetForThisTournament = userData.mySelections.upcoming.some(
       (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
     );
@@ -723,7 +727,15 @@ function App() {
       setSelectedUpcomingTournament(tournament.name);
     } else {
       if (userData.coins < 5) {
+          console.log('⚠️ Недостаточно монет, показываем надпись');
+          console.log('Текущее showNotEnoughCoins:', showNotEnoughCoins);
+
+
+        if (!showNotEnoughCoins) {
         setShowNotEnoughCoins(true);
+        } else {
+        console.log('🚫 Надпись уже показывается, игнорируем');
+      }
         
         return;
       }
