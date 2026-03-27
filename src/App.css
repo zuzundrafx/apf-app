@@ -3015,19 +3015,18 @@ body {
   font-size: clamp(12px, 3.5vw, 14px);
   text-align: center;
   flex: 1;
-  
 }
 
 .bet-modal-close {
   background: #B20101;
-  border: 0.1vh solid #FFFFFF;
-  border-radius: 0.5vh;
+  border: 0.15vh solid #FFFFFF;
+  border-radius: 0.75vh;
   color: #FFFFFF;
   font-size: clamp(10px, 2.5vw, 12px);
   font-weight: 600;
   cursor: pointer;
   text-transform: uppercase;
-  padding: 1% 3%;
+  padding: 1.5% 4.5%;
   position: absolute;
   top: -30%;
   right: 5%;
@@ -3041,8 +3040,8 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0 5%;
-  border-top: 0.1vh solid rgba(255, 255, 255, 0.3);
-  border-bottom: 0.1vh solid rgba(255, 255, 255, 0.3);
+  border-top: 0.15vh solid rgba(255, 255, 255, 0.3);
+  border-bottom: 0.15vh solid rgba(255, 255, 255, 0.3);
   background: #1c1d1f;
 }
 
@@ -3056,16 +3055,16 @@ body {
 
 .bet-slider {
   width: 100%;
-  height: 0.8vh;
+  height: 1.2vh;
   background: #3D3D3B;
-  border-radius: 0.4vh;
+  border-radius: 0.6vh;
   position: relative;
 }
 
 .bet-slider-fill {
   height: 100%;
   background: #fce852;
-  border-radius: 0.4vh;
+  border-radius: 0.6vh;
   transition: width 0.2s ease;
 }
 
@@ -3076,12 +3075,12 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.8vh;
+  gap: 1.2vh;
 }
 
 .bet-slider-marker {
-  width: 1.2vh;
-  height: 1.2vh;
+  width: 1.8vh;
+  height: 1.8vh;
   background: #FFFFFF;
   border-radius: 50%;
   cursor: pointer;
@@ -3095,16 +3094,15 @@ body {
 
 .bet-marker-value {
   position: absolute;
-  top: -2.5vh;
+  top: -3.75vh;
   left: 50%;
   transform: translateX(-50%);
   color: #FFFFFF;
-  font-size: 1.2vh;
+  font-size: 1.8vh;
   font-weight: 500;
   white-space: nowrap;
-  /*background: rgba(0, 0, 0, 0.6);*/
-  padding: 0.2vh 0.5vh;
-  border-radius: 0.4vh;
+  padding: 0.3vh 0.75vh;
+  border-radius: 0.6vh;
 }
 
 .bet-modal-footer {
@@ -3119,7 +3117,7 @@ body {
 .bet-confirm-button {
   background: linear-gradient(180deg, #C9FFCE 0%, #61FF63 100%);
   border: none;
-  border-radius: 0.5vh;
+  border-radius: 0.75vh;
   color: #000000;
   font-size: clamp(14px, 4vw, 16px);
   font-weight: 600;
@@ -3127,8 +3125,6 @@ body {
   text-transform: uppercase;
   width: 60%;
   height: 80%;
-  /*padding: 2% 6%;*/
-  /*display: flex;*/
   align-items: center;
   gap: 2%;
 }
