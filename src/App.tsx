@@ -724,7 +724,7 @@ function App() {
     } else {
       if (userData.coins < 5) {
         setShowNotEnoughCoins(true);
-        setTimeout(() => setShowNotEnoughCoins(false), 2000);
+        
         return;
       }
       
@@ -1189,10 +1189,13 @@ function App() {
                       </div>
                       
                       {showNotEnoughCoins && (
-                        <div className="upcoming-overlay-text">
-                          Not enough coins...
-                        </div>
-                      )}
+  <div 
+    className="upcoming-overlay-text"
+    onAnimationEnd={() => setShowNotEnoughCoins(false)}
+  >
+    Not enough coins...
+  </div>
+)}
                     </>
                   )}
                 </div>
