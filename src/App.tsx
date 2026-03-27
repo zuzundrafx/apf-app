@@ -1,4 +1,4 @@
-﻿﻿import { useState, useEffect, useCallback, useRef } from 'react'
+﻿﻿import { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
 import LeaderboardItem from './components/LeaderboardItem';
@@ -10,7 +10,7 @@ import {
   loadLeaderboard, 
   LeaderboardEntry, 
   loadUserResults,
-  loadExistingResults   // ← ДОБАВЛЯЕМ
+  loadExistingResults
 } from './api/yandexUpload';
 import {
   loadUserProfile,
@@ -68,8 +68,6 @@ const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
 // Функция для округления урона
 const roundDamage = (damage: number): number => Math.round(damage);
-
-const notEnoughCoinsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 // Функция для расчета уровня
 const calculateLevel = (totalExp: number): { level: number; currentExp: number; nextLevelExp: number } => {
@@ -168,8 +166,6 @@ const TournamentSkeleton = () => (
   </section>
 );
 
-
-
 function App() {
   const { pastTournaments, upcomingTournaments, loading, loadingProgress, loadingStage, error } = useTournaments();
   
@@ -250,7 +246,6 @@ function App() {
   const [isClosing, setIsClosing] = useState(false);
   const [isAcceptingRewards, setIsAcceptingRewards] = useState(false);
   
-  
   // Состояния для модального окна ставки
   const [showBetModal, setShowBetModal] = useState(false);
   const [selectedBetTournament, setSelectedBetTournament] = useState<Tournament | null>(null);
@@ -291,10 +286,8 @@ function App() {
     const maxBet = Math.floor(userCoins / 5) * 5;
     const amounts: number[] = [];
     
-    // MIN = 5
     amounts.push(5);
     
-    // Промежуточные значения (не более 7 промежуточных + MIN + MAX = не более 9)
     const step = (maxBet - 5) / 7;
     for (let i = 1; i <= 7; i++) {
       const value = Math.round(5 + step * i);
@@ -304,15 +297,11 @@ function App() {
       }
     }
     
-    // MAX
     if (maxBet > 5 && !amounts.includes(maxBet)) {
       amounts.push(maxBet);
     }
     
-    // Сортируем по возрастанию
     amounts.sort((a, b) => a - b);
-    
-    // Ограничиваем количество меток 9
     return amounts.slice(0, 9);
   };
 
@@ -331,15 +320,6 @@ function App() {
     
     loadAllUserProfiles();
   }, []);
-
-  // Очистка таймера при размонтировании
-useEffect(() => {
-  return () => {
-    if (notEnoughCoinsTimerRef.current) {
-      clearTimeout(notEnoughCoinsTimerRef.current);
-    }
-  };
-}, [])
 
   const updateProfileInCache = useCallback((updatedProfile: UserProfile) => {
     setAllProfiles(prev => {
@@ -362,10 +342,9 @@ useEffect(() => {
       let { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
       let newExpPoints = userData.expPoints;
       
-      // Проверяем, повысился ли уровень
       if (level > userData.level) {
         const levelsGained = level - userData.level;
-        newExpPoints += levelsGained; // +1 EXP за каждый новый уровень
+        newExpPoints += levelsGained;
       }
       
       const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
@@ -736,34 +715,26 @@ useEffect(() => {
   };
 
   const handleUpcomingTournamentClick = (tournament: Tournament) => {
-  const hasBetForThisTournament = userData.mySelections.upcoming.some(
-    (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
-  );
-  
-  if (hasBetForThisTournament) {
-    setSelectedUpcomingTournament(tournament.name);
-  } else {
-    if (userData.coins < 5) {
-      // Если таймер уже есть, не создаем новый
-      if (notEnoughCoinsTimerRef.current) {
+    const hasBetForThisTournament = userData.mySelections.upcoming.some(
+      (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+    );
+    
+    if (hasBetForThisTournament) {
+      setSelectedUpcomingTournament(tournament.name);
+    } else {
+      if (userData.coins < 5) {
+        setShowNotEnoughCoins(true);
+        setTimeout(() => setShowNotEnoughCoins(false), 2000);
         return;
       }
       
-      setShowNotEnoughCoins(true);
-      notEnoughCoinsTimerRef.current = setTimeout(() => {
-        setShowNotEnoughCoins(false);
-        notEnoughCoinsTimerRef.current = null;
-      }, 2000);
-      return;
+      setSelectedBetTournament(tournament);
+      const availableAmounts = calculateAvailableBetAmounts(userData.coins);
+      setAvailableBetAmounts(availableAmounts);
+      setSelectedBetAmount(availableAmounts[0] || 5);
+      setShowBetModal(true);
     }
-    
-    setSelectedBetTournament(tournament);
-    const availableAmounts = calculateAvailableBetAmounts(userData.coins);
-    setAvailableBetAmounts(availableAmounts);
-    setSelectedBetAmount(availableAmounts[0] || 5);
-    setShowBetModal(true);
-  }
-};
+  };
 
   const handlePastTournamentClick = (tournament: Tournament) => {
     setSelectedPastTournament(tournament.name);
@@ -1090,29 +1061,29 @@ useEffect(() => {
             )}
 
             {upcomingTournaments.length > 0 ? (
-  <section className="tournament-section upcoming">
-    <div className="tournament-header">
-      <h2>
-        {selectedUpcomingTournament 
-          ? upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament)?.name 
-          : 'UPCOMING TOURNAMENTS'}
-      </h2>
-      <div className="tournament-meta">
-        <span>
-          {selectedUpcomingTournament 
-            ? formatDate(upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament)?.date || '')
-            : `${upcomingTournaments.length} event${upcomingTournaments.length !== 1 ? 's' : ''}`}
-        </span>
-        <span className="tournament-status upcoming">
-          {selectedUpcomingTournament ? 'UPCOMING' : 'SCHEDULED'}
-        </span>
-      </div>
-    </div>
+              <section className="tournament-section upcoming">
+                <div className="tournament-header">
+                  <h2>
+                    {selectedUpcomingTournament 
+                      ? upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament)?.name 
+                      : 'UPCOMING TOURNAMENTS'}
+                  </h2>
+                  <div className="tournament-meta">
+                    <span>
+                      {selectedUpcomingTournament 
+                        ? formatDate(upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament)?.date || '')
+                        : `${upcomingTournaments.length} event${upcomingTournaments.length !== 1 ? 's' : ''}`}
+                    </span>
+                    <span className="tournament-status upcoming">
+                      {selectedUpcomingTournament ? 'UPCOMING' : 'SCHEDULED'}
+                    </span>
+                  </div>
+                </div>
                 
                 <div className="tournament-content" style={{ position: 'relative' }}>
-      {loadingUserResults ? (
-        <div className="tournament-message">Loading...</div>
-      ) : selectedUpcomingTournament ? (
+                  {loadingUserResults ? (
+                    <div className="tournament-message">Loading...</div>
+                  ) : selectedUpcomingTournament ? (
                     <>
                       <div className="selected-fighters-grid">
                         {userData.mySelections.upcoming
@@ -1184,52 +1155,51 @@ useEffect(() => {
                     </>
                   ) : (
                     <>
-          <div className="tournament-cards-grid">
-  {upcomingTournaments.map((tournament: Tournament) => {
-    const hasBetForThisTournament = userData.mySelections.upcoming.some(
-      (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
-    );
-    
-    const tournamentTotal = hasBetForThisTournament 
-      ? calculateTotalDamage(
-          userData.mySelections.upcoming.filter(
-            (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
-          )
-        )
-      : null;
-    
-    return (
-      <div key={tournament.name} className="tournament-card-wrapper">
-        <div 
-          className="tournament-card" 
-          onClick={() => handleUpcomingTournamentClick(tournament)}
-        >
-          <div className="tournament-card-damage-box">
-            {hasBetForThisTournament ? `TOTAL: ${tournamentTotal}` : 'SELECT'}
-          </div>
-          <div className="tournament-card-image">
-            <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
-          </div>
-          <div className="tournament-card-name">{tournament.name}</div>
-        </div>
-      </div>
-    );
-  })}
-</div>
-          
-          {/* Всплывающая надпись внутри контейнера будущих турниров */}
-          {showNotEnoughCoins && (
-            <div className="upcoming-overlay-text">
-              Not enough coins...
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  </section>
-) : (
-  <TournamentSkeleton />
-)}
+                      <div className="tournament-cards-grid">
+                        {upcomingTournaments.map((tournament: Tournament) => {
+                          const hasBetForThisTournament = userData.mySelections.upcoming.some(
+                            (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+                          );
+                          
+                          const tournamentTotal = hasBetForThisTournament 
+                            ? calculateTotalDamage(
+                                userData.mySelections.upcoming.filter(
+                                  (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+                                )
+                              )
+                            : null;
+                          
+                          return (
+                            <div key={tournament.name} className="tournament-card-wrapper">
+                              <div 
+                                className="tournament-card" 
+                                onClick={() => handleUpcomingTournamentClick(tournament)}
+                              >
+                                <div className="tournament-card-damage-box">
+                                  {hasBetForThisTournament ? `TOTAL: ${tournamentTotal}` : 'SELECT'}
+                                </div>
+                                <div className="tournament-card-image">
+                                  <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
+                                </div>
+                                <div className="tournament-card-name">{tournament.name}</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      {showNotEnoughCoins && (
+                        <div className="upcoming-overlay-text">
+                          Not enough coins...
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </section>
+            ) : (
+              <TournamentSkeleton />
+            )}
           </div>
         )}
 
@@ -1414,63 +1384,61 @@ useEffect(() => {
       )}
 
       {showBetModal && selectedBetTournament && (
-  <div className="bet-modal-overlay">
-    <div className="bet-modal">
-      <div className="bet-modal-header">
-        <span className="bet-modal-title">{selectedBetTournament.name}</span>
-        <button className="bet-modal-close" onClick={() => setShowBetModal(false)}>CLOSE</button>
-      </div>
-      
-      <div className="bet-modal-slider-container">
-        <div className="bet-slider-wrapper">
-          <div className="bet-slider">
-            <div 
-              className="bet-slider-fill" 
-              style={{ 
-                width: availableBetAmounts.length > 1 
-                  ? `${((selectedBetAmount - availableBetAmounts[0]) / (availableBetAmounts[availableBetAmounts.length - 1] - availableBetAmounts[0])) * 100}%` 
-                  : '100%' 
-              }}
-            ></div>
-            {availableBetAmounts.map((amount) => {
-              const minAmount = availableBetAmounts[0];
-              const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
-              const position = maxAmount > minAmount 
-                ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 
-                : 50;
-              const isMin = amount === minAmount;
-              const isMax = amount === maxAmount;
-              
-              return (
-                <div
-                  key={amount}
-                  className="bet-slider-marker-container"
-                  style={{ left: `${position}%` }}
-                >
+        <div className="bet-modal-overlay">
+          <div className="bet-modal">
+            <div className="bet-modal-header">
+              <span className="bet-modal-title">{selectedBetTournament.name}</span>
+              <button className="bet-modal-close" onClick={() => setShowBetModal(false)}>CLOSE</button>
+            </div>
+            
+            <div className="bet-modal-slider-container">
+              <div className="bet-slider-wrapper">
+                <div className="bet-slider">
                   <div 
-                    className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`}
-                    onClick={() => setSelectedBetAmount(amount)}
+                    className="bet-slider-fill" 
+                    style={{ 
+                      width: availableBetAmounts.length > 1 
+                        ? `${((selectedBetAmount - availableBetAmounts[0]) / (availableBetAmounts[availableBetAmounts.length - 1] - availableBetAmounts[0])) * 100}%` 
+                        : '100%' 
+                    }}
                   ></div>
-                  <span className="bet-marker-value">
-                    {isMin ? 'MIN' : isMax ? 'MAX' : amount}
-                  </span>
+                  {availableBetAmounts.map((amount) => {
+                    const minAmount = availableBetAmounts[0];
+                    const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
+                    const position = maxAmount > minAmount 
+                      ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 
+                      : 50;
+                    const isMin = amount === minAmount;
+                    const isMax = amount === maxAmount;
+                    
+                    return (
+                      <div
+                        key={amount}
+                        className="bet-slider-marker-container"
+                        style={{ left: `${position}%` }}
+                      >
+                        <div 
+                          className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`}
+                          onClick={() => setSelectedBetAmount(amount)}
+                        ></div>
+                        <span className="bet-marker-value">
+                          {isMin ? 'MIN' : isMax ? 'MAX' : amount}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            </div>
+            
+            <div className="bet-modal-footer">
+              <button className="bet-confirm-button" onClick={openSelectionWithBet}>
+                BET SIZE: {selectedBetAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div className="bet-modal-footer">
-        <button className="bet-confirm-button" onClick={openSelectionWithBet}>
-          BET SIZE: {selectedBetAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-      
+      )}
 
       <nav className={`bottom-nav ${currentView === 'selection' ? 'hidden' : ''}`}>
         <button className={`nav-button ${currentView === 'main' ? 'active' : ''}`} onClick={() => setCurrentView('main')}>
