@@ -1399,7 +1399,7 @@ function App() {
   <div className="bet-modal-overlay">
     <div className="bet-modal">
       <div className="bet-modal-header">
-        <span className="bet-modal-title">Ready to make a bet on {selectedBetTournament.name}</span>
+        <span className="bet-modal-title">{selectedBetTournament.name}</span>
         <button className="bet-modal-close" onClick={() => setShowBetModal(false)}>CLOSE</button>
       </div>
       
@@ -1445,7 +1445,7 @@ function App() {
       
       <div className="bet-modal-footer">
         <button className="bet-confirm-button" onClick={openSelectionWithBet}>
-          Bet size: {selectedBetAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
+          BET SIZE: {selectedBetAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
         </button>
       </div>
     </div>
