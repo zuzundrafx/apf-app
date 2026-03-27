@@ -3134,3 +3134,28 @@ body {
   height: 1em;
   object-fit: contain;
 }
+
+/* ===== ВСПЛЫВАЮЩАЯ НАДПИСЬ В КОНТЕЙНЕРЕ БУДУЩИХ ТУРНИРОВ ===== */
+
+.upcoming-overlay-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%;
+  height: 16%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 700;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  z-index: 100;
+  pointer-events: none;
+  animation: fadeInOut 1s ease-in-out;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 1vw;
+  white-space: nowrap;
+}
