@@ -1,21 +1,8 @@
 import * as XLSX from 'xlsx';
-import { SelectedFighter } from '../types';
+import { SelectedFighter, UserResult } from '../types';
 
 const YA_TOKEN = import.meta.env.VITE_YA_TOKEN;
 const RESULTS_FOLDER = "UFC_Bot_Results";
-
-export interface UserResult {
-  userId: string;
-  username: string;
-  totalDamage: number;
-  timestamp: string;
-  selections: SelectedFighter[];
-  rewardsAccepted?: boolean;  // true если награды получены
-  rewards?: {                 // Сохраняем, сколько было начислено
-    coins: number;
-    experience: number;
-  };
-}
 
 export interface LeaderboardEntry {
   rank: number;
@@ -25,17 +12,11 @@ export interface LeaderboardEntry {
   timestamp: string;
 }
 
-
-
-// Функция для удаления файла, если он существует
-
-
 // Функция для получения ссылки на загрузку файла
 async function getUploadLink(filename: string): Promise<string | null> {
   try {
     console.log('📤 Получаем ссылку для загрузки файла:', filename);
     
-    // НИЧЕГО НЕ УДАЛЯЕМ! Просим ссылку с overwrite=true
     const response = await fetch(
       `https://cloud-api.yandex.net/v1/disk/resources/upload?path=app:/${RESULTS_FOLDER}/${filename}&overwrite=true`,
       {
@@ -46,7 +27,6 @@ async function getUploadLink(filename: string): Promise<string | null> {
     );
     
     if (!response.ok) {
-      // Если файл заблокирован, пробуем еще раз
       if (response.status === 423) {
         console.log('⚠️ Файл заблокирован, пробуем через секунду...');
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -125,8 +105,6 @@ async function ensureFolderExists(): Promise<boolean> {
   }
 }
 
-
-
 // Загрузка всех существующих результатов (ВСЕХ пользователей)
 export async function loadExistingResults(
   tournamentName: string
@@ -166,7 +144,6 @@ export async function loadExistingResults(
       let i = 1;
       
       while (item[`Боец ${i}`]) {
-        // Обрабатываем W/L - может быть 'win', 'lose' или пусто (null)
         const wlValue = String(item[`W/L ${i}`] || '').toLowerCase();
         let wl: 'win' | 'lose' | null = null;
         
@@ -186,9 +163,9 @@ export async function loadExistingResults(
             'Round': Number(item[`Round ${i}`]) || 0,
             'Time': String(item[`Time ${i}`] || ''),
             'Weight class': String(item[`Вес ${i}`] || ''),
-            'Str': Number(item[`Str ${i}`]) || 0,    // ← ДОБАВИТЬ
-            'Td': Number(item[`Td ${i}`]) || 0,      // ← ДОБАВИТЬ
-            'Sub': Number(item[`Sub ${i}`]) || 0,    // ← ДОБАВИТЬ
+            'Str': Number(item[`Str ${i}`]) || 0,
+            'Td': Number(item[`Td ${i}`]) || 0,
+            'Sub': Number(item[`Sub ${i}`]) || 0,
             'Fight_ID': 0,
             'Kd': 0,
             'Head': 0,
@@ -206,6 +183,7 @@ export async function loadExistingResults(
         totalDamage: Number(item['Total Damage']) || 0,
         timestamp: String(item['Timestamp'] || ''),
         selections: selections,
+        betAmount: item['Bet Amount'] ? Number(item['Bet Amount']) : undefined,
         rewardsAccepted: item['Rewards Accepted'] === 'true' || item['Rewards Accepted'] === true,
         rewards: item['Reward Coins'] ? {
           coins: Number(item['Reward Coins']) || 0,
@@ -240,35 +218,30 @@ export async function saveUserResults(
       throw new Error('Не удалось создать папку для результатов');
     }
     
-    // Загружаем ВСЕ существующие результаты
     const existingResults = await loadExistingResults(tournamentName);
     
-    // Проверяем, есть ли уже результат этого пользователя
     const existingUserIndex = existingResults.findIndex(r => r.userId === userResult.userId);
     
     let updatedResults: UserResult[];
     
     if (existingUserIndex >= 0) {
-      // Обновляем существующую запись пользователя
       updatedResults = [...existingResults];
       updatedResults[existingUserIndex] = userResult;
       console.log('🔄 Обновлен существующий результат пользователя');
     } else {
-      // Добавляем новую запись
       updatedResults = [...existingResults, userResult];
       console.log('➕ Добавлен новый результат пользователя');
     }
     
-    // Сортируем по урону (от большего к меньшему) для рейтинга
     updatedResults.sort((a, b) => b.totalDamage - a.totalDamage);
     
-    // Преобразуем в формат Excel
     const excelData = updatedResults.map((result, index) => {
       const row: any = {
         'Место': index + 1,
         'User ID': result.userId,
         'Username': result.username,
         'Total Damage': Math.round(result.totalDamage),
+        'Bet Amount': result.betAmount || '',
         'Timestamp': result.timestamp,
         'Rewards Accepted': result.rewardsAccepted ? 'true' : '',
         'Reward Coins': result.rewards?.coins || '',
@@ -287,27 +260,22 @@ export async function saveUserResults(
         row[`Str ${num}`] = sel.fighter.Str || 0;
         row[`Td ${num}`] = sel.fighter.Td || 0;
         row[`Sub ${num}`] = sel.fighter.Sub || 0;
-
       });
       
       return row;
     });
     
-    // Создаём Excel файл
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(excelData);
     XLSX.utils.book_append_sheet(wb, ws, 'Результаты');
     
-    // Конвертируем в бинарные данные
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     
-    // Получаем ссылку для загрузки
     const uploadLink = await getUploadLink(filename);
     if (!uploadLink) {
       throw new Error('Не удалось получить ссылку для загрузки');
     }
     
-    // Загружаем файл
     const uploadResponse = await fetch(uploadLink, {
       method: 'PUT',
       body: new Blob([wbout], { type: 'application/octet-stream' })
@@ -339,7 +307,7 @@ export async function loadLeaderboard(tournamentName: string): Promise<Leaderboa
       timestamp: result.timestamp
     }));
     
-    return entries.slice(0, 100); // Топ-100
+    return entries.slice(0, 100);
   } catch (error) {
     console.error('❌ Ошибка загрузки рейтинга:', error);
     return [];

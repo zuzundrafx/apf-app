@@ -25,7 +25,7 @@ export interface SelectedFighter {
 export interface Tournament {
   id: string;
   name: string;
-  league: string;  // ← ДОБАВЛЯЕМ поле league
+  league: string;
   date: string;
   status: 'active' | 'upcoming';
   filename: string;
@@ -37,4 +37,19 @@ export interface DiskFileInfo {
   name: string;
   path: string;
   created: string;
+}
+
+// ← НОВЫЙ ИНТЕРФЕЙС: Результаты пользователя
+export interface UserResult {
+  userId: string;
+  username: string;
+  totalDamage: number;
+  timestamp: string;
+  selections: SelectedFighter[];
+  betAmount?: number;           // ← НОВОЕ: сумма ставки
+  rewardsAccepted?: boolean;
+  rewards?: {
+    coins: number;
+    experience: number;
+  };
 }

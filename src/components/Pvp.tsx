@@ -1,8 +1,7 @@
 // src/components/Pvp.tsx
 
 import React, { useState } from 'react';
-import { Tournament, SelectedFighter, Fighter } from '../types';
-import { UserResult } from '../api/yandexUpload';
+import { Tournament, SelectedFighter, Fighter, UserResult } from '../types';  // ← импортируем UserResult из types
 import { UserProfile } from '../api/userProfiles';
 import ArenaModal from './ArenaModal';
 
@@ -16,7 +15,7 @@ interface PvpProps {
   loadTournamentData: (tournamentName: string) => Promise<{
     weightClasses: string[];
     results: UserResult[];
-    fightersData: Fighter[];  // ← добавили fightersData
+    fightersData: Fighter[];
   }>;
 }
 
@@ -76,8 +75,6 @@ const Pvp: React.FC<PvpProps> = ({
         fightersMap.set(fighter.Fighter, fighter);
       });
       
-      // Обогащаем выборы пользователя полной статистикой
-            
       const rivals = tournamentData.results.filter(r => r.userId !== userId);
       
       console.log(`🔍 Найдено соперников: ${rivals.length}`);
@@ -93,7 +90,7 @@ const Pvp: React.FC<PvpProps> = ({
       const rivalProfile = allProfiles.get(selectedRival.userId);
       
       // Обогащаем выборы соперника полной статистикой
-      const enrichedRivalSelections = selectedRival.selections.map(sel => ({
+      const enrichedRivalSelections = selectedRival.selections.map((sel: SelectedFighter) => ({  // ← добавляем тип SelectedFighter
         ...sel,
         fighter: fightersMap.get(sel.fighter.Fighter) || sel.fighter
       }));

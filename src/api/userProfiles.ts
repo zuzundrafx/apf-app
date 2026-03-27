@@ -10,35 +10,16 @@ export interface UserProfile {
   photoUrl?: string;
   level: number;
   experience: number;
+  expPoints: number;
   coins: number;
-  tickets: number;      // ← НОВОЕ: билеты
-  ton: number;          // ← НОВОЕ: TON
+  tickets: number;
+  ton: number;
   lastUpdated: string;
   processedTournaments?: {
     coins: string[];
     exp: string[];
   };
 }
-
-// Функция для проверки существования файла (закомментирована, т.к. не используется)
-// async function checkFileExists(filename: string): Promise<boolean> {
-//   try {
-//     console.log('🔍 Проверяем существование файла:', filename);
-//     const response = await fetch(
-//       `https://cloud-api.yandex.net/v1/disk/resources?path=app:/${PROFILES_FOLDER}/${filename}`,
-//       {
-//         headers: {
-//           'Authorization': `OAuth ${YA_TOKEN}`
-//         }
-//       }
-//     );
-//     console.log('📁 Результат проверки:', response.status, response.ok);
-//     return response.ok;
-//   } catch (error) {
-//     console.error('❌ Ошибка проверки файла:', error);
-//     return false;
-//   }
-// }
 
 // Функция для получения ссылки на загрузку файла
 async function getUploadLink(filename: string): Promise<string | null> {
@@ -145,33 +126,34 @@ async function ensureFolderExists(): Promise<boolean> {
 }
 
 /**
- * Функция миграции: обновляет старый файл, добавляя колонку Photo URL
+ * Функция миграции: обновляет старый файл, добавляя новые колонки
  */
 async function migrateProfilesFile(oldData: any[]): Promise<any[]> {
   console.log('🔄 Запущена миграция файла профилей...');
   
-  // Определяем, есть ли уже колонка Photo URL
   const hasPhotoUrlColumn = oldData.length > 0 && 'Photo URL' in oldData[0];
+  const hasExpPointsColumn = oldData.length > 0 && 'EXP Points' in oldData[0];
+  const hasTicketsColumn = oldData.length > 0 && 'Tickets' in oldData[0];
+  const hasTONColumn = oldData.length > 0 && 'TON' in oldData[0];
   
-  if (hasPhotoUrlColumn) {
-    console.log('✅ Файл уже имеет колонку Photo URL, миграция не требуется');
+  if (hasPhotoUrlColumn && hasExpPointsColumn && hasTicketsColumn && hasTONColumn) {
+    console.log('✅ Файл уже имеет все необходимые колонки, миграция не требуется');
     return oldData;
   }
   
-  console.log('⚠️ Обнаружена старая версия файла без Photo URL. Выполняем миграцию...');
+  console.log('⚠️ Обнаружена старая версия файла. Выполняем миграцию...');
   
-  // Создаем новый массив с добавленной колонкой Photo URL
   const migratedData = oldData.map((item: any) => {
-    // Создаем новый объект с сохранением всех старых полей
     const newItem: any = {};
     
-    // Копируем все существующие поля
     Object.keys(item).forEach(key => {
       newItem[key] = item[key];
     });
     
-    // Добавляем колонку Photo URL (пустую для существующих записей)
-    newItem['Photo URL'] = '';
+    if (!hasPhotoUrlColumn) newItem['Photo URL'] = '';
+    if (!hasExpPointsColumn) newItem['EXP Points'] = 0;
+    if (!hasTicketsColumn) newItem['Tickets'] = 0;
+    if (!hasTONColumn) newItem['TON'] = 0;
     
     return newItem;
   });
@@ -210,16 +192,16 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
     
     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    let data = XLSX.utils.sheet_to_json(sheet) as any[]; // ← Явно указываем тип any[]
+    let data = XLSX.utils.sheet_to_json(sheet) as any[];
     
     console.log(`✅ Загружено ${data.length} профилей`);
     
     // Запускаем миграцию, если нужно
-    const needsMigration = data.length > 0 && !('Photo URL' in data[0]);
+    data = await migrateProfilesFile(data);
+    
+    // Сохраняем обновленный файл обратно на диск
+    const needsMigration = data.length > 0 && (!('EXP Points' in data[0]) || !('Tickets' in data[0]) || !('TON' in data[0]));
     if (needsMigration) {
-      data = await migrateProfilesFile(data);
-      
-      // Сохраняем обновленный файл обратно на диск
       console.log('💾 Сохраняем обновленный файл с миграцией...');
       
       const wb = XLSX.utils.book_new();
@@ -242,15 +224,14 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
       console.log('📊 Пример данных из файла:', data[0]);
     }
     
+    const safeNumber = (value: any, defaultValue: number): number => {
+      if (typeof value === 'number') return value;
+      if (value === undefined || value === null || value === '') return defaultValue;
+      const parsed = Number(value);
+      return isNaN(parsed) ? defaultValue : parsed;
+    };
+    
     return data.map((item: any) => {
-  const safeNumber = (value: any, defaultValue: number): number => {
-    if (typeof value === 'number') return value;
-    if (value === undefined || value === null || value === '') return defaultValue;
-    const parsed = Number(value);
-    return isNaN(parsed) ? defaultValue : parsed;
-  };
-
-      // Парсим processedTournaments
       let processedTournaments = undefined;
       if (item['Processed Coins'] || item['Processed Exp']) {
         processedTournaments = {
@@ -258,21 +239,21 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
           exp: item['Processed Exp'] ? String(item['Processed Exp']).split(',').filter(Boolean) : []
         };
       }
-
+      
       return {
-    userId: String(item['User ID'] || ''),
-    username: String(item['Username'] || 'Anonymous'),
-    photoUrl: item['Photo URL'] ? String(item['Photo URL']) : undefined,
-    level: safeNumber(item['Level'], 1),
-    experience: safeNumber(item['Experience'], 0),
-    coins: safeNumber(item['Coins'], 100),
-    tickets: safeNumber(item['Tickets'], 0),      // ← НОВОЕ
-    ton: safeNumber(item['TON'], 0),              // ← НОВОЕ
-    lastUpdated: String(item['Last Updated'] || new Date().toISOString()),
-    processedTournaments: processedTournaments
-  };
-});
-
+        userId: String(item['User ID'] || ''),
+        username: String(item['Username'] || 'Anonymous'),
+        photoUrl: item['Photo URL'] ? String(item['Photo URL']) : undefined,
+        level: safeNumber(item['Level'], 1),
+        experience: safeNumber(item['Experience'], 0),
+        expPoints: safeNumber(item['EXP Points'], 0),
+        coins: safeNumber(item['Coins'], 100),
+        tickets: safeNumber(item['Tickets'], 0),
+        ton: safeNumber(item['TON'], 0),
+        lastUpdated: String(item['Last Updated'] || new Date().toISOString()),
+        processedTournaments: processedTournaments
+      };
+    });
   } catch (error) {
     console.error('❌ Ошибка загрузки профилей:', error);
     return [];
@@ -284,6 +265,9 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
   try {
     console.log('📤 Сохраняем профиль пользователя:', profile.userId);
     console.log('💰 Монеты для сохранения:', profile.coins);
+    console.log('🎫 Билеты для сохранения:', profile.tickets);
+    console.log('💎 TON для сохранения:', profile.ton);
+    console.log('✨ EXP Points для сохранения:', profile.expPoints);
     console.log('📊 Уровень:', profile.level, 'Опыт:', profile.experience);
     console.log('🏆 Processed tournaments:', profile.processedTournaments);
     
@@ -322,9 +306,10 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
         'Photo URL': profile.photoUrl || '',
         'Level': profile.level,
         'Experience': profile.experience,
+        'EXP Points': profile.expPoints,
         'Coins': profile.coins,
-        'Tickets': profile.tickets,      // ← НОВОЕ
-        'TON': profile.ton,              // ← НОВОЕ
+        'Tickets': profile.tickets,
+        'TON': profile.ton,
         'Last Updated': profile.lastUpdated
       };
       
@@ -365,6 +350,9 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
     console.log('✅ Файл успешно загружен');
     console.log('📁 Полный путь к файлу:', `app:/${PROFILES_FOLDER}/${PROFILES_FILENAME}`);
     console.log('💰 Сохраненные монеты:', profile.coins);
+    console.log('🎫 Сохраненные билеты:', profile.tickets);
+    console.log('💎 Сохраненный TON:', profile.ton);
+    console.log('✨ Сохраненный EXP Points:', profile.expPoints);
     
     return true;
     
@@ -382,6 +370,9 @@ export async function loadUserProfile(userId: string): Promise<UserProfile | nul
     const profile = allProfiles.find(p => p.userId === userId) || null;
     console.log('📥 Загружен профиль из файла:', profile);
     console.log('💰 Монеты в загруженном профиле:', profile?.coins);
+    console.log('🎫 Билеты в загруженном профиле:', profile?.tickets);
+    console.log('💎 TON в загруженном профиле:', profile?.ton);
+    console.log('✨ EXP Points в загруженном профиле:', profile?.expPoints);
     console.log('📊 Уровень в загруженном профиле:', profile?.level);
     console.log('📈 Опыт в загруженном профиле:', profile?.experience);
     console.log('🏆 Processed tournaments:', profile?.processedTournaments);

@@ -1,17 +1,16 @@
-﻿﻿﻿﻿import { useState, useEffect, useCallback } from 'react';
+﻿﻿import { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
 import LeaderboardItem from './components/LeaderboardItem';
-import { Fighter, Tournament, SelectedFighter } from './types';
+import { Fighter, Tournament, SelectedFighter, UserResult } from './types';
 import { useTournaments } from './hooks/useTournaments';
-import { loadExistingResults } from './api/yandexUpload'; // возможно уже есть
 import { groupFightersByWeight } from './data/loadFighters';
 import { 
   saveUserResults, 
-  UserResult, 
   loadLeaderboard, 
   LeaderboardEntry, 
-  loadUserResults 
+  loadUserResults,
+  loadExistingResults   // ← ДОБАВЛЯЕМ
 } from './api/yandexUpload';
 import {
   loadUserProfile,
@@ -127,33 +126,23 @@ function getWeightClassColor(weightClass: string): string {
 
 /// Функция для определения стиля бойца
 function getFighterStyle(fighter: SelectedFighter): string {
-  // Приводим значения к числу, так как они могут быть string или number
   const str = Number(fighter.fighter.Str) || 0;
   const td = Number(fighter.fighter.Td) || 0;
   const sub = Number(fighter.fighter.Sub) || 0;
   const tdSubSum = td + sub;
-
-  // Временный лог для диагностики
-  console.log('Боец:', fighter.fighter.Fighter);
-  console.log('Str:', str, 'Td:', td, 'Sub:', sub, 'Сумма TD+SUB:', tdSubSum);
   
-  // Grappler: TD+SUB >= 2 и STR < 50
   if (tdSubSum >= 2 && str < 50) {
     return 'Grappler';
   }
-  // Striker: STR >= 50 и TD+SUB < 2
   if (str >= 50 && tdSubSum < 2) {
     return 'Striker';
   }
-  // Universal: STR >= 50 и TD+SUB >= 2
   if (str >= 50 && tdSubSum >= 2) {
     return 'Universal';
   }
-  // Simple: TD+SUB < 2 и STR < 50 (по умолчанию)
   return 'Simple';
 }
 
-// Функция для получения имени файла иконки стиля
 function getStyleIconFilename(style: string): string {
   const icons: { [key: string]: string } = {
     'Grappler': 'Grappler_style_icon.webp',
@@ -177,33 +166,7 @@ const TournamentSkeleton = () => (
   </section>
 );
 
-// Функция для проверки, можно ли делать ставки на турнир
-const canPlaceBet = (tournament: Tournament | null, userCoins: number): boolean => {
-  if (!tournament) return false;
-  
-  // 1. Проверяем монеты
-  if (userCoins < 100) return false;
-  
-  // 2. Получаем дату турнира
-  const tournamentDate = new Date(tournament.date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  // 3. Проверяем, есть ли статистика у бойцов
-  const hasStats = tournament.data?.some(fighter => {
-    const totalDamage = Number(fighter['Total Damage']) || 0;
-    const str = Number(fighter['Str']) || 0;
-    const hasWinLoss = fighter['W/L'] !== null && fighter['W/L'] !== undefined;
-    
-    return hasWinLoss || totalDamage > 0 || str > 0;
-  }) ?? false;
-  
-  // 4. Проверяем, прошла ли дата турнира
-  const isDatePassed = tournamentDate < today;
-  
-  // 5. Логика: можно ставить если (дата не прошла) ИЛИ (нет статистики)
-  return !(isDatePassed && hasStats);
-};
+
 
 function App() {
   const { pastTournaments, upcomingTournaments, loading, loadingProgress, loadingStage, error } = useTournaments();
@@ -222,48 +185,45 @@ function App() {
   } | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   
-  // Кэш всех профилей для рейтинга (загружаем один раз)
+  // Кэш всех профилей для рейтинга
   const [allProfiles, setAllProfiles] = useState<Map<string, UserProfile>>(new Map());
 
-  // Кэш данных турниров (весовые категории + результаты игроков)
+  // Кэш данных турниров
   const [tournamentDataCache, setTournamentDataCache] = useState<Map<string, {
-  weightClasses: string[];        // из tournament.data
-  results: UserResult[];          // из loadExistingResults
-  fightersData: Fighter[];  // ← добавить
+    weightClasses: string[];
+    results: UserResult[];
+    fightersData: Fighter[];
   }>>(new Map());
 
   // Функция для загрузки данных турнира (ленивая)
-const loadTournamentData = useCallback(async (tournamentName: string) => {
-  console.log(`📥 Загружаем данные для турнира: ${tournamentName}`);
-  
-  const cached = tournamentDataCache.get(tournamentName);
-  if (cached) {
-    console.log(`✅ Данные турнира ${tournamentName} взяты из кэша`);
-    return cached;
-  }
+  const loadTournamentData = useCallback(async (tournamentName: string) => {
+    console.log(`📥 Загружаем данные для турнира: ${tournamentName}`);
+    
+    const cached = tournamentDataCache.get(tournamentName);
+    if (cached) {
+      console.log(`✅ Данные турнира ${tournamentName} взяты из кэша`);
+      return cached;
+    }
 
-  const tournament = pastTournaments.find(t => t.name === tournamentName);
-  
-  // Получаем полные данные бойцов из файла турнира
-  const fightersData = tournament?.data || [];
-  
-  const weightClasses = tournament?.data
-    ? [...new Set(tournament.data.map(f => f['Weight class']))]
-    : [];
-  
-  const results = await loadExistingResults(tournamentName);
-  console.log(`👥 Загружено результатов игроков: ${results.length}`);
+    const tournament = pastTournaments.find(t => t.name === tournamentName);
+    const fightersData = tournament?.data || [];
+    const weightClasses = tournament?.data
+      ? [...new Set(tournament.data.map(f => f['Weight class']))]
+      : [];
+    const results = await loadExistingResults(tournamentName);
+    
+    console.log(`👥 Загружено результатов игроков: ${results.length}`);
 
-  const data = { weightClasses, results, fightersData };
-  
-  setTournamentDataCache(prev => {
-    const newMap = new Map(prev);
-    newMap.set(tournamentName, data);
-    return newMap;
-  });
-  
-  return data;
-}, [pastTournaments, tournamentDataCache]);
+    const data = { weightClasses, results, fightersData };
+    
+    setTournamentDataCache(prev => {
+      const newMap = new Map(prev);
+      newMap.set(tournamentName, data);
+      return newMap;
+    });
+    
+    return data;
+  }, [pastTournaments, tournamentDataCache]);
 
   // Состояния для окна наград
   const [showRewardsModal, setShowRewardsModal] = useState(false);
@@ -271,6 +231,7 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
     tournamentName: string;
     winners: SelectedFighter[];
     totalCoins: number;
+    totalTickets: number;
     totalExp: number;
   } | null>(null);
 
@@ -283,12 +244,18 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
   const [selectedPastTournament, setSelectedPastTournament] = useState<string | null>(null);
   const [selectedUpcomingTournament, setSelectedUpcomingTournament] = useState<string | null>(null);
   
-  // Состояние для блокировки кнопок (чтобы не начислялись монеты много раз)
+  // Состояние для блокировки кнопок
   const [isClosing, setIsClosing] = useState(false);
   const [isAcceptingRewards, setIsAcceptingRewards] = useState(false);
   
-  // Состояние для защиты от множественных нажатий при открытии окна выбора
-  const [isOpeningSelection, setIsOpeningSelection] = useState(false);
+  
+  // Состояния для модального окна ставки
+  const [showBetModal, setShowBetModal] = useState(false);
+  const [selectedBetTournament, setSelectedBetTournament] = useState<Tournament | null>(null);
+  const [selectedBetAmount, setSelectedBetAmount] = useState(5);
+  const [availableBetAmounts, setAvailableBetAmounts] = useState<number[]>([]);
+  const [currentBetAmount, setCurrentBetAmount] = useState<number | null>(null);
+  const [showNotEnoughCoins, setShowNotEnoughCoins] = useState(false);
 
   const [userData, setUserData] = useState({
     username: 'Player',
@@ -297,8 +264,9 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
     totalExp: 0,
     nextLevelExp: 5,
     coins: 100,
-    tickets: 0,      // ← НОВОЕ
-    ton: 0,          // ← НОВОЕ
+    tickets: 0,
+    ton: 0,
+    expPoints: 1,
     mySelections: {
       upcoming: [] as SelectedFighter[],
       past: [] as SelectedFighter[]
@@ -314,7 +282,39 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
     return roundDamage(total);
   };
 
-  // Загружаем все профили ТОЛЬКО ОДИН РАЗ (для рейтинга)
+  // Функция расчета доступных ставок
+  const calculateAvailableBetAmounts = (userCoins: number): number[] => {
+    if (userCoins < 5) return [];
+    
+    const maxBet = Math.floor(userCoins / 5) * 5;
+    const amounts: number[] = [];
+    
+    // MIN = 5
+    amounts.push(5);
+    
+    // Промежуточные значения (не более 7 промежуточных + MIN + MAX = не более 9)
+    const step = (maxBet - 5) / 7;
+    for (let i = 1; i <= 7; i++) {
+      const value = Math.round(5 + step * i);
+      const rounded = Math.floor(value / 5) * 5;
+      if (rounded > 5 && rounded < maxBet && !amounts.includes(rounded)) {
+        amounts.push(rounded);
+      }
+    }
+    
+    // MAX
+    if (maxBet > 5 && !amounts.includes(maxBet)) {
+      amounts.push(maxBet);
+    }
+    
+    // Сортируем по возрастанию
+    amounts.sort((a, b) => a - b);
+    
+    // Ограничиваем количество меток 9
+    return amounts.slice(0, 9);
+  };
+
+  // Загружаем все профили
   useEffect(() => {
     const loadAllUserProfiles = async () => {
       console.log('📥 Загружаем все профили для рейтинга...');
@@ -328,9 +328,8 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
     };
     
     loadAllUserProfiles();
-  }, []); // Пустой массив - выполнится один раз
+  }, []);
 
-  // Функция для обновления одного профиля в кэше
   const updateProfileInCache = useCallback((updatedProfile: UserProfile) => {
     setAllProfiles(prev => {
       const newMap = new Map(prev);
@@ -339,94 +338,106 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
     });
   }, []);
 
-  // ОПТИМИЗИРОВАННАЯ функция принятия наград
+  // Функция принятия наград
   const acceptRewards = async () => {
-  if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
-  
-  setIsAcceptingRewards(true);
-  
-  try {
-    const newCoins = userData.coins + pendingRewards.totalCoins;
-    const newTotalExp = userData.totalExp + pendingRewards.totalExp;
-    const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
+    if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
     
-    const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
-    const tournamentSelections = pendingRewards.winners;
+    setIsAcceptingRewards(true);
     
-    setUserData(prev => {
-      const otherPastSelections = prev.mySelections.past.filter(
-        (sel: SelectedFighter) => !tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
-      );
+    try {
+      const newCoins = userData.coins + pendingRewards.totalCoins;
+      const newTickets = userData.tickets + pendingRewards.totalTickets;
+      const newTotalExp = userData.totalExp + pendingRewards.totalExp;
+      let { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
+      let newExpPoints = userData.expPoints;
       
-      return {
-        ...prev,
-        coins: newCoins,
-        totalExp: newTotalExp,
-        level,
-        currentExp,
-        nextLevelExp,
-        mySelections: {
-          ...prev.mySelections,
-          past: [...otherPastSelections, ...tournamentSelections]
-        }
-      };
-    });
-    
-    setShowRewardsModal(false);
-    setPendingRewards(null);
-    setShowPastFighters(false);
-    
-    if (tournament) {
-      Promise.all([
-        saveUserProfile({
-          userId: telegramUser.id,
-          username: userData.username,
-          photoUrl: telegramUser.photoUrl,
-          level,
-          experience: newTotalExp,
+      // Проверяем, повысился ли уровень
+      if (level > userData.level) {
+        const levelsGained = level - userData.level;
+        newExpPoints += levelsGained; // +1 EXP за каждый новый уровень
+      }
+      
+      const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
+      const tournamentSelections = pendingRewards.winners;
+      
+      setUserData(prev => {
+        const otherPastSelections = prev.mySelections.past.filter(
+          (sel: SelectedFighter) => !tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+        );
+        
+        return {
+          ...prev,
           coins: newCoins,
-          tickets: userData.tickets,     // ← ДОБАВЛЯЕМ
-          ton: userData.ton,             // ← ДОБАВЛЯЕМ
-          lastUpdated: new Date().toISOString()
-        }).then(() => {
-          updateProfileInCache({
+          tickets: newTickets,
+          totalExp: newTotalExp,
+          level,
+          currentExp,
+          nextLevelExp,
+          expPoints: newExpPoints,
+          mySelections: {
+            ...prev.mySelections,
+            past: [...otherPastSelections, ...tournamentSelections]
+          }
+        };
+      });
+      
+      setShowRewardsModal(false);
+      setPendingRewards(null);
+      setShowPastFighters(false);
+      
+      if (tournament) {
+        Promise.all([
+          saveUserProfile({
             userId: telegramUser.id,
             username: userData.username,
             photoUrl: telegramUser.photoUrl,
             level,
             experience: newTotalExp,
+            expPoints: newExpPoints,
             coins: newCoins,
-            tickets: userData.tickets,   // ← ДОБАВЛЯЕМ
-            ton: userData.ton,           // ← ДОБАВЛЯЕМ
+            tickets: newTickets,
+            ton: userData.ton,
             lastUpdated: new Date().toISOString()
-          });
-        }),
-        
-        (async () => {
-          const currentResult = await loadUserResults(tournament.name, telegramUser.id);
-          if (currentResult) {
-            const updatedResult: UserResult = {
-              ...currentResult,
-              rewardsAccepted: true,
-              rewards: {
-                coins: pendingRewards.totalCoins,
-                experience: pendingRewards.totalExp
-              }
-            };
-            await saveUserResults(tournament.name, updatedResult);
-          }
-        })()
-      ]).catch(error => {
-        console.error('Фоновое сохранение ошибки:', error);
-      });
+          }).then(() => {
+            updateProfileInCache({
+              userId: telegramUser.id,
+              username: userData.username,
+              photoUrl: telegramUser.photoUrl,
+              level,
+              experience: newTotalExp,
+              expPoints: newExpPoints,
+              coins: newCoins,
+              tickets: newTickets,
+              ton: userData.ton,
+              lastUpdated: new Date().toISOString()
+            });
+          }),
+          
+          (async () => {
+            const currentResult = await loadUserResults(tournament.name, telegramUser.id);
+            if (currentResult) {
+              const updatedResult: UserResult = {
+                ...currentResult,
+                rewardsAccepted: true,
+                rewards: {
+                  coins: pendingRewards.totalCoins,
+                  experience: pendingRewards.totalExp
+                }
+              };
+              await saveUserResults(tournament.name, updatedResult);
+            }
+          })()
+        ]).catch(error => {
+          console.error('Фоновое сохранение ошибки:', error);
+        });
+      }
+      
+    } catch (error) {
+      console.error('Ошибка при получении наград:', error);
+    } finally {
+      setIsAcceptingRewards(false);
     }
-    
-  } catch (error) {
-    console.error('Ошибка при получении наград:', error);
-  } finally {
-    setIsAcceptingRewards(false);
-  }
-};
+  };
 
   // Функция загрузки данных для окна выбора
   const loadSelectionData = async (tournament: Tournament) => {
@@ -502,99 +513,103 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
 
   // Инициализация Telegram WebApp
   useEffect(() => {
-  let isMounted = true;
-  
-  const initTelegram = async () => {
-    if (window.Telegram?.WebApp) {
-      const tg = window.Telegram.WebApp;
-      tg.ready();
-      
-      const user = tg.initDataUnsafe.user;
-      if (user && isMounted) {
-        const username = user.username || `${user.first_name} ${user.last_name || ''}`.trim();
-        const userId = `user_${user.id}`;
+    let isMounted = true;
+    
+    const initTelegram = async () => {
+      if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
         
-        setTelegramUser({
-          id: userId,
-          username: username,
-          photoUrl: user.photo_url
-        });
-        
-        setLoadingProfile(true);
-        const profile = await loadUserProfile(userId);
-        
-        if (profile && isMounted) {
-          const totalExp = profile.experience || 0;
-          const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
+        const user = tg.initDataUnsafe.user;
+        if (user && isMounted) {
+          const username = user.username || `${user.first_name} ${user.last_name || ''}`.trim();
+          const userId = `user_${user.id}`;
           
-          setUserData(prev => ({
-            ...prev,
-            username: profile.username,
-            level,
-            currentExp,
-            totalExp,
-            nextLevelExp,
-            coins: profile.coins,
-            tickets: profile.tickets || 0,
-            ton: profile.ton || 0,
-            myUserId: userId
-          }));
-          
-          const updatedProfile = {
-            userId: userId,
-            username: profile.username,
-            photoUrl: user.photo_url || profile.photoUrl,
-            level: level,
-            experience: totalExp,
-            coins: profile.coins,
-            tickets: profile.tickets || 0,
-            ton: profile.ton || 0,
-            lastUpdated: new Date().toISOString()
-          };
-          
-          await saveUserProfile(updatedProfile);
-          updateProfileInCache(updatedProfile);
-          
-        } else if (isMounted) {
-          const newProfile = {
-            userId: userId,
+          setTelegramUser({
+            id: userId,
             username: username,
-            photoUrl: user.photo_url,
-            level: 1,
-            experience: 0,
-            coins: 100,
-            tickets: 0,
-            ton: 0,
-            lastUpdated: new Date().toISOString()
-          };
+            photoUrl: user.photo_url
+          });
           
-          const saved = await saveUserProfile(newProfile);
+          setLoadingProfile(true);
+          const profile = await loadUserProfile(userId);
           
-          if (saved) {
+          if (profile && isMounted) {
+            const totalExp = profile.experience || 0;
+            const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
+            
             setUserData(prev => ({
               ...prev,
+              username: profile.username,
+              level,
+              currentExp,
+              totalExp,
+              nextLevelExp,
+              coins: profile.coins,
+              tickets: profile.tickets || 0,
+              ton: profile.ton || 0,
+              expPoints: profile.expPoints || 1,
+              myUserId: userId
+            }));
+            
+            const updatedProfile = {
+              userId: userId,
+              username: profile.username,
+              photoUrl: user.photo_url || profile.photoUrl,
+              level: level,
+              experience: totalExp,
+              expPoints: profile.expPoints || 1,
+              coins: profile.coins,
+              tickets: profile.tickets || 0,
+              ton: profile.ton || 0,
+              lastUpdated: new Date().toISOString()
+            };
+            
+            await saveUserProfile(updatedProfile);
+            updateProfileInCache(updatedProfile);
+            
+          } else if (isMounted) {
+            const newProfile = {
+              userId: userId,
               username: username,
+              photoUrl: user.photo_url,
+              level: 1,
+              experience: 0,
+              expPoints: 1,
               coins: 100,
               tickets: 0,
               ton: 0,
-              myUserId: userId
-            }));
-            updateProfileInCache(newProfile);
+              lastUpdated: new Date().toISOString()
+            };
+            
+            const saved = await saveUserProfile(newProfile);
+            
+            if (saved) {
+              setUserData(prev => ({
+                ...prev,
+                username: username,
+                coins: 100,
+                tickets: 0,
+                ton: 0,
+                expPoints: 1,
+                myUserId: userId
+              }));
+              updateProfileInCache(newProfile);
+            }
+          }
+          
+          if (isMounted) {
+            setProfileLoaded(true);
+            setLoadingProfile(false);
           }
         }
-        
-        if (isMounted) {
-          setProfileLoaded(true);
-          setLoadingProfile(false);
-        }
       }
-    }
-  };
-  
-  initTelegram();
-  
-  return () => { isMounted = false; };
-}, [updateProfileInCache]);
+    };
+    
+    initTelegram();
+    
+    return () => { isMounted = false; };
+  }, [updateProfileInCache]);
 
   // Загружаем результаты пользователя
   useEffect(() => {
@@ -645,13 +660,16 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
           if (result && !result.rewardsAccepted && result.selections.length > 0) {
             const winners = result.selections.filter(sel => sel.fighter['W/L'] === 'win');
             if (winners.length > 0) {
-              const totalCoins = winners.length * 50;
+              const betAmount = result.betAmount || 0;
+              const totalCoins = winners.reduce((sum) => sum + Math.floor(betAmount * 2 / 5), 0);
+              const totalTickets = winners.length;
               const totalExp = winners.length * 5;
               
               setPendingRewards({
                 tournamentName: pastTournaments[i].name,
                 winners: result.selections,
                 totalCoins,
+                totalTickets,
                 totalExp
               });
               setShowRewardsModal(true);
@@ -694,91 +712,20 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
     }
   }, [currentView, pastTournaments]);
 
-  const refundCoins = async () => {
-    if (!telegramUser) return;
+  const openSelectionWithBet = async () => {
+    if (!selectedBetTournament || !telegramUser) return;
     
-    const newCoins = userData.coins + 100;
+    setShowBetModal(false);
+    setCurrentBetAmount(selectedBetAmount);
+    setSelectedTournament(selectedBetTournament);
+    setCurrentView('selection');
+    setSelectedFighters(new Map());
     
-    setUserData(prev => ({ ...prev, coins: newCoins }));
-    
-    const updatedProfile = {
-      userId: telegramUser.id,
-      username: userData.username,
-      photoUrl: telegramUser.photoUrl,
-      level: userData.level,
-      experience: userData.totalExp,
-      coins: newCoins,
-      tickets: userData.tickets,    // ← НОВОЕ: сохраняем текущее значение
-      ton: userData.ton,            // ← НОВОЕ: сохраняем текущее значение
-      lastUpdated: new Date().toISOString()
-    };
-    
-    await saveUserProfile(updatedProfile);
-    updateProfileInCache(updatedProfile);
-  };
-
-  const openSelectionModal = async (tournament: Tournament) => {
-    if (!telegramUser || isOpeningSelection) return;
-    
-    setIsOpeningSelection(true);
-    
-    try {
-      if (!canPlaceBet(tournament, userData.coins)) {
-        console.log('Cannot place bet');
-        setIsOpeningSelection(false);
-        return;
-      }
-      
-      const newCoins = userData.coins - 100;
-      
-      setUserData(prev => ({ ...prev, coins: newCoins }));
-      
-      const updatedProfile = {
-        userId: telegramUser.id,
-        username: userData.username,
-        photoUrl: telegramUser.photoUrl,
-        level: userData.level,
-        experience: userData.totalExp,
-        coins: newCoins,
-        tickets: userData.tickets,     // ← ДОБАВЛЯЕМ
-        ton: userData.ton,             // ← ДОБАВЛЯЕМ
-        lastUpdated: new Date().toISOString()
-      };
-      
-      await saveUserProfile(updatedProfile);
-      updateProfileInCache(updatedProfile);
-      
-      setSelectedTournament(tournament);
-      setCurrentView('selection');
-      setSelectedFighters(new Map());
-      
-      loadSelectionData(tournament);
-      
-    } catch (error) {
-      console.error('Error opening selection:', error);
-    } finally {
-      setTimeout(() => {
-        setIsOpeningSelection(false);
-      }, 500);
-    }
-  };
-
-  const handleCloseClick = async () => {
-    if (isClosing) return;
-    
-    setIsClosing(true);
-    await refundCoins();
-    setCurrentView('main');
-    setIsClosing(false);
-  };
-
-  const handlePastTournamentClick = (tournament: Tournament) => {
-    setSelectedPastTournament(tournament.name);
-    setShowPastFighters(true);
+    loadSelectionData(selectedBetTournament);
   };
 
   const handleUpcomingTournamentClick = (tournament: Tournament) => {
-    if (isOpeningSelection) return;
+    
     
     const hasBetForThisTournament = userData.mySelections.upcoming.some(
       (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
@@ -787,8 +734,23 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
     if (hasBetForThisTournament) {
       setSelectedUpcomingTournament(tournament.name);
     } else {
-      openSelectionModal(tournament);
+      if (userData.coins < 5) {
+        setShowNotEnoughCoins(true);
+        setTimeout(() => setShowNotEnoughCoins(false), 2000);
+        return;
+      }
+      
+      setSelectedBetTournament(tournament);
+      const availableAmounts = calculateAvailableBetAmounts(userData.coins);
+      setAvailableBetAmounts(availableAmounts);
+      setSelectedBetAmount(availableAmounts[0] || 5);
+      setShowBetModal(true);
     }
+  };
+
+  const handlePastTournamentClick = (tournament: Tournament) => {
+    setSelectedPastTournament(tournament.name);
+    setShowPastFighters(true);
   };
 
   const saveSelections = async (selections: Map<string, Fighter>) => {
@@ -799,12 +761,35 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
       fighter
     }));
     
+    if (currentBetAmount) {
+      const newCoins = userData.coins - currentBetAmount;
+      
+      setUserData(prev => ({ ...prev, coins: newCoins }));
+      
+      const updatedProfile = {
+        userId: telegramUser.id,
+        username: userData.username,
+        photoUrl: telegramUser.photoUrl,
+        level: userData.level,
+        experience: userData.totalExp,
+        expPoints: userData.expPoints,
+        coins: newCoins,
+        tickets: userData.tickets,
+        ton: userData.ton,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      await saveUserProfile(updatedProfile);
+      updateProfileInCache(updatedProfile);
+    }
+    
     const userResult: UserResult = {
       userId: telegramUser.id,
       username: telegramUser.username,
       totalDamage: 0,
       timestamp: new Date().toISOString(),
-      selections: selectionsArray
+      selections: selectionsArray,
+      betAmount: currentBetAmount || 0
     };
     
     if (selectedTournament) {
@@ -818,9 +803,18 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
           },
           hasBet: true
         }));
+        setCurrentBetAmount(null);
         setCurrentView('main');
       }
     }
+  };
+
+  const handleCloseClick = async () => {
+    if (isClosing) return;
+    
+    setIsClosing(true);
+    setCurrentView('main');
+    setIsClosing(false);
   };
 
   const handleSelectFighter = (weightClass: string, fighter: Fighter) => {
@@ -907,40 +901,40 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
   return (
     <div className="app">
       <header className="profile-header">
-  <div className="profile-avatar">
-    {telegramUser?.photoUrl ? (
-      <img src={telegramUser.photoUrl} alt="avatar" />
-    ) : (
-      <img src={`${BASE_URL}/Home_button.png`} alt="avatar" />
-    )}
-  </div>
-  <div className="profile-info">
-    <div className="profile-name">{userData.username}</div>
-    <div className="level-bar">
-      <div 
-        className="level-progress" 
-        style={{ width: `${(userData.currentExp / userData.nextLevelExp) * 100}%` }}
-      ></div>
-      <span className="level-text">
-        Lvl {userData.level} • {userData.currentExp}/{userData.nextLevelExp}
-      </span>
-    </div>
-    <div className="profile-currencies">
-      <div className="currency-item">
-        <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="currency-icon" />
-        <span className="currency-value">{userData.coins}</span>
-      </div>
-      <div className="currency-item">
-        <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="currency-icon" />
-        <span className="currency-value">{userData.tickets}</span>
-      </div>
-      <div className="currency-item">
-        <img src={`${BASE_URL}/icons/Ton_icon.webp`} alt="TON" className="currency-icon" />
-        <span className="currency-value">{userData.ton}</span>
-      </div>
-    </div>
-  </div>
-</header>
+        <div className="profile-avatar">
+          {telegramUser?.photoUrl ? (
+            <img src={telegramUser.photoUrl} alt="avatar" />
+          ) : (
+            <img src={`${BASE_URL}/Home_button.png`} alt="avatar" />
+          )}
+        </div>
+        <div className="profile-info">
+          <div className="profile-name">{userData.username}</div>
+          <div className="level-bar">
+            <div 
+              className="level-progress" 
+              style={{ width: `${(userData.currentExp / userData.nextLevelExp) * 100}%` }}
+            ></div>
+            <span className="level-text">
+              Lvl {userData.level} • {userData.currentExp}/{userData.nextLevelExp}
+            </span>
+          </div>
+          <div className="profile-currencies">
+            <div className="currency-item">
+              <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="currency-icon" />
+              <span className="currency-value">{userData.coins}</span>
+            </div>
+            <div className="currency-item">
+              <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="currency-icon" />
+              <span className="currency-value">{userData.tickets}</span>
+            </div>
+            <div className="currency-item">
+              <img src={`${BASE_URL}/icons/Ton_icon.webp`} alt="TON" className="currency-icon" />
+              <span className="currency-value">{userData.ton}</span>
+            </div>
+          </div>
+        </div>
+      </header>
 
       <main className="main-content">
         {currentView === 'main' && (
@@ -998,69 +992,58 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
                         </div>
                       ) : (
                         <>
-                          {/* Для прошедших турниров (past) */}
-<div className="selected-fighters-grid">
-  {userData.mySelections.past
-    .filter((sel: SelectedFighter) => {
-      const tournament = pastTournaments.find((t: Tournament) => t.name === selectedPastTournament);
-      return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
-    })
-    .map((sel: SelectedFighter, idx: number) => {
-      const isWinner = sel.fighter['W/L'] === 'win';
-      const style = getFighterStyle(sel);
-      const styleIcon = getStyleIconFilename(style);
-      
-      return (
-        <div 
-          key={idx} 
-          className="selected-fighter-card" 
-          data-weight={sel.weightClass}
-          style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}
-        >
-          {/* Блок с уроном в правом верхнем углу */}
-          <div className="selected-fighter-damage-box">
-            {roundDamage(sel.fighter['Total Damage'])}
-          </div>
-          
-          {/* Внутренний контейнер карточки */}
-          <div className="selected-fighter-inner">
-            {/* Верхний контейнер с иконкой стиля */}
-            <div className="selected-fighter-icon-container">
-              <img 
-                src={`${BASE_URL}/icons/${styleIcon}`}
-                alt={style}
-                className="selected-fighter-icon"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                  const parent = (e.target as HTMLImageElement).parentElement;
-                  if (parent) {
-                    parent.innerHTML = style === 'Striker' ? '👊' : 
-                                      style === 'Grappler' ? '🤼' : 
-                                      style === 'Universal' ? '⚡' : '👤';
-                    parent.style.fontSize = '20px';
-                  }
-                }}
-              />
-            </div>
-            
-            {/* Средний контейнер - градиентная линия */}
-            <div 
-              className="selected-fighter-divider"
-              style={{ color: getWeightClassColor(sel.weightClass) }}
-            ></div>
-            
-            {/* Нижний контейнер с именем бойца */}
-            <div className="selected-fighter-name">
-              {sel.fighter.Fighter}
-            </div>
-          </div>
-          
-          {isWinner && <span className="winner-crown">👑</span>}
-        </div>
-      );
-    })}
-</div>
-                          
+                          <div className="selected-fighters-grid">
+                            {userData.mySelections.past
+                              .filter((sel: SelectedFighter) => {
+                                const tournament = pastTournaments.find((t: Tournament) => t.name === selectedPastTournament);
+                                return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
+                              })
+                              .map((sel: SelectedFighter, idx: number) => {
+                                const isWinner = sel.fighter['W/L'] === 'win';
+                                const style = getFighterStyle(sel);
+                                const styleIcon = getStyleIconFilename(style);
+                                
+                                return (
+                                  <div 
+                                    key={idx} 
+                                    className="selected-fighter-card" 
+                                    data-weight={sel.weightClass}
+                                    style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}
+                                  >
+                                    <div className="selected-fighter-damage-box">
+                                      {roundDamage(sel.fighter['Total Damage'])}
+                                    </div>
+                                    <div className="selected-fighter-inner">
+                                      <div className="selected-fighter-icon-container">
+                                        <img 
+                                          src={`${BASE_URL}/icons/${styleIcon}`}
+                                          alt={style}
+                                          className="selected-fighter-icon"
+                                          onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                            const parent = (e.target as HTMLImageElement).parentElement;
+                                            if (parent) {
+                                              parent.innerHTML = style === 'Striker' ? '👊' : 
+                                                                style === 'Grappler' ? '🤼' : 
+                                                                style === 'Universal' ? '⚡' : '👤';
+                                              parent.style.fontSize = '20px';
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                      <div 
+                                        className="selected-fighter-divider"
+                                        style={{ color: getWeightClassColor(sel.weightClass) }}
+                                      ></div>
+                                      <div className="selected-fighter-name">
+                                        {sel.fighter.Fighter}
+                                      </div>
+                                    </div>
+                                    {isWinner && <span className="winner-crown">👑</span>}
+                                  </div>
+                                );
+                              })}
+                          </div>
                           <div className="tournament-footer">
                             <div className="footer-total-damage">
                               TOTAL DAMAGE: {calculateTotalDamage(
@@ -1114,67 +1097,57 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
                     <div className="tournament-message">Loading...</div>
                   ) : selectedUpcomingTournament ? (
                     <>
-                      {/* Для будущих турниров (upcoming) */}
-<div className="selected-fighters-grid">
-  {userData.mySelections.upcoming
-    .filter((sel: SelectedFighter) => {
-      const tournament = upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament);
-      return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
-    })
-    .map((sel: SelectedFighter, idx: number) => {
-      const hasResult = sel.fighter['W/L'] !== null;
-      const style = getFighterStyle(sel);
-      const styleIcon = getStyleIconFilename(style);
-      
-      return (
-        <div 
-          key={idx} 
-          className="selected-fighter-card" 
-          data-weight={sel.weightClass}
-          style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}
-        >
-          {/* Блок с уроном в правом верхнем углу */}
-          <div className="selected-fighter-damage-box">
-            {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
-          </div>
-          
-          {/* Внутренний контейнер карточки */}
-          <div className="selected-fighter-inner">
-            {/* Верхний контейнер с иконкой стиля */}
-            <div className="selected-fighter-icon-container">
-              <img 
-                src={`${BASE_URL}/icons/${styleIcon}`}
-                alt={style}
-                className="selected-fighter-icon"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                  const parent = (e.target as HTMLImageElement).parentElement;
-                  if (parent) {
-                    parent.innerHTML = style === 'Striker' ? '👊' : 
-                                      style === 'Grappler' ? '🤼' : 
-                                      style === 'Universal' ? '⚡' : '👤';
-                    parent.style.fontSize = '20px';
-                  }
-                }}
-              />
-            </div>
-            
-            {/* Средний контейнер - градиентная линия */}
-            <div 
-              className="selected-fighter-divider"
-              style={{ color: getWeightClassColor(sel.weightClass) }}
-            ></div>
-            
-            {/* Нижний контейнер с именем бойца */}
-            <div className="selected-fighter-name">
-              {sel.fighter.Fighter}
-            </div>
-          </div>
-        </div>
-      );
-    })}
-</div>
-                      
+                      <div className="selected-fighters-grid">
+                        {userData.mySelections.upcoming
+                          .filter((sel: SelectedFighter) => {
+                            const tournament = upcomingTournaments.find((t: Tournament) => t.name === selectedUpcomingTournament);
+                            return tournament?.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter);
+                          })
+                          .map((sel: SelectedFighter, idx: number) => {
+                            const hasResult = sel.fighter['W/L'] !== null;
+                            const style = getFighterStyle(sel);
+                            const styleIcon = getStyleIconFilename(style);
+                            
+                            return (
+                              <div 
+                                key={idx} 
+                                className="selected-fighter-card" 
+                                data-weight={sel.weightClass}
+                                style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}
+                              >
+                                <div className="selected-fighter-damage-box">
+                                  {hasResult ? roundDamage(sel.fighter['Total Damage']) : '?'}
+                                </div>
+                                <div className="selected-fighter-inner">
+                                  <div className="selected-fighter-icon-container">
+                                    <img 
+                                      src={`${BASE_URL}/icons/${styleIcon}`}
+                                      alt={style}
+                                      className="selected-fighter-icon"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                        const parent = (e.target as HTMLImageElement).parentElement;
+                                        if (parent) {
+                                          parent.innerHTML = style === 'Striker' ? '👊' : 
+                                                            style === 'Grappler' ? '🤼' : 
+                                                            style === 'Universal' ? '⚡' : '👤';
+                                          parent.style.fontSize = '20px';
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  <div 
+                                    className="selected-fighter-divider"
+                                    style={{ color: getWeightClassColor(sel.weightClass) }}
+                                  ></div>
+                                  <div className="selected-fighter-name">
+                                    {sel.fighter.Fighter}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
                       <div className="tournament-footer">
                         <div className="footer-total-damage">
                           TOTAL DAMAGE: {calculateTotalDamage(
@@ -1207,7 +1180,7 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
                             )
                           : null;
                         
-                        const isLoading = isOpeningSelection;
+                        const isLoading = false; // или просто убираем эту переменную
                         
                         return (
                           <div key={tournament.name} className="tournament-card-wrapper">
@@ -1215,9 +1188,9 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
                               className="tournament-card" 
                               onClick={() => handleUpcomingTournamentClick(tournament)}
                               style={{ 
-                                opacity: isLoading ? 0.7 : 1, 
-                                pointerEvents: isLoading ? 'none' : 'auto' 
-                              }}
+  opacity: 1, 
+  pointerEvents: 'auto' 
+}}
                             >
                               <div className="tournament-card-damage-box">
                                 {isLoading && !hasBetForThisTournament 
@@ -1295,21 +1268,17 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
                     const selectedFighter = selectedFighters.get(weightClass);
 
                     return (
-                      <div 
-  key={weightClass} 
-  className="weight-section"
->
-  <div 
-    className="weight-header" 
-    data-weight={weightClass}
-    style={{ backgroundColor: getWeightClassColor(weightClass) }}
-  >
-    <span>{weightClass}</span>
-    {isWeightSelected && (
-      <span className="selected-badge">{selectedFighter?.Fighter}</span>
-    )}
-  </div>
-
+                      <div key={weightClass} className="weight-section">
+                        <div 
+                          className="weight-header" 
+                          data-weight={weightClass}
+                          style={{ backgroundColor: getWeightClassColor(weightClass) }}
+                        >
+                          <span>{weightClass}</span>
+                          {isWeightSelected && (
+                            <span className="selected-badge">{selectedFighter?.Fighter}</span>
+                          )}
+                        </div>
                         {pairs.map((pair, idx) => (
                           <div key={idx} className="fight-pair">
                             {pair.map(fighter => (
@@ -1366,17 +1335,16 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
         )}
 
         {currentView === 'pvp' && (
-  <Pvp
-    pastTournaments={pastTournaments}
-    userSelections={userData.mySelections.past}
-    userAvatar={telegramUser?.photoUrl}
-    userId={telegramUser?.id}
-    userName={userData.username} // ← добавить эту строку
-    allProfiles={allProfiles}
-    loadTournamentData={loadTournamentData}
-  />
-)}
-
+          <Pvp
+            pastTournaments={pastTournaments}
+            userSelections={userData.mySelections.past}
+            userAvatar={telegramUser?.photoUrl}
+            userId={telegramUser?.id}
+            userName={userData.username}
+            allProfiles={allProfiles}
+            loadTournamentData={loadTournamentData}
+          />
+        )}
       </main>
 
       {showRewardsModal && pendingRewards && (
@@ -1403,6 +1371,10 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
                     <span className="reward-value">+{pendingRewards.totalCoins} 🪙</span>
                   </div>
                   <div className="reward-item">
+                    <span className="reward-label">TICKETS:</span>
+                    <span className="reward-value">+{pendingRewards.totalTickets} 🎫</span>
+                  </div>
+                  <div className="reward-item">
                     <span className="reward-label">EXP:</span>
                     <span className="reward-value">+{pendingRewards.totalExp} ✨</span>
                   </div>
@@ -1420,6 +1392,62 @@ const loadTournamentData = useCallback(async (tournamentName: string) => {
               {isAcceptingRewards ? 'ACCEPTING...' : 'ACCEPT'}
             </button>
           </div>
+        </div>
+      )}
+
+      {showBetModal && selectedBetTournament && (
+        <div className="bet-modal-overlay">
+          <div className="bet-modal">
+            <div className="bet-modal-header">
+              <span className="bet-modal-title">Ready to make a bet on {selectedBetTournament.name}</span>
+              <button className="bet-modal-close" onClick={() => setShowBetModal(false)}>CLOSE</button>
+            </div>
+            
+            <div className="bet-modal-slider-container">
+              <div className="bet-slider">
+                <div 
+                  className="bet-slider-fill" 
+                  style={{ 
+                    width: availableBetAmounts.length > 1 
+                      ? `${((selectedBetAmount - availableBetAmounts[0]) / (availableBetAmounts[availableBetAmounts.length - 1] - availableBetAmounts[0])) * 100}%` 
+                      : '100%' 
+                  }}
+                ></div>
+                {availableBetAmounts.map((amount) => {
+  const minAmount = availableBetAmounts[0];
+  const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
+  const position = maxAmount > minAmount 
+    ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 
+    : 50;
+  const isMin = amount === minAmount;
+  const isMax = amount === maxAmount;
+  
+  return (
+    <button
+      key={amount}
+      className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`}
+      style={{ left: `${position}%` }}
+      onClick={() => setSelectedBetAmount(amount)}
+    >
+      {isMin ? 'MIN' : isMax ? 'MAX' : ''}
+    </button>
+  );
+})}
+              </div>
+            </div>
+            
+            <div className="bet-modal-footer">
+              <button className="bet-confirm-button" onClick={openSelectionWithBet}>
+                Bet size: {selectedBetAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showNotEnoughCoins && (
+        <div className="battle-overlay-text">
+          Not enough coins...
         </div>
       )}
 
