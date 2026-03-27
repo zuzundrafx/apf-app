@@ -1396,54 +1396,61 @@ function App() {
       )}
 
       {showBetModal && selectedBetTournament && (
-        <div className="bet-modal-overlay">
-          <div className="bet-modal">
-            <div className="bet-modal-header">
-              <span className="bet-modal-title">Ready to make a bet on {selectedBetTournament.name}</span>
-              <button className="bet-modal-close" onClick={() => setShowBetModal(false)}>CLOSE</button>
-            </div>
-            
-            <div className="bet-modal-slider-container">
-              <div className="bet-slider">
-                <div 
-                  className="bet-slider-fill" 
-                  style={{ 
-                    width: availableBetAmounts.length > 1 
-                      ? `${((selectedBetAmount - availableBetAmounts[0]) / (availableBetAmounts[availableBetAmounts.length - 1] - availableBetAmounts[0])) * 100}%` 
-                      : '100%' 
-                  }}
-                ></div>
-                {availableBetAmounts.map((amount) => {
-  const minAmount = availableBetAmounts[0];
-  const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
-  const position = maxAmount > minAmount 
-    ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 
-    : 50;
-  const isMin = amount === minAmount;
-  const isMax = amount === maxAmount;
-  
-  return (
-    <button
-      key={amount}
-      className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`}
-      style={{ left: `${position}%` }}
-      onClick={() => setSelectedBetAmount(amount)}
-    >
-      {isMin ? 'MIN' : isMax ? 'MAX' : ''}
-    </button>
-  );
-})}
-              </div>
-            </div>
-            
-            <div className="bet-modal-footer">
-              <button className="bet-confirm-button" onClick={openSelectionWithBet}>
-                Bet size: {selectedBetAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
-              </button>
-            </div>
+  <div className="bet-modal-overlay">
+    <div className="bet-modal">
+      <div className="bet-modal-header">
+        <span className="bet-modal-title">Ready to make a bet on {selectedBetTournament.name}</span>
+        <button className="bet-modal-close" onClick={() => setShowBetModal(false)}>CLOSE</button>
+      </div>
+      
+      <div className="bet-modal-slider-container">
+        <div className="bet-slider-wrapper">
+          <div className="bet-slider">
+            <div 
+              className="bet-slider-fill" 
+              style={{ 
+                width: availableBetAmounts.length > 1 
+                  ? `${((selectedBetAmount - availableBetAmounts[0]) / (availableBetAmounts[availableBetAmounts.length - 1] - availableBetAmounts[0])) * 100}%` 
+                  : '100%' 
+              }}
+            ></div>
+            {availableBetAmounts.map((amount) => {
+              const minAmount = availableBetAmounts[0];
+              const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
+              const position = maxAmount > minAmount 
+                ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 
+                : 50;
+              const isMin = amount === minAmount;
+              const isMax = amount === maxAmount;
+              
+              return (
+                <div
+                  key={amount}
+                  className="bet-slider-marker-container"
+                  style={{ left: `${position}%` }}
+                >
+                  <div 
+                    className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`}
+                    onClick={() => setSelectedBetAmount(amount)}
+                  ></div>
+                  <span className="bet-marker-value">
+                    {isMin ? 'MIN' : isMax ? 'MAX' : amount}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
-      )}
+      </div>
+      
+      <div className="bet-modal-footer">
+        <button className="bet-confirm-button" onClick={openSelectionWithBet}>
+          Bet size: {selectedBetAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {showNotEnoughCoins && (
         <div className="battle-overlay-text">
