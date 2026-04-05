@@ -166,6 +166,9 @@ const TournamentSkeleton = () => (
   </section>
 );
 
+
+
+
 function App() {
   const { pastTournaments, upcomingTournaments, loading, loadingProgress, loadingStage, error } = useTournaments();
   
@@ -183,6 +186,9 @@ function App() {
   } | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   
+  const [animatedBetAmount, setAnimatedBetAmount] = useState(5);
+  const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
+
   // Кэш всех профилей для рейтинга
   const [allProfiles, setAllProfiles] = useState<Map<string, UserProfile>>(new Map());
 
@@ -214,6 +220,8 @@ function App() {
 
     const data = { weightClasses, results, fightersData };
     
+    
+
     setTournamentDataCache(prev => {
       const newMap = new Map(prev);
       newMap.set(tournamentName, data);
@@ -713,7 +721,6 @@ function App() {
     
     loadSelectionData(selectedBetTournament);
   };
-  /* */
 
   const handleUpcomingTournamentClick = (tournament: Tournament) => {
     
@@ -1417,38 +1424,45 @@ function App() {
                     }}
                   ></div>
                   {availableBetAmounts.map((amount) => {
-                    const minAmount = availableBetAmounts[0];
-                    const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
-                    const position = maxAmount > minAmount 
-                      ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 
-                      : 50;
-                    const isMin = amount === minAmount;
-                    const isMax = amount === maxAmount;
-                    
-                    return (
-                      <div
-                        key={amount}
-                        className="bet-slider-marker-container"
-                        style={{ left: `${position}%` }}
-                      >
-                        <div 
-                          className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`}
-                          onClick={() => setSelectedBetAmount(amount)}
-                        ></div>
-                        <span className="bet-marker-value">
-                          {isMin ? 'MIN' : isMax ? 'MAX' : amount}
-                        </span>
-                      </div>
-                    );
-                  })}
+  const minAmount = availableBetAmounts[0];
+  const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
+  const position = maxAmount > minAmount 
+    ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 
+    : 50;
+  const isMin = amount === minAmount;
+  const isMax = amount === maxAmount;
+  
+  return (
+    <div
+      key={amount}
+      className="bet-slider-marker-container"
+      style={{ left: `${position}%` }}
+    >
+      <div 
+        className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`}
+        onClick={() => {
+          setAnimatedBetAmount(amount);
+          setShowBetAmountIncrease(true);
+          setSelectedBetAmount(amount);
+          setTimeout(() => setShowBetAmountIncrease(false), 500);
+        }}
+      ></div>
+      <span className="bet-marker-value">
+        {isMin ? 'MIN' : isMax ? 'MAX' : amount}
+      </span>
+    </div>
+  );
+})}
                 </div>
               </div>
             </div>
             
             <div className="bet-modal-footer">
-              <button className="bet-confirm-button" onClick={openSelectionWithBet}>
-                BET SIZE: {selectedBetAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
-              </button>
+            <button className="bet-confirm-button" onClick={openSelectionWithBet}>
+                BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>
+                {animatedBetAmount}
+                </span> <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
+            </button>
             </div>
           </div>
         </div>
