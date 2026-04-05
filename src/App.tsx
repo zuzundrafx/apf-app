@@ -863,6 +863,7 @@ function App() {
     const availableAmounts = calculateAvailableBetAmounts(userData.coins);
     setPvpAvailableBetAmounts(availableAmounts);
     setPvpSelectedBetAmount(availableAmounts[0] || 5);
+    setAnimatedBetAmount(availableAmounts[0] || 5);
     setPvpSelectedTournament(tournament);
     setShowPvpBetModal(true);
   };
@@ -878,18 +879,15 @@ function App() {
     setIsPvpBetConfirming(true);
     
     try {
-      // Списываем монеты и билет
       const newCoins = userData.coins - pvpSelectedBetAmount;
       const newTickets = userData.tickets - 1;
       
-      // Обновляем состояние
       setUserData(prev => ({
         ...prev,
         coins: newCoins,
         tickets: newTickets
       }));
       
-      // Сохраняем профиль
       const updatedProfile = {
         userId: telegramUser.id,
         username: userData.username,
@@ -906,10 +904,6 @@ function App() {
       await saveUserProfile(updatedProfile);
       updateProfileInCache(updatedProfile);
       
-      // Закрываем окно ставки
-      setShowPvpBetModal(false);
-      
-      // Запускаем поиск соперника
       if (pvpRef.current) {
         await pvpRef.current.engage(pvpSelectedTournament, pvpSelectedBetAmount);
       }
@@ -993,7 +987,6 @@ function App() {
       <main className="main-content">
         {currentView === 'main' && (
           <div className="tournaments-container">
-            {/* Past Tournaments Section */}
             {pastTournaments.length > 0 ? (
               <section className="tournament-section past">
                 <div className="tournament-header">
@@ -1127,7 +1120,6 @@ function App() {
               <TournamentSkeleton />
             )}
 
-            {/* Upcoming Tournaments Section */}
             {upcomingTournaments.length > 0 ? (
               <section className="tournament-section upcoming">
                 <div className="tournament-header">
@@ -1520,7 +1512,6 @@ function App() {
         </div>
       )}
 
-      {/* PvP Bet Modal */}
       {showPvpBetModal && pvpSelectedTournament && (
         <div className="bet-modal-overlay">
           <div className="bet-modal">
@@ -1557,7 +1548,12 @@ function App() {
                       >
                         <div 
                           className={`bet-slider-marker ${pvpSelectedBetAmount === amount ? 'active' : ''}`}
-                          onClick={() => setPvpSelectedBetAmount(amount)}
+                          onClick={() => {
+                            setAnimatedBetAmount(amount);
+                            setShowBetAmountIncrease(true);
+                            setPvpSelectedBetAmount(amount);
+                            setTimeout(() => setShowBetAmountIncrease(false), 500);
+                          }}
                         ></div>
                         <span className="bet-marker-value">
                           {isMin ? 'MIN' : isMax ? 'MAX' : amount}
@@ -1572,17 +1568,21 @@ function App() {
             <div className="bet-modal-footer">
               <button 
                 className="bet-confirm-button" 
-                onClick={confirmPvpBet}
+                onClick={() => {
+                  setShowPvpBetModal(false);
+                  confirmPvpBet();
+                }}
                 disabled={isPvpBetConfirming}
               >
-                BET SIZE: {pvpSelectedBetAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /> + 1 <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" />
+                BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>
+                  {animatedBetAmount}
+                </span> <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /> + 1 <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" />
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* PvP Not Enough Message */}
       {pvpNotEnoughMessage && (
         <div className="upcoming-overlay-text">
           {pvpNotEnoughMessage}

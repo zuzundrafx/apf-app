@@ -73,13 +73,11 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     return Math.round(totalDamage);
   };
 
-  // Проверка возможности участия в PvP
   const canJoinPvp = (tournament: Tournament): boolean => {
     const hasBet = hasUserBetOnTournament(tournament);
     return hasBet && userCoins >= 5 && userTickets >= 1;
   };
 
-  // Получение причины невозможности участия
   const getPvpBlockReason = (): string => {
     if (userCoins < 5 && userTickets < 1) {
       return 'Not enough coins & tickets';
@@ -160,7 +158,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     setIsEngaging(false);
   };
 
-  // Expose engage method to parent
   useImperativeHandle(ref, () => ({
     engage: handleEngage
   }));
