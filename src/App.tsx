@@ -713,6 +713,7 @@ function App() {
     
     loadSelectionData(selectedBetTournament);
   };
+  /* */
 
   const handleUpcomingTournamentClick = (tournament: Tournament) => {
     
