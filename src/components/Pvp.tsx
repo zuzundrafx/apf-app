@@ -1,7 +1,7 @@
 // src/components/Pvp.tsx
 
-import React, { useState } from 'react';
-import { Tournament, SelectedFighter, Fighter, UserResult } from '../types';  // ← импортируем UserResult из types
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import { Tournament, SelectedFighter, Fighter, UserResult } from '../types';
 import { UserProfile } from '../api/userProfiles';
 import ArenaModal from './ArenaModal';
 
@@ -11,7 +11,11 @@ interface PvpProps {
   userAvatar?: string;
   userId?: string;
   userName: string;
+  userCoins: number;
+  userTickets: number;
   allProfiles: Map<string, UserProfile>;
+  onOpenBetModal: (tournament: Tournament) => void;
+  onShowNotEnough: (message: string) => void;
   loadTournamentData: (tournamentName: string) => Promise<{
     weightClasses: string[];
     results: UserResult[];
@@ -19,15 +23,23 @@ interface PvpProps {
   }>;
 }
 
-const Pvp: React.FC<PvpProps> = ({
+export interface PvpRef {
+  engage: (tournament: Tournament, betAmount: number) => Promise<void>;
+}
+
+const Pvp = forwardRef<PvpRef, PvpProps>(({
   pastTournaments,
   userSelections,
   userAvatar,
   userId,
   userName,
+  userCoins,
+  userTickets,
   allProfiles,
+  onOpenBetModal,
+  onShowNotEnough,
   loadTournamentData,
-}) => {
+}, ref) => {
   const [arenaData, setArenaData] = useState<{
     tournament: Tournament;
     weightClasses: string[];
@@ -61,7 +73,27 @@ const Pvp: React.FC<PvpProps> = ({
     return Math.round(totalDamage);
   };
 
-  const handleEngage = async (tournament: Tournament) => {
+  // Проверка возможности участия в PvP
+  const canJoinPvp = (tournament: Tournament): boolean => {
+    const hasBet = hasUserBetOnTournament(tournament);
+    return hasBet && userCoins >= 5 && userTickets >= 1;
+  };
+
+  // Получение причины невозможности участия
+  const getPvpBlockReason = (): string => {
+    if (userCoins < 5 && userTickets < 1) {
+      return 'Not enough coins & tickets';
+    }
+    if (userCoins < 5) {
+      return 'Not enough coins';
+    }
+    if (userTickets < 1) {
+      return 'Not enough tickets';
+    }
+    return '';
+  };
+
+  const handleEngage = async (tournament: Tournament, betAmount: number) => {
     if (!userId || isEngaging || arenaData) return;
     
     setIsEngaging(true);
@@ -69,7 +101,6 @@ const Pvp: React.FC<PvpProps> = ({
     try {
       const tournamentData = await loadTournamentData(tournament.name);
       
-      // Создаем карту бойцов для быстрого поиска по имени
       const fightersMap = new Map<string, Fighter>();
       tournamentData.fightersData.forEach((fighter: Fighter) => {
         fightersMap.set(fighter.Fighter, fighter);
@@ -89,13 +120,11 @@ const Pvp: React.FC<PvpProps> = ({
       const selectedRival = rivals[randomIndex];
       const rivalProfile = allProfiles.get(selectedRival.userId);
       
-      // Обогащаем выборы соперника полной статистикой
-      const enrichedRivalSelections = selectedRival.selections.map((sel: SelectedFighter) => ({  // ← добавляем тип SelectedFighter
+      const enrichedRivalSelections = selectedRival.selections.map((sel: SelectedFighter) => ({
         ...sel,
         fighter: fightersMap.get(sel.fighter.Fighter) || sel.fighter
       }));
       
-      // Открываем арену с обогащенными данными
       setArenaData({
         tournament,
         weightClasses: tournamentData.weightClasses,
@@ -114,10 +143,27 @@ const Pvp: React.FC<PvpProps> = ({
     }
   };
 
+  const handlePvpClick = (tournament: Tournament) => {
+    if (!canJoinPvp(tournament)) {
+      const reason = getPvpBlockReason();
+      if (reason) {
+        onShowNotEnough(reason);
+      }
+      return;
+    }
+    
+    onOpenBetModal(tournament);
+  };
+
   const handleSurrender = () => {
     setArenaData(null);
     setIsEngaging(false);
   };
+
+  // Expose engage method to parent
+  useImperativeHandle(ref, () => ({
+    engage: handleEngage
+  }));
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
@@ -133,11 +179,11 @@ const Pvp: React.FC<PvpProps> = ({
         {pastTournaments.slice(0, 3).map((tournament) => {
           const userDamage = getUserDamageForTournament(tournament);
           const hasBet = hasUserBetOnTournament(tournament);
-          const isDisabled = !!arenaData || isEngaging || !hasBet;
+          const canJoin = canJoinPvp(tournament);
+          const isDisabled = !!arenaData || isEngaging || !canJoin;
           
           return (
             <div key={tournament.id} className="pvp-tournament-card">
-              {/* Верхняя часть */}
               <div className="pvp-card-top">
                 <div className="pvp-card-league" style={{ backgroundColor: '#B20101' }}>
                   <span>{tournament.league || 'UFC'}</span>
@@ -147,7 +193,6 @@ const Pvp: React.FC<PvpProps> = ({
                 </div>
               </div>
 
-              {/* Средняя часть */}
               <div className="pvp-card-middle">
                 <div className="pvp-middle-left">
                   <div className="pvp-player-avatar">
@@ -176,7 +221,6 @@ const Pvp: React.FC<PvpProps> = ({
                 </div>
               </div>
 
-              {/* Нижняя часть */}
               <div className="pvp-card-bottom">
                 <div className="pvp-bottom-left">
                   <div className={`pvp-damage-block ${!hasBet ? 'disabled' : ''}`}>
@@ -194,11 +238,10 @@ const Pvp: React.FC<PvpProps> = ({
                 <div className="pvp-bottom-right">
                   <button 
                     className={`pvp-engage-button ${isEngaging ? 'loading' : ''} ${isDisabled ? 'disabled' : ''}`}
-                    onClick={() => handleEngage(tournament)}
+                    onClick={() => handlePvpClick(tournament)}
                     disabled={isDisabled}
                   >
-                    {isEngaging ? 'SEARCHING...' : `ENTRY PASS: 50 🪙`}
-                    {!hasBet && <span className="pvp-lock-icon">🔒</span>}
+                    {isEngaging ? 'SEARCHING...' : 'ENTRY BET'}
                   </button>
                 </div>
               </div>
@@ -222,6 +265,6 @@ const Pvp: React.FC<PvpProps> = ({
       )}
     </div>
   );
-};
+});
 
 export default Pvp;

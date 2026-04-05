@@ -1,4 +1,4 @@
-﻿﻿import { useState, useEffect, useCallback } from 'react';
+﻿﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
 import LeaderboardItem from './components/LeaderboardItem';
@@ -124,7 +124,6 @@ function getWeightClassColor(weightClass: string): string {
   return colors[weightClass] || '#666666';
 }
 
-/// Функция для определения стиля бойца
 function getFighterStyle(fighter: SelectedFighter): string {
   const str = Number(fighter.fighter.Str) || 0;
   const td = Number(fighter.fighter.Td) || 0;
@@ -153,7 +152,6 @@ function getStyleIconFilename(style: string): string {
   return icons[style] || 'Simple_style_icon.webp';
 }
 
-// Компонент скелетона для загрузки
 const TournamentSkeleton = () => (
   <section className="tournament-section skeleton">
     <div className="tournament-header skeleton-header">
@@ -165,9 +163,6 @@ const TournamentSkeleton = () => (
     </div>
   </section>
 );
-
-
-
 
 function App() {
   const { pastTournaments, upcomingTournaments, loading, loadingProgress, loadingStage, error } = useTournaments();
@@ -189,17 +184,13 @@ function App() {
   const [animatedBetAmount, setAnimatedBetAmount] = useState(5);
   const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
 
-  // Кэш всех профилей для рейтинга
   const [allProfiles, setAllProfiles] = useState<Map<string, UserProfile>>(new Map());
-
-  // Кэш данных турниров
   const [tournamentDataCache, setTournamentDataCache] = useState<Map<string, {
     weightClasses: string[];
     results: UserResult[];
     fightersData: Fighter[];
   }>>(new Map());
 
-  // Функция для загрузки данных турнира (ленивая)
   const loadTournamentData = useCallback(async (tournamentName: string) => {
     console.log(`📥 Загружаем данные для турнира: ${tournamentName}`);
     
@@ -220,8 +211,6 @@ function App() {
 
     const data = { weightClasses, results, fightersData };
     
-    
-
     setTournamentDataCache(prev => {
       const newMap = new Map(prev);
       newMap.set(tournamentName, data);
@@ -231,7 +220,6 @@ function App() {
     return data;
   }, [pastTournaments, tournamentDataCache]);
 
-  // Состояния для окна наград
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   const [pendingRewards, setPendingRewards] = useState<{
     tournamentName: string;
@@ -241,26 +229,33 @@ function App() {
     totalExp: number;
   } | null>(null);
 
-  // Состояние для данных окна выбора
   const [selectionData, setSelectionData] = useState<Fighter[] | null>(null);
   const [loadingSelection, setLoadingSelection] = useState(false);
 
-  // Состояния для переключения между карточкой турнира и карточками бойцов
   const [showPastFighters, setShowPastFighters] = useState(false);
   const [selectedPastTournament, setSelectedPastTournament] = useState<string | null>(null);
   const [selectedUpcomingTournament, setSelectedUpcomingTournament] = useState<string | null>(null);
   
-  // Состояние для блокировки кнопок
   const [isClosing, setIsClosing] = useState(false);
   const [isAcceptingRewards, setIsAcceptingRewards] = useState(false);
   
-  // Состояния для модального окна ставки
+  // Состояния для модального окна ставки (обычная ставка на турнир)
   const [showBetModal, setShowBetModal] = useState(false);
   const [selectedBetTournament, setSelectedBetTournament] = useState<Tournament | null>(null);
   const [selectedBetAmount, setSelectedBetAmount] = useState(5);
   const [availableBetAmounts, setAvailableBetAmounts] = useState<number[]>([]);
   const [currentBetAmount, setCurrentBetAmount] = useState<number | null>(null);
   const [showNotEnoughCoins, setShowNotEnoughCoins] = useState(false);
+
+  // Состояния для PvP ставки
+  const [showPvpBetModal, setShowPvpBetModal] = useState(false);
+  const [pvpSelectedBetAmount, setPvpSelectedBetAmount] = useState(5);
+  const [pvpAvailableBetAmounts, setPvpAvailableBetAmounts] = useState<number[]>([]);
+  const [pvpSelectedTournament, setPvpSelectedTournament] = useState<Tournament | null>(null);
+  const [pvpNotEnoughMessage, setPvpNotEnoughMessage] = useState<string | null>(null);
+  const [isPvpBetConfirming, setIsPvpBetConfirming] = useState(false);
+
+  const pvpRef = useRef<{ engage: (tournament: Tournament, betAmount: number) => Promise<void> } | null>(null);
 
   const [userData, setUserData] = useState({
     username: 'Player',
@@ -287,7 +282,6 @@ function App() {
     return roundDamage(total);
   };
 
-  // Функция расчета доступных ставок
   const calculateAvailableBetAmounts = (userCoins: number): number[] => {
     if (userCoins < 5) return [];
     
@@ -313,7 +307,6 @@ function App() {
     return amounts.slice(0, 9);
   };
 
-  // Загружаем все профили
   useEffect(() => {
     const loadAllUserProfiles = async () => {
       console.log('📥 Загружаем все профили для рейтинга...');
@@ -337,7 +330,6 @@ function App() {
     });
   }, []);
 
-  // Функция принятия наград
   const acceptRewards = async () => {
     if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
     
@@ -437,7 +429,6 @@ function App() {
     }
   };
 
-  // Функция загрузки данных для окна выбора
   const loadSelectionData = async (tournament: Tournament) => {
     if (!tournament) return;
     
@@ -509,7 +500,6 @@ function App() {
     }
   };
 
-  // Инициализация Telegram WebApp
   useEffect(() => {
     let isMounted = true;
     
@@ -609,7 +599,6 @@ function App() {
     return () => { isMounted = false; };
   }, [updateProfileInCache]);
 
-  // Загружаем результаты пользователя
   useEffect(() => {
     let isMounted = true;
     
@@ -693,7 +682,6 @@ function App() {
     return () => { isMounted = false; };
   }, [pastTournaments, upcomingTournaments, telegramUser, profileLoaded]);
 
-  // Загружаем рейтинг
   useEffect(() => {
     if (currentView === 'leaderboard' && pastTournaments.length > 0) {
       setLeaderboardLoading(true);
@@ -723,7 +711,6 @@ function App() {
   };
 
   const handleUpcomingTournamentClick = (tournament: Tournament) => {
-    
     console.log('🔴 Клик по турниру:', tournament.name);
     console.log('💰 Монет:', userData.coins);
 
@@ -735,17 +722,10 @@ function App() {
       setSelectedUpcomingTournament(tournament.name);
     } else {
       if (userData.coins < 5) {
-          console.log('⚠️ Недостаточно монет, показываем надпись');
-          console.log('Текущее showNotEnoughCoins:', showNotEnoughCoins);
-
-
         if (!showNotEnoughCoins) {
-        setShowNotEnoughCoins(true);
-        setTimeout(() => setShowNotEnoughCoins(false), 1000);
-        } else {
-        console.log('🚫 Надпись уже показывается, игнорируем');
-      }
-        
+          setShowNotEnoughCoins(true);
+          setTimeout(() => setShowNotEnoughCoins(false), 1000);
+        }
         return;
       }
       
@@ -878,6 +858,71 @@ function App() {
     }
   };
 
+  // PvP functions
+  const openPvpBetModal = (tournament: Tournament) => {
+    const availableAmounts = calculateAvailableBetAmounts(userData.coins);
+    setPvpAvailableBetAmounts(availableAmounts);
+    setPvpSelectedBetAmount(availableAmounts[0] || 5);
+    setPvpSelectedTournament(tournament);
+    setShowPvpBetModal(true);
+  };
+
+  const handlePvpNotEnough = (message: string) => {
+    setPvpNotEnoughMessage(message);
+    setTimeout(() => setPvpNotEnoughMessage(null), 1000);
+  };
+
+  const confirmPvpBet = async () => {
+    if (!pvpSelectedTournament || !telegramUser || isPvpBetConfirming) return;
+    
+    setIsPvpBetConfirming(true);
+    
+    try {
+      // Списываем монеты и билет
+      const newCoins = userData.coins - pvpSelectedBetAmount;
+      const newTickets = userData.tickets - 1;
+      
+      // Обновляем состояние
+      setUserData(prev => ({
+        ...prev,
+        coins: newCoins,
+        tickets: newTickets
+      }));
+      
+      // Сохраняем профиль
+      const updatedProfile = {
+        userId: telegramUser.id,
+        username: userData.username,
+        photoUrl: telegramUser.photoUrl,
+        level: userData.level,
+        experience: userData.totalExp,
+        expPoints: userData.expPoints,
+        coins: newCoins,
+        tickets: newTickets,
+        ton: userData.ton,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      await saveUserProfile(updatedProfile);
+      updateProfileInCache(updatedProfile);
+      
+      // Закрываем окно ставки
+      setShowPvpBetModal(false);
+      
+      // Запускаем поиск соперника
+      if (pvpRef.current) {
+        await pvpRef.current.engage(pvpSelectedTournament, pvpSelectedBetAmount);
+      }
+      
+    } catch (error) {
+      console.error('Ошибка при подтверждении PvP ставки:', error);
+      alert('Error placing bet');
+    } finally {
+      setIsPvpBetConfirming(false);
+      setPvpSelectedTournament(null);
+    }
+  };
+
   if (loading || loadingProfile) {
     return (
       <div className="app">
@@ -948,6 +993,7 @@ function App() {
       <main className="main-content">
         {currentView === 'main' && (
           <div className="tournaments-container">
+            {/* Past Tournaments Section */}
             {pastTournaments.length > 0 ? (
               <section className="tournament-section past">
                 <div className="tournament-header">
@@ -1081,6 +1127,7 @@ function App() {
               <TournamentSkeleton />
             )}
 
+            {/* Upcoming Tournaments Section */}
             {upcomingTournaments.length > 0 ? (
               <section className="tournament-section upcoming">
                 <div className="tournament-header">
@@ -1210,10 +1257,10 @@ function App() {
                       </div>
                       
                       {showNotEnoughCoins && (
-  <div className="upcoming-overlay-text">
-    Not enough coins...
-  </div>
-)}
+                        <div className="upcoming-overlay-text">
+                          Not enough coins...
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -1345,12 +1392,17 @@ function App() {
 
         {currentView === 'pvp' && (
           <Pvp
+            ref={pvpRef}
             pastTournaments={pastTournaments}
             userSelections={userData.mySelections.past}
             userAvatar={telegramUser?.photoUrl}
             userId={telegramUser?.id}
             userName={userData.username}
+            userCoins={userData.coins}
+            userTickets={userData.tickets}
             allProfiles={allProfiles}
+            onOpenBetModal={openPvpBetModal}
+            onShowNotEnough={handlePvpNotEnough}
             loadTournamentData={loadTournamentData}
           />
         )}
@@ -1424,47 +1476,116 @@ function App() {
                     }}
                   ></div>
                   {availableBetAmounts.map((amount) => {
-  const minAmount = availableBetAmounts[0];
-  const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
-  const position = maxAmount > minAmount 
-    ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 
-    : 50;
-  const isMin = amount === minAmount;
-  const isMax = amount === maxAmount;
-  
-  return (
-    <div
-      key={amount}
-      className="bet-slider-marker-container"
-      style={{ left: `${position}%` }}
-    >
-      <div 
-        className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`}
-        onClick={() => {
-          setAnimatedBetAmount(amount);
-          setShowBetAmountIncrease(true);
-          setSelectedBetAmount(amount);
-          setTimeout(() => setShowBetAmountIncrease(false), 500);
-        }}
-      ></div>
-      <span className="bet-marker-value">
-        {isMin ? 'MIN' : isMax ? 'MAX' : amount}
-      </span>
-    </div>
-  );
-})}
+                    const minAmount = availableBetAmounts[0];
+                    const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
+                    const position = maxAmount > minAmount 
+                      ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 
+                      : 50;
+                    const isMin = amount === minAmount;
+                    const isMax = amount === maxAmount;
+                    
+                    return (
+                      <div
+                        key={amount}
+                        className="bet-slider-marker-container"
+                        style={{ left: `${position}%` }}
+                      >
+                        <div 
+                          className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`}
+                          onClick={() => {
+                            setAnimatedBetAmount(amount);
+                            setShowBetAmountIncrease(true);
+                            setSelectedBetAmount(amount);
+                            setTimeout(() => setShowBetAmountIncrease(false), 500);
+                          }}
+                        ></div>
+                        <span className="bet-marker-value">
+                          {isMin ? 'MIN' : isMax ? 'MAX' : amount}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
             
             <div className="bet-modal-footer">
-            <button className="bet-confirm-button" onClick={openSelectionWithBet}>
+              <button className="bet-confirm-button" onClick={openSelectionWithBet}>
                 BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>
-                {animatedBetAmount}
+                  {animatedBetAmount}
                 </span> <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
-            </button>
+              </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* PvP Bet Modal */}
+      {showPvpBetModal && pvpSelectedTournament && (
+        <div className="bet-modal-overlay">
+          <div className="bet-modal">
+            <div className="bet-modal-header">
+              <span className="bet-modal-title">{pvpSelectedTournament.name}</span>
+              <button className="bet-modal-close" onClick={() => setShowPvpBetModal(false)}>CLOSE</button>
+            </div>
+            
+            <div className="bet-modal-slider-container">
+              <div className="bet-slider-wrapper">
+                <div className="bet-slider">
+                  <div 
+                    className="bet-slider-fill" 
+                    style={{ 
+                      width: pvpAvailableBetAmounts.length > 1 
+                        ? `${((pvpSelectedBetAmount - pvpAvailableBetAmounts[0]) / (pvpAvailableBetAmounts[pvpAvailableBetAmounts.length - 1] - pvpAvailableBetAmounts[0])) * 100}%` 
+                        : '100%' 
+                    }}
+                  ></div>
+                  {pvpAvailableBetAmounts.map((amount) => {
+                    const minAmount = pvpAvailableBetAmounts[0];
+                    const maxAmount = pvpAvailableBetAmounts[pvpAvailableBetAmounts.length - 1];
+                    const position = maxAmount > minAmount 
+                      ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 
+                      : 50;
+                    const isMin = amount === minAmount;
+                    const isMax = amount === maxAmount;
+                    
+                    return (
+                      <div
+                        key={amount}
+                        className="bet-slider-marker-container"
+                        style={{ left: `${position}%` }}
+                      >
+                        <div 
+                          className={`bet-slider-marker ${pvpSelectedBetAmount === amount ? 'active' : ''}`}
+                          onClick={() => setPvpSelectedBetAmount(amount)}
+                        ></div>
+                        <span className="bet-marker-value">
+                          {isMin ? 'MIN' : isMax ? 'MAX' : amount}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            
+            <div className="bet-modal-footer">
+              <button 
+                className="bet-confirm-button" 
+                onClick={confirmPvpBet}
+                disabled={isPvpBetConfirming}
+              >
+                BET SIZE: {pvpSelectedBetAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /> + 1 <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PvP Not Enough Message */}
+      {pvpNotEnoughMessage && (
+        <div className="upcoming-overlay-text">
+          {pvpNotEnoughMessage}
         </div>
       )}
 
