@@ -152,6 +152,8 @@ function getStyleIconFilename(style: string): string {
   return icons[style] || 'Simple_style_icon.webp';
 }
 
+
+
 const TournamentSkeleton = () => (
   <section className="tournament-section skeleton">
     <div className="tournament-header skeleton-header">
@@ -219,6 +221,48 @@ function App() {
     
     return data;
   }, [pastTournaments, tournamentDataCache]);
+
+  const claimBattleRewards = async (rewards: { coins: number; experience: number }) => {
+    if (!telegramUser) return;
+    
+    const newCoins = userData.coins + rewards.coins;
+    const newTotalExp = userData.totalExp + rewards.experience;
+    const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
+    let newExpPoints = userData.expPoints;
+    
+    if (level > userData.level) {
+      const levelsGained = level - userData.level;
+      newExpPoints += levelsGained;
+    }
+    
+    setUserData(prev => ({
+      ...prev,
+      coins: newCoins,
+      totalExp: newTotalExp,
+      level,
+      currentExp,
+      nextLevelExp,
+      expPoints: newExpPoints
+    }));
+    
+    const updatedProfile = {
+      userId: telegramUser.id,
+      username: userData.username,
+      photoUrl: telegramUser.photoUrl,
+      level,
+      experience: newTotalExp,
+      expPoints: newExpPoints,
+      coins: newCoins,
+      tickets: userData.tickets,
+      ton: userData.ton,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    await saveUserProfile(updatedProfile);
+    updateProfileInCache(updatedProfile);
+  };
+
+
 
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   const [pendingRewards, setPendingRewards] = useState<{
@@ -1373,22 +1417,23 @@ function App() {
           </div>
         )}
 
-        {currentView === 'pvp' && (
-          <Pvp
-            ref={pvpRef}
-            pastTournaments={pastTournaments}
-            userSelections={userData.mySelections.past}
-            userAvatar={telegramUser?.photoUrl}
-            userId={telegramUser?.id}
-            userName={userData.username}
-            userCoins={userData.coins}
-            userTickets={userData.tickets}
-            allProfiles={allProfiles}
-            onOpenBetModal={openPvpBetModal}
-            onUpdateBalance={updatePvpBalance}
-            loadTournamentData={loadTournamentData}
-          />
-        )}
+{currentView === 'pvp' && (
+  <Pvp
+    ref={pvpRef}
+    pastTournaments={pastTournaments}
+    userSelections={userData.mySelections.past}
+    userAvatar={telegramUser?.photoUrl}
+    userId={telegramUser?.id}
+    userName={userData.username}
+    userCoins={userData.coins}
+    userTickets={userData.tickets}
+    allProfiles={allProfiles}
+    onOpenBetModal={openPvpBetModal}
+    onUpdateBalance={updatePvpBalance}
+    onClaimRewards={claimBattleRewards}
+    loadTournamentData={loadTournamentData}
+  />
+)}
       </main>
 
       {showRewardsModal && pendingRewards && (

@@ -3186,3 +3186,117 @@ body {
 .bet-amount-value.bet-amount-increase {
   animation: betAmountPulse 0.4s ease-out forwards;
 }
+
+/* ===== НОВОЕ МОДАЛЬНОЕ ОКНО РЕЗУЛЬТАТА БОЯ ===== */
+
+.battle-result-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4000;
+  backdrop-filter: blur(4px);
+}
+
+.battle-result-modal {
+  width: 100%;
+  height: 40%;
+  background: #1c1d1f;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.battle-result-header {
+  width: 100%;
+  height: 20%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.battle-result-header h2 {
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.battle-result-rewards {
+  width: 100%;
+  height: 30%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 0.15vh solid rgba(255, 255, 255, 0.3);
+  border-bottom: 0.15vh solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+}
+
+.rewards-container {
+  display: flex;
+  gap: 8%;
+  align-items: center;
+  justify-content: center;
+}
+
+.reward-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: clamp(16px, 5vw, 20px);
+  font-weight: 700;
+  color: #FFD966;
+}
+
+.reward-icon {
+  width: auto;
+  height: 1.2em;
+  object-fit: contain;
+}
+
+.reward-exp-icon {
+  font-size: 1.2em;
+}
+
+.no-rewards {
+  color: #FFFFFF;
+  font-size: clamp(14px, 4vw, 16px);
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.battle-result-footer {
+  width: 100%;
+  height: 20%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.battle-result-button {
+  width: 90%;
+  height: 90%;
+  background: linear-gradient(180deg, #C9FFCE 0%, #61FF63 100%);
+  border: none;
+  border-radius: 4px;
+  color: #000000;
+  font-size: clamp(14px, 4vw, 16px);
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.battle-result-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(97, 255, 99, 0.3);
+}

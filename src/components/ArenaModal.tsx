@@ -28,6 +28,7 @@ interface ArenaModalProps {
   userTickets?: number;
   allProfiles?: Map<string, UserProfile>;
   onUpdateBalance?: (coins: number, tickets: number) => Promise<void>;
+  onClaimRewards?: (rewards: { coins: number; experience: number }) => Promise<void>;
   loadTournamentData?: (tournamentName: string) => Promise<{
     weightClasses: string[];
     results: UserResult[];
@@ -130,6 +131,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   userTickets,
   allProfiles,
   onUpdateBalance,
+  onClaimRewards,
   loadTournamentData,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -147,6 +149,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     result: 'win' | 'loss' | 'draw' | 'tech-loss';
     resultType?: 'ko' | 'decision-unanimous' | 'decision-split';
   } | null>(null);
+  const [battleRewards, setBattleRewards] = useState<{ coins: number; experience: number } | null>(null);
   const [countdownStep, setCountdownStep] = useState<'ready' | 'steady' | 'fight' | null>('ready');
   const [damagePhase, setDamagePhase] = useState<'idle' | 'first' | 'second'>('idle');
   const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false, false, false]);
@@ -194,6 +197,54 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       avatarElement.classList.remove('avatar-hit', 'avatar-glow');
       (avatarElement as HTMLElement).style.removeProperty('--glow-color');
     }, 300);
+  };
+
+  const calculateRewards = (
+    result: 'win' | 'loss' | 'draw',
+    resultType: 'ko' | 'decision-unanimous' | 'decision-split' | undefined,
+    betAmount: number
+  ): { coins: number; experience: number } => {
+    if (result === 'win') {
+      if (resultType === 'ko') {
+        return {
+          coins: Math.ceil(betAmount * 2.0),
+          experience: 10
+        };
+      }
+      if (resultType === 'decision-unanimous') {
+        return {
+          coins: Math.ceil(betAmount * 1.5),
+          experience: 7
+        };
+      }
+      if (resultType === 'decision-split') {
+        return {
+          coins: Math.ceil(betAmount * 1.2),
+          experience: 5
+        };
+      }
+    }
+    
+    if (result === 'loss') {
+      if (resultType === 'ko') {
+        return { coins: 0, experience: 1 };
+      }
+      if (resultType === 'decision-unanimous') {
+        return { coins: 0, experience: 2 };
+      }
+      if (resultType === 'decision-split') {
+        return { coins: 0, experience: 3 };
+      }
+    }
+    
+    if (result === 'draw') {
+      return {
+        coins: Math.ceil(betAmount * 1.0),
+        experience: 4
+      };
+    }
+    
+    return { coins: 0, experience: 0 };
   };
 
   const calculateBattleScript = (userCards: SelectedFighter[], rivalCards: SelectedFighter[], weightClassList: string[]): BattleEvent[] => {
@@ -556,6 +607,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         break;
 
       case 'battle-end':
+        const betAmount = pvpMode ? (pvpBetAmount || 0) : 0;
+        const rewards = calculateRewards(
+          event.result.result,
+          event.result.resultType,
+          betAmount
+        );
+        setBattleRewards(rewards);
         setBattleResult(event.result);
         break;
     }
@@ -568,6 +626,9 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   }, [currentEventIndex, isLoading, battleScript]);
 
   const handleResultClose = () => {
+    if (battleRewards && onClaimRewards) {
+      onClaimRewards(battleRewards);
+    }
     setBattleResult(null);
     onSurrender();
   };
@@ -883,6 +944,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           isOpen={battleResult.isOpen}
           result={battleResult.result}
           resultType={battleResult.resultType}
+          rewards={battleRewards || undefined}
           onClose={handleResultClose}
         />
       )}

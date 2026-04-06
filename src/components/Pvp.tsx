@@ -16,6 +16,7 @@ interface PvpProps {
   allProfiles: Map<string, UserProfile>;
   onOpenBetModal: (tournament: Tournament) => void;
   onUpdateBalance: (coins: number, tickets: number) => Promise<void>;
+  onClaimRewards: (rewards: { coins: number; experience: number }) => Promise<void>;
   loadTournamentData: (tournamentName: string) => Promise<{
     weightClasses: string[];
     results: UserResult[];
@@ -38,6 +39,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   allProfiles,
   onOpenBetModal,
   onUpdateBalance,
+  onClaimRewards,
   loadTournamentData,
 }, ref) => {
   const [arenaData, setArenaData] = useState<{
@@ -91,7 +93,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   const handleEngage = async (tournament: Tournament, betAmount: number): Promise<void> => {
     if (!userId || arenaData) return;
     
-    // Сразу открываем арену с лоадером
     setArenaData({
       tournament,
       pvpBetAmount: betAmount
@@ -227,6 +228,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           userTickets={userTickets}
           allProfiles={allProfiles}
           onUpdateBalance={onUpdateBalance}
+          onClaimRewards={onClaimRewards}
           loadTournamentData={loadTournamentData}
         />
       )}
