@@ -1,6 +1,6 @@
 // src/components/Pvp.tsx
 
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import { useState, forwardRef, useImperativeHandle } from 'react';
 import { Tournament, SelectedFighter, Fighter, UserResult } from '../types';
 import { UserProfile } from '../api/userProfiles';
 import ArenaModal from './ArenaModal';
@@ -42,16 +42,9 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
 }, ref) => {
   const [arenaData, setArenaData] = useState<{
     tournament: Tournament;
-    weightClasses: string[];
-    rival: {
-      username: string;
-      photoUrl?: string;
-      totalDamage: number;
-      selections: SelectedFighter[];
-    };
+    pvpBetAmount: number;
   } | null>(null);
   
-  const [isLoadingArena, setIsLoadingArena] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
   const [messageText, setMessageText] = useState('');
 
@@ -95,64 +88,14 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     return { canJoin: true, reason: '' };
   };
 
-  const handleEngage = async (tournament: Tournament, betAmount: number) => {
-    if (!userId || isLoadingArena || arenaData) return;
+  const handleEngage = async (tournament: Tournament, betAmount: number): Promise<void> => {
+    if (!userId || arenaData) return;
     
-    // Показываем арену с лоадером
-    setIsLoadingArena(true);
-    
-    try {
-      // 1. Списываем валюту
-      const newCoins = userCoins - betAmount;
-      const newTickets = userTickets - 1;
-      await onUpdateBalance(newCoins, newTickets);
-      
-      // 2. Загружаем данные турнира и ищем соперника
-      const tournamentData = await loadTournamentData(tournament.name);
-      
-      const fightersMap = new Map<string, Fighter>();
-      tournamentData.fightersData.forEach((fighter: Fighter) => {
-        fightersMap.set(fighter.Fighter, fighter);
-      });
-      
-      const rivals = tournamentData.results.filter(r => r.userId !== userId);
-      
-      console.log(`🔍 Найдено соперников: ${rivals.length}`);
-      
-      if (rivals.length === 0) {
-        alert('No rivals available for this tournament');
-        setIsLoadingArena(false);
-        return;
-      }
-      
-      const randomIndex = Math.floor(Math.random() * rivals.length);
-      const selectedRival = rivals[randomIndex];
-      const rivalProfile = allProfiles.get(selectedRival.userId);
-      
-      const enrichedRivalSelections = selectedRival.selections.map((sel: SelectedFighter) => ({
-        ...sel,
-        fighter: fightersMap.get(sel.fighter.Fighter) || sel.fighter
-      }));
-      
-      // 3. Открываем арену с данными
-      setArenaData({
-        tournament,
-        weightClasses: tournamentData.weightClasses,
-        rival: {
-          username: selectedRival.username,
-          photoUrl: rivalProfile?.photoUrl,
-          totalDamage: selectedRival.totalDamage,
-          selections: enrichedRivalSelections
-        }
-      });
-      
-      setIsLoadingArena(false);
-      
-    } catch (error) {
-      console.error('Ошибка при поиске соперника:', error);
-      alert('Error finding rival');
-      setIsLoadingArena(false);
-    }
+    // Сразу открываем арену с лоадером
+    setArenaData({
+      tournament,
+      pvpBetAmount: betAmount
+    });
   };
 
   const handlePvpClick = (tournament: Tournament) => {
@@ -172,7 +115,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
 
   const handleSurrender = () => {
     setArenaData(null);
-    setIsLoadingArena(false);
   };
 
   useImperativeHandle(ref, () => ({
@@ -183,17 +125,15 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
 
   return (
     <div className="pvp-screen">
-      {isLoadingArena && <div className="pvp-overlay" />}
-      
       <div className="pvp-header">
         <div className="pvp-header-title">ACTIVE TOURNAMENTS</div>
       </div>
 
-      <div className={`pvp-list ${isLoadingArena ? 'blurred' : ''}`}>
+      <div className="pvp-list">
         {pastTournaments.slice(0, 3).map((tournament) => {
           const userDamage = getUserDamageForTournament(tournament);
           const hasBet = hasUserBetOnTournament(tournament);
-          const isDisabled = !!arenaData || isLoadingArena || !hasBet;
+          const isDisabled = !!arenaData || !hasBet;
           
           return (
             <div key={tournament.id} className="pvp-tournament-card" style={{ position: 'relative' }}>
@@ -274,12 +214,20 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           tournament={arenaData.tournament}
           userSelections={userSelections}
           userAvatar={userAvatar}
-          userDamage={getUserDamageForTournament(arenaData.tournament) || 0}
+          userDamage={0}
           userName={userName}
-          rivalData={arenaData.rival}
-          weightClasses={arenaData.weightClasses}
+          rivalData={null as any}
+          weightClasses={[]}
           isOpen={true}
           onSurrender={handleSurrender}
+          pvpMode={true}
+          pvpBetAmount={arenaData.pvpBetAmount}
+          userId={userId}
+          userCoins={userCoins}
+          userTickets={userTickets}
+          allProfiles={allProfiles}
+          onUpdateBalance={onUpdateBalance}
+          loadTournamentData={loadTournamentData}
         />
       )}
     </div>

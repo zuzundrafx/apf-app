@@ -868,8 +868,6 @@ function App() {
     setShowPvpBetModal(true);
   };
 
-  
-
   const updatePvpBalance = async (newCoins: number, newTickets: number) => {
     if (!telegramUser) return;
     
@@ -1387,7 +1385,6 @@ function App() {
             userTickets={userData.tickets}
             allProfiles={allProfiles}
             onOpenBetModal={openPvpBetModal}
-            
             onUpdateBalance={updatePvpBalance}
             loadTournamentData={loadTournamentData}
           />
@@ -1576,8 +1573,6 @@ function App() {
           </div>
         </div>
       )}
-
-      
 
       <nav className={`bottom-nav ${currentView === 'selection' ? 'hidden' : ''}`}>
         <button className={`nav-button ${currentView === 'main' ? 'active' : ''}`} onClick={() => setCurrentView('main')}>
