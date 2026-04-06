@@ -873,48 +873,44 @@ function App() {
     setTimeout(() => setPvpNotEnoughMessage(null), 1000);
   };
 
+  const updatePvpBalance = async (newCoins: number, newTickets: number) => {
+    if (!telegramUser) return;
+    
+    setUserData(prev => ({
+      ...prev,
+      coins: newCoins,
+      tickets: newTickets
+    }));
+    
+    const updatedProfile = {
+      userId: telegramUser.id,
+      username: userData.username,
+      photoUrl: telegramUser.photoUrl,
+      level: userData.level,
+      experience: userData.totalExp,
+      expPoints: userData.expPoints,
+      coins: newCoins,
+      tickets: newTickets,
+      ton: userData.ton,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    await saveUserProfile(updatedProfile);
+    updateProfileInCache(updatedProfile);
+  };
+
   const confirmPvpBet = async () => {
     if (!pvpSelectedTournament || !telegramUser || isPvpBetConfirming) return;
     
     setIsPvpBetConfirming(true);
+    setShowPvpBetModal(false);
     
-    try {
-      const newCoins = userData.coins - pvpSelectedBetAmount;
-      const newTickets = userData.tickets - 1;
-      
-      setUserData(prev => ({
-        ...prev,
-        coins: newCoins,
-        tickets: newTickets
-      }));
-      
-      const updatedProfile = {
-        userId: telegramUser.id,
-        username: userData.username,
-        photoUrl: telegramUser.photoUrl,
-        level: userData.level,
-        experience: userData.totalExp,
-        expPoints: userData.expPoints,
-        coins: newCoins,
-        tickets: newTickets,
-        ton: userData.ton,
-        lastUpdated: new Date().toISOString()
-      };
-      
-      await saveUserProfile(updatedProfile);
-      updateProfileInCache(updatedProfile);
-      
-      if (pvpRef.current) {
-        await pvpRef.current.engage(pvpSelectedTournament, pvpSelectedBetAmount);
-      }
-      
-    } catch (error) {
-      console.error('Ошибка при подтверждении PvP ставки:', error);
-      alert('Error placing bet');
-    } finally {
-      setIsPvpBetConfirming(false);
-      setPvpSelectedTournament(null);
+    if (pvpRef.current) {
+      await pvpRef.current.engage(pvpSelectedTournament, pvpSelectedBetAmount);
     }
+    
+    setIsPvpBetConfirming(false);
+    setPvpSelectedTournament(null);
   };
 
   if (loading || loadingProfile) {
@@ -1395,6 +1391,7 @@ function App() {
             allProfiles={allProfiles}
             onOpenBetModal={openPvpBetModal}
             onShowNotEnough={handlePvpNotEnough}
+            onUpdateBalance={updatePvpBalance}
             loadTournamentData={loadTournamentData}
           />
         )}

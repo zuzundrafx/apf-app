@@ -16,6 +16,7 @@ interface PvpProps {
   allProfiles: Map<string, UserProfile>;
   onOpenBetModal: (tournament: Tournament) => void;
   onShowNotEnough: (message: string) => void;
+  onUpdateBalance: (coins: number, tickets: number) => Promise<void>;
   loadTournamentData: (tournamentName: string) => Promise<{
     weightClasses: string[];
     results: UserResult[];
@@ -38,6 +39,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   allProfiles,
   onOpenBetModal,
   onShowNotEnough,
+  onUpdateBalance,
   loadTournamentData,
 }, ref) => {
   const [arenaData, setArenaData] = useState<{
@@ -73,22 +75,24 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     return Math.round(totalDamage);
   };
 
-  const canJoinPvp = (tournament: Tournament): boolean => {
+  const checkCanJoinPvp = (tournament: Tournament): { canJoin: boolean; reason: string } => {
     const hasBet = hasUserBetOnTournament(tournament);
-    return hasBet && userCoins >= 5 && userTickets >= 1;
-  };
-
-  const getPvpBlockReason = (): string => {
+    
+    if (!hasBet) {
+      return { canJoin: false, reason: '' };
+    }
+    
     if (userCoins < 5 && userTickets < 1) {
-      return 'Not enough coins & tickets';
+      return { canJoin: false, reason: 'Not enough coins & tickets' };
     }
     if (userCoins < 5) {
-      return 'Not enough coins';
+      return { canJoin: false, reason: 'Not enough coins' };
     }
     if (userTickets < 1) {
-      return 'Not enough tickets';
+      return { canJoin: false, reason: 'Not enough tickets' };
     }
-    return '';
+    
+    return { canJoin: true, reason: '' };
   };
 
   const handleEngage = async (tournament: Tournament, betAmount: number) => {
@@ -97,6 +101,12 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     setIsEngaging(true);
     
     try {
+      // 1. Сначала списываем валюту
+      const newCoins = userCoins - betAmount;
+      const newTickets = userTickets - 1;
+      await onUpdateBalance(newCoins, newTickets);
+      
+      // 2. Загружаем данные турнира и ищем соперника
       const tournamentData = await loadTournamentData(tournament.name);
       
       const fightersMap = new Map<string, Fighter>();
@@ -142,8 +152,9 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   };
 
   const handlePvpClick = (tournament: Tournament) => {
-    if (!canJoinPvp(tournament)) {
-      const reason = getPvpBlockReason();
+    const { canJoin, reason } = checkCanJoinPvp(tournament);
+    
+    if (!canJoin) {
       if (reason) {
         onShowNotEnough(reason);
       }
@@ -176,8 +187,8 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         {pastTournaments.slice(0, 3).map((tournament) => {
           const userDamage = getUserDamageForTournament(tournament);
           const hasBet = hasUserBetOnTournament(tournament);
-          const canJoin = canJoinPvp(tournament);
-          const isDisabled = !!arenaData || isEngaging || !canJoin;
+          const { canJoin } = checkCanJoinPvp(tournament);
+          const isDisabled = !!arenaData || isEngaging || !hasBet;
           
           return (
             <div key={tournament.id} className="pvp-tournament-card">
