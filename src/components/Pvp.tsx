@@ -51,7 +51,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     };
   } | null>(null);
   
-  const [isEngaging, setIsEngaging] = useState(false);
+  const [isLoadingArena, setIsLoadingArena] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
   const [messageText, setMessageText] = useState('');
 
@@ -96,12 +96,13 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   };
 
   const handleEngage = async (tournament: Tournament, betAmount: number) => {
-    if (!userId || isEngaging || arenaData) return;
+    if (!userId || isLoadingArena || arenaData) return;
     
-    setIsEngaging(true);
+    // Показываем арену с лоадером
+    setIsLoadingArena(true);
     
     try {
-      // 1. Сначала списываем валюту
+      // 1. Списываем валюту
       const newCoins = userCoins - betAmount;
       const newTickets = userTickets - 1;
       await onUpdateBalance(newCoins, newTickets);
@@ -120,7 +121,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
       
       if (rivals.length === 0) {
         alert('No rivals available for this tournament');
-        setIsEngaging(false);
+        setIsLoadingArena(false);
         return;
       }
       
@@ -133,6 +134,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         fighter: fightersMap.get(sel.fighter.Fighter) || sel.fighter
       }));
       
+      // 3. Открываем арену с данными
       setArenaData({
         tournament,
         weightClasses: tournamentData.weightClasses,
@@ -144,10 +146,12 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         }
       });
       
+      setIsLoadingArena(false);
+      
     } catch (error) {
       console.error('Ошибка при поиске соперника:', error);
       alert('Error finding rival');
-      setIsEngaging(false);
+      setIsLoadingArena(false);
     }
   };
 
@@ -168,7 +172,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
 
   const handleSurrender = () => {
     setArenaData(null);
-    setIsEngaging(false);
+    setIsLoadingArena(false);
   };
 
   useImperativeHandle(ref, () => ({
@@ -179,18 +183,17 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
 
   return (
     <div className="pvp-screen">
-      {arenaData && <div className="pvp-overlay" />}
+      {isLoadingArena && <div className="pvp-overlay" />}
       
       <div className="pvp-header">
         <div className="pvp-header-title">ACTIVE TOURNAMENTS</div>
       </div>
 
-      <div className={`pvp-list ${arenaData ? 'blurred' : ''}`}>
+      <div className={`pvp-list ${isLoadingArena ? 'blurred' : ''}`}>
         {pastTournaments.slice(0, 3).map((tournament) => {
           const userDamage = getUserDamageForTournament(tournament);
           const hasBet = hasUserBetOnTournament(tournament);
-          const { canJoin } = checkCanJoinPvp(tournament);
-          const isDisabled = !!arenaData || isEngaging || !hasBet;
+          const isDisabled = !!arenaData || isLoadingArena || !hasBet;
           
           return (
             <div key={tournament.id} className="pvp-tournament-card" style={{ position: 'relative' }}>
@@ -247,16 +250,15 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
 
                 <div className="pvp-bottom-right">
                   <button 
-                    className={`pvp-engage-button ${isEngaging ? 'loading' : ''} ${isDisabled ? 'disabled' : ''}`}
+                    className={`pvp-engage-button ${isDisabled ? 'disabled' : ''}`}
                     onClick={() => handlePvpClick(tournament)}
                     disabled={isDisabled}
                   >
-                    {isEngaging ? 'SEARCHING...' : 'ENTRY BET'}
+                    ENTRY BET
                   </button>
                 </div>
               </div>
 
-              {/* Всплывающая надпись внутри карточки турнира */}
               {showMessage && (
                 <div className="upcoming-overlay-text">
                   {messageText}
