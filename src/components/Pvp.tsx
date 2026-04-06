@@ -15,7 +15,6 @@ interface PvpProps {
   userTickets: number;
   allProfiles: Map<string, UserProfile>;
   onOpenBetModal: (tournament: Tournament) => void;
-  onShowNotEnough: (message: string) => void;
   onUpdateBalance: (coins: number, tickets: number) => Promise<void>;
   loadTournamentData: (tournamentName: string) => Promise<{
     weightClasses: string[];
@@ -38,7 +37,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   userTickets,
   allProfiles,
   onOpenBetModal,
-  onShowNotEnough,
   onUpdateBalance,
   loadTournamentData,
 }, ref) => {
@@ -54,6 +52,8 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   } | null>(null);
   
   const [isEngaging, setIsEngaging] = useState(false);
+  const [showMessage, setShowMessage] = useState(false);
+  const [messageText, setMessageText] = useState('');
 
   const hasUserBetOnTournament = (tournament: Tournament): boolean => {
     return userSelections.some(sel => 
@@ -156,7 +156,9 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     
     if (!canJoin) {
       if (reason) {
-        onShowNotEnough(reason);
+        setMessageText(reason);
+        setShowMessage(true);
+        setTimeout(() => setShowMessage(false), 1000);
       }
       return;
     }
@@ -191,7 +193,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           const isDisabled = !!arenaData || isEngaging || !hasBet;
           
           return (
-            <div key={tournament.id} className="pvp-tournament-card">
+            <div key={tournament.id} className="pvp-tournament-card" style={{ position: 'relative' }}>
               <div className="pvp-card-top">
                 <div className="pvp-card-league" style={{ backgroundColor: '#B20101' }}>
                   <span>{tournament.league || 'UFC'}</span>
@@ -253,6 +255,13 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                   </button>
                 </div>
               </div>
+
+              {/* Всплывающая надпись внутри карточки турнира */}
+              {showMessage && (
+                <div className="upcoming-overlay-text">
+                  {messageText}
+                </div>
+              )}
             </div>
           );
         })}

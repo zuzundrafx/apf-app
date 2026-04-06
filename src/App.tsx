@@ -252,7 +252,7 @@ function App() {
   const [pvpSelectedBetAmount, setPvpSelectedBetAmount] = useState(5);
   const [pvpAvailableBetAmounts, setPvpAvailableBetAmounts] = useState<number[]>([]);
   const [pvpSelectedTournament, setPvpSelectedTournament] = useState<Tournament | null>(null);
-  const [pvpNotEnoughMessage, setPvpNotEnoughMessage] = useState<string | null>(null);
+  
   const [isPvpBetConfirming, setIsPvpBetConfirming] = useState(false);
 
   const pvpRef = useRef<{ engage: (tournament: Tournament, betAmount: number) => Promise<void> } | null>(null);
@@ -868,10 +868,7 @@ function App() {
     setShowPvpBetModal(true);
   };
 
-  const handlePvpNotEnough = (message: string) => {
-    setPvpNotEnoughMessage(message);
-    setTimeout(() => setPvpNotEnoughMessage(null), 1000);
-  };
+  
 
   const updatePvpBalance = async (newCoins: number, newTickets: number) => {
     if (!telegramUser) return;
@@ -1390,7 +1387,7 @@ function App() {
             userTickets={userData.tickets}
             allProfiles={allProfiles}
             onOpenBetModal={openPvpBetModal}
-            onShowNotEnough={handlePvpNotEnough}
+            
             onUpdateBalance={updatePvpBalance}
             loadTournamentData={loadTournamentData}
           />
@@ -1580,11 +1577,7 @@ function App() {
         </div>
       )}
 
-      {pvpNotEnoughMessage && (
-        <div className="upcoming-overlay-text">
-          {pvpNotEnoughMessage}
-        </div>
-      )}
+      
 
       <nav className={`bottom-nav ${currentView === 'selection' ? 'hidden' : ''}`}>
         <button className={`nav-button ${currentView === 'main' ? 'active' : ''}`} onClick={() => setCurrentView('main')}>
