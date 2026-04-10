@@ -1,6 +1,6 @@
 // src/components/BattleResultModal.tsx
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface BattleResultModalProps {
   isOpen: boolean;
@@ -10,6 +10,12 @@ interface BattleResultModalProps {
     coins: number;
     experience: number;
   };
+  betAmount?: number;
+  winningRound?: number;  // раунд, в котором закончился бой (1-5)
+  userAvatar?: string;
+  rivalAvatar?: string;
+  userName?: string;
+  rivalName?: string;
   onClose: () => void;
 }
 
@@ -18,9 +24,51 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   result,
   resultType,
   rewards,
+  betAmount,
+  winningRound,
+  userAvatar,
+  rivalAvatar,
+  userName,
+  rivalName,
   onClose
 }) => {
+  const [showWinAnimation, setShowWinAnimation] = useState(false);
+  const [winIconScale, setWinIconScale] = useState(1);
+
+  useEffect(() => {
+    if (isOpen && result === 'win') {
+      // Анимация победы: увеличение и смена иконки
+      setWinIconScale(1.2);
+      setTimeout(() => {
+        setWinIconScale(1);
+        setShowWinAnimation(true);
+      }, 150);
+      setTimeout(() => {
+        setShowWinAnimation(false);
+      }, 450);
+    }
+  }, [isOpen, result]);
+
   if (!isOpen) return null;
+
+  // Расчёт коэффициента победы
+  const getWinCoefficient = (): number | null => {
+    if (result !== 'win') return null;
+    
+    let baseCoeff = 0;
+    if (resultType === 'ko') baseCoeff = 2.0;
+    else if (resultType === 'decision-unanimous') baseCoeff = 1.5;
+    else if (resultType === 'decision-split') baseCoeff = 1.2;
+    else return null;
+    
+    if (winningRound && winningRound < 5) {
+      const roundsNotFought = 5 - winningRound;
+      const bonus = roundsNotFought * 0.1;
+      return baseCoeff + bonus;
+    }
+    
+    return baseCoeff;
+  };
 
   const getTitle = () => {
     if (result === 'win') {
@@ -36,7 +84,7 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
       return 'YOU LOSE';
     }
     if (result === 'draw') return 'DRAW';
-    if (result === 'tech-loss') return 'TECHNICAL DEFEAT';
+    if (result === 'tech-loss') return 'LOSE: by Technical Defeat';
     return '';
   };
 
@@ -49,8 +97,30 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   };
 
   const getButtonText = () => {
-    if (result === 'win' || result === 'draw') return 'GET ALL';
-    return 'BETTER LUCK NEXT TIME';
+    if (result === 'win' || result === 'draw') return 'CLAIM REWARD';
+    return 'Try another time';
+  };
+
+  const winCoefficient = getWinCoefficient();
+  const shouldShowRound = result !== 'tech-loss';
+  const shouldShowCoefficient = result === 'win';
+  const shouldShowBet = result !== 'tech-loss';
+  
+  // Иконка награды
+  const getRewardIcon = () => {
+    if (result === 'win') {
+      if (showWinAnimation) {
+        return `${BASE_URL}/icons/Open_win_icon.webp`;
+      }
+      return `${BASE_URL}/icons/Close_win_icon.webp`;
+    }
+    if (result === 'loss' || result === 'tech-loss') {
+      return `${BASE_URL}/icons/Open_lose_icon.webp`;
+    }
+    if (result === 'draw') {
+      return `${BASE_URL}/icons/Open_win_icon.webp`;
+    }
+    return `${BASE_URL}/icons/default-avatar.png`;
   };
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
@@ -58,48 +128,109 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   return (
     <div className="battle-result-modal-overlay">
       <div className="battle-result-modal">
-        {/* Верхний контейнер - заголовок */}
+        
+        {/* Контейнер 1: Заголовок (выступает за верхнюю границу) */}
         <div className="battle-result-header">
           <h2 style={{ color: getTitleColor() }}>{getTitle()}</h2>
         </div>
 
-        {/* Средний контейнер - награды */}
-        <div className="battle-result-rewards">
-          {rewards && (result === 'win' || result === 'draw') ? (
-            <div className="rewards-container">
-              {rewards.coins > 0 && (
-                <div className="reward-item">
-                  <span>+{rewards.coins}</span>
-                  <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="reward-icon" />
-                </div>
-              )}
-              {rewards.experience > 0 && (
-                <div className="reward-item">
-                  <span>+{rewards.experience}</span>
-                  <span className="reward-exp-icon">✨</span>
-                </div>
-              )}
-            </div>
-          ) : (result === 'loss' || result === 'tech-loss') && rewards?.experience ? (
-            <div className="rewards-container">
-              <div className="reward-item">
-                <span>+{rewards.experience}</span>
-                <span className="reward-exp-icon">✨</span>
+        {/* Контейнер 2: Round x/5 */}
+        {shouldShowRound && winningRound && (
+          <div className="battle-result-round">
+            <span>Round {winningRound}/5</span>
+          </div>
+        )}
+
+        {/* Контейнер 3: Аватарки игрока и противника */}
+        <div className="battle-result-avatars">
+          <div className="battle-result-avatar-left">
+            <img 
+              src={userAvatar || `${BASE_URL}/Home_button.png`}
+              alt="player"
+              className="battle-result-avatar-img"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
+              }}
+            />
+            {/* Опыт под аватаркой игрока (восьмиугольник) */}
+            {rewards && rewards.experience > 0 && (
+              <div className="battle-result-exp-octagon">
+                +{rewards.experience} exp
               </div>
-            </div>
-          ) : (
-            <div className="rewards-container">
-              <span className="no-rewards">No rewards</span>
-            </div>
-          )}
+            )}
+            <div className="battle-result-avatar-name">{userName}</div>
+          </div>
+          
+          <div className="battle-result-avatar-center">
+            <img 
+              src={`${BASE_URL}/VS_logo.webp`}
+              alt="VS"
+              className="battle-result-vs-logo"
+            />
+          </div>
+          
+          <div className="battle-result-avatar-right">
+            <img 
+              src={rivalAvatar || `${BASE_URL}/default-avatar.png`}
+              alt="rival"
+              className="battle-result-avatar-img"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`;
+              }}
+            />
+            <div className="battle-result-avatar-name">{rivalName}</div>
+          </div>
         </div>
 
-        {/* Нижний контейнер - кнопка */}
+        {/* Контейнер 4: Разделительная линия */}
+        <div className="battle-result-divider"></div>
+
+        {/* Контейнер 5: Your bet */}
+        {shouldShowBet && betAmount !== undefined && (
+          <div className="battle-result-bet">
+            <div className="battle-result-bet-label">Your bet:</div>
+            <div className="battle-result-bet-value">
+              {betAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="battle-result-coin-icon" />
+            </div>
+          </div>
+        )}
+
+        {/* Контейнер 6: W / Koef */}
+        {shouldShowCoefficient && winCoefficient !== null && (
+          <div className="battle-result-coef">
+            <div className="battle-result-coef-label">W / Koef:</div>
+            <div className="battle-result-coef-value">
+              x{winCoefficient.toFixed(1)}
+            </div>
+          </div>
+        )}
+
+        {/* Контейнер 7: Иконка награды */}
+        <div className="battle-result-reward-icon">
+          <div 
+            className="battle-result-reward-icon-wrapper"
+            style={{ transform: `scale(${winIconScale})`, transition: 'transform 0.15s ease' }}
+          >
+            <img 
+              src={getRewardIcon()}
+              alt="reward"
+              className="battle-result-reward-img"
+            />
+            {rewards && rewards.coins > 0 && (
+              <div className="battle-result-reward-amount">
+                +{rewards.coins}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Контейнер 8: Кнопка (выступает за нижнюю границу) */}
         <div className="battle-result-footer">
           <button className="battle-result-button" onClick={onClose}>
             {getButtonText()}
           </button>
         </div>
+
       </div>
     </div>
   );

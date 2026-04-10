@@ -940,14 +940,20 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       </div>
       
       {battleResult && (
-        <BattleResultModal
-          isOpen={battleResult.isOpen}
-          result={battleResult.result}
-          resultType={battleResult.resultType}
-          rewards={battleRewards || undefined}
-          onClose={handleResultClose}
-        />
-      )}
+  <BattleResultModal
+    isOpen={battleResult.isOpen}
+    result={battleResult.result}
+    resultType={battleResult.resultType}
+    rewards={battleRewards || undefined}
+    betAmount={pvpMode ? (pvpBetAmount || 0) : 0}
+    winningRound={currentRound}
+    userAvatar={userAvatar}
+    rivalAvatar={displayRivalData?.photoUrl}
+    userName={userName}
+    rivalName={displayRivalData?.username}
+    onClose={handleResultClose}
+  />
+)}
     </div>
   );
 };

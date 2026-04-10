@@ -2499,66 +2499,6 @@ body {
   100% { opacity: 0; transform: translate(-50%, -70%); }
 }
 
-/* ===== МОДАЛЬНОЕ ОКНО РЕЗУЛЬТАТА БОЯ ===== */
-.battle-result-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 4000;
-  backdrop-filter: blur(4px);
-}
-
-.battle-result-modal {
-  background: #2A2A2A;
-  padding: 24px 32px;
-  max-width: 90%;
-  width: min(340px, 90vw);
-  text-align: center;
-  border: 2px solid #FFD700;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  animation: slideUp 0.3s ease;
-}
-
-.battle-result-title {
-  color: #FFD700;
-  margin-bottom: 16px;
-  font-size: 20px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.battle-result-message {
-  color: #FFFFFF;
-  margin-bottom: 20px;
-  font-size: 14px;
-  opacity: 0.9;
-}
-
-.battle-result-button {
-  width: 100%;
-  padding: 12px 16px;
-  background: linear-gradient(180deg, #C9FFCE 0%, #61FF63 100%);
-  border: none;
-  color: #000000;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.battle-result-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(97, 255, 99, 0.3);
-}
-
 /* Пустая карта бойца */
 .arena-fighter-card.empty {
   background: #2A2A2A;
@@ -3195,7 +3135,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.95);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3204,21 +3144,29 @@ body {
 }
 
 .battle-result-modal {
-  width: 100%;
-  height: 40%;
-  background: #1c1d1f;
+  width: 85%;
+  height: 60%;
+  background: #1c1e1c;
+  border-radius: 5%;
+  border: 0.15vh solid #666d75;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: visible;
 }
 
 .battle-result-header {
   width: 100%;
   height: 20%;
+  background: #1c1e1c;
+  border: 0.15vh solid #666d75;
+  border-radius: 5%;
+  position: absolute;
+  top: -10%;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
 }
 
 .battle-result-header h2 {
@@ -3229,68 +3177,242 @@ body {
   letter-spacing: 1px;
 }
 
-.battle-result-rewards {
+.battle-result-round {
   width: 100%;
-  height: 30%;
+  height: 5%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-top: 0.15vh solid rgba(255, 255, 255, 0.3);
-  border-bottom: 0.15vh solid rgba(255, 255, 255, 0.3);
-  background: transparent;
+  margin-top: 10%;
 }
 
-.rewards-container {
-  display: flex;
-  gap: 8%;
-  align-items: center;
-  justify-content: center;
-}
-
-.reward-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: clamp(16px, 5vw, 20px);
+.battle-result-round span {
+  font-size: clamp(12px, 3vw, 16px);
   font-weight: 700;
-  color: #FFD966;
+  font-style: italic;
+  color: #FFFFFF;
+  text-shadow: 0 0 2px #000000;
 }
 
-.reward-icon {
+.battle-result-avatars {
+  width: 100%;
+  height: 25%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2%;
+}
+
+.battle-result-avatar-left,
+.battle-result-avatar-right {
+  width: 33%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.battle-result-avatar-center {
+  width: 33%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.battle-result-avatar-img {
+  width: 80%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10%;
+  background: #3D3D3B;
+}
+
+.battle-result-vs-logo {
+  width: 50%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+}
+
+.battle-result-avatar-name {
+  font-size: clamp(8px, 2.5vw, 10px);
+  color: #FFFFFF;
+  text-align: center;
+  margin-top: 4%;
+  text-shadow: 0 0 2px #000000;
+}
+
+.battle-result-exp-octagon {
+  position: absolute;
+  bottom: -8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40%;
+  background: radial-gradient(circle, #ffff91 0%, #ffe63e 100%);
+  border: 0.15vh solid #666d75;
+  border-radius: 0;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(6px, 2vw, 8px);
+  font-weight: 700;
+  color: #FFFFFF;
+  text-shadow: 0 0 1px #000000;
+  padding: 2% 0;
+  white-space: nowrap;
+}
+
+.battle-result-divider {
+  width: 100%;
+  height: 1%;
+  margin: 2% 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #666d75 20%,
+    #666d75 80%,
+    transparent 100%
+  );
+  opacity: 0.8;
+}
+
+.battle-result-bet {
+  width: 100%;
+  height: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.battle-result-bet-label {
+  width: 60%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 700;
+  color: #FFFFFF;
+  text-shadow: 0 0 2px #000000;
+  padding-right: 4%;
+}
+
+.battle-result-bet-value {
+  width: 40%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2%;
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 700;
+  color: #FFFFFF;
+  text-shadow: 0 0 2px #000000;
+}
+
+.battle-result-coin-icon {
   width: auto;
   height: 1.2em;
   object-fit: contain;
 }
 
-.reward-exp-icon {
-  font-size: 1.2em;
+.battle-result-coef {
+  width: 100%;
+  height: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.no-rewards {
+.battle-result-coef-label {
+  width: 60%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 700;
   color: #FFFFFF;
-  font-size: clamp(14px, 4vw, 16px);
-  font-weight: 500;
-  opacity: 0.7;
+  text-shadow: 0 0 2px #000000;
+  padding-right: 4%;
+}
+
+.battle-result-coef-value {
+  width: 40%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 700;
+  color: #FFFFFF;
+  text-shadow: 0 0 2px #000000;
+  background: linear-gradient(180deg, #aa62c1 0%, #ba66bd 50%, #aa62c1 100%);
+  border: 0.15vh solid #666d75;
+  border-radius: 2%;
+  padding-left: 4%;
+}
+
+.battle-result-reward-icon {
+  width: 100%;
+  height: 45%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.battle-result-reward-icon-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.battle-result-reward-img {
+  width: auto;
+  height: 80%;
+  max-height: 80%;
+  object-fit: contain;
+}
+
+.battle-result-reward-amount {
+  position: absolute;
+  bottom: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: 700;
+  color: #FFFFFF;
+  text-shadow: 0 0 2px #000000;
+  white-space: nowrap;
 }
 
 .battle-result-footer {
   width: 100%;
-  height: 20%;
+  height: 15%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
+  position: absolute;
+  bottom: -7.5%;
+  left: 0;
 }
 
 .battle-result-button {
-  width: 90%;
-  height: 90%;
-  background: linear-gradient(180deg, #C9FFCE 0%, #61FF63 100%);
-  border: none;
-  border-radius: 4px;
-  color: #000000;
-  font-size: clamp(14px, 4vw, 16px);
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(180deg, #5b5b5b 0%, #3d3c3d 100%);
+  border: 0.15vh solid #666d75;
+  border-radius: 2%;
+  color: #FFFFFF;
+  font-size: clamp(12px, 3vw, 14px);
   font-weight: 700;
+  text-shadow: 0 0 2px #000000;
   cursor: pointer;
   text-transform: uppercase;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -3298,5 +3420,14 @@ body {
 
 .battle-result-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(97, 255, 99, 0.3);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 320px) {
+  .battle-result-exp-octagon {
+    font-size: clamp(5px, 1.5vw, 6px);
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+  }
 }
