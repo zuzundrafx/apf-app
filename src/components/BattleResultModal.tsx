@@ -11,7 +11,7 @@ interface BattleResultModalProps {
     experience: number;
   };
   betAmount?: number;
-  winningRound?: number;  // раунд, в котором закончился бой (1-5)
+  winningRound?: number;
   userAvatar?: string;
   rivalAvatar?: string;
   userName?: string;
@@ -37,21 +37,36 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
 
   useEffect(() => {
     if (isOpen && result === 'win') {
-      // Анимация победы: увеличение и смена иконки
-      setWinIconScale(1.2);
-      setTimeout(() => {
+      // Сначала показываем закрытую сумку (уже по умолчанию)
+      setShowWinAnimation(false);
+      setWinIconScale(1);
+      
+      // Через 0.15 сек начинаем анимацию увеличения
+      const timer1 = setTimeout(() => {
+        setWinIconScale(1.2);
+      }, 150);
+      
+      // Через 0.3 сек меняем иконку на открытую и возвращаем размер
+      const timer2 = setTimeout(() => {
         setWinIconScale(1);
         setShowWinAnimation(true);
-      }, 150);
-      setTimeout(() => {
+      }, 300);
+      
+      // Через 0.6 сек снимаем флаг анимации
+      const timer3 = setTimeout(() => {
         setShowWinAnimation(false);
-      }, 450);
+      }, 600);
+      
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+      };
     }
   }, [isOpen, result]);
 
   if (!isOpen) return null;
 
-  // Расчёт коэффициента победы
   const getWinCoefficient = (): number | null => {
     if (result !== 'win') return null;
     
@@ -106,7 +121,6 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   const shouldShowCoefficient = result === 'win';
   const shouldShowBet = result !== 'tech-loss';
   
-  // Иконка награды
   const getRewardIcon = () => {
     if (result === 'win') {
       if (showWinAnimation) {
@@ -129,19 +143,16 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
     <div className="battle-result-modal-overlay">
       <div className="battle-result-modal">
         
-        {/* Контейнер 1: Заголовок (выступает за верхнюю границу) */}
         <div className="battle-result-header">
           <h2 style={{ color: getTitleColor() }}>{getTitle()}</h2>
         </div>
 
-        {/* Контейнер 2: Round x/5 */}
         {shouldShowRound && winningRound && (
           <div className="battle-result-round">
             <span>Round {winningRound}/5</span>
           </div>
         )}
 
-        {/* Контейнер 3: Аватарки игрока и противника */}
         <div className="battle-result-avatars">
           <div className="battle-result-avatar-left">
             <img 
@@ -152,7 +163,6 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
                 (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
               }}
             />
-            {/* Опыт под аватаркой игрока (восьмиугольник) */}
             {rewards && rewards.experience > 0 && (
               <div className="battle-result-exp-octagon">
                 +{rewards.experience} exp
@@ -182,10 +192,8 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
           </div>
         </div>
 
-        {/* Контейнер 4: Разделительная линия */}
         <div className="battle-result-divider"></div>
 
-        {/* Контейнер 5: Your bet */}
         {shouldShowBet && betAmount !== undefined && (
           <div className="battle-result-bet">
             <div className="battle-result-bet-label">Your bet:</div>
@@ -195,7 +203,6 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
           </div>
         )}
 
-        {/* Контейнер 6: W / Koef */}
         {shouldShowCoefficient && winCoefficient !== null && (
           <div className="battle-result-coef">
             <div className="battle-result-coef-label">W / Koef:</div>
@@ -205,11 +212,10 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
           </div>
         )}
 
-        {/* Контейнер 7: Иконка награды */}
         <div className="battle-result-reward-icon">
           <div 
             className="battle-result-reward-icon-wrapper"
-            style={{ transform: `scale(${winIconScale})`, transition: 'transform 0.15s ease' }}
+            style={{ transform: `scale(${winIconScale})` }}
           >
             <img 
               src={getRewardIcon()}
@@ -224,7 +230,6 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
           </div>
         </div>
 
-        {/* Контейнер 8: Кнопка (выступает за нижнюю границу) */}
         <div className="battle-result-footer">
           <button className="battle-result-button" onClick={onClose}>
             {getButtonText()}
