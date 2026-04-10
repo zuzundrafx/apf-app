@@ -3364,6 +3364,7 @@ body {
   align-items: center;
   justify-content: center;
   position: relative;
+  overflow:auto;
 }
 
 .battle-result-reward-icon-wrapper {
@@ -3373,12 +3374,15 @@ body {
   justify-content: center;
   position: relative;
   transition: transform 0.15s ease;
+  max-width: 100%;   /* ← ДОБАВИТЬ */
+  max-height: 100%;  /* ← ДОБАВИТЬ */
+
 }
 
 .battle-result-reward-img {
   width: auto;
-  height: 40%;
-  max-height: 40%;
+  max-width: 60%;    /* ← ИЗМЕНИТЬ: максимальная ширина 60% от родителя */
+  max-height: 60%;   /* ← ИЗМЕНИТЬ: максимальная высота 60% от родителя */
   object-fit: contain;
 }
 
