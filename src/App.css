@@ -3557,3 +3557,47 @@ body {
     height: 100%;
   }
 }
+
+/* ===== ОВЕРЛЕЙ ПРИ ПОВОРОТЕ ЭКРАНА ===== */
+
+.orientation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #1d2733;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  gap: 5vh;
+}
+
+.orientation-icon {
+  width: 20vh;
+  height: 20vh;
+  object-fit: contain;
+  animation: rotateHint 1.5s ease-in-out infinite;
+}
+
+.orientation-text {
+  color: #FFFFFF;
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: 500;
+  text-align: center;
+  padding: 0 10%;
+}
+
+@keyframes rotateHint {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(90deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}

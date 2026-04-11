@@ -351,7 +351,23 @@ function App() {
     return amounts.slice(0, 9);
   };
 
+  const [isLandscape, setIsLandscape] = useState(false);
+
+useEffect(() => {
+  const checkOrientation = () => {
+    setIsLandscape(window.innerWidth > window.innerHeight);
+  };
   
+  checkOrientation();
+  
+  window.addEventListener('resize', checkOrientation);
+  window.addEventListener('orientationchange', checkOrientation);
+  
+  return () => {
+    window.removeEventListener('resize', checkOrientation);
+    window.removeEventListener('orientationchange', checkOrientation);
+  };
+}, []);
 
 
   useEffect(() => {
@@ -986,6 +1002,21 @@ function App() {
 
   return (
     <div className="app">
+
+      {/* ОВЕРЛЕЙ ПРИ ЛАНДШАФТНОЙ ОРИЕНТАЦИИ */}
+    {isLandscape && (
+      <div className="orientation-overlay">
+        <img 
+          src={`${BASE_URL}/icons/Rotate_error_icon.webp`} 
+          alt="Please rotate your device" 
+          className="orientation-icon"
+        />
+        <div className="orientation-text">
+          Please rotate your device to portrait mode
+        </div>
+      </div>
+    )}
+
       <header className="profile-header">
         <div className="profile-avatar">
           {telegramUser?.photoUrl ? (
