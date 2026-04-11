@@ -1114,7 +1114,7 @@ body {
 
 .rewards-modal {
   width: 85%;
-  height: 54%;
+  height: 75%;
   background: #1c1e1c;
   border-radius: 5%;
   border: 0.15vh solid #666d75;
@@ -1173,7 +1173,7 @@ body {
   border: 1px solid #3D3D3B;
   border-radius: 8px;
   overflow-y: auto;
-  max-height: 40%;
+  max-height: 60%;
 }
 
 .rewards-winners-list h3 {
