@@ -730,7 +730,7 @@ useEffect(() => {
                 
                 setPendingRewards({
                   tournamentName: pastTournaments[i].name,
-                  winners: result.selections,
+                  winners: winners,
                   totalCoins,
                   totalTickets,
                   totalExp
