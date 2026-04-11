@@ -3376,19 +3376,19 @@ body {
   transition: transform 0.15s ease;
   max-width: 90%;   /* ← ДОБАВИТЬ */
   max-height: 90%;  /* ← ДОБАВИТЬ */
-  bottom: 10%;
+  bottom: 5%;
 }
 
 .battle-result-reward-img {
   width: auto;
-  max-width: 50%;    /* ← ИЗМЕНИТЬ: максимальная ширина 60% от родителя */
-  max-height: 50%;   /* ← ИЗМЕНИТЬ: максимальная высота 60% от родителя */
+  max-width: 60%;    /* ← ИЗМЕНИТЬ: максимальная ширина 60% от родителя */
+  max-height: 60%;   /* ← ИЗМЕНИТЬ: максимальная высота 60% от родителя */
   object-fit: contain;
 }
 
 .battle-result-reward-amount {
   position: absolute;
-  bottom: 10%;
+  /*bottom: 10%;*/
   left: 50%;
   transform: translateX(-50%);
   font-size: clamp(20px, 8vw, 27px);
