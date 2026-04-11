@@ -3342,7 +3342,7 @@ body {
 }
 
 .battle-result-coef-value {
-  width: 40%;
+  width: 10%;
   height: 100%;
   display: flex;
   align-items: center;
@@ -3389,9 +3389,9 @@ body {
 .battle-result-reward-amount {
   position: absolute;
   /*bottom: 35%;*/
-  left: 50%;
+  /*left: 50%;*/
   transform: translateX(-50%);
-  transform: translateY(90%);
+  transform: translateY(100%);
   font-size: clamp(20px, 8vw, 27px);
   font-weight: 700;
   color: #FFFFFF;
