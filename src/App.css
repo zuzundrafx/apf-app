@@ -3325,7 +3325,7 @@ body {
   height: 10%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: left;
 }
 
 .battle-result-coef-label {
@@ -3342,7 +3342,7 @@ body {
 }
 
 .battle-result-coef-value {
-  width: 10%;
+  width: 15%;
   height: 100%;
   display: flex;
   align-items: center;
