@@ -3409,7 +3409,7 @@ body {
   font-size: clamp(20px, 8vw, 27px);
   font-weight: 700;
   color: #FFFFFF;
-  text-shadow: 0 0 4px #000000;
+  text-shadow: 0 0 8px #000000;
   white-space: nowrap;
 }
 
