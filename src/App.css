@@ -3391,6 +3391,7 @@ body {
   bottom: 35%;
   left: 50%;
   transform: translateX(-50%);
+  transform: translateY(-40%);
   font-size: clamp(20px, 8vw, 27px);
   font-weight: 700;
   color: #FFFFFF;
