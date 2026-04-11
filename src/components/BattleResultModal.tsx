@@ -34,11 +34,13 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
 }) => {
   const [winIconScale, setWinIconScale] = useState(1);
   const [showOpenIcon, setShowOpenIcon] = useState(false);
+  const [shakeScreen, setShakeScreen] = useState(false);
 
   useEffect(() => {
     if (isOpen && result === 'win') {
       setShowOpenIcon(false);
       setWinIconScale(1);
+      setShakeScreen(false);
       
       const timer1 = setTimeout(() => {
         setWinIconScale(1.2);
@@ -47,6 +49,8 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
       const timer2 = setTimeout(() => {
         setWinIconScale(1);
         setShowOpenIcon(true);
+        setShakeScreen(true);
+        setTimeout(() => setShakeScreen(false), 400);
       }, 300);
       
       return () => {
@@ -109,10 +113,9 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
 
   const winCoefficient = getWinCoefficient();
   const shouldShowRound = result !== 'tech-loss';
-  const shouldShowCoefficient = result === 'win';
+  const shouldShowCoefficient = result === 'win' || result === 'loss';
   const shouldShowBet = result !== 'tech-loss';
   
-  // Определяем, кто победил, а кто проиграл
   const isPlayerWinner = result === 'win';
   const isRivalWinner = result === 'loss';
   
@@ -135,7 +138,7 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
   return (
-    <div className="battle-result-modal-overlay">
+    <div className={`battle-result-modal-overlay ${shakeScreen ? 'shake' : ''}`}>
       <div className="battle-result-modal">
         
         <div className="battle-result-header">
@@ -149,25 +152,25 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
         )}
 
         <div className="battle-result-avatars">
-        <div className="battle-result-avatar-left">
-  <div className={`battle-result-avatar-wrapper ${isPlayerWinner ? 'avatar-winner' : 'avatar-loser'}`}>
-    <img 
-      src={userAvatar || `${BASE_URL}/Home_button.png`}
-      alt="player"
-      className="battle-result-avatar-img"
-      onError={(e) => {
-        (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
-      }}
-    />
-  </div>
-  {rewards && rewards.experience > 0 && (
-    <div className="battle-result-exp-octagon">
-      <span className="battle-result-exp-arrow">▲</span>
-      {rewards.experience} exp
-    </div>
-  )}
-  <div className="battle-result-avatar-name">{userName}</div>
-</div>
+          <div className="battle-result-avatar-left">
+            <div className={`battle-result-avatar-wrapper ${isPlayerWinner ? 'avatar-winner' : 'avatar-loser'}`}>
+              <img 
+                src={userAvatar || `${BASE_URL}/Home_button.png`}
+                alt="player"
+                className="battle-result-avatar-img"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
+                }}
+              />
+            </div>
+            {rewards && rewards.experience > 0 && (
+              <div className="battle-result-exp-octagon">
+                <span className="battle-result-exp-arrow">▲</span>
+                {rewards.experience} exp
+              </div>
+            )}
+            <div className="battle-result-avatar-name">{userName}</div>
+          </div>
           
           <div className="battle-result-avatar-center">
             <img 
@@ -196,18 +199,22 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
 
         {shouldShowBet && betAmount !== undefined && (
           <div className="battle-result-bet">
-            <div className="battle-result-bet-label">Your bet:</div>
+            <div className="battle-result-bet-label">
+              {result === 'loss' ? 'Spent:' : 'Your bet:'}
+            </div>
             <div className="battle-result-bet-value">
               {betAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="battle-result-coin-icon" />
             </div>
           </div>
         )}
 
-        {shouldShowCoefficient && winCoefficient !== null && (
+        {shouldShowCoefficient && (
           <div className="battle-result-coef">
-            <div className="battle-result-coef-label">W / Koef:</div>
+            <div className="battle-result-coef-label">
+              {result === 'win' ? 'W / Koef:' : 'L / Koef:'}
+            </div>
             <div className="battle-result-coef-value">
-              x{winCoefficient.toFixed(1)}
+              {result === 'win' ? `x${winCoefficient?.toFixed(1)}` : 'none'}
             </div>
           </div>
         )}
