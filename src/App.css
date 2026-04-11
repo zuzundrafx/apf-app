@@ -3270,7 +3270,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 2%;
+  margin-top: 8%;
 }
 
 .battle-result-avatar-left,
@@ -3315,66 +3315,10 @@ body {
   text-shadow: 0 0 2px #000000;
 }
 
-
-.battle-result-bet-label {
-  width: 50%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  font-size: clamp(14px, 5vw, 18px);
-  font-weight: 700;
-  color: #FFFFFF;
-  text-shadow: 0 0 2px #000000;
-  padding-right: 4%;
-}
-
-.battle-result-bet-value {
-  width: 50%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 2%;
-  font-size: clamp(14px, 5vw, 18px);
-  font-weight: 700;
-  color: #FFFFFF;
-  text-shadow: 0 0 2px #000000;
-}
-
 .battle-result-coin-icon {
   width: auto;
   height: 1.5em;
   object-fit: contain;
-}
-
-.battle-result-coef-label {
-  width: 50%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  font-size: clamp(14px, 5vw, 18px);
-  font-weight: 700;
-  color: #FFFFFF;
-  text-shadow: 0 0 2px #000000;
-  padding-right: 4%;
-}
-
-.battle-result-coef-value {
-  width: 50%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  font-size: clamp(14px, 5vw, 18px);
-  font-weight: 700;
-  color: #d66ff0;
-  text-shadow: 0 0 4px #000000;
-  /*background: linear-gradient(180deg, #aa62c1 0%, #ba66bd 50%, #aa62c1 100%);
-  border: 1.15vh solid #666d75;
-  border-radius: 15%;
-  padding-left: 4%;*/
 }
 
 .battle-result-footer {
@@ -3449,7 +3393,7 @@ body {
 
 /* Контейнер со ставкой и коэффициентом */
 .battle-result-bet-coef-container {
-  margin: 4% 6%;
+  margin: 4% 14%;
   background: #1C1D1F;
   border: 1px solid #3D3D3B;
   border-radius: 8px;
@@ -3544,25 +3488,6 @@ body {
   border-radius: 10%;
   background: #3D3D3B;
   display: block;
-}
-
-/* Увеличиваем длительность тряски с 0.4s до 0.5s (на 25%) */
-@keyframes shakeIcon {
-  0% { transform: translate(0, 0) scale(1); }
-  10% { transform: translate(-3px, -2px) scale(1.05); }
-  20% { transform: translate(3px, 2px) scale(1.05); }
-  30% { transform: translate(-3px, 1px) scale(1.05); }
-  40% { transform: translate(2px, -2px) scale(1.05); }
-  50% { transform: translate(-2px, 1px) scale(1.05); }
-  60% { transform: translate(1px, -1px) scale(1.02); }
-  70% { transform: translate(-1px, 0) scale(1.02); }
-  80% { transform: translate(0, 1px) scale(1.01); }
-  90% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(0, 0) scale(1); }
-}
-
-.shake-icon {
-  animation: shakeIcon 0.6s ease-in-out; /* Было 0.4s, стало 0.6s - увеличение на 50% */
 }
 
 /* ===== СПИННЕР ЗАГРУЗКИ АРЕНЫ ===== */
