@@ -3252,15 +3252,16 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 2%;
+  margin-top: 6%;
 }
 
 .battle-result-round span {
-  font-size: clamp(12px, 3vw, 16px);
-  font-weight: 700;
-  font-style: italic;
   color: #FFFFFF;
-  text-shadow: 0 0 2px #000000;
+  font-size: clamp(10px, 3vw, 12px);
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .battle-result-avatars {
@@ -3314,38 +3315,6 @@ body {
   text-shadow: 0 0 2px #000000;
 }
 
-.battle-result-exp-octagon {
-  position: absolute;
-  bottom: 105%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: auto;
-  min-width: 50%;
-  max-width: 90%;
-  /*background: radial-gradient(circle, #ffff91 0%, #ffe63e 100%);
-  border: 0.15vh solid #666d75;
-  border-radius: 0;
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);*/
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5vh;
-  font-size: clamp(10px, 4vw, 16px);
-  font-weight: 700;
-  color: #ffff91;
-  text-shadow: 0 0 1px #000000;
-  padding: 0.5vh 1vh;
-  white-space: nowrap;
-  z-index: 10;
-}
-
-/* Стрелка вверх вместо плюса */
-.battle-result-exp-arrow {
-  display: inline-block;
-  font-size: clamp(10px, 3vw, 14px);
-  font-weight: 900;
-  margin-right: 0.2vh;
-}
 
 .battle-result-bet-label {
   width: 50%;
