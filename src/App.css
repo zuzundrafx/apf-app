@@ -3308,7 +3308,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  font-size: clamp(12px, 3vw, 14px);
+  font-size: clamp(14px, 5vw, 18px);
   font-weight: 700;
   color: #FFFFFF;
   text-shadow: 0 0 2px #000000;
@@ -3322,7 +3322,7 @@ body {
   align-items: center;
   justify-content: flex-start;
   gap: 2%;
-  font-size: clamp(12px, 3vw, 14px);
+  font-size: clamp(14px, 5vw, 18px);
   font-weight: 700;
   color: #FFFFFF;
   text-shadow: 0 0 2px #000000;
@@ -3330,7 +3330,7 @@ body {
 
 .battle-result-coin-icon {
   width: auto;
-  height: 1.2em;
+  height: 1.5em;
   object-fit: contain;
 }
 
@@ -3348,7 +3348,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  font-size: clamp(12px, 3vw, 14px);
+  font-size: clamp(14px, 5vw, 18px);
   font-weight: 700;
   color: #FFFFFF;
   text-shadow: 0 0 2px #000000;
@@ -3475,7 +3475,7 @@ body {
 .battle-result-avatar-wrapper.avatar-loser {
   background: linear-gradient(180deg, #abacad 0%, #616264 100%);
   border-radius: 10%;
-  padding: 4%;
+  padding: 2%;
 }
 
 .battle-result-avatar-img {
