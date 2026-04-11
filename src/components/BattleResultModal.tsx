@@ -32,35 +32,29 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   rivalName,
   onClose
 }) => {
-  const [showWinAnimation, setShowWinAnimation] = useState(false);
   const [winIconScale, setWinIconScale] = useState(1);
+  const [showOpenIcon, setShowOpenIcon] = useState(false); // флаг для открытой сумки
 
   useEffect(() => {
     if (isOpen && result === 'win') {
-      // Сначала показываем закрытую сумку (уже по умолчанию)
-      setShowWinAnimation(false);
+      // Сброс состояния при открытии
+      setShowOpenIcon(false);
       setWinIconScale(1);
       
-      // Через 0.15 сек начинаем анимацию увеличения
+      // Начинаем анимацию увеличения закрытой сумки
       const timer1 = setTimeout(() => {
         setWinIconScale(1.2);
-      }, 150);
+      }, 50);
       
-      // Через 0.3 сек меняем иконку на открытую и возвращаем размер
+      // Через 0.3 сек увеличиваем масштаб и меняем иконку на открытую
       const timer2 = setTimeout(() => {
         setWinIconScale(1);
-        setShowWinAnimation(true);
+        setShowOpenIcon(true); // показываем открытую сумку
       }, 300);
-      
-      // Через 0.6 сек снимаем флаг анимации
-      const timer3 = setTimeout(() => {
-        setShowWinAnimation(false);
-      }, 600);
       
       return () => {
         clearTimeout(timer1);
         clearTimeout(timer2);
-        clearTimeout(timer3);
       };
     }
   }, [isOpen, result]);
@@ -123,7 +117,7 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   
   const getRewardIcon = () => {
     if (result === 'win') {
-      if (showWinAnimation) {
+      if (showOpenIcon) {
         return `${BASE_URL}/icons/Open_win_icon.webp`;
       }
       return `${BASE_URL}/icons/Close_win_icon.webp`;
@@ -215,7 +209,7 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
         <div className="battle-result-reward-icon">
           <div 
             className="battle-result-reward-icon-wrapper"
-            style={{ transform: `scale(${winIconScale})` }}
+            style={{ transform: `scale(${winIconScale})`, transition: 'transform 0.25s ease' }}
           >
             <img 
               src={getRewardIcon()}
