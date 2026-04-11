@@ -3528,7 +3528,7 @@ body {
   font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: 1px;
-  margin-top: 80%;
+  margin-top: 75%;
 }
 
 @keyframes spin {
@@ -3606,7 +3606,7 @@ body {
   align-items: center;
   justify-content: center;
   margin-top: auto;
-  margin-bottom: 5%;
+  margin-bottom: 2%;
   padding: 0 2%;
 }
 
