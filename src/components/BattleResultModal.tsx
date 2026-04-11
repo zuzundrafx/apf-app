@@ -45,19 +45,19 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
       // Шаг 1: масштабирование закрытой сумки
       const timer1 = setTimeout(() => {
         setWinIconScale(1.2);
-      }, 50);
+      }, 150);
       
       // Шаг 2: тряска закрытой сумки
       const timer2 = setTimeout(() => {
         setShakeIcon(true);
-      }, 250);
+      }, 350);
       
       // Шаг 3: остановка тряски и смена иконки
       const timer3 = setTimeout(() => {
         setShakeIcon(false);
         setShowOpenIcon(true);
         setWinIconScale(1);
-      }, 650);
+      }, 150);
       
       return () => {
         clearTimeout(timer1);
