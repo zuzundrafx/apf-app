@@ -117,7 +117,7 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
 
   const getTitleColor = () => {
     if (result === 'win') return '#FFD966';
-    if (result === 'loss') return '#FF0000';
+    if (result === 'loss') return '#FFFFFF';
     if (result === 'draw') return '#FFFFFF';
     if (result === 'tech-loss') return '#FF0000';
     return '#FFFFFF';

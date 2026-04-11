@@ -997,6 +997,7 @@ body {
   height: min(30vw, 120px);
   margin-bottom: clamp(10px, 5vh, 20px);
   object-fit: contain;
+  border-radius: 10%;
 }
 
 .loading-progress-bar {
