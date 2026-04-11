@@ -3248,7 +3248,7 @@ body {
 
 .battle-result-exp-octagon {
   position: absolute;
-  bottom: 110%;
+  bottom: 105%;
   left: 50%;
   transform: translateX(-50%);
   width: auto;
@@ -3262,7 +3262,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5vh;
-  font-size: clamp(8px, 2.5vw, 12px);
+  font-size: clamp(10px, 4vw, 16px);
   font-weight: 700;
   color: #ffff91;
   text-shadow: 0 0 1px #000000;
