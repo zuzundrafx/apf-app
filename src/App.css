@@ -3173,7 +3173,7 @@ body {
 .battle-result-header h2 {
   font-size: clamp(14px, 6vw, 27px);
   font-weight: 700;
-  /*text-transform: uppercase;*/
+  text-transform: uppercase;
   text-align: center;
   letter-spacing: 1px;
 }
@@ -3376,7 +3376,7 @@ body {
   transition: transform 0.15s ease;
   max-width: 90%;   /* ← ДОБАВИТЬ */
   max-height: 90%;  /* ← ДОБАВИТЬ */
-  bottom: 5%;
+  bottom: 10%;
 }
 
 .battle-result-reward-img {
@@ -3388,7 +3388,7 @@ body {
 
 .battle-result-reward-amount {
   position: absolute;
-  /*bottom: 10%;*/
+  bottom: 35%;
   left: 50%;
   transform: translateX(-50%);
   font-size: clamp(20px, 8vw, 27px);
