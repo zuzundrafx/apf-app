@@ -1,6 +1,6 @@
 // src/components/ArenaModal.tsx
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Tournament, SelectedFighter, UserResult, Fighter } from '../types';
 import { UserProfile } from '../api/userProfiles';
 import BattleResultModal from './BattleResultModal';
@@ -34,7 +34,17 @@ interface ArenaModalProps {
     results: UserResult[];
     fightersData: Fighter[];
   }>;
+  loadingTip?: string;
 }
+
+// Список советов для загрузки (резервный, если пропс не передан)
+const DEFAULT_LOADING_TIPS = [
+  "💡 TIP: Bet multipliers by result: KO grants you 2x, Unanimous Decision - 1.5x, Split Decision - 1.25x, DRAW - 1x (refund), LOSS = 0x.",
+  "💡 TIP: Higher bet amounts increase your potential rewards, but also the risk. Choose wisely!",
+  "💡 TIP: Winning fighters earn you TICKETS, which can be used for special PvP battles with higher rewards!",
+  "💡 TIP: Save your coins for upcoming tournaments — the more you bet, the bigger the prize pool!",
+  "💡 TIP: Each round features a random weight class, with fighters from that class participating in the tournament!"
+];
 
 // Функция для получения имени файла аватарки по весовой категории
 const getAvatarFilename = (weightClass: string): string => {
@@ -117,6 +127,9 @@ type BattleEvent = {
   result?: any;
 };
 
+// Тип для интервала (浏览器环境)
+type IntervalId = ReturnType<typeof setInterval>;
+
 const ArenaModal: React.FC<ArenaModalProps> = ({
   tournament,
   userSelections,
@@ -133,6 +146,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   onUpdateBalance,
   onClaimRewards,
   loadTournamentData,
+  loadingTip,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
@@ -151,7 +165,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   } | null>(null);
   const [battleRewards, setBattleRewards] = useState<{ coins: number; experience: number } | null>(null);
   const [countdownStep, setCountdownStep] = useState<'ready' | 'steady' | 'fight' | null>('ready');
-  const [damagePhase, setDamagePhase] = useState<'idle' | 'first' | 'second'>('idle');
   const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false, false, false]);
   const [animatedDamage, setAnimatedDamage] = useState<{ player: number; rival: number }>({ player: 0, rival: 0 });
   const [showDamageIncrease, setShowDamageIncrease] = useState<{ player: boolean; rival: boolean }>({ player: false, rival: false });
@@ -159,6 +172,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const [shakeScreen, setShakeScreen] = useState(false);
   const [healthFlash, setHealthFlash] = useState<'player' | 'rival' | null>(null);
   const [isBattleLoaded, setIsBattleLoaded] = useState(false);
+  
+  // Состояние для текущего совета (с ротацией)
+  const [currentLoadingTip, setCurrentLoadingTip] = useState<string>(loadingTip || DEFAULT_LOADING_TIPS[0]);
+  const tipIntervalRef = useRef<IntervalId | null>(null);
   
   // Данные для боя (загружаются в PvP режиме)
   const [rivalData, setRivalData] = useState<{
@@ -170,6 +187,42 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const [weightClasses, setWeightClasses] = useState<string[]>([]);
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
+
+  // Функция для получения случайного совета
+  const getRandomTip = useCallback(() => {
+    const tips = DEFAULT_LOADING_TIPS;
+    const randomIndex = Math.floor(Math.random() * tips.length);
+    return tips[randomIndex];
+  }, []);
+
+  // Запуск ротации советов
+  const startTipRotation = useCallback(() => {
+    if (tipIntervalRef.current) {
+      clearInterval(tipIntervalRef.current);
+      tipIntervalRef.current = null;
+    }
+    
+    setCurrentLoadingTip(loadingTip || DEFAULT_LOADING_TIPS[0]);
+    
+    tipIntervalRef.current = setInterval(() => {
+      setCurrentLoadingTip(getRandomTip());
+    }, 5000);
+  }, [loadingTip, getRandomTip]);
+
+  // Остановка ротации советов
+  const stopTipRotation = useCallback(() => {
+    if (tipIntervalRef.current) {
+      clearInterval(tipIntervalRef.current);
+      tipIntervalRef.current = null;
+    }
+  }, []);
+
+  // Очистка интервала при размонтировании
+  useEffect(() => {
+    return () => {
+      stopTipRotation();
+    };
+  }, [stopTipRotation]);
 
   const applyHitEffect = (target: 'player' | 'rival', damage: number) => {
     const avatarElement = document.querySelector(
@@ -402,6 +455,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     if (isOpen && pvpMode && loadTournamentData && userId && onUpdateBalance && allProfiles && pvpBetAmount !== undefined && userCoins !== undefined && userTickets !== undefined) {
       const loadPvpData = async () => {
         setIsLoading(true);
+        startTipRotation();
         
         try {
           // 1. Списываем валюту
@@ -456,11 +510,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           setTimeout(() => {
             setIsLoading(false);
             setIsBattleLoaded(true);
+            stopTipRotation();
           }, 500);
           
         } catch (error) {
           console.error('Ошибка загрузки PvP данных:', error);
           alert('Error loading arena');
+          stopTipRotation();
           onSurrender();
         }
       };
@@ -474,6 +530,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     if (isOpen && !pvpMode && rivalData && weightClasses.length > 0) {
       const initNormalMode = async () => {
         setIsLoading(true);
+        startTipRotation();
         
         const script = calculateBattleScript(userSelections, rivalData.selections, weightClasses);
         setBattleScript(script);
@@ -483,6 +540,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         setTimeout(() => {
           setIsLoading(false);
           setIsBattleLoaded(true);
+          stopTipRotation();
         }, 500);
       };
       
@@ -560,7 +618,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         const playerDamageDealt = event.userDamage || 0;
         const rivalDamageDealt = event.rivalDamage || 0;
         
-        setDamagePhase('first');
         setRivalHealth(event.rivalHealthAfter!);
         
         if (playerDamageDealt > 0) {
@@ -575,7 +632,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         }
         
         setTimeout(() => {
-          setDamagePhase('second');
           setUserHealth(event.userHealthAfter!);
           
           if (rivalDamageDealt > 0) {
@@ -595,7 +651,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           }, 1000);
           
           setTimeout(() => {
-            setDamagePhase('idle');
             setCurrentEventIndex(prev => prev + 1);
           }, 750);
         }, 750);
@@ -663,9 +718,12 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             <img src={`${BASE_URL}/backgrounds/Arena_1_bg.webp`} alt="Octagon" className="octagon-image" />
           </div>
           <div className="arena-loading">
-    <div className="arena-loading-spinner"></div>
-    <div className="arena-loading-text">Loading arena data...</div>
-  </div>
+            <div className="arena-loading-spinner"></div>
+            <div className="arena-loading-text">LOADING ARENA...</div>
+            <div className="arena-loading-tip-container">
+              <div className="arena-loading-tip">{currentLoadingTip}</div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -943,20 +1001,20 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       </div>
       
       {battleResult && (
-  <BattleResultModal
-    isOpen={battleResult.isOpen}
-    result={battleResult.result}
-    resultType={battleResult.resultType}
-    rewards={battleRewards || undefined}
-    betAmount={pvpMode ? (pvpBetAmount || 0) : 0}
-    winningRound={currentRound}
-    userAvatar={userAvatar}
-    rivalAvatar={displayRivalData?.photoUrl}
-    userName={userName}
-    rivalName={displayRivalData?.username}
-    onClose={handleResultClose}
-  />
-)}
+        <BattleResultModal
+          isOpen={battleResult.isOpen}
+          result={battleResult.result}
+          resultType={battleResult.resultType}
+          rewards={battleRewards || undefined}
+          betAmount={pvpMode ? (pvpBetAmount || 0) : 0}
+          winningRound={currentRound}
+          userAvatar={userAvatar}
+          rivalAvatar={displayRivalData?.photoUrl}
+          userName={userName}
+          rivalName={displayRivalData?.username}
+          onClose={handleResultClose}
+        />
+      )}
     </div>
   );
 };

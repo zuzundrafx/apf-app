@@ -1,6 +1,6 @@
 // src/components/Pvp.tsx
 
-import { useState, forwardRef, useImperativeHandle } from 'react';
+import { useState, forwardRef, useImperativeHandle, useEffect, useCallback, useRef } from 'react';
 import { Tournament, SelectedFighter, Fighter, UserResult } from '../types';
 import { UserProfile } from '../api/userProfiles';
 import ArenaModal from './ArenaModal';
@@ -28,6 +28,18 @@ export interface PvpRef {
   engage: (tournament: Tournament, betAmount: number) => Promise<void>;
 }
 
+// Тип для интервала (浏览器环境)
+type IntervalId = ReturnType<typeof setInterval>;
+
+// Список советов для загрузки
+const LOADING_TIPS = [
+  "💡 TIP: Bet multipliers by result: KO grants you 2x, Unanimous Decision - 1.5x, Split Decision - 1.25x, DRAW - 1x (refund), LOSS = 0x.",
+  "💡 TIP: Higher bet amounts increase your potential rewards, but also the risk. Choose wisely!",
+  "💡 TIP: Winning fighters earn you TICKETS, which can be used for special PvP battles with higher rewards!",
+  "💡 TIP: Save your coins for upcoming tournaments — the more you bet, the bigger the prize pool!",
+  "💡 TIP: Each round features a random weight class, with fighters from that class participating in the tournament!"
+];
+
 const Pvp = forwardRef<PvpRef, PvpProps>(({
   pastTournaments,
   userSelections,
@@ -49,6 +61,48 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   
   const [showMessage, setShowMessage] = useState(false);
   const [messageText, setMessageText] = useState('');
+  
+  // Состояния для советов при загрузке
+  const [currentTip, setCurrentTip] = useState<string>(LOADING_TIPS[0]);
+  const tipIntervalRef = useRef<IntervalId | null>(null);
+
+  // Функция для получения случайного совета
+  const getRandomTip = useCallback(() => {
+    const randomIndex = Math.floor(Math.random() * LOADING_TIPS.length);
+    return LOADING_TIPS[randomIndex];
+  }, []);
+
+  // Запуск ротации советов
+  const startTipRotation = useCallback(() => {
+    // Очищаем предыдущий интервал
+    if (tipIntervalRef.current) {
+      clearInterval(tipIntervalRef.current);
+      tipIntervalRef.current = null;
+    }
+    
+    // Устанавливаем первый случайный совет
+    setCurrentTip(getRandomTip());
+    
+    // Запускаем интервал для смены советов каждые 5 секунд
+    tipIntervalRef.current = setInterval(() => {
+      setCurrentTip(getRandomTip());
+    }, 5000);
+  }, [getRandomTip]);
+
+  // Остановка ротации советов
+  const stopTipRotation = useCallback(() => {
+    if (tipIntervalRef.current) {
+      clearInterval(tipIntervalRef.current);
+      tipIntervalRef.current = null;
+    }
+  }, []);
+
+  // Очистка интервала при размонтировании
+  useEffect(() => {
+    return () => {
+      stopTipRotation();
+    };
+  }, [stopTipRotation]);
 
   const hasUserBetOnTournament = (tournament: Tournament): boolean => {
     return userSelections.some(sel => 
@@ -93,6 +147,9 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   const handleEngage = async (tournament: Tournament, betAmount: number): Promise<void> => {
     if (!userId || arenaData) return;
     
+    // Запускаем ротацию советов при открытии арены
+    startTipRotation();
+    
     setArenaData({
       tournament,
       pvpBetAmount: betAmount
@@ -115,6 +172,8 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   };
 
   const handleSurrender = () => {
+    // Останавливаем ротацию советов при закрытии арены
+    stopTipRotation();
     setArenaData(null);
   };
 
@@ -230,6 +289,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           onUpdateBalance={onUpdateBalance}
           onClaimRewards={onClaimRewards}
           loadTournamentData={loadTournamentData}
+          loadingTip={currentTip}
         />
       )}
     </div>
