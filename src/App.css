@@ -3388,7 +3388,7 @@ body {
 
 .battle-result-reward-amount {
   position: absolute;
-  bottom: 35%;
+  /*bottom: 35%;*/
   left: 50%;
   transform: translateX(-50%);
   /*transform: translateY(60%);*/
