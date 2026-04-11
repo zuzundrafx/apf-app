@@ -3497,3 +3497,22 @@ body {
   background: #3D3D3B;
   display: block;
 }
+
+/* Тряска иконки сумки */
+@keyframes shakeIcon {
+  0% { transform: translate(0, 0) scale(1); }
+  10% { transform: translate(-3px, -2px) scale(1.05); }
+  20% { transform: translate(3px, 2px) scale(1.05); }
+  30% { transform: translate(-3px, 1px) scale(1.05); }
+  40% { transform: translate(2px, -2px) scale(1.05); }
+  50% { transform: translate(-2px, 1px) scale(1.05); }
+  60% { transform: translate(1px, -1px) scale(1.02); }
+  70% { transform: translate(-1px, 0) scale(1.02); }
+  80% { transform: translate(0, 1px) scale(1.01); }
+  90% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.shake-icon {
+  animation: shakeIcon 0.4s ease-in-out;
+}

@@ -34,13 +34,13 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
 }) => {
   const [winIconScale, setWinIconScale] = useState(1);
   const [showOpenIcon, setShowOpenIcon] = useState(false);
-  const [shakeScreen, setShakeScreen] = useState(false);
+  const [shakeIcon, setShakeIcon] = useState(false);
 
   useEffect(() => {
     if (isOpen && result === 'win') {
       setShowOpenIcon(false);
       setWinIconScale(1);
-      setShakeScreen(false);
+      setShakeIcon(false);
       
       const timer1 = setTimeout(() => {
         setWinIconScale(1.2);
@@ -49,8 +49,8 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
       const timer2 = setTimeout(() => {
         setWinIconScale(1);
         setShowOpenIcon(true);
-        setShakeScreen(true);
-        setTimeout(() => setShakeScreen(false), 400);
+        setShakeIcon(true);
+        setTimeout(() => setShakeIcon(false), 400);
       }, 300);
       
       return () => {
@@ -138,7 +138,7 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
   return (
-    <div className={`battle-result-modal-overlay ${shakeScreen ? 'shake' : ''}`}>
+    <div className="battle-result-modal-overlay">
       <div className="battle-result-modal">
         
         <div className="battle-result-header">
@@ -221,7 +221,7 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
 
         <div className="battle-result-reward-icon">
           <div 
-            className="battle-result-reward-icon-wrapper"
+            className={`battle-result-reward-icon-wrapper ${shakeIcon ? 'shake-icon' : ''}`}
             style={{ transform: `scale(${winIconScale})`, transition: 'transform 0.25s ease' }}
           >
             <img 
