@@ -159,8 +159,8 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
                 {result === 'loss' ? 'Spent:' : 'Your bet:'}
               </span>
               <div className="battle-result-bet-value-wrapper">
-                <span className="battle-result-bet-value">{betAmount}</span>
                 <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="battle-result-bet-icon" />
+                <span className="battle-result-bet-value">{betAmount}</span>
               </div>
             </div>
           )}
