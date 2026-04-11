@@ -3602,6 +3602,19 @@ body {
   }
 }
 /* ===== КОНТЕЙНЕР С СОВЕТОМ НА ЭКРАНЕ ЗАГРУЗКИ АРЕНЫ ===== */
+.arena-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2vh;
+  color: #FFFFFF;
+  z-index: 1;
+  position: relative;
+  min-height: 0; /* Добавить */
+}
+
 .arena-loading-tip-container {
   width: 90%;
   height: 25%;
@@ -3611,20 +3624,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 16px;
+  margin-top: auto; /* <- ГЛАВНОЕ: прижимает к низу */
+  margin-bottom: 5%; /* Отступ от нижнего края (опционально) */
   padding: 0 12px;
-}
-
-.arena-loading-tip {
-  color: #FFD966;
-  font-size: clamp(11px, 3vw, 14px);
-  font-weight: 500;
-  text-align: center;
-  line-height: 1.4;
-  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
-  word-break: break-word;
-  max-width: 100%;
-  animation: tipFadeIn 0.5s ease-out;
 }
 
 @keyframes tipFadeIn {
