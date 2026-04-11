@@ -1,6 +1,6 @@
 // src/components/BattleResultModal.tsx
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 interface BattleResultModalProps {
   isOpen: boolean;
@@ -32,46 +32,6 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   rivalName,
   onClose
 }) => {
-  const [winIconScale, setWinIconScale] = useState(1);
-  const [showOpenIcon, setShowOpenIcon] = useState(false);
-  const [shakeIcon, setShakeIcon] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && (result === 'win' || result === 'draw' || result === 'loss')) {
-      setShowOpenIcon(false);
-      setWinIconScale(1);
-      setShakeIcon(false);
-      
-      // Шаг 1: масштабирование закрытой сумки
-      const timer1 = setTimeout(() => {
-        setWinIconScale(1.3);
-      }, 150);
-      
-      // Шаг 2: тряска закрытой сумки
-      const timer2 = setTimeout(() => {
-        setShakeIcon(true);
-      }, 250);
-
-      // Шаг 3: Смена иконки
-      const timer3 = setTimeout(() => {
-        setShowOpenIcon(true); 
-      }, 450);
-
-      // Шаг 4: остановка тряски
-      const timer4 = setTimeout(() => {
-        setShakeIcon(false);
-        setWinIconScale(1);
-      }, 750);
-      
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-        clearTimeout(timer3);
-        clearTimeout(timer4);
-      };
-    }
-  }, [isOpen, result]);
-
   if (!isOpen) return null;
 
   const getWinCoefficient = (): number | null => {
@@ -136,27 +96,6 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   
   const isPlayerWinner = result === 'win';
   const isRivalWinner = result === 'loss';
-  
-  const getRewardIcon = () => {
-    // Для победы и ничьей
-    if (result === 'win' || result === 'draw') {
-      if (showOpenIcon) {
-        return `${BASE_URL}/icons/Open_win_icon.webp`;
-      }
-      return `${BASE_URL}/icons/Close_win_icon.webp`;
-    }
-    // Для поражения
-    if (result === 'loss') {
-      if (showOpenIcon) {
-        return `${BASE_URL}/icons/Open_lose_icon.webp`;
-      }
-      return `${BASE_URL}/icons/Close_win_icon.webp`;
-    }
-    if (result === 'tech-loss') {
-      return `${BASE_URL}/icons/Open_lose_icon.webp`;
-    }
-    return `${BASE_URL}/icons/default-avatar.png`;
-  };
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
@@ -186,12 +125,6 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
                 }}
               />
             </div>
-            {rewards && rewards.experience > 0 && (
-              <div className="battle-result-exp-octagon">
-                <span className="battle-result-exp-arrow">▲</span>
-                {rewards.experience} exp
-              </div>
-            )}
             <div className="battle-result-avatar-name">{userName}</div>
           </div>
           
@@ -218,48 +151,44 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
           </div>
         </div>
 
-        <div className="battle-result-divider"></div>
-
-        {shouldShowBet && betAmount !== undefined && (
-          <div className="battle-result-bet">
-            <div className="battle-result-bet-label">
-              {result === 'loss' ? 'Spent:' : 'Your bet:'}
-            </div>
-            <div className="battle-result-bet-value">
-              {betAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="battle-result-coin-icon" />
-            </div>
+        {/* Контейнер с наградами (как в окне наград за турнир) */}
+        <div className="battle-result-rewards-summary">
+          <div className="battle-result-rewards-item">
+            <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="battle-result-rewards-icon" />
+            <span className="battle-result-rewards-value">+{rewards?.coins || 0}</span>
           </div>
-        )}
-
-        {shouldShowCoefficient && (
-          <div className="battle-result-coef">
-            <div className="battle-result-coef-label">
-              {result === 'win' ? 'W / Koef:' : result === 'draw' ? 'D / Koef:' : 'L / Koef:'}
-            </div>
-            <div className="battle-result-coef-value">
-              {result === 'win' ? `x${winCoefficient?.toFixed(1)}` : 
-               result === 'draw' ? `x${drawCoefficient?.toFixed(1)}` : 
-               'none'}
-            </div>
+          <div className="battle-result-rewards-item">
+            <span className="battle-result-rewards-label">EXP</span>
+            <span className="battle-result-rewards-value">+{rewards?.experience || 0}</span>
           </div>
-        )}
+        </div>
 
-        <div className="battle-result-reward-icon">
-          <div 
-            className={`battle-result-reward-icon-wrapper ${shakeIcon ? 'shake-icon' : ''}`}
-            style={{ transform: `scale(${winIconScale})`, transition: 'transform 0.50s ease' }}
-          >
-            <img 
-              src={getRewardIcon()}
-              alt="reward"
-              className="battle-result-reward-img"
-            />
-            {rewards && rewards.coins > 0 && (
-              <div className="battle-result-reward-amount">
-                +{rewards.coins}
+        {/* Контейнер со ставкой и коэффициентом */}
+        <div className="battle-result-bet-coef-container">
+          {shouldShowBet && betAmount !== undefined && (
+            <div className="battle-result-bet-item">
+              <span className="battle-result-bet-label">
+                {result === 'loss' ? 'Spent:' : 'Your bet:'}
+              </span>
+              <div className="battle-result-bet-value-wrapper">
+                <span className="battle-result-bet-value">{betAmount}</span>
+                <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="battle-result-bet-icon" />
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {shouldShowCoefficient && (
+            <div className="battle-result-coef-item">
+              <span className="battle-result-coef-label">
+                {result === 'win' ? 'W / Koef:' : result === 'draw' ? 'D / Koef:' : 'L / Koef:'}
+              </span>
+              <span className="battle-result-coef-value">
+                {result === 'win' ? `x${winCoefficient?.toFixed(1)}` : 
+                 result === 'draw' ? `x${drawCoefficient?.toFixed(1)}` : 
+                 'none'}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="battle-result-footer">
