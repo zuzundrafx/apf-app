@@ -3164,7 +3164,7 @@ body {
   position: absolute;
   top: -10%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-60%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3173,7 +3173,7 @@ body {
 .battle-result-header h2 {
   font-size: clamp(14px, 6vw, 27px);
   font-weight: 700;
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
   text-align: center;
   letter-spacing: 1px;
 }
@@ -3184,7 +3184,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 10%;
+  margin-top: 2%;
 }
 
 .battle-result-round span {
