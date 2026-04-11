@@ -3506,7 +3506,7 @@ body {
 }
 
 .shake-icon {
-  animation: shakeIcon 0.7s ease-in-out; /* Было 0.4s, стало 0.5s - увеличение на 25% */
+  animation: shakeIcon 0.6s ease-in-out; /* Было 0.4s, стало 0.6s - увеличение на 50% */
 }
 
 /* ===== СПИННЕР ЗАГРУЗКИ АРЕНЫ ===== */

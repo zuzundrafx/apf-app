@@ -55,7 +55,7 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
       // Шаг 3: Смена иконки
       const timer3 = setTimeout(() => {
         setShowOpenIcon(true); 
-      }, 550);
+      }, 450);
 
       // Шаг 4: остановка тряски
       const timer4 = setTimeout(() => {
@@ -247,7 +247,7 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
         <div className="battle-result-reward-icon">
           <div 
             className={`battle-result-reward-icon-wrapper ${shakeIcon ? 'shake-icon' : ''}`}
-            style={{ transform: `scale(${winIconScale})`, transition: 'transform 0.25s ease' }}
+            style={{ transform: `scale(${winIconScale})`, transition: 'transform 0.50s ease' }}
           >
             <img 
               src={getRewardIcon()}
