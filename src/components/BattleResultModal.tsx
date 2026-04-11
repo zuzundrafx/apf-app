@@ -37,25 +37,32 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   const [shakeIcon, setShakeIcon] = useState(false);
 
   useEffect(() => {
-    if (isOpen && result === 'win') {
+    if (isOpen && (result === 'win' || result === 'draw' || result === 'loss')) {
       setShowOpenIcon(false);
       setWinIconScale(1);
       setShakeIcon(false);
       
+      // Шаг 1: масштабирование закрытой сумки
       const timer1 = setTimeout(() => {
         setWinIconScale(1.2);
       }, 50);
       
+      // Шаг 2: тряска закрытой сумки
       const timer2 = setTimeout(() => {
-        setWinIconScale(1);
-        setShowOpenIcon(true);
         setShakeIcon(true);
-        setTimeout(() => setShakeIcon(false), 400);
-      }, 300);
+      }, 250);
+      
+      // Шаг 3: остановка тряски и смена иконки
+      const timer3 = setTimeout(() => {
+        setShakeIcon(false);
+        setShowOpenIcon(true);
+        setWinIconScale(1);
+      }, 650);
       
       return () => {
         clearTimeout(timer1);
         clearTimeout(timer2);
+        clearTimeout(timer3);
       };
     }
   }, [isOpen, result]);
@@ -120,17 +127,22 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   const isRivalWinner = result === 'loss';
   
   const getRewardIcon = () => {
-    if (result === 'win') {
+    // Для победы и ничьей
+    if (result === 'win' || result === 'draw') {
       if (showOpenIcon) {
         return `${BASE_URL}/icons/Open_win_icon.webp`;
       }
       return `${BASE_URL}/icons/Close_win_icon.webp`;
     }
-    if (result === 'loss' || result === 'tech-loss') {
-      return `${BASE_URL}/icons/Open_lose_icon.webp`;
+    // Для поражения
+    if (result === 'loss') {
+      if (showOpenIcon) {
+        return `${BASE_URL}/icons/Open_lose_icon.webp`;
+      }
+      return `${BASE_URL}/icons/Close_win_icon.webp`;
     }
-    if (result === 'draw') {
-      return `${BASE_URL}/icons/Open_win_icon.webp`;
+    if (result === 'tech-loss') {
+      return `${BASE_URL}/icons/Open_lose_icon.webp`;
     }
     return `${BASE_URL}/icons/default-avatar.png`;
   };
