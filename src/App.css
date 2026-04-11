@@ -1640,15 +1640,7 @@ body {
   position: relative;
 }
 
-.arena-loading {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  font-size: 18px;
-  font-weight: 600;
-}
+
 
 /* Верхняя шапка (8%) */
 .arena-header {
@@ -3612,7 +3604,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 2%;
   padding: 0 2%;
 }
 
