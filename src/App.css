@@ -3611,8 +3611,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 16px;
-  padding: 0 12px;
+  margin-top: 5%;
+  padding: 0 3%;
 }
 
 .arena-loading-tip {
