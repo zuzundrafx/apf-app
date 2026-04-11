@@ -268,6 +268,7 @@ function App() {
   const [pendingRewards, setPendingRewards] = useState<{
     tournamentName: string;
     winners: SelectedFighter[];
+    allSelections: SelectedFighter[];  // ← ДОБАВИТЬ
     totalCoins: number;
     totalTickets: number;
     totalExp: number;
@@ -731,6 +732,7 @@ useEffect(() => {
                 setPendingRewards({
                   tournamentName: pastTournaments[i].name,
                   winners: winners,
+                  allSelections: result.selections,  // ← ДОБАВИТЬ ВСЕХ БОЙЦОВ
                   totalCoins,
                   totalTickets,
                   totalExp
@@ -1495,44 +1497,43 @@ useEffect(() => {
         <p>Tournament "{pendingRewards.tournamentName}"</p>
       </div>
 
-      {pendingRewards.winners.length > 0 ? (
-        <>
-          <div className="rewards-winners-list">
-            <h3>WINNERS IN YOUR BET:</h3>
-            {pendingRewards.winners.map((sel: SelectedFighter, idx: number) => (
-              <div key={idx} className="rewards-winner-item">
-                <div className="rewards-winner-info">
-                  <span 
-                    className="rewards-winner-weight"
-                    style={{ color: getWeightClassColor(sel.weightClass) }}
-                  >
-                    {sel.weightClass}
-                  </span>
-                  <span className="rewards-winner-name">{sel.fighter.Fighter}</span>
-                </div>
-                <span className="rewards-winner-badge">WIN</span>
+      <div className="rewards-winners-list">
+        <h3>YOUR BETS:</h3>
+        {pendingRewards.allSelections.map((sel: SelectedFighter, idx: number) => {
+          const isWin = sel.fighter['W/L'] === 'win';
+          return (
+            <div key={idx} className="rewards-winner-item">
+              <div className="rewards-winner-info">
+                <span 
+                  className="rewards-winner-weight"
+                  style={{ color: getWeightClassColor(sel.weightClass) }}
+                >
+                  {sel.weightClass}
+                </span>
+                <span className="rewards-winner-name">{sel.fighter.Fighter}</span>
               </div>
-            ))}
-          </div>
+              <span className={`rewards-winner-badge ${isWin ? 'win' : 'lose'}`}>
+                {isWin ? 'WIN' : 'LOSE'}
+              </span>
+            </div>
+          );
+        })}
+      </div>
 
-          <div className="rewards-summary">
-            <div className="rewards-summary-item">
-              <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="rewards-summary-icon" />
-              <span className="rewards-summary-value">{pendingRewards.totalCoins}</span>
-            </div>
-            <div className="rewards-summary-item">
-              <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="rewards-summary-icon" />
-              <span className="rewards-summary-value">{pendingRewards.totalTickets}</span>
-            </div>
-            <div className="rewards-summary-item">
-              <span className="rewards-summary-label">EXP</span>
-              <span className="rewards-summary-value">+{pendingRewards.totalExp}</span>
-            </div>
-          </div>
-        </>
-      ) : (
-        <p className="rewards-no-winners">Unfortunately, none of your fighters won 😢</p>
-      )}
+      <div className="rewards-summary">
+        <div className="rewards-summary-item">
+          <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="rewards-summary-icon" />
+          <span className="rewards-summary-value">{pendingRewards.totalCoins}</span>
+        </div>
+        <div className="rewards-summary-item">
+          <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="rewards-summary-icon" />
+          <span className="rewards-summary-value">{pendingRewards.totalTickets}</span>
+        </div>
+        <div className="rewards-summary-item">
+          <span className="rewards-summary-label">EXP</span>
+          <span className="rewards-summary-value">+{pendingRewards.totalExp}</span>
+        </div>
+      </div>
 
       <div className="rewards-footer">
         <button 
