@@ -149,24 +149,25 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
         )}
 
         <div className="battle-result-avatars">
-          <div className="battle-result-avatar-left">
-            <div className={`battle-result-avatar-wrapper ${isPlayerWinner ? 'avatar-winner' : 'avatar-loser'}`}>
-              <img 
-                src={userAvatar || `${BASE_URL}/Home_button.png`}
-                alt="player"
-                className="battle-result-avatar-img"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
-                }}
-              />
-            </div>
-            {rewards && rewards.experience > 0 && (
-              <div className="battle-result-exp-octagon">
-                +{rewards.experience} exp
-              </div>
-            )}
-            <div className="battle-result-avatar-name">{userName}</div>
-          </div>
+        <div className="battle-result-avatar-left">
+  <div className={`battle-result-avatar-wrapper ${isPlayerWinner ? 'avatar-winner' : 'avatar-loser'}`}>
+    <img 
+      src={userAvatar || `${BASE_URL}/Home_button.png`}
+      alt="player"
+      className="battle-result-avatar-img"
+      onError={(e) => {
+        (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
+      }}
+    />
+  </div>
+  {rewards && rewards.experience > 0 && (
+    <div className="battle-result-exp-octagon">
+      <span className="battle-result-exp-arrow">▲</span>
+      {rewards.experience} exp
+    </div>
+  )}
+  <div className="battle-result-avatar-name">{userName}</div>
+</div>
           
           <div className="battle-result-avatar-center">
             <img 
