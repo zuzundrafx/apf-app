@@ -3248,23 +3248,23 @@ body {
 
 .battle-result-exp-octagon {
   position: absolute;
-  bottom: 10%;
+  bottom: 110%;
   left: 50%;
   transform: translateX(-50%);
   width: auto;
   min-width: 50%;
   max-width: 90%;
-  background: radial-gradient(circle, #ffff91 0%, #ffe63e 100%);
+  /*background: radial-gradient(circle, #ffff91 0%, #ffe63e 100%);
   border: 0.15vh solid #666d75;
   border-radius: 0;
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);*/
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5vh;
   font-size: clamp(8px, 2.5vw, 12px);
   font-weight: 700;
-  color: #000000;
+  color: #ffff91;
   text-shadow: 0 0 1px #000000;
   padding: 0.5vh 1vh;
   white-space: nowrap;
@@ -3339,7 +3339,7 @@ body {
   height: 10%;
   display: flex;
   align-items: center;
-  justify-content: left;
+  justify-content: center;
 }
 
 .battle-result-coef-label {
@@ -3356,7 +3356,7 @@ body {
 }
 
 .battle-result-coef-value {
-  width: 15%;
+  width: 40%;
   height: 100%;
   display: flex;
   align-items: center;
@@ -3427,9 +3427,9 @@ body {
 .battle-result-button {
   width: 60%;
   height: 80%;
-  background: linear-gradient(180deg, #5b5b5b 0%, #3d3c3d 100%);
+  background: linear-gradient(180deg, #5b5b5b 0%, #302f30 100%);
   border: 0.15vh solid #666d75;
-  border-radius: 2%;
+  border-radius: 10%;
   color: #FFFFFF;
   font-size: clamp(12px, 3vw, 14px);
   font-weight: 700;
