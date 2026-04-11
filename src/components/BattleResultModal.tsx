@@ -50,14 +50,14 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
       // Шаг 2: тряска закрытой сумки
       const timer2 = setTimeout(() => {
         setShakeIcon(true);
-      }, 350);
+      }, 250);
       
       // Шаг 3: остановка тряски и смена иконки
       const timer3 = setTimeout(() => {
         setShakeIcon(false);
         setShowOpenIcon(true);
         setWinIconScale(1);
-      }, 150);
+      }, 750);
       
       return () => {
         clearTimeout(timer1);
@@ -85,6 +85,11 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
     }
     
     return baseCoeff;
+  };
+
+  const getDrawCoefficient = (): number | null => {
+    if (result !== 'draw') return null;
+    return 1.0;
   };
 
   const getTitle = () => {
@@ -119,8 +124,9 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   };
 
   const winCoefficient = getWinCoefficient();
+  const drawCoefficient = getDrawCoefficient();
   const shouldShowRound = result !== 'tech-loss';
-  const shouldShowCoefficient = result === 'win' || result === 'loss';
+  const shouldShowCoefficient = result === 'win' || result === 'loss' || result === 'draw';
   const shouldShowBet = result !== 'tech-loss';
   
   const isPlayerWinner = result === 'win';
@@ -223,10 +229,12 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
         {shouldShowCoefficient && (
           <div className="battle-result-coef">
             <div className="battle-result-coef-label">
-              {result === 'win' ? 'W / Koef:' : 'L / Koef:'}
+              {result === 'win' ? 'W / Koef:' : result === 'draw' ? 'D / Koef:' : 'L / Koef:'}
             </div>
             <div className="battle-result-coef-value">
-              {result === 'win' ? `x${winCoefficient?.toFixed(1)}` : 'none'}
+              {result === 'win' ? `x${winCoefficient?.toFixed(1)}` : 
+               result === 'draw' ? `x${drawCoefficient?.toFixed(1)}` : 
+               'none'}
             </div>
           </div>
         )}
