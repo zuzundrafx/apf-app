@@ -3275,7 +3275,7 @@ body {
 
 .battle-result-avatar-left,
 .battle-result-avatar-right {
-  width: 33%;
+  width: 40%;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -3285,7 +3285,7 @@ body {
 }
 
 .battle-result-avatar-center {
-  width: 33%;
+  width: 20%;
   height: 100%;
   display: flex;
   align-items: center;
@@ -3302,7 +3302,7 @@ body {
 }
 
 .battle-result-vs-logo {
-  width: 50%;
+  width: 66%;
   aspect-ratio: 1 / 1;
   object-fit: contain;
 }
