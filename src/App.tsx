@@ -707,24 +707,38 @@ useEffect(() => {
         let hasPendingRewards = false;
         for (let i = 0; i < pastResults.length; i++) {
           const result = pastResults[i];
+          const tournament = pastTournaments[i];
+          
           if (result && !result.rewardsAccepted && result.selections.length > 0) {
-            const winners = result.selections.filter(sel => sel.fighter['W/L'] === 'win');
-            if (winners.length > 0) {
-              const betAmount = result.betAmount || 0;
-              const totalCoins = winners.reduce((sum) => sum + Math.floor(betAmount * 2 / 5), 0);
-              const totalTickets = winners.length;
-              const totalExp = winners.length * 5;
-              
-              setPendingRewards({
-                tournamentName: pastTournaments[i].name,
-                winners: result.selections,
-                totalCoins,
-                totalTickets,
-                totalExp
-              });
-              setShowRewardsModal(true);
-              hasPendingRewards = true;
-              break;
+            // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: турнир должен быть полностью завершен
+            const isTournamentComplete = tournament?.data?.every(
+              (fighter: Fighter) => fighter['W/L'] === 'win' || fighter['W/L'] === 'lose'
+            ) ?? false;
+            
+            // Также проверяем, что ВСЕ выбранные бойцы пользователя имеют результат
+            const allUserFightersHaveResult = result.selections.every(
+              (sel: SelectedFighter) => sel.fighter['W/L'] === 'win' || sel.fighter['W/L'] === 'lose'
+            );
+            
+            if (isTournamentComplete && allUserFightersHaveResult) {
+              const winners = result.selections.filter((sel: SelectedFighter) => sel.fighter['W/L'] === 'win');
+              if (winners.length > 0) {
+                const betAmount = result.betAmount || 0;
+                const totalCoins = winners.reduce((sum) => sum + Math.floor(betAmount * 2 / 5), 0);
+                const totalTickets = winners.length;
+                const totalExp = winners.length * 5;
+                
+                setPendingRewards({
+                  tournamentName: pastTournaments[i].name,
+                  winners: result.selections,
+                  totalCoins,
+                  totalTickets,
+                  totalExp
+                });
+                setShowRewardsModal(true);
+                hasPendingRewards = true;
+                break;
+              }
             }
           }
         }
