@@ -3406,6 +3406,7 @@ body {
   justify-content: space-between;
   padding: 10px 16px;
   border-bottom: 1px solid #3D3D3B;
+  margin: 0 16px;
 }
 
 .battle-result-coef-item {
@@ -3413,6 +3414,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
+  margin: 0 16px;
 }
 
 .battle-result-bet-label {
