@@ -284,6 +284,8 @@ function App() {
   const [isClosing, setIsClosing] = useState(false);
   const [isAcceptingRewards, setIsAcceptingRewards] = useState(false);
   
+  const [isUpdatingTournaments, setIsUpdatingTournaments] = useState(false);
+
   // Состояния для модального окна ставки (обычная ставка на турнир)
   const [showBetModal, setShowBetModal] = useState(false);
   const [selectedBetTournament, setSelectedBetTournament] = useState<Tournament | null>(null);
@@ -398,6 +400,7 @@ useEffect(() => {
     if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
     
     setIsAcceptingRewards(true);
+    setIsUpdatingTournaments(true); // Блокируем контейнер и показываем спиннер
     
     try {
       const newCoins = userData.coins + pendingRewards.totalCoins;
@@ -412,7 +415,7 @@ useEffect(() => {
       }
       
       const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
-      const tournamentSelections = pendingRewards.winners;
+      const tournamentSelections = pendingRewards.allSelections; // Сохраняем ВСЕХ бойцов
       
       setUserData(prev => {
         const otherPastSelections = prev.mySelections.past.filter(
@@ -440,7 +443,8 @@ useEffect(() => {
       setShowPastFighters(false);
       
       if (tournament) {
-        Promise.all([
+        // Сохраняем профиль и обновляем результаты
+        await Promise.all([
           saveUserProfile({
             userId: telegramUser.id,
             username: userData.username,
@@ -481,17 +485,65 @@ useEffect(() => {
               await saveUserResults(tournament.name, updatedResult);
             }
           })()
-        ]).catch(error => {
-          console.error('Фоновое сохранение ошибки:', error);
-        });
+        ]);
       }
+      
+      // Перезагружаем данные пользователя
+      await refreshUserData();
+      
+      // Снимаем блокировку после обновления
+      setIsUpdatingTournaments(false);
       
     } catch (error) {
       console.error('Ошибка при получении наград:', error);
+      setIsUpdatingTournaments(false);
     } finally {
       setIsAcceptingRewards(false);
     }
   };
+
+  const refreshUserData = useCallback(async () => {
+    if (!telegramUser) return;
+    
+    console.log('🔄 Обновляем данные пользователя...');
+    
+    // Перезагружаем результаты пользователя для прошедших турниров
+    const pastResults = await Promise.all(
+      pastTournaments.map((tournament: Tournament) => loadUserResults(tournament.name, telegramUser.id))
+    );
+    
+    // Перезагружаем результаты для будущих турниров
+    const upcomingResults = await Promise.all(
+      upcomingTournaments.map((tournament: Tournament) => loadUserResults(tournament.name, telegramUser.id))
+    );
+    
+    const allPastSelections: SelectedFighter[] = [];
+    pastResults.forEach((result: UserResult | null) => {
+      if (result && result.selections.length > 0) {
+        allPastSelections.push(...result.selections);
+      }
+    });
+    
+    const allUpcomingSelections: SelectedFighter[] = [];
+    upcomingResults.forEach((result: UserResult | null) => {
+      if (result && result.selections.length > 0) {
+        allUpcomingSelections.push(...result.selections);
+      }
+    });
+    
+    setUserData(prev => ({
+      ...prev,
+      mySelections: {
+        upcoming: allUpcomingSelections,
+        past: allPastSelections
+      },
+      hasBet: allUpcomingSelections.length > 0
+    }));
+    
+    console.log('✅ Данные пользователя обновлены');
+  }, [pastTournaments, upcomingTournaments, telegramUser]);
+
+  
 
   const loadSelectionData = async (tournament: Tournament) => {
     if (!tournament) return;
@@ -1099,29 +1151,37 @@ useEffect(() => {
                       {!showPastFighters ? (
                         <div className="tournament-cards-grid">
                           {pastTournaments.map((tournament: Tournament) => {
-                            const tournamentTotal = calculateTotalDamage(
-                              userData.mySelections.past.filter(
-                                (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
-                              )
-                            );
-                            
-                            return (
-                              <div key={tournament.name} className="tournament-card-wrapper">
-                                <div 
-                                  className="tournament-card" 
-                                  onClick={() => handlePastTournamentClick(tournament)}
-                                >
-                                  <div className="tournament-card-damage-box">
-                                    TOTAL: {tournamentTotal}
-                                  </div>
-                                  <div className="tournament-card-image">
-                                    <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
-                                  </div>
-                                  <div className="tournament-card-name">{tournament.name}</div>
-                                </div>
-                              </div>
-                            );
-                          })}
+  const tournamentTotal = calculateTotalDamage(
+    userData.mySelections.past.filter(
+      (sel: SelectedFighter) => tournament.data?.some((f: Fighter) => f.Fighter === sel.fighter.Fighter)
+    )
+  );
+  
+  const isUpdating = isUpdatingTournaments && pendingRewards?.tournamentName === tournament.name;
+  
+  return (
+    <div key={tournament.name} className="tournament-card-wrapper" style={{ position: 'relative' }}>
+      <div 
+        className={`tournament-card ${isUpdating ? 'updating' : ''}`} 
+        onClick={() => !isUpdating && handlePastTournamentClick(tournament)}
+        style={{ opacity: isUpdating ? 0.5 : 1, pointerEvents: isUpdating ? 'none' : 'auto' }}
+      >
+        <div className="tournament-card-damage-box">
+          TOTAL: {tournamentTotal}
+        </div>
+        <div className="tournament-card-image">
+          <img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" />
+        </div>
+        <div className="tournament-card-name">{tournament.name}</div>
+      </div>
+      {isUpdating && (
+        <div className="tournament-updating-overlay">
+          <div className="tournament-updating-spinner"></div>
+        </div>
+      )}
+    </div>
+  );
+})}
                         </div>
                       ) : (
                         <>
