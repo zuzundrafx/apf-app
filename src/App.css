@@ -2716,7 +2716,8 @@ body {
   100% { transform: translate(0, 0); }
 }
 
-.arena-modal.shake {
+.arena-modal.shake,
+.battle-result-modal-overlay.shake {
   animation: screenShake 0.4s ease-out;
 }
 
