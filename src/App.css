@@ -3505,7 +3505,7 @@ body {
 }
 
 .shake-icon {
-  animation: shakeIcon 0.5s ease-in-out; /* Было 0.4s, стало 0.5s - увеличение на 25% */
+  animation: shakeIcon 0.7s ease-in-out; /* Было 0.4s, стало 0.5s - увеличение на 25% */
 }
 
 /* ===== СПИННЕР ЗАГРУЗКИ АРЕНЫ ===== */
@@ -3611,8 +3611,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 5%;
-  padding: 0 3%;
+  margin-top: 2%;
+  padding: 0 2%;
 }
 
 .arena-loading-tip {

@@ -54,10 +54,8 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
 
       // Шаг 3: Смена иконки
       const timer3 = setTimeout(() => {
-        
-        setShowOpenIcon(true);
-        
-      }, 650);
+        setShowOpenIcon(true); 
+      }, 550);
 
       // Шаг 4: остановка тряски
       const timer4 = setTimeout(() => {
