@@ -1485,52 +1485,67 @@ useEffect(() => {
       </main>
 
       {showRewardsModal && pendingRewards && (
-        <div className="rewards-modal">
-          <div className="rewards-content">
-            <h2>🏆 CONGRATULATIONS! 🏆</h2>
-            <p>Tournament "{pendingRewards.tournamentName}" completed</p>
-            
-            {pendingRewards.winners.length > 0 ? (
-              <>
-                <div className="winners-list">
-                  <h3>WINNERS IN YOUR BET:</h3>
-                  {pendingRewards.winners.map((sel: SelectedFighter, idx: number) => (
-                    <div key={idx} className="winner-item">
-                      <span className="winner-name">{sel.fighter.Fighter}</span>
-                      <span className="winner-badge">👑</span>
-                    </div>
-                  ))}
+  <div className="rewards-modal-overlay">
+    <div className="rewards-modal">
+      <div className="rewards-header">
+        <h2>RESULTS</h2>
+      </div>
+
+      <div className="rewards-tournament-name">
+        <p>Tournament "{pendingRewards.tournamentName}"</p>
+      </div>
+
+      {pendingRewards.winners.length > 0 ? (
+        <>
+          <div className="rewards-winners-list">
+            <h3>WINNERS IN YOUR BET:</h3>
+            {pendingRewards.winners.map((sel: SelectedFighter, idx: number) => (
+              <div key={idx} className="rewards-winner-item">
+                <div className="rewards-winner-info">
+                  <span 
+                    className="rewards-winner-weight"
+                    style={{ color: getWeightClassColor(sel.weightClass) }}
+                  >
+                    {sel.weightClass}
+                  </span>
+                  <span className="rewards-winner-name">{sel.fighter.Fighter}</span>
                 </div>
-                
-                <div className="rewards-summary">
-                  <div className="reward-item">
-                    <span className="reward-label">COINS:</span>
-                    <span className="reward-value">+{pendingRewards.totalCoins} 🪙</span>
-                  </div>
-                  <div className="reward-item">
-                    <span className="reward-label">TICKETS:</span>
-                    <span className="reward-value">+{pendingRewards.totalTickets} 🎫</span>
-                  </div>
-                  <div className="reward-item">
-                    <span className="reward-label">EXP:</span>
-                    <span className="reward-value">+{pendingRewards.totalExp} ✨</span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <p className="no-winners">Unfortunately, none of your fighters won 😢</p>
-            )}
-            
-            <button 
-              className="accept-button" 
-              onClick={acceptRewards}
-              disabled={isAcceptingRewards}
-            >
-              {isAcceptingRewards ? 'ACCEPTING...' : 'ACCEPT'}
-            </button>
+                <span className="rewards-winner-badge">WIN</span>
+              </div>
+            ))}
           </div>
-        </div>
+
+          <div className="rewards-summary">
+            <div className="rewards-summary-item">
+              <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="rewards-summary-icon" />
+              <span className="rewards-summary-value">{pendingRewards.totalCoins}</span>
+            </div>
+            <div className="rewards-summary-item">
+              <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="rewards-summary-icon" />
+              <span className="rewards-summary-value">{pendingRewards.totalTickets}</span>
+            </div>
+            <div className="rewards-summary-item">
+              <span className="rewards-summary-label">EXP</span>
+              <span className="rewards-summary-value">+{pendingRewards.totalExp}</span>
+            </div>
+          </div>
+        </>
+      ) : (
+        <p className="rewards-no-winners">Unfortunately, none of your fighters won 😢</p>
       )}
+
+      <div className="rewards-footer">
+        <button 
+          className="rewards-claim-button" 
+          onClick={acceptRewards}
+          disabled={isAcceptingRewards}
+        >
+          {isAcceptingRewards ? 'CLAIMING...' : 'CLAIM REWARDS'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {showBetModal && selectedBetTournament && (
         <div className="bet-modal-overlay">

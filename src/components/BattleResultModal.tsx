@@ -124,7 +124,7 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   };
 
   const getButtonText = () => {
-    if (result === 'win' || result === 'draw') return 'CLAIM REWARD';
+    if (result === 'win' || result === 'draw') return 'CLAIM REWARDS';
     return 'Try another time';
   };
 
