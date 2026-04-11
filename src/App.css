@@ -10,19 +10,6 @@ body {
   color: #FFFFFF;
 }
 
-/* Запрет поворота экрана - фиксация портретной ориентации */
-@media screen and (orientation: landscape) {
-  body {
-    transform: rotate(90deg);
-    transform-origin: left top;
-    width: 100vh;
-    height: 100vw;
-    overflow-x: hidden;
-    position: absolute;
-    top: 0;
-    left: 100vw;
-  }
-}
 
 .app {
   max-width: 375px;
@@ -3553,5 +3540,20 @@ body {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Запрет поворота экрана */
+@media screen and (orientation: landscape) {
+  .app {
+    transform: rotate(0deg);
+    width: 100%;
+    height: 100%;
+  }
+  
+  body {
+    position: fixed;
+    width: 100%;
+    height: 100%;
   }
 }

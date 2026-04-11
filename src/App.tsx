@@ -351,6 +351,9 @@ function App() {
     return amounts.slice(0, 9);
   };
 
+  
+
+
   useEffect(() => {
     const loadAllUserProfiles = async () => {
       console.log('📥 Загружаем все профили для рейтинга...');
