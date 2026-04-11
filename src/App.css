@@ -3429,7 +3429,7 @@ body {
   height: 80%;
   background: linear-gradient(180deg, #5b5b5b 0%, #302f30 100%);
   border: 0.15vh solid #666d75;
-  border-radius: 10%;
+  border-radius: 2vh;
   color: #FFFFFF;
   font-size: clamp(12px, 3vw, 14px);
   font-weight: 700;
