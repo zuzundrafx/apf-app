@@ -3438,3 +3438,46 @@ body {
     line-height: 1.2;
   }
 }
+
+/* ===== ОБВОДКА АВАТАРОК ПОБЕДИТЕЛЯ/ПРОИГРАВШЕГО ===== */
+
+.battle-result-avatar-wrapper {
+  position: relative;
+  width: 80%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.battle-result-avatar-wrapper::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  border-radius: 10%;
+  pointer-events: none;
+}
+
+/* Обводка победителя */
+.battle-result-avatar-wrapper.avatar-winner::before {
+  background: linear-gradient(180deg, #d2bf28 0%, #c8b727 100%);
+  z-index: -1;
+}
+
+/* Обводка проигравшего */
+.battle-result-avatar-wrapper.avatar-loser::before {
+  background: linear-gradient(180deg, #7b7c7d 0%, #616264 100%);
+  z-index: -1;
+}
+
+.battle-result-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10%;
+  background: #000000;
+}

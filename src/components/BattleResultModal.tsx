@@ -33,23 +33,20 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   onClose
 }) => {
   const [winIconScale, setWinIconScale] = useState(1);
-  const [showOpenIcon, setShowOpenIcon] = useState(false); // флаг для открытой сумки
+  const [showOpenIcon, setShowOpenIcon] = useState(false);
 
   useEffect(() => {
     if (isOpen && result === 'win') {
-      // Сброс состояния при открытии
       setShowOpenIcon(false);
       setWinIconScale(1);
       
-      // Начинаем анимацию увеличения закрытой сумки
       const timer1 = setTimeout(() => {
         setWinIconScale(1.2);
       }, 50);
       
-      // Через 0.3 сек увеличиваем масштаб и меняем иконку на открытую
       const timer2 = setTimeout(() => {
         setWinIconScale(1);
-        setShowOpenIcon(true); // показываем открытую сумку
+        setShowOpenIcon(true);
       }, 300);
       
       return () => {
@@ -115,6 +112,10 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   const shouldShowCoefficient = result === 'win';
   const shouldShowBet = result !== 'tech-loss';
   
+  // Определяем, кто победил, а кто проиграл
+  const isPlayerWinner = result === 'win';
+  const isRivalWinner = result === 'loss';
+  
   const getRewardIcon = () => {
     if (result === 'win') {
       if (showOpenIcon) {
@@ -149,14 +150,16 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
 
         <div className="battle-result-avatars">
           <div className="battle-result-avatar-left">
-            <img 
-              src={userAvatar || `${BASE_URL}/Home_button.png`}
-              alt="player"
-              className="battle-result-avatar-img"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
-              }}
-            />
+            <div className={`battle-result-avatar-wrapper ${isPlayerWinner ? 'avatar-winner' : 'avatar-loser'}`}>
+              <img 
+                src={userAvatar || `${BASE_URL}/Home_button.png`}
+                alt="player"
+                className="battle-result-avatar-img"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
+                }}
+              />
+            </div>
             {rewards && rewards.experience > 0 && (
               <div className="battle-result-exp-octagon">
                 +{rewards.experience} exp
@@ -174,14 +177,16 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
           </div>
           
           <div className="battle-result-avatar-right">
-            <img 
-              src={rivalAvatar || `${BASE_URL}/default-avatar.png`}
-              alt="rival"
-              className="battle-result-avatar-img"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`;
-              }}
-            />
+            <div className={`battle-result-avatar-wrapper ${isRivalWinner ? 'avatar-winner' : 'avatar-loser'}`}>
+              <img 
+                src={rivalAvatar || `${BASE_URL}/default-avatar.png`}
+                alt="rival"
+                className="battle-result-avatar-img"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`;
+                }}
+              />
+            </div>
             <div className="battle-result-avatar-name">{rivalName}</div>
           </div>
         </div>
