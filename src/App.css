@@ -3516,3 +3516,38 @@ body {
 .shake-icon {
   animation: shakeIcon 0.4s ease-in-out;
 }
+
+/* ===== СПИННЕР ЗАГРУЗКИ АРЕНЫ ===== */
+
+.arena-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2vh;
+  color: #FFFFFF;
+  z-index: 1;
+  position: relative;
+}
+
+.arena-loading-spinner {
+  width: 5vh;
+  height: 5vh;
+  border: 0.4vh solid #3D3D3B;
+  border-top-color: #B20101;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.arena-loading-text {
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

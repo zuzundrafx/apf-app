@@ -662,7 +662,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           <div className="arena-octagon">
             <img src={`${BASE_URL}/backgrounds/Arena_1_bg.webp`} alt="Octagon" className="octagon-image" />
           </div>
-          <div className="arena-loading">Loading arena data...</div>
+          <div className="arena-loading">
+    <div className="arena-loading-spinner"></div>
+    <div className="arena-loading-text">Loading arena data...</div>
+  </div>
         </div>
       </div>
     );
