@@ -151,18 +151,6 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
           </div>
         </div>
 
-        {/* Контейнер с наградами (как в окне наград за турнир) */}
-        <div className="battle-result-rewards-summary">
-          <div className="battle-result-rewards-item">
-            <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="battle-result-rewards-icon" />
-            <span className="battle-result-rewards-value">+{rewards?.coins || 0}</span>
-          </div>
-          <div className="battle-result-rewards-item">
-            <span className="battle-result-rewards-label">EXP</span>
-            <span className="battle-result-rewards-value">+{rewards?.experience || 0}</span>
-          </div>
-        </div>
-
         {/* Контейнер со ставкой и коэффициентом */}
         <div className="battle-result-bet-coef-container">
           {shouldShowBet && betAmount !== undefined && (
@@ -176,6 +164,18 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
               </div>
             </div>
           )}
+
+          {/* Контейнер с наградами (как в окне наград за турнир) */}
+        <div className="battle-result-rewards-summary">
+          <div className="battle-result-rewards-item">
+            <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="battle-result-rewards-icon" />
+            <span className="battle-result-rewards-value">{rewards?.coins || 0}</span>
+          </div>
+          <div className="battle-result-rewards-item">
+            <span className="battle-result-rewards-label">EXP</span>
+            <span className="battle-result-rewards-value">+{rewards?.experience || 0}</span>
+          </div>
+        </div>
 
           {shouldShowCoefficient && (
             <div className="battle-result-coef-item">
