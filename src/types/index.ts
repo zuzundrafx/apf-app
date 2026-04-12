@@ -1,7 +1,7 @@
 export interface Fighter {
   Fight_ID: number;
   Fighter: string;
-  'W/L': 'win' | 'lose' | null;  // null для будущих/незавершенных боев
+  'W/L': 'win' | 'lose' | 'draw' | null;  
   'Kd': number | string;
   'Str': number | string;
   'Td': number | string;

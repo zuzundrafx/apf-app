@@ -145,12 +145,14 @@ export async function loadExistingResults(
       
       while (item[`Боец ${i}`]) {
         const wlValue = String(item[`W/L ${i}`] || '').toLowerCase();
-        let wl: 'win' | 'lose' | null = null;
+        let wl: 'win' | 'lose' | 'draw' | null = null;
         
         if (wlValue === 'win') {
           wl = 'win';
         } else if (wlValue === 'lose') {
           wl = 'lose';
+        } else if (wlValue === 'draw') {
+          wl = 'draw';
         }
         
         selections.push({

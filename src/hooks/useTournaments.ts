@@ -10,6 +10,13 @@ const tournamentCache = new Map<string, {
 
 const CACHE_DURATION = 3600000; // 1 час в миллисекундах
 
+// Функция для проверки, есть ли у бойца результат (win/lose/draw)
+const hasFightResult = (fighter: Fighter): boolean => {
+  return fighter['W/L'] === 'win' || 
+         fighter['W/L'] === 'lose' || 
+         fighter['W/L'] === 'draw';
+};
+
 // Функция для безопасного парсинга даты
 const parseDate = (dateStr: string): Date | null => {
   try {
@@ -124,6 +131,14 @@ export function useTournaments() {
               timestamp: Date.now()
             });
           }
+        }
+        
+        // Определяем статус турнира на основе данных
+        if (tournament.data && tournament.data.length > 0) {
+          const allHaveResults = tournament.data.every(fighter => hasFightResult(fighter));
+          tournament.status = allHaveResults ? 'active' : 'upcoming';
+        } else {
+          tournament.status = 'upcoming';
         }
         
         latestPastTournaments.push(tournament);

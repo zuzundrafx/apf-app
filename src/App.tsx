@@ -1,4 +1,4 @@
-﻿﻿import { useState, useEffect, useCallback, useRef } from 'react';
+﻿﻿﻿﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
 import LeaderboardItem from './components/LeaderboardItem';
@@ -268,7 +268,7 @@ function App() {
   const [pendingRewards, setPendingRewards] = useState<{
     tournamentName: string;
     winners: SelectedFighter[];
-    allSelections: SelectedFighter[];  // ← ДОБАВИТЬ
+    allSelections: SelectedFighter[];
     totalCoins: number;
     totalTickets: number;
     totalExp: number;
@@ -396,11 +396,18 @@ useEffect(() => {
     });
   }, []);
 
+  // Функция для проверки, есть ли у бойца результат (win/lose/draw)
+  const hasFightResult = (fighter: Fighter): boolean => {
+    return fighter['W/L'] === 'win' || 
+           fighter['W/L'] === 'lose' || 
+           fighter['W/L'] === 'draw';
+  };
+
   const acceptRewards = async () => {
     if (!pendingRewards || !telegramUser || isAcceptingRewards) return;
     
     setIsAcceptingRewards(true);
-    setIsUpdatingTournaments(true); // Блокируем контейнер и показываем спиннер
+    setIsUpdatingTournaments(true);
     
     try {
       const newCoins = userData.coins + pendingRewards.totalCoins;
@@ -415,7 +422,7 @@ useEffect(() => {
       }
       
       const tournament = pastTournaments.find(t => t.name === pendingRewards.tournamentName);
-      const tournamentSelections = pendingRewards.allSelections; // Сохраняем ВСЕХ бойцов
+      const tournamentSelections = pendingRewards.allSelections;
       
       setUserData(prev => {
         const otherPastSelections = prev.mySelections.past.filter(
@@ -443,7 +450,6 @@ useEffect(() => {
       setShowPastFighters(false);
       
       if (tournament) {
-        // Сохраняем профиль и обновляем результаты
         await Promise.all([
           saveUserProfile({
             userId: telegramUser.id,
@@ -488,10 +494,7 @@ useEffect(() => {
         ]);
       }
       
-      // Перезагружаем данные пользователя
       await refreshUserData();
-      
-      // Снимаем блокировку после обновления
       setIsUpdatingTournaments(false);
       
     } catch (error) {
@@ -507,12 +510,10 @@ useEffect(() => {
     
     console.log('🔄 Обновляем данные пользователя...');
     
-    // Перезагружаем результаты пользователя для прошедших турниров
     const pastResults = await Promise.all(
       pastTournaments.map((tournament: Tournament) => loadUserResults(tournament.name, telegramUser.id))
     );
     
-    // Перезагружаем результаты для будущих турниров
     const upcomingResults = await Promise.all(
       upcomingTournaments.map((tournament: Tournament) => loadUserResults(tournament.name, telegramUser.id))
     );
@@ -758,6 +759,15 @@ useEffect(() => {
       
       if (allPastSelections.length > 0 && isMounted) {
         let hasPendingRewards = false;
+        let pendingRewardsData: {
+          tournamentName: string;
+          winners: SelectedFighter[];
+          allSelections: SelectedFighter[];
+          totalCoins: number;
+          totalTickets: number;
+          totalExp: number;
+        } | null = null;
+        
         for (let i = 0; i < pastResults.length; i++) {
           const result = pastResults[i];
           const tournament = pastTournaments[i];
@@ -765,12 +775,12 @@ useEffect(() => {
           if (result && !result.rewardsAccepted && result.selections.length > 0) {
             // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: турнир должен быть полностью завершен
             const isTournamentComplete = tournament?.data?.every(
-              (fighter: Fighter) => fighter['W/L'] === 'win' || fighter['W/L'] === 'lose'
+              (fighter: Fighter) => hasFightResult(fighter)
             ) ?? false;
             
             // Также проверяем, что ВСЕ выбранные бойцы пользователя имеют результат
             const allUserFightersHaveResult = result.selections.every(
-              (sel: SelectedFighter) => sel.fighter['W/L'] === 'win' || sel.fighter['W/L'] === 'lose'
+              (sel: SelectedFighter) => hasFightResult(sel.fighter)
             );
             
             if (isTournamentComplete && allUserFightersHaveResult) {
@@ -781,15 +791,14 @@ useEffect(() => {
                 const totalTickets = winners.length;
                 const totalExp = winners.length * 5;
                 
-                setPendingRewards({
+                pendingRewardsData = {
                   tournamentName: pastTournaments[i].name,
                   winners: winners,
-                  allSelections: result.selections,  // ← ДОБАВИТЬ ВСЕХ БОЙЦОВ
+                  allSelections: result.selections,
                   totalCoins,
                   totalTickets,
                   totalExp
-                });
-                setShowRewardsModal(true);
+                };
                 hasPendingRewards = true;
                 break;
               }
@@ -797,11 +806,15 @@ useEffect(() => {
           }
         }
         
-        if (!hasPendingRewards) {
-          setUserData(prev => ({
-            ...prev,
-            mySelections: { ...prev.mySelections, past: allPastSelections }
-          }));
+        // ВСЕГДА обновляем mySelections.past
+        setUserData(prev => ({
+          ...prev,
+          mySelections: { ...prev.mySelections, past: allPastSelections }
+        }));
+        
+        if (hasPendingRewards && pendingRewardsData) {
+          setPendingRewards(pendingRewardsData);
+          setShowRewardsModal(true);
         }
       }
       
@@ -1561,6 +1574,7 @@ useEffect(() => {
         <h3>YOUR BETS:</h3>
         {pendingRewards.allSelections.map((sel: SelectedFighter, idx: number) => {
           const isWin = sel.fighter['W/L'] === 'win';
+          const isDraw = sel.fighter['W/L'] === 'draw';
           return (
             <div key={idx} className="rewards-winner-item">
               <div className="rewards-winner-info">
@@ -1572,8 +1586,8 @@ useEffect(() => {
                 </span>
                 <span className="rewards-winner-name">{sel.fighter.Fighter}</span>
               </div>
-              <span className={`rewards-winner-badge ${isWin ? 'win' : 'lose'}`}>
-                {isWin ? 'WIN' : 'LOSE'}
+              <span className={`rewards-winner-badge ${isWin ? 'win' : isDraw ? 'draw' : 'lose'}`}>
+                {isWin ? 'WIN' : isDraw ? 'DRAW' : 'LOSE'}
               </span>
             </div>
           );

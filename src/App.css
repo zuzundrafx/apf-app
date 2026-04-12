@@ -3656,3 +3656,11 @@ body {
   cursor: not-allowed;
 }
 
+.rewards-winner-badge.draw {
+  font-size: clamp(12px, 4vw, 16px);
+  font-weight: 700;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
