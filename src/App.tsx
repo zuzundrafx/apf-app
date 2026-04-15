@@ -151,7 +151,7 @@ const TournamentSkeleton = () => (
 
 function App() {
   const { pastTournaments, upcomingTournaments, loading, loadingProgress, loadingStage, error } = useTournaments();
-  
+  const [isSavingBet, setIsSavingBet] = useState(false);
   const [selectedFighters, setSelectedFighters] = useState<Map<string, Fighter>>(new Map());
   const [currentView, setCurrentView] = useState<'main' | 'leaderboard' | 'selection' | 'pvp'>('main');
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
@@ -653,27 +653,75 @@ function App() {
     setShowPastFighters(true);
   };
 
-  const saveSelections = async (selections: Map<string, Fighter>) => {
-    if (!telegramUser) return;
+  const saveSelections = useCallback(async (selections: Map<string, Fighter>) => {
+    // Защита от повторных вызовов во время фонового сохранения
+    if (!telegramUser || isSavingBet) return;
+  
     const selectionsArray = Array.from(selections.entries()).map(([weightClass, fighter]) => ({ weightClass, fighter }));
-    if (currentBetAmount) {
-      const newCoins = userData.coins - currentBetAmount;
-      setUserData(prev => ({ ...prev, coins: newCoins }));
+    const betAmount = currentBetAmount || 0;
+    const tournament = selectedTournament;
+  
+    // 1. Оптимистичное обновление UI – сразу закрываем окно и обновляем состояние
+    setCurrentView('main');
+    setSelectedTournament(null);
+  
+    const newCoins = userData.coins - betAmount;
+    setUserData(prev => ({
+      ...prev,
+      coins: newCoins,
+      mySelections: {
+        ...prev.mySelections,
+        upcoming: [...prev.mySelections.upcoming, ...selectionsArray]
+      },
+      hasBet: true
+    }));
+    setCurrentBetAmount(null);
+  
+    // 2. Запускаем фоновое сохранение
+    setIsSavingBet(true);
+  
+    try {
+      // Сохраняем профиль (обновляем монеты)
       const currentProfile = await loadUserProfile(telegramUser.id);
-      const updatedProfile = { userId: telegramUser.id, username: userData.username, photoUrl: telegramUser.photoUrl, level: userData.level, experience: userData.totalExp, expPoints: userData.expPoints, coins: newCoins, tickets: userData.tickets, ton: userData.ton, lastUpdated: new Date().toISOString(), notifications: currentProfile?.notifications };
-      await saveUserProfile(updatedProfile);
-      updateProfileInCache(updatedProfile);
-    }
-    const userResult: UserResult = { userId: telegramUser.id, username: telegramUser.username, totalDamage: 0, timestamp: new Date().toISOString(), selections: selectionsArray, betAmount: currentBetAmount || 0 };
-    if (selectedTournament) {
-      const saved = await saveUserResults(selectedTournament.name, userResult);
-      if (saved) {
-        setUserData(prev => ({ ...prev, mySelections: { ...prev.mySelections, upcoming: [...prev.mySelections.upcoming, ...selectionsArray] }, hasBet: true }));
-        setCurrentBetAmount(null);
-        setCurrentView('main');
+      if (currentProfile) {
+        currentProfile.coins = newCoins;
+        currentProfile.lastUpdated = new Date().toISOString();
+        await saveUserProfile(currentProfile);
+        updateProfileInCache(currentProfile);
       }
+  
+      // Сохраняем результаты ставки
+      if (tournament) {
+        const userResult: UserResult = {
+          userId: telegramUser.id,
+          username: telegramUser.username,
+          totalDamage: 0,
+          timestamp: new Date().toISOString(),
+          selections: selectionsArray,
+          betAmount
+        };
+        await saveUserResults(tournament.name, userResult);
+      }
+    } catch (error) {
+      console.error('Background save failed:', error);
+      // Откат оптимистичных изменений при ошибке
+      setUserData(prev => ({
+        ...prev,
+        coins: prev.coins + betAmount,
+        mySelections: {
+          ...prev.mySelections,
+          upcoming: prev.mySelections.upcoming.filter(
+            sel => !selectionsArray.some(s => s.weightClass === sel.weightClass && s.fighter.Fighter === sel.fighter.Fighter)
+          )
+        },
+        hasBet: prev.mySelections.upcoming.length - selectionsArray.length > 0
+      }));
+      // Уведомление пользователя об ошибке
+      alert('Failed to save your bet. Please try again.');
+    } finally {
+      setIsSavingBet(false);
     }
-  };
+  }, [telegramUser, userData, currentBetAmount, selectedTournament, isSavingBet, updateProfileInCache]);
 
   const handleCloseClick = async () => { if (isClosing) return; setIsClosing(true); setCurrentView('main'); setIsClosing(false); };
   const handleSelectFighter = (weightClass: string, fighter: Fighter) => {
