@@ -3670,8 +3670,8 @@ body {
 }
 .cancelled-modal-close {
   position: absolute;
-  top: 90%;
-  right: 5%;
+  top: 105%;
+  right: 1%;
   background: #B20101;
   border: 0.15vh solid #FFFFFF;
   border-radius: 0.75vh;
