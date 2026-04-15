@@ -396,6 +396,8 @@ function App() {
     let newExpPoints = userData.expPoints;
     if (level > userData.level) newExpPoints += (level - userData.level);
     setUserData(prev => ({ ...prev, coins: newCoins, totalExp: newTotalExp, level, currentExp, nextLevelExp, expPoints: newExpPoints }));
+    
+    const currentProfile = await loadUserProfile(telegramUser.id);
     const updatedProfile = {
       userId: telegramUser.id,
       username: userData.username,
@@ -406,7 +408,8 @@ function App() {
       coins: newCoins,
       tickets: userData.tickets,
       ton: userData.ton,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      notifications: currentProfile?.notifications
     };
     await saveUserProfile(updatedProfile);
     updateProfileInCache(updatedProfile);
@@ -433,6 +436,7 @@ function App() {
       setPendingRewards(null);
       setShowPastFighters(false);
       if (tournament) {
+        const currentProfile = await loadUserProfile(telegramUser.id);
         await Promise.all([
           saveUserProfile({
             userId: telegramUser.id,
@@ -444,7 +448,8 @@ function App() {
             coins: newCoins,
             tickets: newTickets,
             ton: userData.ton,
-            lastUpdated: new Date().toISOString()
+            lastUpdated: new Date().toISOString(),
+            notifications: currentProfile?.notifications
           }).then(() => updateProfileInCache({
             userId: telegramUser.id,
             username: userData.username,
@@ -455,7 +460,8 @@ function App() {
             coins: newCoins,
             tickets: newTickets,
             ton: userData.ton,
-            lastUpdated: new Date().toISOString()
+            lastUpdated: new Date().toISOString(),
+            notifications: currentProfile?.notifications
           })),
           (async () => {
             const currentResult = await loadUserResults(tournament.name, telegramUser.id);
@@ -548,11 +554,23 @@ function App() {
             const totalExp = profile.experience || 0;
             const { level, currentExp, nextLevelExp } = calculateLevel(totalExp);
             setUserData(prev => ({ ...prev, username: profile.username, level, currentExp, totalExp, nextLevelExp, coins: profile.coins, tickets: profile.tickets || 0, ton: profile.ton || 0, expPoints: profile.expPoints || 1, myUserId: userId }));
-            const updatedProfile = { userId, username: profile.username, photoUrl: user.photo_url || profile.photoUrl, level, experience: totalExp, expPoints: profile.expPoints || 1, coins: profile.coins, tickets: profile.tickets || 0, ton: profile.ton || 0, lastUpdated: new Date().toISOString() };
+            const updatedProfile = {
+              userId,
+              username: profile.username,
+              photoUrl: user.photo_url || profile.photoUrl,
+              level,
+              experience: totalExp,
+              expPoints: profile.expPoints || 1,
+              coins: profile.coins,
+              tickets: profile.tickets || 0,
+              ton: profile.ton || 0,
+              lastUpdated: new Date().toISOString(),
+              notifications: profile.notifications
+            };
             await saveUserProfile(updatedProfile);
             updateProfileInCache(updatedProfile);
           } else if (mounted) {
-            const newProfile = { userId, username, photoUrl: user.photo_url, level: 1, experience: 0, expPoints: 1, coins: 100, tickets: 0, ton: 0, lastUpdated: new Date().toISOString() };
+            const newProfile = { userId, username, photoUrl: user.photo_url, level: 1, experience: 0, expPoints: 1, coins: 100, tickets: 0, ton: 0, lastUpdated: new Date().toISOString(), notifications: [] };
             const saved = await saveUserProfile(newProfile);
             if (saved) {
               setUserData(prev => ({ ...prev, username, coins: 100, tickets: 0, ton: 0, expPoints: 1, myUserId: userId }));
@@ -645,7 +663,8 @@ function App() {
     if (currentBetAmount) {
       const newCoins = userData.coins - currentBetAmount;
       setUserData(prev => ({ ...prev, coins: newCoins }));
-      const updatedProfile = { userId: telegramUser.id, username: userData.username, photoUrl: telegramUser.photoUrl, level: userData.level, experience: userData.totalExp, expPoints: userData.expPoints, coins: newCoins, tickets: userData.tickets, ton: userData.ton, lastUpdated: new Date().toISOString() };
+      const currentProfile = await loadUserProfile(telegramUser.id);
+      const updatedProfile = { userId: telegramUser.id, username: userData.username, photoUrl: telegramUser.photoUrl, level: userData.level, experience: userData.totalExp, expPoints: userData.expPoints, coins: newCoins, tickets: userData.tickets, ton: userData.ton, lastUpdated: new Date().toISOString(), notifications: currentProfile?.notifications };
       await saveUserProfile(updatedProfile);
       updateProfileInCache(updatedProfile);
     }
@@ -698,7 +717,8 @@ function App() {
   const updatePvpBalance = async (newCoins: number, newTickets: number) => {
     if (!telegramUser) return;
     setUserData(prev => ({ ...prev, coins: newCoins, tickets: newTickets }));
-    const updatedProfile = { userId: telegramUser.id, username: userData.username, photoUrl: telegramUser.photoUrl, level: userData.level, experience: userData.totalExp, expPoints: userData.expPoints, coins: newCoins, tickets: newTickets, ton: userData.ton, lastUpdated: new Date().toISOString() };
+    const currentProfile = await loadUserProfile(telegramUser.id);
+    const updatedProfile = { userId: telegramUser.id, username: userData.username, photoUrl: telegramUser.photoUrl, level: userData.level, experience: userData.totalExp, expPoints: userData.expPoints, coins: newCoins, tickets: newTickets, ton: userData.ton, lastUpdated: new Date().toISOString(), notifications: currentProfile?.notifications };
     await saveUserProfile(updatedProfile);
     updateProfileInCache(updatedProfile);
   };
