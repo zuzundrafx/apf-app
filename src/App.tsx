@@ -297,8 +297,11 @@ function App() {
   }, [telegramUser]);
 
   const removeNotification = useCallback(async (id: string) => {
+    // Оптимистичное удаление из локального состояния
     const updated = notifications.filter(n => n.id !== id);
-    await updateNotifications(updated);
+    setNotifications(updated);
+    // Асинхронное сохранение в фоне
+    updateNotifications(updated).catch(console.error);
   }, [notifications, updateNotifications]);
 
   const claimAllNotifications = useCallback(async () => {
@@ -333,11 +336,12 @@ function App() {
           profile.notifications = [];
           await saveUserProfile(profile);
           setNotifications([]);
+          updateProfileInCache(profile);
         }
       }
       setShowNotificationsModal(false);
     } finally { setIsClaimingAll(false); }
-  }, [notifications, telegramUser, userData, isClaimingAll]);
+  }, [notifications, telegramUser, userData, isClaimingAll, updateProfileInCache]);
 
   const claimRefund = useCallback(async (notification: Notification) => {
     if (!telegramUser) return;
@@ -350,10 +354,11 @@ function App() {
       profile.notifications = profile.notifications?.filter(n => n.id !== notification.id) || [];
       await saveUserProfile(profile);
       setNotifications(profile.notifications);
+      updateProfileInCache(profile);
     }
     setShowChangesModal(false);
     setSelectedNotification(null);
-  }, [telegramUser, userData]);
+  }, [telegramUser, userData, updateProfileInCache]);
 
   const handleNotificationClick = (notification: Notification) => {
     setSelectedNotification(notification);
@@ -371,6 +376,7 @@ function App() {
         totalExp: notification.data.experience || 0
       });
       setShowRewardsModal(true);
+      // Удаляем уведомление сразу (оптимистично)
       removeNotification(notification.id);
     }
   };
@@ -411,8 +417,10 @@ function App() {
       lastUpdated: new Date().toISOString(),
       notifications: currentProfile?.notifications
     };
-    await saveUserProfile(updatedProfile);
-    updateProfileInCache(updatedProfile);
+    const saved = await saveUserProfile(updatedProfile);
+    if (saved) {
+      updateProfileInCache(updatedProfile);
+    }
   };
 
   const acceptRewards = async () => {
@@ -437,40 +445,28 @@ function App() {
       setShowPastFighters(false);
       if (tournament) {
         const currentProfile = await loadUserProfile(telegramUser.id);
-        await Promise.all([
-          saveUserProfile({
-            userId: telegramUser.id,
-            username: userData.username,
-            photoUrl: telegramUser.photoUrl,
-            level,
-            experience: newTotalExp,
-            expPoints: newExpPoints,
-            coins: newCoins,
-            tickets: newTickets,
-            ton: userData.ton,
-            lastUpdated: new Date().toISOString(),
-            notifications: currentProfile?.notifications
-          }).then(() => updateProfileInCache({
-            userId: telegramUser.id,
-            username: userData.username,
-            photoUrl: telegramUser.photoUrl,
-            level,
-            experience: newTotalExp,
-            expPoints: newExpPoints,
-            coins: newCoins,
-            tickets: newTickets,
-            ton: userData.ton,
-            lastUpdated: new Date().toISOString(),
-            notifications: currentProfile?.notifications
-          })),
-          (async () => {
-            const currentResult = await loadUserResults(tournament.name, telegramUser.id);
-            if (currentResult) {
-              const updatedResult: UserResult = { ...currentResult, rewardsAccepted: true, rewards: { coins: pendingRewards.totalCoins, experience: pendingRewards.totalExp } };
-              await saveUserResults(tournament.name, updatedResult);
-            }
-          })()
-        ]);
+        const updatedProfile = {
+          userId: telegramUser.id,
+          username: userData.username,
+          photoUrl: telegramUser.photoUrl,
+          level,
+          experience: newTotalExp,
+          expPoints: newExpPoints,
+          coins: newCoins,
+          tickets: newTickets,
+          ton: userData.ton,
+          lastUpdated: new Date().toISOString(),
+          notifications: currentProfile?.notifications
+        };
+        const saved = await saveUserProfile(updatedProfile);
+        if (saved) {
+          updateProfileInCache(updatedProfile);
+        }
+        const currentResult = await loadUserResults(tournament.name, telegramUser.id);
+        if (currentResult) {
+          const updatedResult: UserResult = { ...currentResult, rewardsAccepted: true, rewards: { coins: pendingRewards.totalCoins, experience: pendingRewards.totalExp } };
+          await saveUserResults(tournament.name, updatedResult);
+        }
       }
       await refreshUserData();
       setIsUpdatingTournaments(false);
@@ -953,6 +949,38 @@ function App() {
         {currentView === 'pvp' && <Pvp ref={pvpRef} pastTournaments={pastTournaments} userSelections={userData.mySelections.past} userAvatar={telegramUser?.photoUrl} userId={telegramUser?.id} userName={userData.username} userCoins={userData.coins} userTickets={userData.tickets} allProfiles={allProfiles} onOpenBetModal={openPvpBetModal} onUpdateBalance={updatePvpBalance} onClaimRewards={claimBattleRewards} loadTournamentData={loadTournamentData} />}
       </main>
 
+      {/* Модальные окна уведомлений и наград — порядок изменён: сначала окно уведомлений, затем остальные поверх */}
+      {showNotificationsModal && (
+        <div className="rewards-modal-overlay">
+          <div className="rewards-modal">
+            <div className="rewards-header"><h2>NOTIFICATIONS</h2><button className="cancelled-modal-close" onClick={() => setShowNotificationsModal(false)}>✕</button></div>
+            <div className="rewards-winners-list">
+              {notifications.length === 0 ? <p className="rewards-no-winners">You don't have any notifications</p> : notifications.map(notif => (
+                <div key={notif.id} className="rewards-winner-item notification-item" onClick={() => handleNotificationClick(notif)} style={{ cursor: 'pointer' }}>
+                  <div className="rewards-winner-info">
+                    <span className="rewards-winner-weight" style={{ color: '#FFFFFF' }}>{notif.tournamentName}</span>
+                    <span className="rewards-winner-name">{notif.type === 'tournament_reward' ? 'RESULTS' : 'Refund due to a change in your card'}</span>
+                  </div>
+                  <span className="rewards-winner-badge win">
+                    {notif.type === 'tournament_reward' ? (
+                      <>+{notif.data.coins || 0} 🪙 +{notif.data.tickets || 0} 🎫 +{notif.data.experience || 0} ✨</>
+                    ) : (
+                      <>+{notif.data.refundAmount || 0} 🪙</>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="rewards-summary">
+              <div className="rewards-summary-item"><img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="rewards-summary-icon" /><span className="rewards-summary-value">{notifications.reduce((s, n) => s + (n.type === 'tournament_reward' ? (n.data.coins || 0) : (n.data.refundAmount || 0)), 0)}</span></div>
+              <div className="rewards-summary-item"><img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="rewards-summary-icon" /><span className="rewards-summary-value">{notifications.reduce((s, n) => s + (n.type === 'tournament_reward' ? (n.data.tickets || 0) : 0), 0)}</span></div>
+              <div className="rewards-summary-item"><span className="rewards-summary-label">EXP</span><span className="rewards-summary-value">+{notifications.reduce((s, n) => s + (n.type === 'tournament_reward' ? (n.data.experience || 0) : 0), 0)}</span></div>
+            </div>
+            <div className="rewards-footer"><button className="rewards-claim-button" onClick={claimAllNotifications} disabled={notifications.length === 0 || isClaimingAll}>{isClaimingAll ? 'CLAIMING...' : 'CLAIM ALL'}</button></div>
+          </div>
+        </div>
+      )}
+
       {showRewardsModal && pendingRewards && (
         <div className="rewards-modal-overlay">
           <div className="rewards-modal">
@@ -988,28 +1016,6 @@ function App() {
             <div className="rewards-tournament-name"><p>Tournament "{cancelledTournament.name}"</p></div>
             <div className="cancelled-message"><p>Your bet has been cancelled due to changes in the fight card.</p><p>Your coins have been fully refunded.</p><p>Please make a new bet for this tournament.</p></div>
             <div className="rewards-footer"><button className="rewards-claim-button" onClick={() => { setShowCancelledModal(false); handleUpcomingTournamentClick(cancelledTournament); }}>MAKE A NEW BET</button></div>
-          </div>
-        </div>
-      )}
-
-      {showNotificationsModal && (
-        <div className="rewards-modal-overlay">
-          <div className="rewards-modal">
-            <div className="rewards-header"><h2>NOTIFICATIONS</h2><button className="cancelled-modal-close" onClick={() => setShowNotificationsModal(false)}>✕</button></div>
-            <div className="rewards-winners-list">
-              {notifications.length === 0 ? <p className="rewards-no-winners">You don't have any notifications</p> : notifications.map(notif => (
-                <div key={notif.id} className="rewards-winner-item notification-item" onClick={() => handleNotificationClick(notif)} style={{ cursor: 'pointer' }}>
-                  <div className="rewards-winner-info"><span className="rewards-winner-weight" style={{ color: '#FFFFFF' }}>{notif.tournamentName}</span><span className="rewards-winner-name">{notif.type === 'tournament_reward' ? 'RESULTS' : 'Refund due to a change in your card'}</span></div>
-                  <span className="rewards-winner-badge win">{notif.type === 'tournament_reward' ? `+${notif.data.coins || 0} 🪙` : `+${notif.data.refundAmount || 0} 🪙`}</span>
-                </div>
-              ))}
-            </div>
-            <div className="rewards-summary">
-              <div className="rewards-summary-item"><img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="rewards-summary-icon" /><span className="rewards-summary-value">{notifications.reduce((s, n) => s + (n.type === 'tournament_reward' ? (n.data.coins || 0) : (n.data.refundAmount || 0)), 0)}</span></div>
-              <div className="rewards-summary-item"><img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="rewards-summary-icon" /><span className="rewards-summary-value">{notifications.reduce((s, n) => s + (n.type === 'tournament_reward' ? (n.data.tickets || 0) : 0), 0)}</span></div>
-              <div className="rewards-summary-item"><span className="rewards-summary-label">EXP</span><span className="rewards-summary-value">+{notifications.reduce((s, n) => s + (n.type === 'tournament_reward' ? (n.data.experience || 0) : 0), 0)}</span></div>
-            </div>
-            <div className="rewards-footer"><button className="rewards-claim-button" onClick={claimAllNotifications} disabled={notifications.length === 0 || isClaimingAll}>{isClaimingAll ? 'CLAIMING...' : 'CLAIM ALL'}</button></div>
           </div>
         </div>
       )}
