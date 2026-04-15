@@ -4,6 +4,25 @@ const YA_TOKEN = import.meta.env.VITE_YA_TOKEN;
 const PROFILES_FOLDER = "UFC_Bot_Results";
 const PROFILES_FILENAME = "UFC_User_Profiles.xlsx";
 
+export interface Notification {
+  id: string;
+  type: 'tournament_reward' | 'bet_cancelled';
+  tournamentName: string;
+  timestamp: string;
+  data: {
+    coins?: number;
+    tickets?: number;
+    experience?: number;
+    winners?: any[];
+    allSelections?: any[];
+    refundAmount?: number;
+    cancelledFighters?: {
+      originalFighter: string;
+      weightClass: string;
+    }[];
+  };
+}
+
 export interface UserProfile {
   userId: string;
   username: string;
@@ -19,6 +38,7 @@ export interface UserProfile {
     coins: string[];
     exp: string[];
   };
+  notifications?: Notification[];
 }
 
 // Функция для получения ссылки на загрузку файла
@@ -135,8 +155,9 @@ async function migrateProfilesFile(oldData: any[]): Promise<any[]> {
   const hasExpPointsColumn = oldData.length > 0 && 'EXP Points' in oldData[0];
   const hasTicketsColumn = oldData.length > 0 && 'Tickets' in oldData[0];
   const hasTONColumn = oldData.length > 0 && 'TON' in oldData[0];
+  const hasNotificationsColumn = oldData.length > 0 && 'Notifications' in oldData[0];
   
-  if (hasPhotoUrlColumn && hasExpPointsColumn && hasTicketsColumn && hasTONColumn) {
+  if (hasPhotoUrlColumn && hasExpPointsColumn && hasTicketsColumn && hasTONColumn && hasNotificationsColumn) {
     console.log('✅ Файл уже имеет все необходимые колонки, миграция не требуется');
     return oldData;
   }
@@ -154,6 +175,7 @@ async function migrateProfilesFile(oldData: any[]): Promise<any[]> {
     if (!hasExpPointsColumn) newItem['EXP Points'] = 0;
     if (!hasTicketsColumn) newItem['Tickets'] = 0;
     if (!hasTONColumn) newItem['TON'] = 0;
+    if (!hasNotificationsColumn) newItem['Notifications'] = '';
     
     return newItem;
   });
@@ -200,7 +222,7 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
     data = await migrateProfilesFile(data);
     
     // Сохраняем обновленный файл обратно на диск
-    const needsMigration = data.length > 0 && (!('EXP Points' in data[0]) || !('Tickets' in data[0]) || !('TON' in data[0]));
+    const needsMigration = data.length > 0 && (!('EXP Points' in data[0]) || !('Tickets' in data[0]) || !('TON' in data[0]) || !('Notifications' in data[0]));
     if (needsMigration) {
       console.log('💾 Сохраняем обновленный файл с миграцией...');
       
@@ -240,6 +262,15 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
         };
       }
       
+      let notifications = undefined;
+      if (item['Notifications'] && typeof item['Notifications'] === 'string' && item['Notifications'].trim()) {
+        try {
+          notifications = JSON.parse(item['Notifications']);
+        } catch (e) {
+          console.error('Ошибка парсинга уведомлений:', e);
+        }
+      }
+      
       return {
         userId: String(item['User ID'] || ''),
         username: String(item['Username'] || 'Anonymous'),
@@ -251,7 +282,8 @@ export async function loadAllProfiles(): Promise<UserProfile[]> {
         tickets: safeNumber(item['Tickets'], 0),
         ton: safeNumber(item['TON'], 0),
         lastUpdated: String(item['Last Updated'] || new Date().toISOString()),
-        processedTournaments: processedTournaments
+        processedTournaments: processedTournaments,
+        notifications: notifications
       };
     });
   } catch (error) {
@@ -270,6 +302,7 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
     console.log('✨ EXP Points для сохранения:', profile.expPoints);
     console.log('📊 Уровень:', profile.level, 'Опыт:', profile.experience);
     console.log('🏆 Processed tournaments:', profile.processedTournaments);
+    console.log('📬 Уведомления:', profile.notifications?.length || 0);
     
     const folderOk = await ensureFolderExists();
     if (!folderOk) {
@@ -316,6 +349,12 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
       if (profile.processedTournaments) {
         row['Processed Coins'] = profile.processedTournaments.coins.join(',');
         row['Processed Exp'] = profile.processedTournaments.exp.join(',');
+      }
+      
+      if (profile.notifications && profile.notifications.length > 0) {
+        row['Notifications'] = JSON.stringify(profile.notifications);
+      } else {
+        row['Notifications'] = '';
       }
       
       return row;
@@ -376,6 +415,7 @@ export async function loadUserProfile(userId: string): Promise<UserProfile | nul
     console.log('📊 Уровень в загруженном профиле:', profile?.level);
     console.log('📈 Опыт в загруженном профиле:', profile?.experience);
     console.log('🏆 Processed tournaments:', profile?.processedTournaments);
+    console.log('📬 Уведомления:', profile?.notifications?.length || 0);
     return profile;
   } catch (error) {
     console.error('❌ Ошибка загрузки профиля пользователя:', error);

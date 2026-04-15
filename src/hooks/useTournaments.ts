@@ -51,7 +51,7 @@ const detectLeague = (filename: string): string => {
   if (filename.includes('PFL_')) return 'PFL';
   if (filename.includes('ONE_')) return 'ONE';
   if (filename.includes('Bellator_')) return 'Bellator';
-  return 'UFC'; // по умолчанию
+  return 'UFC';
 };
 
 export function useTournaments() {
@@ -62,17 +62,14 @@ export function useTournaments() {
   const [loadingStage, setLoadingStage] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  // Функция для загрузки с прогрессом
   const loadWithProgress = async () => {
     try {
       setLoadingStage('Loading tournaments list...');
       setLoadingProgress(10);
       
-      // Получаем список всех файлов турниров (только метаданные!)
       const files = await getTournamentFiles();
       setLoadingProgress(30);
       
-      // Разделяем на прошедшие и будущие
       const pastFiles = files.filter(f => !f.name.startsWith('UPCOMING_') && f.name.endsWith('.xlsx'));
       const upcomingFiles = files.filter(f => f.name.startsWith('UPCOMING_'));
       
@@ -82,7 +79,6 @@ export function useTournaments() {
       setLoadingStage('Selecting latest tournaments...');
       setLoadingProgress(50);
       
-      // Группируем прошедшие турниры по лигам БЕЗ загрузки данных
       const latestByLeague = new Map<string, { file: typeof pastFiles[0], tournament: Partial<Tournament> }>();
       
       for (const file of pastFiles) {
@@ -106,7 +102,6 @@ export function useTournaments() {
       setLoadingStage('Loading tournament data...');
       setLoadingProgress(70);
       
-      // Загружаем ТОЛЬКО последние турниры из каждой лиги
       const latestPastTournaments: Tournament[] = [];
       let loadedCount = 0;
       const totalToLoad = latestByLeague.size;
@@ -146,7 +141,6 @@ export function useTournaments() {
         setLoadingProgress(70 + (loadedCount / totalToLoad) * 20);
       }
       
-      // Сортируем по дате (от новых к старым)
       latestPastTournaments.sort((a, b) => {
         const dateA = parseDate(a.date);
         const dateB = parseDate(b.date);
@@ -156,7 +150,6 @@ export function useTournaments() {
       
       setLoadingStage('Loading upcoming tournaments...');
       
-      // Загружаем ВСЕ будущие турниры (их обычно немного)
       const upcomingList: Tournament[] = [];
       
       for (const file of upcomingFiles) {
@@ -183,7 +176,6 @@ export function useTournaments() {
         upcomingList.push(tournament);
       }
       
-      // Сортируем будущие турниры по дате
       upcomingList.sort((a, b) => {
         const dateA = parseDate(a.date);
         const dateB = parseDate(b.date);

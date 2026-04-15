@@ -48,6 +48,8 @@ export interface UserResult {
   selections: SelectedFighter[];
   betAmount?: number;           // ← НОВОЕ: сумма ставки
   rewardsAccepted?: boolean;
+  cancelled?: boolean;  // ← НОВОЕ ПОЛЕ
+
   rewards?: {
     coins: number;
     experience: number;
