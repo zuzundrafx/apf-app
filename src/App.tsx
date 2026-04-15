@@ -990,27 +990,81 @@ function App() {
         </div>
       )}
 
-      {showNotificationsModal && (
-        <div className="rewards-modal-overlay">
-          <div className="rewards-modal">
-            <div className="rewards-header"><h2>NOTIFICATIONS</h2><button className="cancelled-modal-close" onClick={() => setShowNotificationsModal(false)}>✕</button></div>
-            <div className="rewards-winners-list" style={{ maxHeight: '50%' }}>
-              {notifications.length === 0 ? <p className="rewards-no-winners">You don't have any notifications</p> : notifications.map(notif => (
-                <div key={notif.id} className="rewards-winner-item notification-item" onClick={() => handleNotificationClick(notif)} style={{ cursor: 'pointer' }}>
-                  <div className="rewards-winner-info"><span className="rewards-winner-weight" style={{ color: '#FFFFFF' }}>{notif.tournamentName}</span><span className="rewards-winner-name">{notif.type === 'tournament_reward' ? 'RESULTS' : 'Refund due to a change in your card'}</span></div>
-                  <span className="rewards-winner-badge win">{notif.type === 'tournament_reward' ? `+${notif.data.coins || 0} 🪙` : `+${notif.data.refundAmount || 0} 🪙`}</span>
-                </div>
-              ))}
+{showNotificationsModal && (
+  <div className="rewards-modal-overlay">
+    <div className="rewards-modal">
+      <div className="rewards-header">
+        <h2>NOTIFICATIONS</h2>
+        <button 
+          className="cancelled-modal-close"
+          onClick={() => setShowNotificationsModal(false)}
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="rewards-winners-list">
+        {notifications.length === 0 ? (
+          <p className="rewards-no-winners">You don't have any notifications</p>
+        ) : (
+          notifications.map((notif) => (
+            <div 
+              key={notif.id} 
+              className="rewards-winner-item notification-item"
+              onClick={() => handleNotificationClick(notif)}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="rewards-winner-info">
+                <span className="rewards-winner-weight" style={{ color: '#FFFFFF' }}>
+                  {notif.tournamentName}
+                </span>
+                <span className="rewards-winner-name">
+                  {notif.type === 'tournament_reward' ? 'RESULTS' : 'Refund due to a change in your card'}
+                </span>
+              </div>
+              <span className="rewards-winner-badge win">
+                {notif.type === 'tournament_reward' 
+                  ? `+${(notif.data.coins || 0)} 🪙`
+                  : `+${(notif.data.refundAmount || 0)} 🪙`}
+              </span>
             </div>
-            <div className="rewards-summary">
-              <div className="rewards-summary-item"><img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="rewards-summary-icon" /><span className="rewards-summary-value">{notifications.reduce((s, n) => s + (n.type === 'tournament_reward' ? (n.data.coins || 0) : (n.data.refundAmount || 0)), 0)}</span></div>
-              <div className="rewards-summary-item"><img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="rewards-summary-icon" /><span className="rewards-summary-value">{notifications.reduce((s, n) => s + (n.type === 'tournament_reward' ? (n.data.tickets || 0) : 0), 0)}</span></div>
-              <div className="rewards-summary-item"><span className="rewards-summary-label">EXP</span><span className="rewards-summary-value">+{notifications.reduce((s, n) => s + (n.type === 'tournament_reward' ? (n.data.experience || 0) : 0), 0)}</span></div>
-            </div>
-            <div className="rewards-footer"><button className="rewards-claim-button" onClick={claimAllNotifications} disabled={notifications.length === 0 || isClaimingAll}>{isClaimingAll ? 'CLAIMING...' : 'CLAIM ALL'}</button></div>
-          </div>
+          ))
+        )}
+      </div>
+
+      <div className="rewards-summary">
+        <div className="rewards-summary-item">
+          <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="rewards-summary-icon" />
+          <span className="rewards-summary-value">
+            {notifications.reduce((sum, n) => sum + (n.type === 'tournament_reward' ? (n.data.coins || 0) : (n.data.refundAmount || 0)), 0)}
+          </span>
         </div>
-      )}
+        <div className="rewards-summary-item">
+          <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="rewards-summary-icon" />
+          <span className="rewards-summary-value">
+            {notifications.reduce((sum, n) => sum + (n.type === 'tournament_reward' ? (n.data.tickets || 0) : 0), 0)}
+          </span>
+        </div>
+        <div className="rewards-summary-item">
+          <span className="rewards-summary-label">EXP</span>
+          <span className="rewards-summary-value">
+            +{notifications.reduce((sum, n) => sum + (n.type === 'tournament_reward' ? (n.data.experience || 0) : 0), 0)}
+          </span>
+        </div>
+      </div>
+
+      <div className="rewards-footer">
+        <button 
+          className="rewards-claim-button" 
+          onClick={claimAllNotifications}
+          disabled={notifications.length === 0 || isClaimingAll}
+        >
+          {isClaimingAll ? 'CLAIMING...' : 'CLAIM ALL'}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {showChangesModal && selectedNotification?.type === 'bet_cancelled' && (
         <div className="rewards-modal-overlay">
