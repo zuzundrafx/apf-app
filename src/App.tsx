@@ -308,24 +308,40 @@ function App() {
   const claimAllNotifications = useCallback(async () => {
     if (isClaimingAll) return;
     setIsClaimingAll(true);
-    try {
-      let totalCoins = 0, totalTickets = 0, totalExp = 0;
-      for (const n of notifications) {
-        if (n.type === 'tournament_reward') {
-          totalCoins += n.data.coins || 0;
-          totalTickets += n.data.tickets || 0;
-          totalExp += n.data.experience || 0;
-        } else if (n.type === 'bet_cancelled') {
-          totalCoins += n.data.refundAmount || 0;
-        }
+  
+    // 1. Оптимистичное обновление UI – очищаем уведомления и обновляем баланс
+    let totalCoins = 0, totalTickets = 0, totalExp = 0;
+    for (const n of notifications) {
+      if (n.type === 'tournament_reward') {
+        totalCoins += n.data.coins || 0;
+        totalTickets += n.data.tickets || 0;
+        totalExp += n.data.experience || 0;
+      } else if (n.type === 'bet_cancelled') {
+        totalCoins += n.data.refundAmount || 0;
       }
-      const newCoins = userData.coins + totalCoins;
-      const newTickets = userData.tickets + totalTickets;
-      const newTotalExp = userData.totalExp + totalExp;
-      const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
-      let newExpPoints = userData.expPoints;
-      if (level > userData.level) newExpPoints += (level - userData.level);
-      setUserData(prev => ({ ...prev, coins: newCoins, tickets: newTickets, totalExp: newTotalExp, level, currentExp, nextLevelExp, expPoints: newExpPoints }));
+    }
+    const newCoins = userData.coins + totalCoins;
+    const newTickets = userData.tickets + totalTickets;
+    const newTotalExp = userData.totalExp + totalExp;
+    const { level, currentExp, nextLevelExp } = calculateLevel(newTotalExp);
+    let newExpPoints = userData.expPoints;
+    if (level > userData.level) newExpPoints += (level - userData.level);
+  
+    // Мгновенно обновляем локальное состояние
+    setUserData(prev => ({
+      ...prev,
+      coins: newCoins,
+      tickets: newTickets,
+      totalExp: newTotalExp,
+      level,
+      currentExp,
+      nextLevelExp,
+      expPoints: newExpPoints
+    }));
+    setNotifications([]); // Уведомления исчезают сразу
+  
+    // 2. Фоновое сохранение на диск
+    try {
       if (telegramUser) {
         const profile = await loadUserProfile(telegramUser.id);
         if (profile) {
@@ -336,13 +352,28 @@ function App() {
           profile.expPoints = newExpPoints;
           profile.notifications = [];
           await saveUserProfile(profile);
-          setNotifications([]);
           updateProfileInCache(profile);
         }
       }
-      setShowNotificationsModal(false);
-    } finally { setIsClaimingAll(false); }
-  }, [notifications, telegramUser, userData, isClaimingAll, updateProfileInCache]);
+    } catch (error) {
+      console.error('Claim all save failed:', error);
+      // Откат при ошибке – возвращаем уведомления и старый баланс
+      setNotifications(notifications);
+      setUserData(prev => ({
+        ...prev,
+        coins: prev.coins - totalCoins,
+        tickets: prev.tickets - totalTickets,
+        totalExp: prev.totalExp - totalExp,
+        level: userData.level,
+        currentExp: userData.currentExp,
+        nextLevelExp: userData.nextLevelExp,
+        expPoints: userData.expPoints
+      }));
+      alert('Failed to claim rewards. Please try again.');
+    } finally {
+      setIsClaimingAll(false);
+    }
+  }, [notifications, userData, telegramUser, isClaimingAll, updateProfileInCache]);
 
   const claimRefund = useCallback(async (notification: Notification) => {
     if (!telegramUser || isClaimingRefund) return;
