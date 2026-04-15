@@ -60,7 +60,7 @@ body {
 }
 
 .level-bar {
-  height: clamp(9px, 3vh, 13px);
+  height: clamp(5px, 1.6vh, 7px);
   width: 100%;
   background: #3D3D3B;
   position: relative;
@@ -68,6 +68,7 @@ body {
   border: 1px solid #000000;
   margin-bottom: 4px;
   border-radius: 1vw;
+  margin-top: 1.2em;
 }
 
 .level-progress {
@@ -79,12 +80,12 @@ body {
 .level-text {
   position: absolute;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  bottom: 100%;                     /* текст поднимается над шкалой */
+  margin-bottom: 2px;
+  transform: none;
   color: #FFFFFF;
   font-size: clamp(9px, 2.5vw, 11px);
   font-weight: 500;
-  -webkit-text-stroke: 0.5px black;
   
   white-space: nowrap;
 }
