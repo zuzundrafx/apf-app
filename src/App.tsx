@@ -1031,28 +1031,30 @@ function App() {
                 <span className="rewards-winner-name">RESULTS:</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                {notif.type === 'tournament_reward' ? (
-                  <>
-                    <div className="rewards-summary-item" style={{ gap: '4px' }}>
-                      <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="rewards-summary-icon" />
-                      <span className="rewards-summary-value">{notif.data.coins || 0}</span>
-                    </div>
-                    <div className="rewards-summary-item" style={{ gap: '4px' }}>
-                      <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="rewards-summary-icon" />
-                      <span className="rewards-summary-value">{notif.data.tickets || 0}</span>
-                    </div>
-                    <div className="rewards-summary-item" style={{ gap: '4px' }}>
-                      <span className="rewards-summary-label">EXP</span>
-                      <span className="rewards-summary-value">+{notif.data.experience || 0}</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="rewards-summary-item" style={{ gap: '4px' }}>
-                    <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="rewards-summary-icon" />
-                    <span className="rewards-summary-value">{notif.data.refundAmount || 0}</span>
-                  </div>
-                )}
-              </div>
+  {notif.type === 'tournament_reward' ? (
+    <>
+      <div className="rewards-summary-item" style={{ gap: '4px' }}>
+        <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="rewards-summary-icon" />
+        <span className="rewards-summary-value">{notif.data.coins || 0}</span>
+      </div>
+      <div className="rewards-summary-item" style={{ gap: '4px' }}>
+        <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="rewards-summary-icon" />
+        <span className="rewards-summary-value">{notif.data.tickets || 0}</span>
+      </div>
+      <div className="rewards-summary-item" style={{ gap: '4px' }}>
+        <span className="rewards-summary-label">EXP</span>
+        <span className="rewards-summary-value">+{notif.data.experience || 0}</span>
+      </div>
+    </>
+  ) : (
+    <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+      <div className="rewards-summary-item" style={{ gap: '4px' }}>
+        <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="rewards-summary-icon" />
+        <span className="rewards-summary-value">{notif.data.refundAmount || 0}</span>
+      </div>
+    </div>
+  )}
+</div>
             </div>
           ))
         )}
