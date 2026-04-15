@@ -456,40 +456,48 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       const loadPvpData = async () => {
         setIsLoading(true);
         startTipRotation();
-        
+      
+        // Сохраняем исходные значения для возможного возврата
+        const originalCoins = userCoins;
+        const originalTickets = userTickets;
+        const spentCoins = pvpBetAmount;
+        const spentTickets = 1;
+      
         try {
           // 1. Списываем валюту
-          const newCoins = userCoins - pvpBetAmount;
-          const newTickets = userTickets - 1;
+          const newCoins = originalCoins - spentCoins;
+          const newTickets = originalTickets - spentTickets;
           await onUpdateBalance(newCoins, newTickets);
-          
+      
           // 2. Загружаем данные турнира
           const tournamentData = await loadTournamentData(tournament.name);
-          
+      
           // 3. Ищем соперника
           const rivals = tournamentData.results.filter(r => r.userId !== userId);
-          
+      
           if (rivals.length === 0) {
+            // Возврат валюты
+            await onUpdateBalance(originalCoins, originalTickets);
             alert('No rivals available for this tournament');
             onSurrender();
             return;
           }
-          
+      
           const randomIndex = Math.floor(Math.random() * rivals.length);
           const selectedRival = rivals[randomIndex];
           const rivalProfile = allProfiles.get(selectedRival.userId);
-          
+      
           // 4. Обогащаем выборы соперника
           const fightersMap = new Map<string, Fighter>();
           tournamentData.fightersData.forEach((fighter: Fighter) => {
             fightersMap.set(fighter.Fighter, fighter);
           });
-          
+      
           const enrichedRivalSelections = selectedRival.selections.map(sel => ({
             ...sel,
             fighter: fightersMap.get(sel.fighter.Fighter) || sel.fighter
           }));
-          
+      
           // 5. Устанавливаем данные
           setRivalData({
             username: selectedRival.username,
@@ -498,23 +506,29 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             selections: enrichedRivalSelections
           });
           setWeightClasses(tournamentData.weightClasses);
-          
+      
           // 6. Рассчитываем сценарий боя
           const script = calculateBattleScript(userSelections, enrichedRivalSelections, tournamentData.weightClasses);
           setBattleScript(script);
-          
+      
           // 7. Предзагружаем изображения
           await preloadImages(script);
-          
+      
           // 8. Запускаем бой
           setTimeout(() => {
             setIsLoading(false);
             setIsBattleLoaded(true);
             stopTipRotation();
           }, 500);
-          
+      
         } catch (error) {
           console.error('Ошибка загрузки PvP данных:', error);
+          // Возврат валюты при любой ошибке
+          try {
+            await onUpdateBalance(originalCoins, originalTickets);
+          } catch (refundError) {
+            console.error('Failed to refund:', refundError);
+          }
           alert('Error loading arena');
           stopTipRotation();
           onSurrender();
