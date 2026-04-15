@@ -152,6 +152,7 @@ const TournamentSkeleton = () => (
 function App() {
   const { pastTournaments, upcomingTournaments, loading, loadingProgress, loadingStage, error } = useTournaments();
   const [isSavingBet, setIsSavingBet] = useState(false);
+  const [isClaimingRefund, setIsClaimingRefund] = useState(false);
   const [selectedFighters, setSelectedFighters] = useState<Map<string, Fighter>>(new Map());
   const [currentView, setCurrentView] = useState<'main' | 'leaderboard' | 'selection' | 'pvp'>('main');
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
@@ -344,21 +345,38 @@ function App() {
   }, [notifications, telegramUser, userData, isClaimingAll, updateProfileInCache]);
 
   const claimRefund = useCallback(async (notification: Notification) => {
-    if (!telegramUser) return;
+    if (!telegramUser || isClaimingRefund) return;
+  
     const refundAmount = notification.data.refundAmount || 0;
     const newCoins = userData.coins + refundAmount;
+  
+    // 1. Оптимистичное обновление UI – сразу закрываем окно и обновляем баланс
     setUserData(prev => ({ ...prev, coins: newCoins }));
-    const profile = await loadUserProfile(telegramUser.id);
-    if (profile) {
-      profile.coins = newCoins;
-      profile.notifications = profile.notifications?.filter(n => n.id !== notification.id) || [];
-      await saveUserProfile(profile);
-      setNotifications(profile.notifications);
-      updateProfileInCache(profile);
-    }
+    // Удаляем уведомление из локального списка
+    setNotifications(prev => prev.filter(n => n.id !== notification.id));
     setShowChangesModal(false);
     setSelectedNotification(null);
-  }, [telegramUser, userData, updateProfileInCache]);
+  
+    // 2. Запускаем фоновое сохранение
+    setIsClaimingRefund(true);
+    try {
+      const profile = await loadUserProfile(telegramUser.id);
+      if (profile) {
+        profile.coins = newCoins;
+        profile.notifications = profile.notifications?.filter(n => n.id !== notification.id) || [];
+        await saveUserProfile(profile);
+        updateProfileInCache(profile);
+      }
+    } catch (error) {
+      console.error('Refund save failed:', error);
+      // Откат оптимистичных изменений при ошибке
+      setUserData(prev => ({ ...prev, coins: prev.coins - refundAmount }));
+      setNotifications(prev => [...prev, notification]); // возвращаем уведомление
+      alert('Failed to claim refund. Please try again.');
+    } finally {
+      setIsClaimingRefund(false);
+    }
+  }, [telegramUser, userData.coins, isClaimingRefund, updateProfileInCache]);
 
   const handleNotificationClick = (notification: Notification) => {
     setSelectedNotification(notification);
@@ -1100,7 +1118,9 @@ function App() {
               <div key={idx} className="rewards-winner-item"><div className="rewards-winner-info"><span className="rewards-winner-weight" style={{ color: '#FFFFFF' }}>{fighter.weightClass}</span><span className="rewards-winner-name">{fighter.originalFighter}</span></div><span className="rewards-winner-badge lose">CHANGED</span></div>
             ))}</div>
             <div className="rewards-summary"><div className="rewards-summary-item"><img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="rewards-summary-icon" /><span className="rewards-summary-value">{selectedNotification.data.refundAmount || 0}</span></div></div>
-            <div className="rewards-footer"><button className="rewards-claim-button" onClick={() => claimRefund(selectedNotification)}>CLAIM REFUND</button></div>
+            <div className="rewards-footer"><button className="rewards-claim-button" onClick={() => claimRefund(selectedNotification)} disabled={isClaimingRefund}>
+  {isClaimingRefund ? 'PROCESSING...' : 'CLAIM REFUND'}
+</button></div>
           </div>
         </div>
       )}
