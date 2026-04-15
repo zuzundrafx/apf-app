@@ -64,7 +64,7 @@ body {
   width: 100%;
   background: #3D3D3B;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid #000000;
   margin-bottom: 4px;
   border-radius: 1vw;
