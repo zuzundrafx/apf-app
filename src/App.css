@@ -80,7 +80,7 @@ body {
 .level-text {
   position: absolute;
   left: 0;
-  bottom: 110%;                     /* текст поднимается над шкалой */
+  bottom: 150%;                     /* текст поднимается над шкалой */
   margin-bottom: 2px;
   transform: none;
   color: #FFFFFF;
