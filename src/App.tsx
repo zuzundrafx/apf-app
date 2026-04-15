@@ -276,10 +276,6 @@ function App() {
     });
   }, []);
 
-  const hasFightResult = (fighter: Fighter): boolean => {
-    return fighter['W/L'] === 'win' || fighter['W/L'] === 'lose' || fighter['W/L'] === 'draw';
-  };
-
   // ----- Notifications functions -----
   const loadNotifications = useCallback(async () => {
     if (!telegramUser) return;
@@ -584,36 +580,22 @@ function App() {
       upcomingResults.forEach(r => { if (r?.selections.length) allUpcomingSelections.push(...r.selections); });
       if (allUpcomingSelections.length && mounted) setUserData(prev => ({ ...prev, mySelections: { ...prev.mySelections, upcoming: allUpcomingSelections }, hasBet: true }));
       if (allPastSelections.length && mounted) {
-        let hasPendingRewards = false, hasCancelled = false, cancelledTournamentData: Tournament | null = null;
-        let pendingRewardsData: typeof pendingRewards = null;
+        let hasCancelledBet = false;
+        let cancelledTournamentData: Tournament | null = null;
         for (let i = 0; i < pastResults.length; i++) {
           const result = pastResults[i];
           const tournament = pastTournaments[i];
-          if (result?.cancelled === true) { hasCancelled = true; cancelledTournamentData = tournament; continue; }
-          if (result && !result.rewardsAccepted && result.selections.length) {
-            const isTournamentComplete = tournament?.data?.every(f => hasFightResult(f)) ?? false;
-            const allUserHaveResult = result.selections.every(sel => hasFightResult(sel.fighter));
-            if (isTournamentComplete && allUserHaveResult) {
-              const winners = result.selections.filter(sel => sel.fighter['W/L'] === 'win');
-              if (winners.length) {
-                const betAmount = result.betAmount || 0;
-                pendingRewardsData = {
-                  tournamentName: tournament.name,
-                  winners,
-                  allSelections: result.selections,
-                  totalCoins: winners.reduce((sum) => sum + Math.floor(betAmount * 2 / 5), 0),
-                  totalTickets: winners.length,
-                  totalExp: winners.length * 5
-                };
-                hasPendingRewards = true;
-                break;
-              }
-            }
+          if (result?.cancelled === true) {
+            hasCancelledBet = true;
+            cancelledTournamentData = tournament;
+            continue;
           }
         }
         setUserData(prev => ({ ...prev, mySelections: { ...prev.mySelections, past: allPastSelections } }));
-        if (hasCancelled && cancelledTournamentData) { setCancelledTournament(cancelledTournamentData); setShowCancelledModal(true); }
-        if (hasPendingRewards && pendingRewardsData) { setPendingRewards(pendingRewardsData); setShowRewardsModal(true); }
+        if (hasCancelledBet && cancelledTournamentData) {
+          setCancelledTournament(cancelledTournamentData);
+          setShowCancelledModal(true);
+        }
       }
       await loadNotifications();
       if (mounted) setLoadingUserResults(false);
@@ -775,7 +757,7 @@ function App() {
         </div>
         <div className="profile-notifications">
           <button className={`notifications-button ${notifications.length > 0 ? 'has-notifications' : ''}`} onClick={() => setShowNotificationsModal(true)}>
-            <img src={`${BASE_URL}/icons/Notifications_icon.webp`} alt="Notifications" />
+            <img src={`${BASE_URL}/icons/Notifications_icon.webp`} alt="Notifications" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const p = (e.target as HTMLImageElement).parentElement; if (p) p.innerHTML = '📬'; }} />
             {notifications.length > 0 && <span className="notification-badge">!</span>}
           </button>
         </div>
@@ -994,7 +976,7 @@ function App() {
         <div className="rewards-modal-overlay">
           <div className="rewards-modal">
             <div className="rewards-header"><h2>NOTIFICATIONS</h2><button className="cancelled-modal-close" onClick={() => setShowNotificationsModal(false)}>✕</button></div>
-            <div className="rewards-winners-list" style={{ maxHeight: '70%' }}>
+            <div className="rewards-winners-list">
               {notifications.length === 0 ? <p className="rewards-no-winners">You don't have any notifications</p> : notifications.map(notif => (
                 <div key={notif.id} className="rewards-winner-item notification-item" onClick={() => handleNotificationClick(notif)} style={{ cursor: 'pointer' }}>
                   <div className="rewards-winner-info"><span className="rewards-winner-weight" style={{ color: '#FFFFFF' }}>{notif.tournamentName}</span><span className="rewards-winner-name">{notif.type === 'tournament_reward' ? 'RESULTS' : 'Refund due to a change in your card'}</span></div>
