@@ -60,7 +60,7 @@ body {
 }
 
 .level-bar {
-  height: clamp(12px, 4vh, 16px);
+  height: clamp(9px, 3vh, 13px);
   width: 100%;
   background: #3D3D3B;
   position: relative;
@@ -71,7 +71,7 @@ body {
 }
 
 .level-progress {
-  height: 90%;
+  height: 100%;
   background: #FFE438;
   transition: width 0.3s ease;
 }
