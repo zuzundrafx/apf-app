@@ -295,6 +295,11 @@ function App() {
   }, [telegramUser, selectedTournament, currentBetAmount, isSavingBet, apiRequest]);
 
   const loadSelectionDataBackend = async (tournament: Tournament) => {
+    if (!tournament.id || isNaN(Number(tournament.id))) {
+      console.error('Invalid tournament id:', tournament.id);
+      setSelectionData([]);
+      return;
+    }
     if (!tournament.id) return;
     setLoadingSelection(true);
     try {
