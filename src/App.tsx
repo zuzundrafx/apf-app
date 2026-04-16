@@ -690,11 +690,12 @@ function App() {
             userTickets={userData.tickets}
             allProfiles={allProfiles}
             onOpenBetModal={(tournament: Tournament) => {
-              console.log('📬 onOpenBetModal in App, tournament:', tournament.name);
               setPvpSelectedTournament(tournament);
               const amounts = calculateAvailableBetAmounts(userData.coins);
               setPvpAvailableBetAmounts(amounts);
-              setPvpSelectedBetAmount(amounts[0] || 5);
+              const defaultAmount = amounts[0] || 5;
+              setPvpSelectedBetAmount(defaultAmount);
+              setAnimatedBetAmount(defaultAmount); // ← ВАЖНО: сброс отображаемого значения
               setShowPvpBetModal(true);
             }}
             onUpdateBalance={async (coins, tickets) => {
