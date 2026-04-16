@@ -1,5 +1,4 @@
-// src/components/Pvp.tsx
-
+// src/components/Pvp.tsx (исправлен)
 import { useState, forwardRef, useImperativeHandle, useEffect, useCallback, useRef } from 'react';
 import { Tournament, SelectedFighter, Fighter, UserResult } from '../types';
 import { UserProfile } from '../api/userProfiles';
@@ -7,7 +6,7 @@ import ArenaModal from './ArenaModal';
 
 interface PvpProps {
   pastTournaments: Tournament[];
-  userSelections: SelectedFighter[];
+  userBets: Map<number, any>; // вместо userSelections
   userAvatar?: string;
   userId?: string;
   userName: string;
@@ -28,10 +27,8 @@ export interface PvpRef {
   engage: (tournament: Tournament, betAmount: number) => Promise<void>;
 }
 
-// Тип для интервала (浏览器环境)
 type IntervalId = ReturnType<typeof setInterval>;
 
-// Список советов для загрузки
 const LOADING_TIPS = [
   "💡 TIP: Bet multipliers by result: KO grants you 2x, Unanimous Decision - 1.5x, Split Decision - 1.25x, DRAW - 1x (refund), LOSS = 0x.",
   "💡 TIP: Higher bet amounts increase your potential rewards, but also the risk. Choose wisely!",
@@ -42,7 +39,7 @@ const LOADING_TIPS = [
 
 const Pvp = forwardRef<PvpRef, PvpProps>(({
   pastTournaments,
-  userSelections,
+  userBets,
   userAvatar,
   userId,
   userName,
@@ -62,34 +59,22 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   const [showMessage, setShowMessage] = useState(false);
   const [messageText, setMessageText] = useState('');
   
-  // Состояния для советов при загрузке
   const [currentTip, setCurrentTip] = useState<string>(LOADING_TIPS[0]);
   const tipIntervalRef = useRef<IntervalId | null>(null);
 
-  // Функция для получения случайного совета
   const getRandomTip = useCallback(() => {
     const randomIndex = Math.floor(Math.random() * LOADING_TIPS.length);
     return LOADING_TIPS[randomIndex];
   }, []);
 
-  // Запуск ротации советов
   const startTipRotation = useCallback(() => {
-    // Очищаем предыдущий интервал
-    if (tipIntervalRef.current) {
-      clearInterval(tipIntervalRef.current);
-      tipIntervalRef.current = null;
-    }
-    
-    // Устанавливаем первый случайный совет
+    if (tipIntervalRef.current) clearInterval(tipIntervalRef.current);
     setCurrentTip(getRandomTip());
-    
-    // Запускаем интервал для смены советов каждые 5 секунд
     tipIntervalRef.current = setInterval(() => {
       setCurrentTip(getRandomTip());
     }, 5000);
   }, [getRandomTip]);
 
-  // Остановка ротации советов
   const stopTipRotation = useCallback(() => {
     if (tipIntervalRef.current) {
       clearInterval(tipIntervalRef.current);
@@ -97,35 +82,18 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     }
   }, []);
 
-  // Очистка интервала при размонтировании
   useEffect(() => {
-    return () => {
-      stopTipRotation();
-    };
+    return () => stopTipRotation();
   }, [stopTipRotation]);
 
-  const hasUserBetOnTournament = (tournament: Tournament): boolean => {
-    return userSelections.some(sel => 
-      tournament.data?.some(f => f.Fighter === sel.fighter.Fighter)
-    );
-  };
-
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
-    const tournamentSelections = userSelections.filter(sel => 
-      tournament.data?.some(f => f.Fighter === sel.fighter.Fighter)
-    );
-    
-    if (tournamentSelections.length === 0) return null;
-    
-    const totalDamage = tournamentSelections.reduce(
-      (sum, sel) => sum + (sel.fighter['Total Damage'] || 0), 
-      0
-    );
-    return Math.round(totalDamage);
+    const bet = userBets.get(Number(tournament.id));
+    if (!bet) return null;
+    return bet.total_damage || 0;
   };
 
   const checkCanJoinPvp = (tournament: Tournament): { canJoin: boolean; reason: string } => {
-    const hasBet = hasUserBetOnTournament(tournament);
+    const hasBet = userBets.has(Number(tournament.id));
     
     if (!hasBet) {
       return { canJoin: false, reason: '' };
@@ -146,19 +114,12 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
 
   const handleEngage = async (tournament: Tournament, betAmount: number): Promise<void> => {
     if (!userId || arenaData) return;
-    
-    // Запускаем ротацию советов при открытии арены
     startTipRotation();
-    
-    setArenaData({
-      tournament,
-      pvpBetAmount: betAmount
-    });
+    setArenaData({ tournament, pvpBetAmount: betAmount });
   };
 
   const handlePvpClick = (tournament: Tournament) => {
     const { canJoin, reason } = checkCanJoinPvp(tournament);
-    
     if (!canJoin) {
       if (reason) {
         setMessageText(reason);
@@ -167,12 +128,10 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
       }
       return;
     }
-    
     onOpenBetModal(tournament);
   };
 
   const handleSurrender = () => {
-    // Останавливаем ротацию советов при закрытии арены
     stopTipRotation();
     setArenaData(null);
   };
@@ -183,6 +142,9 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
+  // Показываем все завершённые турниры без ограничения в 3
+  const completedTournaments = pastTournaments.filter(t => t.status === 'completed');
+
   return (
     <div className="pvp-screen">
       <div className="pvp-header">
@@ -190,9 +152,9 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
       </div>
 
       <div className="pvp-list">
-        {pastTournaments.slice(0, 3).map((tournament) => {
+        {completedTournaments.map((tournament) => {
           const userDamage = getUserDamageForTournament(tournament);
-          const hasBet = hasUserBetOnTournament(tournament);
+          const hasBet = userBets.has(Number(tournament.id));
           const isDisabled = !!arenaData || !hasBet;
           
           return (
@@ -272,7 +234,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
       {arenaData && (
         <ArenaModal
           tournament={arenaData.tournament}
-          userSelections={userSelections}
+          userSelections={userBets.get(Number(arenaData.tournament.id))?.selections || []}
           userAvatar={userAvatar}
           userDamage={0}
           userName={userName}

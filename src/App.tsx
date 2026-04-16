@@ -654,33 +654,33 @@ function App() {
           </div>
         )}
 
-        {currentView === 'pvp' && (
-          <Pvp
-            ref={pvpRef}
-            pastTournaments={allCompletedTournaments}
-            userSelections={[]}
-            userAvatar={telegramUser?.photoUrl}
-            userId={telegramUser?.id}
-            userName={userData.username}
-            userCoins={userData.coins}
-            userTickets={userData.tickets}
-            allProfiles={allProfiles}
-            onOpenBetModal={(tournament: Tournament) => {
-              setPvpSelectedTournament(tournament);
-              const amounts = calculateAvailableBetAmounts(userData.coins);
-              setPvpAvailableBetAmounts(amounts);
-              setPvpSelectedBetAmount(amounts[0] || 5);
-              setShowPvpBetModal(true);
-            }}
-            onUpdateBalance={async (coins, tickets) => {
-              setUserData(prev => ({ ...prev, coins, tickets }));
-            }}
-            onClaimRewards={async (rewards) => {
-              setUserData(prev => ({ ...prev, coins: prev.coins + rewards.coins, totalExp: prev.totalExp + rewards.experience }));
-            }}
-            loadTournamentData={loadTournamentData}
-          />
-        )}
+{currentView === 'pvp' && (
+  <Pvp
+    ref={pvpRef}
+    pastTournaments={allCompletedTournaments}
+    userBets={userBets}               // ← вместо userSelections
+    userAvatar={telegramUser?.photoUrl}
+    userId={telegramUser?.id}
+    userName={userData.username}
+    userCoins={userData.coins}
+    userTickets={userData.tickets}
+    allProfiles={allProfiles}
+    onOpenBetModal={(tournament: Tournament) => {
+      setPvpSelectedTournament(tournament);
+      const amounts = calculateAvailableBetAmounts(userData.coins);
+      setPvpAvailableBetAmounts(amounts);
+      setPvpSelectedBetAmount(amounts[0] || 5);
+      setShowPvpBetModal(true);
+    }}
+    onUpdateBalance={async (coins, tickets) => {
+      setUserData(prev => ({ ...prev, coins, tickets }));
+    }}
+    onClaimRewards={async (rewards) => {
+      setUserData(prev => ({ ...prev, coins: prev.coins + rewards.coins, totalExp: prev.totalExp + rewards.experience }));
+    }}
+    loadTournamentData={loadTournamentData}
+  />
+)}
       </main>
 
       {/* Модальные окна (без изменений) */}
