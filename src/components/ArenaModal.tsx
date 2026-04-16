@@ -407,8 +407,23 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         setBattleRewards(data.rewards);
 
         if (data.battleScript && data.battleScript.events) {
-          setBattleScript(data.battleScript.events);
-          await preloadImages(data.battleScript.events);
+          let events = data.battleScript.events;
+          // Если последнее событие не battle-end, добавляем его
+          if (events.length > 0 && events[events.length - 1].type !== 'battle-end') {
+            events = [
+              ...events,
+              {
+                type: 'battle-end',
+                result: data.battleScript.result || {
+                  isOpen: true,
+                  result: 'win', // или другой результат на основе data
+                  resultType: 'decision-unanimous'
+                }
+              }
+            ];
+          }
+          setBattleScript(events);
+          await preloadImages(events);
         } else {
           // fallback
           const script = calculateBattleScript(userSelections, rivalSelections, []);
