@@ -406,6 +406,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
         setBattleRewards(data.rewards);
 
+        setWeightClasses(['Flyweight', 'Bantamweight', 'Featherweight', 'Lightweight', 'Heavyweight']);
+
         if (data.battleScript && data.battleScript.events) {
           let events = data.battleScript.events;
           // Если последнее событие не battle-end, добавляем его
