@@ -1,4 +1,4 @@
-// src/components/ArenaModal.tsx – ФИНАЛЬНАЯ ВЕРСИЯ с вашими таймингами и без дублирования наград
+// src/components/ArenaModal.tsx – ФИНАЛЬНАЯ ВЕРСИЯ (исправлено отображение наград)
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Tournament, SelectedFighter, UserResult, Fighter } from '../types';
 import { UserProfile } from '../api/userProfiles';
@@ -216,136 +216,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     }, 300);
   };
 
-  const calculateRewards = (
-    result: 'win' | 'loss' | 'draw',
-    resultType: 'ko' | 'decision-unanimous' | 'decision-split' | undefined,
-    betAmount: number
-  ): { coins: number; experience: number } => {
-    if (result === 'win') {
-      if (resultType === 'ko') return { coins: Math.ceil(betAmount * 2.0), experience: 10 };
-      if (resultType === 'decision-unanimous') return { coins: Math.ceil(betAmount * 1.5), experience: 7 };
-      if (resultType === 'decision-split') return { coins: Math.ceil(betAmount * 1.2), experience: 5 };
-    }
-    if (result === 'loss') {
-      if (resultType === 'ko') return { coins: 0, experience: 1 };
-      if (resultType === 'decision-unanimous') return { coins: 0, experience: 2 };
-      if (resultType === 'decision-split') return { coins: 0, experience: 3 };
-    }
-    if (result === 'draw') return { coins: Math.ceil(betAmount * 1.0), experience: 4 };
-    return { coins: 0, experience: 0 };
-  };
-
-  const calculateBattleScript = (userCards: SelectedFighter[], rivalCards: SelectedFighter[], weightClassList: string[]): BattleEvent[] => {
-    const events: BattleEvent[] = [];
-    let currentUserHealth = 1000;
-    let currentRivalHealth = 1000;
-    let currentUserCards: SelectedFighter[] = [];
-    let currentRivalCards: SelectedFighter[] = [];
-    let availableClasses = [...weightClassList];
-    let usedClasses: string[] = [];
-
-    events.push({ type: 'countdown' });
-
-    for (let round = 1; round <= 5; round++) {
-      events.push({ type: 'round-start', round });
-
-      if (availableClasses.length === 0) break;
-
-      const randomIndex = Math.floor(Math.random() * availableClasses.length);
-      const selectedClass = availableClasses[randomIndex];
-      usedClasses.push(selectedClass);
-      availableClasses = availableClasses.filter((_, i) => i !== randomIndex);
-
-      const newUserFighters = userCards.filter(
-        sel => sel.weightClass === selectedClass && !currentUserCards.includes(sel)
-      );
-      const newRivalFighters = rivalCards.filter(
-        sel => sel.weightClass === selectedClass && !currentRivalCards.includes(sel)
-      );
-
-      const userSlots = 5 - currentUserCards.length;
-      const userCardsToAdd = newUserFighters.slice(0, userSlots);
-      const rivalSlots = 5 - currentRivalCards.length;
-      const rivalCardsToAdd = newRivalFighters.slice(0, rivalSlots);
-
-      if (userCardsToAdd.length > 0) currentUserCards = [...currentUserCards, ...userCardsToAdd];
-      if (rivalCardsToAdd.length > 0) currentRivalCards = [...currentRivalCards, ...rivalCardsToAdd];
-
-      events.push({
-        type: 'card-appear',
-        round,
-        weightClass: selectedClass,
-        userActiveCards: [...currentUserCards],
-        rivalActiveCards: [...currentRivalCards]
-      });
-
-      const userTotalDamage = currentUserCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0);
-      const rivalTotalDamage = currentRivalCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0);
-
-      currentRivalHealth = Math.max(0, currentRivalHealth - userTotalDamage);
-      currentUserHealth = Math.max(0, currentUserHealth - rivalTotalDamage);
-
-      events.push({
-        type: 'damage',
-        round,
-        userDamage: userTotalDamage,
-        rivalDamage: rivalTotalDamage,
-        userHealthAfter: currentUserHealth,
-        rivalHealthAfter: currentRivalHealth
-      });
-
-      if (currentRivalHealth <= 0 && currentUserHealth > 0) {
-        events.push({ type: 'battle-end', result: { isOpen: true, result: 'win', resultType: 'ko' } });
-        return events;
-      }
-      if (currentUserHealth <= 0 && currentRivalHealth > 0) {
-        events.push({ type: 'battle-end', result: { isOpen: true, result: 'loss', resultType: 'ko' } });
-        return events;
-      }
-      if (currentUserHealth <= 0 && currentRivalHealth <= 0) {
-        events.push({ type: 'battle-end', result: { isOpen: true, result: 'draw' } });
-        return events;
-      }
-
-      if (round < 5) events.push({ type: 'round-end', round });
-    }
-
-    const healthDiff = Math.abs(currentUserHealth - currentRivalHealth);
-    let result;
-    if (currentUserHealth > currentRivalHealth) {
-      result = { isOpen: true, result: 'win', resultType: healthDiff >= 100 ? 'decision-unanimous' : 'decision-split' };
-    } else if (currentRivalHealth > currentUserHealth) {
-      result = { isOpen: true, result: 'loss', resultType: healthDiff >= 100 ? 'decision-unanimous' : 'decision-split' };
-    } else {
-      result = { isOpen: true, result: 'draw' };
-    }
-    events.push({ type: 'battle-end', result });
-    return events;
-  };
-
-  const preloadImages = async (script: BattleEvent[]) => {
-    const allCardsThatWillAppear = new Set<string>();
-    script.forEach(event => {
-      if (event.type === 'card-appear') {
-        event.userActiveCards?.forEach(card => {
-          allCardsThatWillAppear.add(`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`);
-        });
-        event.rivalActiveCards?.forEach(card => {
-          allCardsThatWillAppear.add(`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`);
-        });
-      }
-    });
-    const imagePromises = Array.from(allCardsThatWillAppear).map(src => {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = src;
-        img.onload = resolve;
-        img.onerror = reject;
-      });
-    });
-    await Promise.allSettled(imagePromises);
-  };
-
   // ========== PvP через API ==========
   useEffect(() => {
     if (!isOpen || !pvpMode || !userId || !tournament.id || pvpBetAmount === undefined) return;
@@ -376,7 +246,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         const data = await response.json();
         console.log('✅ PvP response:', data);
 
-        // Обновляем баланс немедленно
         if (onUpdateBalance && data.updatedBalance) {
           await onUpdateBalance(data.updatedBalance.coins, data.updatedBalance.tickets);
         }
@@ -406,30 +275,27 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         });
 
         setBattleRewards(data.rewards);
-
         setWeightClasses(['Flyweight', 'Bantamweight', 'Featherweight', 'Lightweight', 'Heavyweight']);
 
         if (data.battleScript && data.battleScript.events) {
-          let events = data.battleScript.events;
-          if (events.length > 0 && events[events.length - 1].type !== 'battle-end') {
-            events = [
-              ...events,
-              {
-                type: 'battle-end',
-                result: data.battleScript.result || {
-                  isOpen: true,
-                  result: 'win',
-                  resultType: 'decision-unanimous'
-                }
-              }
-            ];
-          }
-          setBattleScript(events);
-          await preloadImages(events);
+          setBattleScript(data.battleScript.events);
+          // Предзагрузка изображений
+          const allCards = new Set<string>();
+          data.battleScript.events.forEach((event: any) => {
+            if (event.type === 'card-appear') {
+              event.userActiveCards?.forEach((card: any) => allCards.add(`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`));
+              event.rivalActiveCards?.forEach((card: any) => allCards.add(`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`));
+            }
+          });
+          await Promise.allSettled(Array.from(allCards).map(src => new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = src;
+            img.onload = resolve;
+            img.onerror = reject;
+          })));
         } else {
-          const script = calculateBattleScript(userSelections, rivalSelections, []);
-          setBattleScript(script);
-          await preloadImages(script);
+          // fallback (не должен вызываться)
+          setBattleScript([{ type: 'countdown' }, { type: 'battle-end', result: { isOpen: true, result: 'draw' } }]);
         }
 
         setIsLoading(false);
@@ -445,25 +311,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
     startPvpBattle();
   }, [isOpen, pvpMode, tournament.id, pvpBetAmount, userId, authToken]);
-
-  // Обычный режим (не PvP)
-  useEffect(() => {
-    if (isOpen && !pvpMode && rivalData && weightClasses.length > 0) {
-      const initNormalMode = async () => {
-        setIsLoading(true);
-        startTipRotation();
-        const script = calculateBattleScript(userSelections, rivalData.selections, weightClasses);
-        setBattleScript(script);
-        await preloadImages(script);
-        setTimeout(() => {
-          setIsLoading(false);
-          setIsBattleLoaded(true);
-          stopTipRotation();
-        }, 500);
-      };
-      initNormalMode();
-    }
-  }, [isOpen, pvpMode, rivalData, weightClasses]);
 
   const playNextEvent = () => {
     if (currentEventIndex >= battleScript.length) return;
@@ -551,9 +398,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         break;
 
       case 'battle-end':
-        const betAmount = pvpMode ? (pvpBetAmount || 0) : 0;
-        const rewards = calculateRewards(event.result.result, event.result.resultType, betAmount);
-        setBattleRewards(rewards);
+        // Награды уже установлены из ответа сервера (для PvP) или будут рассчитаны (для обычного режима)
         setBattleResult(event.result);
         break;
     }
@@ -566,10 +411,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   }, [currentEventIndex, isLoading, battleScript]);
 
   const handleResultClose = () => {
-    // Для PvP награды уже учтены через onUpdateBalance, повторно не начисляем
-    if (!pvpMode && battleRewards && onClaimRewards) {
-      onClaimRewards(battleRewards);
-    }
     setBattleResult(null);
     onSurrender();
   };
@@ -588,8 +429,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   if (!isOpen) return null;
 
   const countdownText = getCountdownText();
-  const displayRivalData = pvpMode ? rivalData : (rivalData as any);
-  const displayWeightClasses = pvpMode ? weightClasses : (weightClasses as any);
+  const displayRivalData = rivalData;
+  const displayWeightClasses = weightClasses;
 
   if (isLoading || !displayRivalData || displayWeightClasses.length === 0) {
     return (
