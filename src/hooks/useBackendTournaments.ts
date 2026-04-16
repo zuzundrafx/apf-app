@@ -26,6 +26,7 @@ interface BackendFighter {
 export function useBackendTournaments(authToken: string | null, userId: string | null) {
   const [pastTournaments, setPastTournaments] = useState<Tournament[]>([]);
   const [upcomingTournaments, setUpcomingTournaments] = useState<Tournament[]>([]);
+  const [allCompletedTournaments, setAllCompletedTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userBets, setUserBets] = useState<Map<number, any>>(new Map());
@@ -54,7 +55,6 @@ export function useBackendTournaments(authToken: string | null, userId: string |
         betsData.forEach((bet: any) => betsMap.set(bet.tournament_id, bet));
         setUserBets(betsMap);
 
-        // Преобразуем в формат Tournament, сохраняя оригинальный статус
         const allTournaments: Tournament[] = tournamentsData.map(t => ({
           id: t.id.toString(),
           name: t.name,
@@ -66,13 +66,13 @@ export function useBackendTournaments(authToken: string | null, userId: string |
           url: '',
         }));
 
-        // UPCOMING: все турниры, которые не завершены (status !== 'completed')
         const upcoming = allTournaments.filter(t => t.status !== 'completed');
-        // ACTIVE: завершённые турниры, на которые есть ставка
-        const active = allTournaments.filter(t => t.status === 'completed' && betsMap.has(Number(t.id)));
+        const completedAll = allTournaments.filter(t => t.status === 'completed');
+        const activeWithBet = completedAll.filter(t => betsMap.has(Number(t.id)));
 
-        setPastTournaments(active);
+        setPastTournaments(activeWithBet);
         setUpcomingTournaments(upcoming);
+        setAllCompletedTournaments(completedAll);
       } catch (err: any) {
         console.error('❌ Error loading tournaments:', err);
         setError(err.message);
@@ -110,5 +110,5 @@ export function useBackendTournaments(authToken: string | null, userId: string |
     }
   };
 
-  return { pastTournaments, upcomingTournaments, loading, error, userBets, loadFighters };
+  return { pastTournaments, upcomingTournaments, allCompletedTournaments, loading, error, userBets, loadFighters };
 }

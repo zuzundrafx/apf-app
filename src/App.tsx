@@ -1,4 +1,4 @@
-﻿﻿// App.tsx (исправлен: встроенный просмотр ставки в UPCOMING, PvP все завершённые)
+﻿﻿// App.tsx (финальный)
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
@@ -67,7 +67,7 @@ function getStyleIconFilename(style: string): string {
 function App() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [telegramUser, setTelegramUser] = useState<{ id: string; username: string; photoUrl?: string } | null>(null);
-  const { pastTournaments, upcomingTournaments, loading, error, loadFighters, userBets } = useBackendTournaments(authToken, telegramUser?.id || null);
+  const { pastTournaments, upcomingTournaments, allCompletedTournaments, loading, error, loadFighters, userBets } = useBackendTournaments(authToken, telegramUser?.id || null);
 
   const [isSavingBet, setIsSavingBet] = useState(false);
   const [isClaimingRefund, setIsClaimingRefund] = useState(false);
@@ -106,7 +106,6 @@ function App() {
   const [pvpSelectedTournament, setPvpSelectedTournament] = useState<Tournament | null>(null);
   const pvpRef = useRef<any>(null);
 
-  // Состояния для встроенного просмотра ставки в UPCOMING
   const [selectedUpcomingTournament, setSelectedUpcomingTournament] = useState<Tournament | null>(null);
   const [upcomingBetData, setUpcomingBetData] = useState<any>(null);
 
@@ -381,7 +380,6 @@ function App() {
   const handleUpcomingTournamentClick = (tournament: Tournament) => {
     const hasBet = userBets.has(Number(tournament.id));
     if (hasBet) {
-      // Открыть встроенный просмотр
       setSelectedUpcomingTournament(tournament);
       setUpcomingBetData(userBets.get(Number(tournament.id)));
     } else {
@@ -398,8 +396,7 @@ function App() {
   };
 
   const handleActiveTournamentClick = (tournament: Tournament) => {
-    // Для ACTIVE уже используется selectedPastTournament (в старой версии), добавим аналогично
-    // Пока оставим заглушку, если нужно будет
+    // Пока не реализовано
   };
 
   const handleSelectFighter = (weightClass: string, fighter: Fighter) => {
@@ -452,7 +449,6 @@ function App() {
   );
 
   const activeTournaments = pastTournaments.filter(t => t.status === 'completed' && userBets.has(Number(t.id)));
-  const allCompletedTournaments = pastTournaments.filter(t => t.status === 'completed');
   const upcoming = upcomingTournaments.filter(t => t.status !== 'completed');
 
   return (
@@ -500,9 +496,7 @@ function App() {
                       const bet = userBets.get(Number(tournament.id));
                       const totalDamage = bet ? bet.total_damage : 0;
                       return (
-                        <div key={tournament.id} className="tournament-card-wrapper" onClick={() => {
-                          // Для ACTIVE пока оставляем без детального просмотра, можно добавить позже
-                        }}>
+                        <div key={tournament.id} className="tournament-card-wrapper" onClick={() => handleActiveTournamentClick(tournament)}>
                           <div className="tournament-card">
                             <div className="tournament-card-damage-box">TOTAL: {totalDamage}</div>
                             <div className="tournament-card-image"><img src={`${BASE_URL}/UFC_cardpack.png`} alt="pack" /></div>
@@ -529,7 +523,6 @@ function App() {
               </div>
               <div className="tournament-content">
                 {selectedUpcomingTournament ? (
-                  // Детальный просмотр своей ставки
                   <>
                     <div className="selected-fighters-grid">
                       {upcomingBetData?.selections.map((sel: any, idx: number) => {
@@ -555,7 +548,6 @@ function App() {
                     </div>
                   </>
                 ) : (
-                  // Список карточек турниров
                   upcoming.length > 0 ? (
                     <div className="tournament-cards-grid">
                       {upcoming.map(tournament => {
@@ -582,7 +574,6 @@ function App() {
           </div>
         )}
 
-        {/* Окно выбора бойцов */}
         {currentView === 'selection' && selectedTournament && (
           <div className="selection-modal">
             <div className="selection-content">
@@ -654,33 +645,33 @@ function App() {
           </div>
         )}
 
-{currentView === 'pvp' && (
-  <Pvp
-    ref={pvpRef}
-    pastTournaments={allCompletedTournaments}
-    userBets={userBets}               // ← вместо userSelections
-    userAvatar={telegramUser?.photoUrl}
-    userId={telegramUser?.id}
-    userName={userData.username}
-    userCoins={userData.coins}
-    userTickets={userData.tickets}
-    allProfiles={allProfiles}
-    onOpenBetModal={(tournament: Tournament) => {
-      setPvpSelectedTournament(tournament);
-      const amounts = calculateAvailableBetAmounts(userData.coins);
-      setPvpAvailableBetAmounts(amounts);
-      setPvpSelectedBetAmount(amounts[0] || 5);
-      setShowPvpBetModal(true);
-    }}
-    onUpdateBalance={async (coins, tickets) => {
-      setUserData(prev => ({ ...prev, coins, tickets }));
-    }}
-    onClaimRewards={async (rewards) => {
-      setUserData(prev => ({ ...prev, coins: prev.coins + rewards.coins, totalExp: prev.totalExp + rewards.experience }));
-    }}
-    loadTournamentData={loadTournamentData}
-  />
-)}
+        {currentView === 'pvp' && (
+          <Pvp
+            ref={pvpRef}
+            pastTournaments={allCompletedTournaments}
+            userBets={userBets}
+            userAvatar={telegramUser?.photoUrl}
+            userId={telegramUser?.id}
+            userName={userData.username}
+            userCoins={userData.coins}
+            userTickets={userData.tickets}
+            allProfiles={allProfiles}
+            onOpenBetModal={(tournament: Tournament) => {
+              setPvpSelectedTournament(tournament);
+              const amounts = calculateAvailableBetAmounts(userData.coins);
+              setPvpAvailableBetAmounts(amounts);
+              setPvpSelectedBetAmount(amounts[0] || 5);
+              setShowPvpBetModal(true);
+            }}
+            onUpdateBalance={async (coins, tickets) => {
+              setUserData(prev => ({ ...prev, coins, tickets }));
+            }}
+            onClaimRewards={async (rewards) => {
+              setUserData(prev => ({ ...prev, coins: prev.coins + rewards.coins, totalExp: prev.totalExp + rewards.experience }));
+            }}
+            loadTournamentData={loadTournamentData}
+          />
+        )}
       </main>
 
       {/* Модальные окна (без изменений) */}
@@ -742,7 +733,6 @@ function App() {
         </div>
       )}
 
-      {/* Остальные модалки без изменений */}
       {showNotificationsModal && (
         <div className="rewards-modal-overlay">
           <div className="rewards-modal">
