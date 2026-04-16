@@ -566,10 +566,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   }, [currentEventIndex, isLoading, battleScript]);
 
   const handleResultClose = () => {
-    if (battleRewards && onClaimRewards) onClaimRewards(battleRewards);
-    setBattleResult(null);
-    onSurrender();
-  };
+  // Для PvP награды уже учтены через onUpdateBalance, повторно не начисляем
+  if (!pvpMode && battleRewards && onClaimRewards) {
+    onClaimRewards(battleRewards);
+  }
+  setBattleResult(null);
+  onSurrender();
+};
 
   const handleSurrender = () => {
     setBattleResult({ isOpen: true, result: 'tech-loss' });
