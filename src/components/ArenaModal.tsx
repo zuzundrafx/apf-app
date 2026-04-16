@@ -1,4 +1,4 @@
-// src/components/ArenaModal.tsx – ПОЛНЫЙ ФАЙЛ с обновлением баланса
+// src/components/ArenaModal.tsx – ФИНАЛЬНАЯ ВЕРСИЯ с вашими таймингами и без дублирования наград
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Tournament, SelectedFighter, UserResult, Fighter } from '../types';
 import { UserProfile } from '../api/userProfiles';
@@ -566,13 +566,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   }, [currentEventIndex, isLoading, battleScript]);
 
   const handleResultClose = () => {
-  // Для PvP награды уже учтены через onUpdateBalance, повторно не начисляем
-  if (!pvpMode && battleRewards && onClaimRewards) {
-    onClaimRewards(battleRewards);
-  }
-  setBattleResult(null);
-  onSurrender();
-};
+    // Для PvP награды уже учтены через onUpdateBalance, повторно не начисляем
+    if (!pvpMode && battleRewards && onClaimRewards) {
+      onClaimRewards(battleRewards);
+    }
+    setBattleResult(null);
+    onSurrender();
+  };
 
   const handleSurrender = () => {
     setBattleResult({ isOpen: true, result: 'tech-loss' });
