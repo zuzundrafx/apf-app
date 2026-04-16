@@ -54,19 +54,22 @@ export function useBackendTournaments(authToken: string | null, userId: string |
         betsData.forEach((bet: any) => betsMap.set(bet.tournament_id, bet));
         setUserBets(betsMap);
 
-        const allTournaments = tournamentsData.map(t => ({
+        // Преобразуем в формат Tournament, сохраняя оригинальный статус
+        const allTournaments: Tournament[] = tournamentsData.map(t => ({
           id: t.id.toString(),
           name: t.name,
           league: t.league,
           date: t.date,
-          status: t.status as 'active' | 'upcoming',
+          status: t.status as 'active' | 'upcoming' | 'completed',
           filename: '',
           data: null,
           url: '',
         }));
 
-        const upcoming = allTournaments.filter(t => !betsMap.has(Number(t.id)));
-        const active = allTournaments.filter(t => betsMap.has(Number(t.id)));
+        // UPCOMING: все турниры, которые не завершены (status !== 'completed')
+        const upcoming = allTournaments.filter(t => t.status !== 'completed');
+        // ACTIVE: завершённые турниры, на которые есть ставка
+        const active = allTournaments.filter(t => t.status === 'completed' && betsMap.has(Number(t.id)));
 
         setPastTournaments(active);
         setUpcomingTournaments(upcoming);
