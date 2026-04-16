@@ -1,4 +1,4 @@
-﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ с встроенным просмотром ACTIVE
+﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ (исправлены уровни и опыт, модалки сохранены)
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
@@ -161,8 +161,8 @@ function App() {
         username: data.user.username,
         level: data.user.level,
         totalExp: data.user.experience,
-        currentExp: data.user.experience % 5,
-        nextLevelExp: 5,
+        currentExp: data.user.currentExp,
+        nextLevelExp: data.user.nextLevelExp,
         coins: data.user.coins,
         tickets: data.user.tickets,
         myUserId: data.user.id
@@ -192,8 +192,9 @@ function App() {
         coins: result.newCoins,
         tickets: result.newTickets,
         totalExp: result.newExp,
-        currentExp: result.newExp % 5,
-        level: Math.floor(result.newExp / 5) + 1
+        currentExp: result.currentExp,
+        nextLevelExp: result.nextLevelExp,
+        level: result.level
       }));
       setNotifications([]);
       setShowNotificationsModal(false);
@@ -250,7 +251,8 @@ function App() {
         tickets: profile.tickets,
         totalExp: profile.experience,
         level: profile.level,
-        currentExp: profile.experience % 5
+        currentExp: profile.currentExp,
+        nextLevelExp: profile.nextLevelExp
       }));
       setShowRewardsModal(false);
       setPendingRewards(null);
@@ -482,7 +484,6 @@ function App() {
       <main className="main-content">
         {currentView === 'main' && (
           <div className="tournaments-container">
-            {/* ACTIVE TOURNAMENTS */}
             <section className="tournament-section past">
               <div className="tournament-header">
                 <h2>{selectedActiveTournament ? selectedActiveTournament.name : 'ACTIVE TOURNAMENTS'}</h2>
@@ -543,7 +544,6 @@ function App() {
               </div>
             </section>
 
-            {/* UPCOMING TOURNAMENTS */}
             <section className="tournament-section upcoming">
               <div className="tournament-header">
                 <h2>{selectedUpcomingTournament ? selectedUpcomingTournament.name : 'UPCOMING TOURNAMENTS'}</h2>
@@ -695,7 +695,7 @@ function App() {
               setPvpAvailableBetAmounts(amounts);
               const defaultAmount = amounts[0] || 5;
               setPvpSelectedBetAmount(defaultAmount);
-              setAnimatedBetAmount(defaultAmount); // ← ВАЖНО: сброс отображаемого значения
+              setAnimatedBetAmount(defaultAmount);
               setShowPvpBetModal(true);
             }}
             onUpdateBalance={async (coins, tickets) => {
@@ -710,7 +710,7 @@ function App() {
         )}
       </main>
 
-      {/* Модальные окна (без изменений) */}
+      {/* Модальные окна */}
       {showBetModal && selectedBetTournament && (
         <div className="bet-modal-overlay">
           <div className="bet-modal">
@@ -764,7 +764,7 @@ function App() {
                 </div>
               </div>
             </div>
-            <div className="bet-modal-footer"><button className="bet-confirm-button" onClick={() => { console.log('🔥 PvP confirm button clicked, tournament:', pvpSelectedTournament?.name, 'betAmount:', pvpSelectedBetAmount); setShowPvpBetModal(false);  pvpRef.current?.engage(pvpSelectedTournament, pvpSelectedBetAmount); }}>BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount}</span> <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /> + 1 <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" /></button></div>
+            <div className="bet-modal-footer"><button className="bet-confirm-button" onClick={() => { console.log('🔥 PvP confirm button clicked, tournament:', pvpSelectedTournament?.name, 'betAmount:', pvpSelectedBetAmount); setShowPvpBetModal(false); pvpRef.current?.engage(pvpSelectedTournament, pvpSelectedBetAmount); }}>BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount}</span> <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /> + 1 <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" /></button></div>
           </div>
         </div>
       )}
