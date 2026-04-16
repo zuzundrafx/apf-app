@@ -33,12 +33,8 @@ export function useBackendTournaments(authToken: string | null, userId: string |
   const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
 
   const apiRequest = async (endpoint: string, options?: RequestInit) => {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`;
-    }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
     const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
     if (!res.ok) {
       const err = await res.json();
@@ -52,15 +48,12 @@ export function useBackendTournaments(authToken: string | null, userId: string |
       if (!authToken || !userId) return;
       try {
         setLoading(true);
-        // 1. Загружаем все турниры
         const tournamentsData: BackendTournament[] = await apiRequest('/api/tournaments');
-        // 2. Загружаем все ставки пользователя (чтобы знать, на какие турниры есть ставка)
         const betsData = await apiRequest(`/api/bets/user/${userId}`);
         const betsMap = new Map();
         betsData.forEach((bet: any) => betsMap.set(bet.tournament_id, bet));
         setUserBets(betsMap);
 
-        // Преобразуем в формат Tournament
         const allTournaments = tournamentsData.map(t => ({
           id: t.id.toString(),
           name: t.name,
@@ -72,10 +65,13 @@ export function useBackendTournaments(authToken: string | null, userId: string |
           url: '',
         }));
 
-        // Разделяем: upcoming – те, на которые нет ставки, active – те, на которые есть ставка
-        setPastTournaments([]);
-setUpcomingTournaments(allTournaments);
+        const upcoming = allTournaments.filter(t => !betsMap.has(Number(t.id)));
+        const active = allTournaments.filter(t => betsMap.has(Number(t.id)));
+
+        setPastTournaments(active);
+        setUpcomingTournaments(upcoming);
       } catch (err: any) {
+        console.error('❌ Error loading tournaments:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -84,7 +80,6 @@ setUpcomingTournaments(allTournaments);
     loadData();
   }, [authToken, userId]);
 
-  // Функция для загрузки бойцов конкретного турнира
   const loadFighters = async (tournamentId: string): Promise<Fighter[]> => {
     try {
       const fightersData: BackendFighter[] = await apiRequest(`/api/tournaments/${tournamentId}/fighters`);
@@ -112,9 +107,5 @@ setUpcomingTournaments(allTournaments);
     }
   };
 
-  
-
   return { pastTournaments, upcomingTournaments, loading, error, userBets, loadFighters };
-
-  
 }

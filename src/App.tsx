@@ -220,6 +220,8 @@ function App() {
       setSelectedFighters(new Map());
       setShowBetModal(false);
       setCurrentBetAmount(null);
+      // Перезагружаем страницу, чтобы обновить список турниров (ставка теперь есть)
+      window.location.reload();
     } catch (error: any) {
       console.error(error);
       alert(error.message);
