@@ -112,14 +112,10 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     return { canJoin: true, reason: '' };
   };
 
-  const handleEngage = async (tournament: Tournament, betAmount: number): Promise<void> => {
-    if (!userId || arenaData) return;
-    startTipRotation();
-    setArenaData({ tournament, pvpBetAmount: betAmount });
-  };
-
   const handlePvpClick = (tournament: Tournament) => {
+    console.log('🖱️ Pvp button clicked for tournament:', tournament.name);
     const { canJoin, reason } = checkCanJoinPvp(tournament);
+    console.log('   canJoin:', canJoin, 'reason:', reason);
     if (!canJoin) {
       if (reason) {
         setMessageText(reason);
@@ -128,7 +124,23 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
       }
       return;
     }
+    console.log('   Opening bet modal...');
     onOpenBetModal(tournament);
+  };
+  
+  const handleEngage = async (tournament: Tournament, betAmount: number): Promise<void> => {
+    console.log('⚔️ engage called with tournament:', tournament.name, 'betAmount:', betAmount);
+    if (!userId) {
+      console.warn('❌ userId is missing, cannot start PvP');
+      return;
+    }
+    if (arenaData) {
+      console.warn('❌ arenaData already exists, cannot start new battle');
+      return;
+    }
+    console.log('✅ Starting arena, betAmount:', betAmount);
+    startTipRotation();
+    setArenaData({ tournament, pvpBetAmount: betAmount });
   };
 
   const handleSurrender = () => {

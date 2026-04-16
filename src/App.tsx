@@ -690,6 +690,7 @@ function App() {
             userTickets={userData.tickets}
             allProfiles={allProfiles}
             onOpenBetModal={(tournament: Tournament) => {
+              console.log('📬 onOpenBetModal in App, tournament:', tournament.name);
               setPvpSelectedTournament(tournament);
               const amounts = calculateAvailableBetAmounts(userData.coins);
               setPvpAvailableBetAmounts(amounts);
@@ -761,7 +762,7 @@ function App() {
                 </div>
               </div>
             </div>
-            <div className="bet-modal-footer"><button className="bet-confirm-button" onClick={() => { setShowPvpBetModal(false); pvpRef.current?.engage(pvpSelectedTournament, pvpSelectedBetAmount); }}>BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount}</span> <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /> + 1 <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" /></button></div>
+            <div className="bet-modal-footer"><button className="bet-confirm-button" onClick={() => { console.log('🔥 PvP confirm button clicked, tournament:', pvpSelectedTournament?.name, 'betAmount:', pvpSelectedBetAmount); setShowPvpBetModal(false);  pvpRef.current?.engage(pvpSelectedTournament, pvpSelectedBetAmount); }}>BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount}</span> <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /> + 1 <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" /></button></div>
           </div>
         </div>
       )}
