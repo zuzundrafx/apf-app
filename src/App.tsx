@@ -1,4 +1,4 @@
-﻿﻿// App.tsx (финальный)
+﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ с встроенным просмотром ACTIVE
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
@@ -77,7 +77,7 @@ function App() {
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  
+
   const [animatedBetAmount, setAnimatedBetAmount] = useState(5);
   const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
   const [allProfiles] = useState<Map<string, any>>(new Map());
@@ -108,6 +108,8 @@ function App() {
 
   const [selectedUpcomingTournament, setSelectedUpcomingTournament] = useState<Tournament | null>(null);
   const [upcomingBetData, setUpcomingBetData] = useState<any>(null);
+
+  const [selectedActiveTournament, setSelectedActiveTournament] = useState<Tournament | null>(null);
 
   const [userData, setUserData] = useState({
     username: 'Player', level: 1, currentExp: 0, totalExp: 0, nextLevelExp: 5,
@@ -396,13 +398,13 @@ function App() {
   };
 
   const handleActiveTournamentClick = (tournament: Tournament) => {
-    // Пока не реализовано
+    setSelectedActiveTournament(tournament);
   };
 
   const handleSelectFighter = (weightClass: string, fighter: Fighter) => {
     const newSelection = new Map(selectedFighters);
     const alreadySelectedInCategory = newSelection.get(weightClass);
-    
+
     if (alreadySelectedInCategory?.Fighter === fighter.Fighter) {
       newSelection.delete(weightClass);
     } else {
@@ -483,31 +485,60 @@ function App() {
             {/* ACTIVE TOURNAMENTS */}
             <section className="tournament-section past">
               <div className="tournament-header">
-                <h2>ACTIVE TOURNAMENTS</h2>
+                <h2>{selectedActiveTournament ? selectedActiveTournament.name : 'ACTIVE TOURNAMENTS'}</h2>
                 <div className="tournament-meta">
-                  <span>{activeTournaments.length} events</span>
+                  <span>{selectedActiveTournament ? new Date(selectedActiveTournament.date).toLocaleDateString() : `${activeTournaments.length} events`}</span>
                   <span className="tournament-status active">COMPLETED</span>
                 </div>
               </div>
               <div className="tournament-content">
-                {activeTournaments.length > 0 ? (
-                  <div className="tournament-cards-grid">
-                    {activeTournaments.map(tournament => {
-                      const bet = userBets.get(Number(tournament.id));
-                      const totalDamage = bet ? bet.total_damage : 0;
-                      return (
-                        <div key={tournament.id} className="tournament-card-wrapper" onClick={() => handleActiveTournamentClick(tournament)}>
-                          <div className="tournament-card">
-                            <div className="tournament-card-damage-box">TOTAL: {totalDamage}</div>
-                            <div className="tournament-card-image"><img src={`${BASE_URL}/UFC_cardpack.png`} alt="pack" /></div>
-                            <div className="tournament-card-name">{tournament.name}</div>
+                {selectedActiveTournament ? (
+                  <>
+                    <div className="selected-fighters-grid">
+                      {userBets.get(Number(selectedActiveTournament.id))?.selections.map((sel: any, idx: number) => {
+                        const isWinner = sel.fighter.W_L === 'win';
+                        const style = getFighterStyle(sel as SelectedFighter);
+                        const styleIcon = getStyleIconFilename(style);
+                        return (
+                          <div key={idx} className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
+                            <div className="selected-fighter-damage-box">{sel.fighter['Total Damage']}</div>
+                            <div className="selected-fighter-inner">
+                              <div className="selected-fighter-icon-container">
+                                <img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="selected-fighter-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const p = (e.target as HTMLImageElement).parentElement; if (p) { p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; p.style.fontSize = '20px'; } }} />
+                              </div>
+                              <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
+                              <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
+                            </div>
+                            {isWinner && <span className="winner-crown">👑</span>}
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                    <div className="tournament-footer">
+                      <div className="footer-total-damage">TOTAL DAMAGE: {userBets.get(Number(selectedActiveTournament.id))?.total_damage || 0}</div>
+                      <button className="footer-close-button" onClick={() => setSelectedActiveTournament(null)}>CLOSE</button>
+                    </div>
+                  </>
                 ) : (
-                  <div className="tournament-message">No active tournaments</div>
+                  activeTournaments.length > 0 ? (
+                    <div className="tournament-cards-grid">
+                      {activeTournaments.map(tournament => {
+                        const bet = userBets.get(Number(tournament.id));
+                        const totalDamage = bet ? bet.total_damage : 0;
+                        return (
+                          <div key={tournament.id} className="tournament-card-wrapper" onClick={() => handleActiveTournamentClick(tournament)}>
+                            <div className="tournament-card">
+                              <div className="tournament-card-damage-box">TOTAL: {totalDamage}</div>
+                              <div className="tournament-card-image"><img src={`${BASE_URL}/UFC_cardpack.png`} alt="pack" /></div>
+                              <div className="tournament-card-name">{tournament.name}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="tournament-message">No active tournaments</div>
+                  )
                 )}
               </div>
             </section>
@@ -639,7 +670,9 @@ function App() {
             <h2 className="leaderboard-header">{activeTournaments.length > 0 ? activeTournaments[0].name : 'LEADERBOARD'}</h2>
             {leaderboardLoading ? <div className="leaderboard-loading">LOADING...</div> : leaderboardData.length > 0 ? (
               <div className="leaderboard-list">
-                {leaderboardData.map(entry => <LeaderboardItem key={entry.userId} entry={entry} currentUserId={telegramUser?.id} currentUserPhoto={telegramUser?.photoUrl} profile={allProfiles.get(entry.userId)} />)}
+                {leaderboardData.map(entry => (
+                  <LeaderboardItem key={entry.userId} entry={entry} currentUserId={telegramUser?.id} currentUserPhoto={telegramUser?.photoUrl} profile={allProfiles.get(entry.userId)} />
+                ))}
               </div>
             ) : <div className="leaderboard-empty">NO RESULTS YET</div>}
           </div>
