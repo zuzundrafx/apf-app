@@ -21,6 +21,7 @@ interface PvpProps {
     results: UserResult[];
     fightersData: Fighter[];
   }>;
+  authToken?: string; // <-- ДОБАВИТЬ
 }
 
 export interface PvpRef {
@@ -50,6 +51,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   onUpdateBalance,
   onClaimRewards,
   loadTournamentData,
+  authToken, // <-- ДОБАВИТЬ
 }, ref) => {
   const [arenaData, setArenaData] = useState<{
     tournament: Tournament;
@@ -264,6 +266,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           onClaimRewards={onClaimRewards}
           loadTournamentData={loadTournamentData}
           loadingTip={currentTip}
+          authToken={authToken}
         />
       )}
     </div>

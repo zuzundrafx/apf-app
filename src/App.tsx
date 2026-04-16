@@ -704,6 +704,7 @@ function App() {
               setUserData(prev => ({ ...prev, coins: prev.coins + rewards.coins, totalExp: prev.totalExp + rewards.experience }));
             }}
             loadTournamentData={loadTournamentData}
+            authToken={authToken ?? undefined}
           />
         )}
       </main>

@@ -1,5 +1,4 @@
-// src/components/ArenaModal.tsx
-
+// src/components/ArenaModal.tsx – ПОЛНЫЙ ФАЙЛ с вызовом API для PvP
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Tournament, SelectedFighter, UserResult, Fighter } from '../types';
 import { UserProfile } from '../api/userProfiles';
@@ -20,7 +19,6 @@ interface ArenaModalProps {
   weightClasses: string[];
   isOpen: boolean;
   onSurrender: () => void;
-  // PvP mode props
   pvpMode?: boolean;
   pvpBetAmount?: number;
   userId?: string;
@@ -35,9 +33,9 @@ interface ArenaModalProps {
     fightersData: Fighter[];
   }>;
   loadingTip?: string;
+  authToken?: string; // <-- новый пропс для авторизации
 }
 
-// Список советов для загрузки (резервный, если пропс не передан)
 const DEFAULT_LOADING_TIPS = [
   "💡 TIP: Bet multipliers by result: KO grants you 2x, Unanimous Decision - 1.5x, Split Decision - 1.25x, DRAW - 1x (refund), LOSS = 0x.",
   "💡 TIP: Higher bet amounts increase your potential rewards, but also the risk. Choose wisely!",
@@ -46,7 +44,6 @@ const DEFAULT_LOADING_TIPS = [
   "💡 TIP: Each round features a random weight class, with fighters from that class participating in the tournament!"
 ];
 
-// Функция для получения имени файла аватарки по весовой категории
 const getAvatarFilename = (weightClass: string): string => {
   const map: { [key: string]: string } = {
     'Flyweight': 'Flyweight_avatar.png',
@@ -65,7 +62,6 @@ const getAvatarFilename = (weightClass: string): string => {
   return map[weightClass] || 'default-avatar.png';
 };
 
-// Функция для получения цвета весовой категории
 const getWeightClassColor = (weightClass: string): string => {
   const colors: { [key: string]: string } = {
     'Flyweight': '#00FFA3',
@@ -84,26 +80,17 @@ const getWeightClassColor = (weightClass: string): string => {
   return colors[weightClass] || '#666666';
 };
 
-// Функция для определения стиля бойца
 const getFighterStyle = (fighter: SelectedFighter): string => {
   const str = Number(fighter.fighter.Str) || 0;
   const td = Number(fighter.fighter.Td) || 0;
   const sub = Number(fighter.fighter.Sub) || 0;
   const tdSubSum = td + sub;
-  
-  if (tdSubSum >= 2 && str < 50) {
-    return 'Grappler';
-  }
-  if (str >= 50 && tdSubSum < 2) {
-    return 'Striker';
-  }
-  if (str >= 50 && tdSubSum >= 2) {
-    return 'Universal';
-  }
+  if (tdSubSum >= 2 && str < 50) return 'Grappler';
+  if (str >= 50 && tdSubSum < 2) return 'Striker';
+  if (str >= 50 && tdSubSum >= 2) return 'Universal';
   return 'Simple';
 };
 
-// Функция для получения имени файла иконки стиля
 const getStyleIconFilename = (style: string): string => {
   const icons: { [key: string]: string } = {
     'Grappler': 'Grappler_style_icon.webp',
@@ -127,7 +114,6 @@ type BattleEvent = {
   result?: any;
 };
 
-// Тип для интервала (浏览器环境)
 type IntervalId = ReturnType<typeof setInterval>;
 
 const ArenaModal: React.FC<ArenaModalProps> = ({
@@ -147,6 +133,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   onClaimRewards,
   loadTournamentData,
   loadingTip,
+  authToken,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
@@ -172,12 +159,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const [shakeScreen, setShakeScreen] = useState(false);
   const [healthFlash, setHealthFlash] = useState<'player' | 'rival' | null>(null);
   const [isBattleLoaded, setIsBattleLoaded] = useState(false);
-  
-  // Состояние для текущего совета (с ротацией)
   const [currentLoadingTip, setCurrentLoadingTip] = useState<string>(loadingTip || DEFAULT_LOADING_TIPS[0]);
   const tipIntervalRef = useRef<IntervalId | null>(null);
-  
-  // Данные для боя (загружаются в PvP режиме)
   const [rivalData, setRivalData] = useState<{
     username: string;
     photoUrl?: string;
@@ -187,29 +170,21 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const [weightClasses, setWeightClasses] = useState<string[]>([]);
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
+  const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
 
-  // Функция для получения случайного совета
   const getRandomTip = useCallback(() => {
-    const tips = DEFAULT_LOADING_TIPS;
-    const randomIndex = Math.floor(Math.random() * tips.length);
-    return tips[randomIndex];
+    const randomIndex = Math.floor(Math.random() * DEFAULT_LOADING_TIPS.length);
+    return DEFAULT_LOADING_TIPS[randomIndex];
   }, []);
 
-  // Запуск ротации советов
   const startTipRotation = useCallback(() => {
-    if (tipIntervalRef.current) {
-      clearInterval(tipIntervalRef.current);
-      tipIntervalRef.current = null;
-    }
-    
+    if (tipIntervalRef.current) clearInterval(tipIntervalRef.current);
     setCurrentLoadingTip(loadingTip || DEFAULT_LOADING_TIPS[0]);
-    
     tipIntervalRef.current = setInterval(() => {
       setCurrentLoadingTip(getRandomTip());
     }, 5000);
   }, [loadingTip, getRandomTip]);
 
-  // Остановка ротации советов
   const stopTipRotation = useCallback(() => {
     if (tipIntervalRef.current) {
       clearInterval(tipIntervalRef.current);
@@ -217,35 +192,24 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     }
   }, []);
 
-  // Очистка интервала при размонтировании
   useEffect(() => {
-    return () => {
-      stopTipRotation();
-    };
+    return () => stopTipRotation();
   }, [stopTipRotation]);
 
   const applyHitEffect = (target: 'player' | 'rival', damage: number) => {
     const avatarElement = document.querySelector(
       target === 'player' ? '.arena-bottom .arena-avatar' : '.arena-top .arena-avatar'
     );
-    
     if (!avatarElement) return;
-    
     let glowColor = '';
-    if (damage < 50) {
-      glowColor = 'rgba(255, 255, 255, 0.3)';
-    } else if (damage >= 50 && damage < 150) {
-      glowColor = 'rgba(255, 255, 0, 0.3)';
-    } else {
-      glowColor = 'rgba(255, 0, 0, 0.3)';
-    }
-    
+    if (damage < 50) glowColor = 'rgba(255, 255, 255, 0.3)';
+    else if (damage >= 50 && damage < 150) glowColor = 'rgba(255, 255, 0, 0.3)';
+    else glowColor = 'rgba(255, 0, 0, 0.3)';
     avatarElement.classList.remove('avatar-hit', 'avatar-glow');
     void (avatarElement as HTMLElement).offsetHeight;
     avatarElement.classList.add('avatar-hit');
     (avatarElement as HTMLElement).style.setProperty('--glow-color', glowColor);
     avatarElement.classList.add('avatar-glow');
-    
     setTimeout(() => {
       avatarElement.classList.remove('avatar-hit', 'avatar-glow');
       (avatarElement as HTMLElement).style.removeProperty('--glow-color');
@@ -258,45 +222,16 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     betAmount: number
   ): { coins: number; experience: number } => {
     if (result === 'win') {
-      if (resultType === 'ko') {
-        return {
-          coins: Math.ceil(betAmount * 2.0),
-          experience: 10
-        };
-      }
-      if (resultType === 'decision-unanimous') {
-        return {
-          coins: Math.ceil(betAmount * 1.5),
-          experience: 7
-        };
-      }
-      if (resultType === 'decision-split') {
-        return {
-          coins: Math.ceil(betAmount * 1.2),
-          experience: 5
-        };
-      }
+      if (resultType === 'ko') return { coins: Math.ceil(betAmount * 2.0), experience: 10 };
+      if (resultType === 'decision-unanimous') return { coins: Math.ceil(betAmount * 1.5), experience: 7 };
+      if (resultType === 'decision-split') return { coins: Math.ceil(betAmount * 1.2), experience: 5 };
     }
-    
     if (result === 'loss') {
-      if (resultType === 'ko') {
-        return { coins: 0, experience: 1 };
-      }
-      if (resultType === 'decision-unanimous') {
-        return { coins: 0, experience: 2 };
-      }
-      if (resultType === 'decision-split') {
-        return { coins: 0, experience: 3 };
-      }
+      if (resultType === 'ko') return { coins: 0, experience: 1 };
+      if (resultType === 'decision-unanimous') return { coins: 0, experience: 2 };
+      if (resultType === 'decision-split') return { coins: 0, experience: 3 };
     }
-    
-    if (result === 'draw') {
-      return {
-        coins: Math.ceil(betAmount * 1.0),
-        experience: 4
-      };
-    }
-    
+    if (result === 'draw') return { coins: Math.ceil(betAmount * 1.0), experience: 4 };
     return { coins: 0, experience: 0 };
   };
 
@@ -315,7 +250,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       events.push({ type: 'round-start', round });
 
       if (availableClasses.length === 0) break;
-      
+
       const randomIndex = Math.floor(Math.random() * availableClasses.length);
       const selectedClass = availableClasses[randomIndex];
       usedClasses.push(selectedClass);
@@ -324,24 +259,17 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       const newUserFighters = userCards.filter(
         sel => sel.weightClass === selectedClass && !currentUserCards.includes(sel)
       );
-      
       const newRivalFighters = rivalCards.filter(
         sel => sel.weightClass === selectedClass && !currentRivalCards.includes(sel)
       );
 
       const userSlots = 5 - currentUserCards.length;
       const userCardsToAdd = newUserFighters.slice(0, userSlots);
-      
       const rivalSlots = 5 - currentRivalCards.length;
       const rivalCardsToAdd = newRivalFighters.slice(0, rivalSlots);
 
-      if (userCardsToAdd.length > 0) {
-        currentUserCards = [...currentUserCards, ...userCardsToAdd];
-      }
-      
-      if (rivalCardsToAdd.length > 0) {
-        currentRivalCards = [...currentRivalCards, ...rivalCardsToAdd];
-      }
+      if (userCardsToAdd.length > 0) currentUserCards = [...currentUserCards, ...userCardsToAdd];
+      if (rivalCardsToAdd.length > 0) currentRivalCards = [...currentRivalCards, ...rivalCardsToAdd];
 
       events.push({
         type: 'card-appear',
@@ -351,13 +279,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         rivalActiveCards: [...currentRivalCards]
       });
 
-      const userTotalDamage = currentUserCards.reduce(
-        (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-      );
-      
-      const rivalTotalDamage = currentRivalCards.reduce(
-        (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-      );
+      const userTotalDamage = currentUserCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0);
+      const rivalTotalDamage = currentRivalCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0);
 
       currentRivalHealth = Math.max(0, currentRivalHealth - userTotalDamage);
       currentUserHealth = Math.max(0, currentUserHealth - rivalTotalDamage);
@@ -372,61 +295,36 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       });
 
       if (currentRivalHealth <= 0 && currentUserHealth > 0) {
-        events.push({
-          type: 'battle-end',
-          result: { isOpen: true, result: 'win', resultType: 'ko' }
-        });
+        events.push({ type: 'battle-end', result: { isOpen: true, result: 'win', resultType: 'ko' } });
         return events;
       }
-      
       if (currentUserHealth <= 0 && currentRivalHealth > 0) {
-        events.push({
-          type: 'battle-end',
-          result: { isOpen: true, result: 'loss', resultType: 'ko' }
-        });
+        events.push({ type: 'battle-end', result: { isOpen: true, result: 'loss', resultType: 'ko' } });
         return events;
       }
-      
       if (currentUserHealth <= 0 && currentRivalHealth <= 0) {
-        events.push({
-          type: 'battle-end',
-          result: { isOpen: true, result: 'draw' }
-        });
+        events.push({ type: 'battle-end', result: { isOpen: true, result: 'draw' } });
         return events;
       }
 
-      if (round < 5) {
-        events.push({ type: 'round-end', round });
-      }
+      if (round < 5) events.push({ type: 'round-end', round });
     }
 
     const healthDiff = Math.abs(currentUserHealth - currentRivalHealth);
     let result;
-
     if (currentUserHealth > currentRivalHealth) {
-      result = {
-        isOpen: true,
-        result: 'win',
-        resultType: healthDiff >= 100 ? 'decision-unanimous' : 'decision-split'
-      };
+      result = { isOpen: true, result: 'win', resultType: healthDiff >= 100 ? 'decision-unanimous' : 'decision-split' };
     } else if (currentRivalHealth > currentUserHealth) {
-      result = {
-        isOpen: true,
-        result: 'loss',
-        resultType: healthDiff >= 100 ? 'decision-unanimous' : 'decision-split'
-      };
+      result = { isOpen: true, result: 'loss', resultType: healthDiff >= 100 ? 'decision-unanimous' : 'decision-split' };
     } else {
       result = { isOpen: true, result: 'draw' };
     }
-
     events.push({ type: 'battle-end', result });
-
     return events;
   };
 
   const preloadImages = async (script: BattleEvent[]) => {
     const allCardsThatWillAppear = new Set<string>();
-    
     script.forEach(event => {
       if (event.type === 'card-appear') {
         event.userActiveCards?.forEach(card => {
@@ -437,7 +335,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         });
       }
     });
-    
     const imagePromises = Array.from(allCardsThatWillAppear).map(src => {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -446,127 +343,116 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         img.onerror = reject;
       });
     });
-    
     await Promise.allSettled(imagePromises);
   };
 
-  // Загрузка PvP данных
+  // ========== PvP через API ==========
   useEffect(() => {
-    if (isOpen && pvpMode && loadTournamentData && userId && onUpdateBalance && allProfiles && pvpBetAmount !== undefined && userCoins !== undefined && userTickets !== undefined) {
-      const loadPvpData = async () => {
-        setIsLoading(true);
-        startTipRotation();
-      
-        // Сохраняем исходные значения для возможного возврата
-        const originalCoins = userCoins;
-        const originalTickets = userTickets;
-        const spentCoins = pvpBetAmount;
-        const spentTickets = 1;
-      
-        try {
-          // 1. Списываем валюту
-          const newCoins = originalCoins - spentCoins;
-          const newTickets = originalTickets - spentTickets;
-          await onUpdateBalance(newCoins, newTickets);
-      
-          // 2. Загружаем данные турнира
-          const tournamentData = await loadTournamentData(tournament.name);
-      
-          // 3. Ищем соперника
-          const rivals = tournamentData.results.filter(r => r.userId !== userId);
-      
-          if (rivals.length === 0) {
-            // Возврат валюты
-            await onUpdateBalance(originalCoins, originalTickets);
-            alert('No rivals available for this tournament');
-            onSurrender();
-            return;
-          }
-      
-          const randomIndex = Math.floor(Math.random() * rivals.length);
-          const selectedRival = rivals[randomIndex];
-          const rivalProfile = allProfiles.get(selectedRival.userId);
-      
-          // 4. Обогащаем выборы соперника
-          const fightersMap = new Map<string, Fighter>();
-          tournamentData.fightersData.forEach((fighter: Fighter) => {
-            fightersMap.set(fighter.Fighter, fighter);
-          });
-      
-          const enrichedRivalSelections = selectedRival.selections.map(sel => ({
-            ...sel,
-            fighter: fightersMap.get(sel.fighter.Fighter) || sel.fighter
-          }));
-      
-          // 5. Устанавливаем данные
-          setRivalData({
-            username: selectedRival.username,
-            photoUrl: rivalProfile?.photoUrl,
-            totalDamage: selectedRival.totalDamage,
-            selections: enrichedRivalSelections
-          });
-          setWeightClasses(tournamentData.weightClasses);
-      
-          // 6. Рассчитываем сценарий боя
-          const script = calculateBattleScript(userSelections, enrichedRivalSelections, tournamentData.weightClasses);
-          setBattleScript(script);
-      
-          // 7. Предзагружаем изображения
-          await preloadImages(script);
-      
-          // 8. Запускаем бой
-          setTimeout(() => {
-            setIsLoading(false);
-            setIsBattleLoaded(true);
-            stopTipRotation();
-          }, 500);
-      
-        } catch (error) {
-          console.error('Ошибка загрузки PvP данных:', error);
-          // Возврат валюты при любой ошибке
-          try {
-            await onUpdateBalance(originalCoins, originalTickets);
-          } catch (refundError) {
-            console.error('Failed to refund:', refundError);
-          }
-          alert('Error loading arena');
-          stopTipRotation();
-          onSurrender();
-        }
-      };
-      
-      loadPvpData();
-    }
-  }, [isOpen, pvpMode]);
+    if (!isOpen || !pvpMode || !userId || !tournament.id || pvpBetAmount === undefined) return;
 
-  // Обычный режим (не PvP) — используем переданные пропсы
+    const startPvpBattle = async () => {
+      setIsLoading(true);
+      startTipRotation();
+
+      try {
+        console.log(`🚀 PvP API call: tournamentId=${tournament.id}, betAmount=${pvpBetAmount}`);
+        const response = await fetch(`${API_BASE}/api/pvp/start`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken || ''}`
+          },
+          body: JSON.stringify({
+            tournamentId: Number(tournament.id),
+            betAmount: pvpBetAmount
+          })
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || 'PvP request failed');
+        }
+
+        const data = await response.json();
+        console.log('✅ PvP response:', data);
+
+        if (onUpdateBalance) {
+          // Можно запросить свежий профиль или обновить через коллбэк
+        }
+
+        const rival = data.rival;
+        const rivalSelections = rival.selections.map((sel: any) => ({
+          weightClass: sel.weightClass,
+          fighter: {
+            Fighter: sel.fighter.Fighter,
+            'Total Damage': sel.fighter['Total Damage'],
+            'W/L': sel.fighter['W/L'],
+            Str: sel.fighter.Str,
+            Td: sel.fighter.Td,
+            Sub: sel.fighter.Sub,
+            Method: sel.fighter.Method,
+            Round: sel.fighter.Round,
+            Time: sel.fighter.Time,
+            'Weight class': sel.weightClass,
+          }
+        }));
+
+        setRivalData({
+          username: rival.username,
+          photoUrl: rival.photoUrl,
+          totalDamage: rivalSelections.reduce((s: number, c: any) => s + c.fighter['Total Damage'], 0),
+          selections: rivalSelections
+        });
+
+        setBattleRewards(data.rewards);
+
+        if (data.battleScript && data.battleScript.events) {
+          setBattleScript(data.battleScript.events);
+          await preloadImages(data.battleScript.events);
+        } else {
+          // fallback
+          const script = calculateBattleScript(userSelections, rivalSelections, []);
+          setBattleScript(script);
+          await preloadImages(script);
+        }
+
+        setIsLoading(false);
+        setIsBattleLoaded(true);
+        stopTipRotation();
+      } catch (error: any) {
+        console.error('❌ PvP error:', error);
+        alert(error.message || 'Failed to start PvP battle');
+        stopTipRotation();
+        onSurrender();
+      }
+    };
+
+    startPvpBattle();
+  }, [isOpen, pvpMode, tournament.id, pvpBetAmount, userId, authToken]);
+
+  // Обычный режим (не PvP)
   useEffect(() => {
     if (isOpen && !pvpMode && rivalData && weightClasses.length > 0) {
       const initNormalMode = async () => {
         setIsLoading(true);
         startTipRotation();
-        
         const script = calculateBattleScript(userSelections, rivalData.selections, weightClasses);
         setBattleScript(script);
-        
         await preloadImages(script);
-        
         setTimeout(() => {
           setIsLoading(false);
           setIsBattleLoaded(true);
           stopTipRotation();
         }, 500);
       };
-      
       initNormalMode();
     }
   }, [isOpen, pvpMode, rivalData, weightClasses]);
 
   const playNextEvent = () => {
     if (currentEventIndex >= battleScript.length) return;
-
     const event = battleScript[currentEventIndex];
-    console.log('🎬 Событие:', event);
+    console.log('🎬 Event:', event);
 
     switch (event.type) {
       case 'countdown':
@@ -589,41 +475,24 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
       case 'card-appear':
         setUsedWeightClasses(prev => [...prev, event.weightClass!]);
-        
         const cardIndex = event.round! - 1;
         setFlippedCards(prev => {
           const newFlipped = [...prev];
           newFlipped[cardIndex] = true;
           return newFlipped;
         });
-        
-        const currentPlayerDamage = userActiveCards.reduce(
-          (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-        );
-        const currentRivalDamage = rivalActiveCards.reduce(
-          (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-        );
-        
-        const newPlayerDamage = (event.userActiveCards || []).reduce(
-          (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-        );
-        const newRivalDamage = (event.rivalActiveCards || []).reduce(
-          (sum, card) => sum + Math.round(card.fighter['Total Damage']), 0
-        );
-        
+        const currentPlayerDamage = userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0);
+        const currentRivalDamage = rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0);
+        const newPlayerDamage = (event.userActiveCards || []).reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0);
+        const newRivalDamage = (event.rivalActiveCards || []).reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0);
         const playerDamageIncreased = newPlayerDamage > currentPlayerDamage;
         const rivalDamageIncreased = newRivalDamage > currentRivalDamage;
-        
         setTimeout(() => {
           setUserActiveCards(event.userActiveCards || []);
           setRivalActiveCards(event.rivalActiveCards || []);
           setAnimatedDamage({ player: newPlayerDamage, rival: newRivalDamage });
           setShowDamageIncrease({ player: playerDamageIncreased, rival: rivalDamageIncreased });
-          
-          setTimeout(() => {
-            setShowDamageIncrease({ player: false, rival: false });
-          }, 500);
-          
+          setTimeout(() => setShowDamageIncrease({ player: false, rival: false }), 500);
           setTimeout(() => setCurrentEventIndex(prev => prev + 1), 1200);
         }, 300);
         break;
@@ -631,42 +500,32 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       case 'damage':
         const playerDamageDealt = event.userDamage || 0;
         const rivalDamageDealt = event.rivalDamage || 0;
-        
         setRivalHealth(event.rivalHealthAfter!);
-        
         if (playerDamageDealt > 0) {
           setShowDamageNumber({ player: null, rival: playerDamageDealt });
           setHealthFlash('rival');
           applyHitEffect('rival', playerDamageDealt);
-          
           if (playerDamageDealt > 50) {
             setShakeScreen(true);
             setTimeout(() => setShakeScreen(false), 400);
           }
         }
-        
         setTimeout(() => {
           setUserHealth(event.userHealthAfter!);
-          
           if (rivalDamageDealt > 0) {
             setShowDamageNumber({ player: rivalDamageDealt, rival: null });
             setHealthFlash('player');
             applyHitEffect('player', rivalDamageDealt);
-            
             if (rivalDamageDealt > 50) {
               setShakeScreen(true);
               setTimeout(() => setShakeScreen(false), 400);
             }
           }
-          
           setTimeout(() => {
             setShowDamageNumber({ player: null, rival: null });
             setHealthFlash(null);
           }, 1000);
-          
-          setTimeout(() => {
-            setCurrentEventIndex(prev => prev + 1);
-          }, 750);
+          setTimeout(() => setCurrentEventIndex(prev => prev + 1), 750);
         }, 750);
         break;
 
@@ -677,11 +536,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
       case 'battle-end':
         const betAmount = pvpMode ? (pvpBetAmount || 0) : 0;
-        const rewards = calculateRewards(
-          event.result.result,
-          event.result.resultType,
-          betAmount
-        );
+        const rewards = calculateRewards(event.result.result, event.result.resultType, betAmount);
         setBattleRewards(rewards);
         setBattleResult(event.result);
         break;
@@ -695,18 +550,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   }, [currentEventIndex, isLoading, battleScript]);
 
   const handleResultClose = () => {
-    if (battleRewards && onClaimRewards) {
-      onClaimRewards(battleRewards);
-    }
+    if (battleRewards && onClaimRewards) onClaimRewards(battleRewards);
     setBattleResult(null);
     onSurrender();
   };
 
   const handleSurrender = () => {
-    setBattleResult({
-      isOpen: true,
-      result: 'tech-loss'
-    });
+    setBattleResult({ isOpen: true, result: 'tech-loss' });
   };
 
   const getCountdownText = () => {
@@ -719,8 +569,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   if (!isOpen) return null;
 
   const countdownText = getCountdownText();
-  
-  // Данные для отображения (в PvP режиме используем загруженные, в обычном — переданные)
   const displayRivalData = pvpMode ? rivalData : (rivalData as any);
   const displayWeightClasses = pvpMode ? weightClasses : (weightClasses as any);
 
@@ -732,7 +580,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             <img src={`${BASE_URL}/backgrounds/Arena_1_bg.webp`} alt="Octagon" className="octagon-image" />
           </div>
           <div className="arena-loading">
-            
             <div className="arena-loading-text">LOADING ARENA...</div>
             <div className="arena-loading-spinner"></div>
             <div className="arena-loading-tip-container">
@@ -750,15 +597,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         <div className="arena-octagon">
           <img src={`${BASE_URL}/backgrounds/Arena_1_bg.webp`} alt="Octagon" className="octagon-image" />
         </div>
-        
-        {countdownText && (
-          <div className="battle-overlay-text">{countdownText}</div>
-        )}
-        
-        {showRoundText && (
-          <div className="battle-overlay-text">ROUND {currentRound}</div>
-        )}
-        
+        {countdownText && <div className="battle-overlay-text">{countdownText}</div>}
+        {showRoundText && <div className="battle-overlay-text">ROUND {currentRound}</div>}
         <div className="arena-header">
           <div className="arena-header-left">{tournament.name}</div>
           <div className="arena-header-right">
@@ -774,70 +614,38 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 <div className="damage-divider"></div>
                 <span className="damage-label">DAMAGE</span>
                 <span className={`damage-value ${showDamageIncrease.rival ? 'damage-increase' : ''}`}>
-                  {animatedDamage.rival > 0 ? animatedDamage.rival : 
-                    rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+                  {animatedDamage.rival > 0 ? animatedDamage.rival : rivalActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
                 </span>
               </div>
             </div>
-            
             <div className="arena-avatar-center">
               <div className="arena-avatar">
-                <img 
-                  src={displayRivalData.photoUrl || `${BASE_URL}/default-avatar.png`}
-                  alt="rival"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`;
-                  }}
-                />
+                <img src={displayRivalData.photoUrl || `${BASE_URL}/default-avatar.png`} alt="rival" onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`; }} />
               </div>
             </div>
-            
             <div className="arena-avatar-right"></div>
           </div>
-
-          {showDamageNumber.rival && (
-            <div className="damage-number rival-damage">-{showDamageNumber.rival}</div>
-          )}
-
+          {showDamageNumber.rival && <div className="damage-number rival-damage">-{showDamageNumber.rival}</div>}
           <div className="arena-rival-health">
             <div className={`arena-health-bar ${healthFlash === 'rival' ? 'damage-flash' : ''}`}>
               <div className="arena-health-fill" style={{ width: `${(rivalHealth / 1000) * 100}%` }}></div>
               <span className="arena-health-text">HP {rivalHealth}/1000</span>
             </div>
           </div>
-
           <div className="arena-rival-fighters">
             {rivalActiveCards.map((card, index) => {
               const style = getFighterStyle(card);
               const styleIcon = getStyleIconFilename(style);
-              
               return (
-                <div 
-                  key={index} 
-                  className="arena-fighter-card"
-                  data-weight={card.weightClass}
-                  style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-                >
-                  <div className="fighter-damage-block">
-                    {Math.round(card.fighter['Total Damage'])}
-                  </div>
+                <div key={index} className="arena-fighter-card" data-weight={card.weightClass} style={{ backgroundColor: getWeightClassColor(card.weightClass) }}>
+                  <div className="fighter-damage-block">{Math.round(card.fighter['Total Damage'])}</div>
                   <div className="fighter-card-inner">
                     <div className="fighter-icon-container">
-                      <img 
-                        src={`${BASE_URL}/icons/${styleIcon}`}
-                        alt={style}
-                        className="fighter-style-icon"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                          const parent = (e.target as HTMLImageElement).parentElement;
-                          if (parent) {
-                            parent.innerHTML = style === 'Striker' ? '👊' : 
-                                              style === 'Grappler' ? '🤼' : 
-                                              style === 'Universal' ? '⚡' : '👤';
-                            parent.style.fontSize = '24px';
-                          }
-                        }}
-                      />
+                      <img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="fighter-style-icon" onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        const parent = (e.target as HTMLImageElement).parentElement;
+                        if (parent) { parent.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; parent.style.fontSize = '24px'; }
+                      }} />
                     </div>
                     <div className="fighter-divider" style={{ color: getWeightClassColor(card.weightClass) }}></div>
                     <div className="fighter-name-container">{card.fighter.Fighter}</div>
@@ -854,45 +662,28 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             const isUsed = roundNumber <= usedWeightClasses.length;
             const weightClass = isUsed ? usedWeightClasses[roundIndex] : null;
             const isFlipped = flippedCards[roundIndex];
-            
-            const getWeightCardClass = (weightClass: string | null): string => {
-              if (!weightClass) return '';
-              const classMap: { [key: string]: string } = {
-                'Flyweight': 'weight-card-flyweight',
-                'Bantamweight': 'weight-card-bantamweight',
-                'Featherweight': 'weight-card-featherweight',
-                'Lightweight': 'weight-card-lightweight',
-                'Welterweight': 'weight-card-welterweight',
-                'Middleweight': 'weight-card-middleweight',
-                'Light Heavyweight': 'weight-card-light-heavyweight',
-                'Heavyweight': 'weight-card-heavyweight',
-                "Women's Strawweight": 'weight-card-womens-strawweight',
-                "Women's Flyweight": 'weight-card-womens-flyweight',
-                "Women's Bantamweight": 'weight-card-womens-bantamweight',
-                "Catch Weight": 'weight-card-catch-weight'
+            const getWeightCardClass = (wc: string | null): string => {
+              if (!wc) return '';
+              const m: { [k: string]: string } = {
+                'Flyweight': 'weight-card-flyweight', 'Bantamweight': 'weight-card-bantamweight', 'Featherweight': 'weight-card-featherweight',
+                'Lightweight': 'weight-card-lightweight', 'Welterweight': 'weight-card-welterweight', 'Middleweight': 'weight-card-middleweight',
+                'Light Heavyweight': 'weight-card-light-heavyweight', 'Heavyweight': 'weight-card-heavyweight',
+                "Women's Strawweight": 'weight-card-womens-strawweight', "Women's Flyweight": 'weight-card-womens-flyweight',
+                "Women's Bantamweight": 'weight-card-womens-bantamweight', "Catch Weight": 'weight-card-catch-weight'
               };
-              return classMap[weightClass] || '';
+              return m[wc] || '';
             };
-            
-            const getWeightClassIcon = (weightClass: string | null): string => {
-              if (!weightClass) return '';
-              const iconMap: { [key: string]: string } = {
-                'Flyweight': 'Flyweight_icon.webp',
-                'Bantamweight': 'Bantamweight_icon.webp',
-                'Featherweight': 'Featherweight_icon.webp',
-                'Lightweight': 'Lightweight_icon.webp',
-                'Welterweight': 'Welterweight_icon.webp',
-                'Middleweight': 'Middleweight_icon.webp',
-                'Light Heavyweight': 'Ligh_Heavyweight_icon.webp',
-                'Heavyweight': 'Heavyweight_icon.webp',
-                "Women's Strawweight": "Women's_Strawweight_icon.webp",
-                "Women's Flyweight": "Women's_Flyweight_icon.webp",
-                "Women's Bantamweight": "Women's_Bantamweight_icon.webp",
-                "Catch Weight": 'Catch_weight_icon.webp'
+            const getWeightClassIcon = (wc: string | null): string => {
+              if (!wc) return '';
+              const i: { [k: string]: string } = {
+                'Flyweight': 'Flyweight_icon.webp', 'Bantamweight': 'Bantamweight_icon.webp', 'Featherweight': 'Featherweight_icon.webp',
+                'Lightweight': 'Lightweight_icon.webp', 'Welterweight': 'Welterweight_icon.webp', 'Middleweight': 'Middleweight_icon.webp',
+                'Light Heavyweight': 'Ligh_Heavyweight_icon.webp', 'Heavyweight': 'Heavyweight_icon.webp',
+                "Women's Strawweight": "Women's_Strawweight_icon.webp", "Women's Flyweight": "Women's_Flyweight_icon.webp",
+                "Women's Bantamweight": "Women's_Bantamweight_icon.webp", "Catch Weight": 'Catch_weight_icon.webp'
               };
-              return iconMap[weightClass] || 'default_icon.webp';
+              return i[wc] || 'default_icon.webp';
             };
-            
             return (
               <div key={roundIndex} className={`arena-round-card ${isFlipped ? 'flipped' : ''}`}>
                 <div className="arena-round-card-inner">
@@ -905,22 +696,11 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   <div className={`arena-round-card-back ${getWeightCardClass(weightClass)}`}>
                     <div className="weight-card-inner">
                       <div className="weight-card-icon-container">
-                        {weightClass && (
-                          <img 
-                            src={`${BASE_URL}/icons/${getWeightClassIcon(weightClass)}`}
-                            alt={weightClass}
-                            className="weight-card-icon"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                              const parent = (e.target as HTMLImageElement).parentElement;
-                              if (parent) {
-                                parent.innerHTML = weightClass.substring(0, 2);
-                                parent.style.fontSize = '20px';
-                                parent.style.fontWeight = 'bold';
-                              }
-                            }}
-                          />
-                        )}
+                        {weightClass && <img src={`${BASE_URL}/icons/${getWeightClassIcon(weightClass)}`} alt={weightClass} className="weight-card-icon" onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          const parent = (e.target as HTMLImageElement).parentElement;
+                          if (parent) { parent.innerHTML = weightClass.substring(0, 2); parent.style.fontSize = '20px'; parent.style.fontWeight = 'bold'; }
+                        }} />}
                       </div>
                       <div className="weight-card-divider"></div>
                       <div className="weight-card-name">{weightClass || 'TBD'}</div>
@@ -937,34 +717,16 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             {userActiveCards.map((card, index) => {
               const style = getFighterStyle(card);
               const styleIcon = getStyleIconFilename(style);
-              
               return (
-                <div 
-                  key={index} 
-                  className="arena-fighter-card"
-                  data-weight={card.weightClass}
-                  style={{ backgroundColor: getWeightClassColor(card.weightClass) }}
-                >
-                  <div className="fighter-damage-block">
-                    {Math.round(card.fighter['Total Damage'])}
-                  </div>
+                <div key={index} className="arena-fighter-card" data-weight={card.weightClass} style={{ backgroundColor: getWeightClassColor(card.weightClass) }}>
+                  <div className="fighter-damage-block">{Math.round(card.fighter['Total Damage'])}</div>
                   <div className="fighter-card-inner">
                     <div className="fighter-icon-container">
-                      <img 
-                        src={`${BASE_URL}/icons/${styleIcon}`}
-                        alt={style}
-                        className="fighter-style-icon"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                          const parent = (e.target as HTMLImageElement).parentElement;
-                          if (parent) {
-                            parent.innerHTML = style === 'Striker' ? '👊' : 
-                                              style === 'Grappler' ? '🤼' : 
-                                              style === 'Universal' ? '⚡' : '👤';
-                            parent.style.fontSize = '24px';
-                          }
-                        }}
-                      />
+                      <img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="fighter-style-icon" onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        const parent = (e.target as HTMLImageElement).parentElement;
+                        if (parent) { parent.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; parent.style.fontSize = '24px'; }
+                      }} />
                     </div>
                     <div className="fighter-divider" style={{ color: getWeightClassColor(card.weightClass) }}></div>
                     <div className="fighter-name-container">{card.fighter.Fighter}</div>
@@ -973,14 +735,12 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               );
             })}
           </div>
-
           <div className="arena-player-health">
             <div className={`arena-health-bar ${healthFlash === 'player' ? 'damage-flash' : ''}`}>
               <div className="arena-health-fill" style={{ width: `${(userHealth / 1000) * 100}%` }}></div>
               <span className="arena-health-text">HP {userHealth}/1000</span>
             </div>
           </div>
-
           <div className="arena-avatar-container">
             <div className="arena-avatar-left">
               <div className="arena-damage-display player-damage">
@@ -988,33 +748,20 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 <div className="damage-divider"></div>
                 <span className="damage-label">DAMAGE</span>
                 <span className={`damage-value ${showDamageIncrease.player ? 'damage-increase' : ''}`}>
-                  {animatedDamage.player > 0 ? animatedDamage.player : 
-                    userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
+                  {animatedDamage.player > 0 ? animatedDamage.player : userActiveCards.reduce((sum, card) => sum + Math.round(card.fighter['Total Damage']), 0)}
                 </span>
               </div>
             </div>
-            
             <div className="arena-avatar-center">
               <div className="arena-avatar">
-                <img 
-                  src={userAvatar || `${BASE_URL}/Home_button.png`}
-                  alt="player"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
-                  }}
-                />
+                <img src={userAvatar || `${BASE_URL}/Home_button.png`} alt="player" onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`; }} />
               </div>
             </div>
-            
             <div className="arena-avatar-right"></div>
           </div>
-
-          {showDamageNumber.player && (
-            <div className="damage-number player-damage">-{showDamageNumber.player}</div>
-          )}
+          {showDamageNumber.player && <div className="damage-number player-damage">-{showDamageNumber.player}</div>}
         </div>
       </div>
-      
       {battleResult && (
         <BattleResultModal
           isOpen={battleResult.isOpen}
