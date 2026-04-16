@@ -73,11 +73,8 @@ export function useBackendTournaments(authToken: string | null, userId: string |
         }));
 
         // Разделяем: upcoming – те, на которые нет ставки, active – те, на которые есть ставка
-        const upcoming = allTournaments.filter(t => !betsMap.has(Number(t.id)));
-        const active = allTournaments.filter(t => betsMap.has(Number(t.id)));
-
-        setPastTournaments(active);   // ACTIVE TOURNAMENTS (есть ставка)
-        setUpcomingTournaments(upcoming); // UPCOMING TOURNAMENTS (нет ставки)
+        setPastTournaments([]);
+setUpcomingTournaments(allTournaments);
       } catch (err: any) {
         setError(err.message);
       } finally {
