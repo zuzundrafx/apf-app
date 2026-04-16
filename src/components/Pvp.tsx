@@ -205,7 +205,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                         <span className="pvp-fist-icon">👊</span>
                       </>
                     ) : (
-                      <span className="pvp-damage-na">not available</span>
+                      <span className="pvp-damage-na">No bet</span>
                     )}
                   </div>
                 </div>
