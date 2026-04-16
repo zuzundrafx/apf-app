@@ -486,7 +486,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         setTimeout(() => {
           setShowRoundText(false);
           setCurrentEventIndex(prev => prev + 1);
-        }, 1000);
+        }, 1200);
         break;
 
       case 'card-appear':
@@ -547,7 +547,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
       case 'round-end':
         setCurrentRound(prev => prev + 1);
-        setTimeout(() => setCurrentEventIndex(prev => prev + 1), 500);
+        setTimeout(() => setCurrentEventIndex(prev => prev + 1), 700);
         break;
 
       case 'battle-end':
