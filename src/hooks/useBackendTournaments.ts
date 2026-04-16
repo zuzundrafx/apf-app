@@ -112,5 +112,9 @@ setUpcomingTournaments(allTournaments);
     }
   };
 
+  
+
   return { pastTournaments, upcomingTournaments, loading, error, userBets, loadFighters };
+
+  
 }

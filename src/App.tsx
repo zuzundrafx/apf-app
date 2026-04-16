@@ -11,16 +11,7 @@ declare global {
     Telegram?: {
       WebApp: {
         initData: string;
-        initDataUnsafe: {
-          user?: {
-            id: number;
-            first_name: string;
-            last_name?: string;
-            username?: string;
-            language_code?: string;
-            photo_url?: string;
-          };
-        };
+        initDataUnsafe: { user?: { id: number; first_name: string; last_name?: string; username?: string; photo_url?: string; } };
         ready: () => void;
         close: () => void;
         BackButton: { isVisible: boolean; show: () => void; hide: () => void; onClick: (callback: () => void) => void; };
@@ -36,34 +27,13 @@ const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' :
 
 const roundDamage = (damage: number): number => Math.round(damage);
 
-const calculateLevel = (totalExp: number): { level: number; currentExp: number; nextLevelExp: number } => {
-  let remainingExp = totalExp;
-  let level = 1;
-  for (let i = 0; i < LEVEL_THRESHOLDS.length - 1; i++) {
-    const expNeeded = LEVEL_THRESHOLDS[i];
-    if (remainingExp >= expNeeded) {
-      remainingExp -= expNeeded;
-      level = i + 2;
-    } else break;
-  }
-  const nextLevelExp = level < 10 ? LEVEL_THRESHOLDS[level - 1] : 0;
-  return { level, currentExp: remainingExp, nextLevelExp };
-};
-
 function getAvatarFilename(weightClass: string): string {
   const map: Record<string, string> = {
-    'Flyweight': 'Flyweight_avatar.png',
-    'Bantamweight': 'Bantamweight_avatar.png',
-    'Featherweight': 'Featherweight_avatar.png',
-    'Lightweight': 'Lightweight_avatar.png',
-    'Welterweight': 'Welterweight_avatar.png',
-    'Middleweight': 'Middleweight_avatar.png',
-    'Light Heavyweight': 'Light_Heavyweight_avatar.png',
-    'Heavyweight': 'Heavyweight_avatar.png',
-    "Women's Strawweight": "Women's_Strawweight_avatar.png",
-    "Women's Flyweight": "Women's_Flyweight_avatar.png",
-    "Women's Bantamweight": "Women's_Bantamweight_avatar.png",
-    "Catch Weight": 'default-avatar.png'
+    'Flyweight': 'Flyweight_avatar.png', 'Bantamweight': 'Bantamweight_avatar.png', 'Featherweight': 'Featherweight_avatar.png',
+    'Lightweight': 'Lightweight_avatar.png', 'Welterweight': 'Welterweight_avatar.png', 'Middleweight': 'Middleweight_avatar.png',
+    'Light Heavyweight': 'Light_Heavyweight_avatar.png', 'Heavyweight': 'Heavyweight_avatar.png',
+    "Women's Strawweight": "Women's_Strawweight_avatar.png", "Women's Flyweight": "Women's_Flyweight_avatar.png",
+    "Women's Bantamweight": "Women's_Bantamweight_avatar.png", "Catch Weight": 'default-avatar.png'
   };
   return map[weightClass] || 'default-avatar.png';
 }
@@ -104,7 +74,6 @@ const TournamentSkeleton = () => (
 );
 
 function App() {
-  // Бэкенд-хук для турниров
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [telegramUser, setTelegramUser] = useState<{ id: string; username: string; photoUrl?: string } | null>(null);
   const { pastTournaments, upcomingTournaments, loading, error, loadFighters } = useBackendTournaments(authToken, telegramUser?.id || null);
@@ -184,7 +153,6 @@ function App() {
     return amounts.slice(0, 9);
   };
 
-  // ----- Функции для работы с бэкендом -----
   const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -275,7 +243,6 @@ function App() {
     }
   };
 
-  // Инициализация Telegram и авторизация
   useEffect(() => {
     const initTelegram = async () => {
       if (window.Telegram?.WebApp) {
@@ -288,13 +255,10 @@ function App() {
           setTelegramUser({ id: userId, username, photoUrl: user.photo_url });
           setLoadingProfile(true);
           const success = await authenticate(tg, { id: user.id, first_name: user.first_name, last_name: user.last_name, username: user.username, photo_url: user.photo_url });
-          if (!success) {
-            console.warn('Auth failed, but continuing');
-          }
+          if (!success) console.warn('Auth failed, but continuing');
           setLoadingProfile(false);
           setProfileLoaded(true);
         } else {
-          // Тестовый пользователь для локальной разработки
           setTelegramUser({ id: 'test_user', username: 'tester', photoUrl: '' });
           setUserData(prev => ({ ...prev, username: 'tester', coins: 100, tickets: 0, myUserId: 'test_user' }));
           setLoadingProfile(false);
@@ -310,7 +274,7 @@ function App() {
     initTelegram();
   }, []);
 
-  // ----- ОСТАЛЬНЫЕ ФУНКЦИИ (заглушки для уведомлений и PvP, пока не реализованы) -----
+  // Заглушки для остальных функций
   const loadNotifications = useCallback(async () => {}, []);
   const updateNotifications = useCallback(async (updated: any[]) => {}, []);
   const removeNotification = useCallback(async (id: string) => {}, []);
@@ -419,6 +383,7 @@ function App() {
       <main className="main-content">
         {currentView === 'main' && (
           <div className="tournaments-container">
+            {/* ACTIVE TOURNAMENTS (pastTournaments) */}
             {pastTournaments.length > 0 ? (
               <section className="tournament-section past">
                 <div className="tournament-header">
@@ -429,57 +394,54 @@ function App() {
                   </div>
                 </div>
                 <div className="tournament-content">
-                  {loadingUserResults ? <div className="tournament-message">Loading...</div> : hasPastBet ? (
+                  {!showPastFighters ? (
+                    <div className="tournament-cards-grid">
+                      {pastTournaments.map(tournament => {
+                        const tournamentTotal = calculateTotalDamage(userData.mySelections.past.filter(sel => tournament.data?.some(f => f.Fighter === sel.fighter.Fighter)));
+                        const isUpdating = isUpdatingTournaments && pendingRewards?.tournamentName === tournament.name;
+                        return (
+                          <div key={tournament.name} className="tournament-card-wrapper" style={{ position: 'relative' }}>
+                            <div className={`tournament-card ${isUpdating ? 'updating' : ''}`} onClick={() => !isUpdating && handlePastTournamentClick(tournament)} style={{ opacity: isUpdating ? 0.5 : 1, pointerEvents: isUpdating ? 'none' : 'auto' }}>
+                              <div className="tournament-card-damage-box">TOTAL: {tournamentTotal}</div>
+                              <div className="tournament-card-image"><img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" /></div>
+                              <div className="tournament-card-name">{tournament.name}</div>
+                            </div>
+                            {isUpdating && <div className="tournament-updating-overlay"><div className="tournament-updating-spinner"></div></div>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
                     <>
-                      {!showPastFighters ? (
-                        <div className="tournament-cards-grid">
-                          {pastTournaments.map(tournament => {
-                            const tournamentTotal = calculateTotalDamage(userData.mySelections.past.filter(sel => tournament.data?.some(f => f.Fighter === sel.fighter.Fighter)));
-                            const isUpdating = isUpdatingTournaments && pendingRewards?.tournamentName === tournament.name;
-                            return (
-                              <div key={tournament.name} className="tournament-card-wrapper" style={{ position: 'relative' }}>
-                                <div className={`tournament-card ${isUpdating ? 'updating' : ''}`} onClick={() => !isUpdating && handlePastTournamentClick(tournament)} style={{ opacity: isUpdating ? 0.5 : 1, pointerEvents: isUpdating ? 'none' : 'auto' }}>
-                                  <div className="tournament-card-damage-box">TOTAL: {tournamentTotal}</div>
-                                  <div className="tournament-card-image"><img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" /></div>
-                                  <div className="tournament-card-name">{tournament.name}</div>
-                                </div>
-                                {isUpdating && <div className="tournament-updating-overlay"><div className="tournament-updating-spinner"></div></div>}
+                      <div className="selected-fighters-grid">
+                        {userData.mySelections.past.filter(sel => pastTournaments.find(t => t.name === selectedPastTournament)?.data?.some(f => f.Fighter === sel.fighter.Fighter)).map((sel, idx) => {
+                          const isWinner = sel.fighter['W/L'] === 'win';
+                          const style = getFighterStyle(sel);
+                          const styleIcon = getStyleIconFilename(style);
+                          return (
+                            <div key={idx} className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
+                              <div className="selected-fighter-damage-box">{roundDamage(sel.fighter['Total Damage'])}</div>
+                              <div className="selected-fighter-inner">
+                                <div className="selected-fighter-icon-container"><img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="selected-fighter-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const p = (e.target as HTMLImageElement).parentElement; if (p) { p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; p.style.fontSize = '20px'; } }} /></div>
+                                <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
+                                <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
                               </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <>
-                          <div className="selected-fighters-grid">
-                            {userData.mySelections.past.filter(sel => pastTournaments.find(t => t.name === selectedPastTournament)?.data?.some(f => f.Fighter === sel.fighter.Fighter)).map((sel, idx) => {
-                              const isWinner = sel.fighter['W/L'] === 'win';
-                              const style = getFighterStyle(sel);
-                              const styleIcon = getStyleIconFilename(style);
-                              return (
-                                <div key={idx} className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-                                  <div className="selected-fighter-damage-box">{roundDamage(sel.fighter['Total Damage'])}</div>
-                                  <div className="selected-fighter-inner">
-                                    <div className="selected-fighter-icon-container"><img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="selected-fighter-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const p = (e.target as HTMLImageElement).parentElement; if (p) { p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; p.style.fontSize = '20px'; } }} /></div>
-                                    <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
-                                    <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
-                                  </div>
-                                  {isWinner && <span className="winner-crown">👑</span>}
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div className="tournament-footer">
-                            <div className="footer-total-damage">TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.past.filter(sel => pastTournaments.find(t => t.name === selectedPastTournament)?.data?.some(f => f.Fighter === sel.fighter.Fighter)))}</div>
-                            <button className="footer-close-button" onClick={() => setShowPastFighters(false)}>CLOSE</button>
-                          </div>
-                        </>
-                      )}
+                              {isWinner && <span className="winner-crown">👑</span>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="tournament-footer">
+                        <div className="footer-total-damage">TOTAL DAMAGE: {calculateTotalDamage(userData.mySelections.past.filter(sel => pastTournaments.find(t => t.name === selectedPastTournament)?.data?.some(f => f.Fighter === sel.fighter.Fighter)))}</div>
+                        <button className="footer-close-button" onClick={() => setShowPastFighters(false)}>CLOSE</button>
+                      </div>
                     </>
-                  ) : <div className="tournament-message">BETS ARE CLOSED</div>}
+                  )}
                 </div>
               </section>
             ) : <TournamentSkeleton />}
 
+            {/* UPCOMING TOURNAMENTS (upcomingTournaments) */}
             {upcomingTournaments.length > 0 ? (
               <section className="tournament-section upcoming">
                 <div className="tournament-header">
@@ -490,7 +452,7 @@ function App() {
                   </div>
                 </div>
                 <div className="tournament-content" style={{ position: 'relative' }}>
-                  {loadingUserResults ? <div className="tournament-message">Loading...</div> : selectedUpcomingTournament ? (
+                  {selectedUpcomingTournament ? (
                     <>
                       <div className="selected-fighters-grid">
                         {userData.mySelections.upcoming.filter(sel => upcomingTournaments.find(t => t.name === selectedUpcomingTournament)?.data?.some(f => f.Fighter === sel.fighter.Fighter)).map((sel, idx) => {
@@ -515,25 +477,23 @@ function App() {
                       </div>
                     </>
                   ) : (
-                    <>
-                      <div className="tournament-cards-grid">
-                        {upcomingTournaments.map(tournament => {
-                          const hasBetForThisTournament = userData.mySelections.upcoming.some(sel => tournament.data?.some(f => f.Fighter === sel.fighter.Fighter));
-                          const tournamentTotal = hasBetForThisTournament ? calculateTotalDamage(userData.mySelections.upcoming.filter(sel => tournament.data?.some(f => f.Fighter === sel.fighter.Fighter))) : null;
-                          return (
-                            <div key={tournament.name} className="tournament-card-wrapper">
-                              <div className="tournament-card" onClick={() => handleUpcomingTournamentClick(tournament)}>
-                                <div className="tournament-card-damage-box">{hasBetForThisTournament ? `TOTAL: ${tournamentTotal}` : 'SELECT'}</div>
-                                <div className="tournament-card-image"><img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" /></div>
-                                <div className="tournament-card-name">{tournament.name}</div>
-                              </div>
+                    <div className="tournament-cards-grid">
+                      {upcomingTournaments.map(tournament => {
+                        const hasBetForThisTournament = userData.mySelections.upcoming.some(sel => tournament.data?.some(f => f.Fighter === sel.fighter.Fighter));
+                        const tournamentTotal = hasBetForThisTournament ? calculateTotalDamage(userData.mySelections.upcoming.filter(sel => tournament.data?.some(f => f.Fighter === sel.fighter.Fighter))) : null;
+                        return (
+                          <div key={tournament.name} className="tournament-card-wrapper">
+                            <div className="tournament-card" onClick={() => handleUpcomingTournamentClick(tournament)}>
+                              <div className="tournament-card-damage-box">{hasBetForThisTournament ? `TOTAL: ${tournamentTotal}` : 'SELECT'}</div>
+                              <div className="tournament-card-image"><img src={`${BASE_URL}/UFC_cardpack.png`} alt="Tournament pack" /></div>
+                              <div className="tournament-card-name">{tournament.name}</div>
                             </div>
-                          );
-                        })}
-                      </div>
-                      {showNotEnoughCoins && <div className="upcoming-overlay-text">Not enough coins...</div>}
-                    </>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
+                  {showNotEnoughCoins && <div className="upcoming-overlay-text">Not enough coins...</div>}
                 </div>
               </section>
             ) : <TournamentSkeleton />}
@@ -586,7 +546,7 @@ function App() {
         {currentView === 'pvp' && <Pvp ref={pvpRef} pastTournaments={pastTournaments} userSelections={userData.mySelections.past} userAvatar={telegramUser?.photoUrl} userId={telegramUser?.id} userName={userData.username} userCoins={userData.coins} userTickets={userData.tickets} allProfiles={allProfiles} onOpenBetModal={openPvpBetModal} onUpdateBalance={updatePvpBalance} onClaimRewards={claimBattleRewards} loadTournamentData={loadTournamentData} />}
       </main>
 
-      {/* Модальные окна (ставки, уведомления, награды) – без изменений */}
+      {/* Модальные окна (без изменений) */}
       {showBetModal && selectedBetTournament && (
         <div className="bet-modal-overlay">
           <div className="bet-modal">
