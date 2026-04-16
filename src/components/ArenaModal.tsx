@@ -1,4 +1,4 @@
-// src/components/ArenaModal.tsx – ПОЛНЫЙ ФАЙЛ с вызовом API для PvP
+// src/components/ArenaModal.tsx – ПОЛНЫЙ ФАЙЛ с обновлением баланса
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Tournament, SelectedFighter, UserResult, Fighter } from '../types';
 import { UserProfile } from '../api/userProfiles';
@@ -33,7 +33,7 @@ interface ArenaModalProps {
     fightersData: Fighter[];
   }>;
   loadingTip?: string;
-  authToken?: string; // <-- новый пропс для авторизации
+  authToken?: string;
 }
 
 const DEFAULT_LOADING_TIPS = [
@@ -376,8 +376,9 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         const data = await response.json();
         console.log('✅ PvP response:', data);
 
-        if (onUpdateBalance) {
-          // Можно запросить свежий профиль или обновить через коллбэк
+        // Обновляем баланс немедленно
+        if (onUpdateBalance && data.updatedBalance) {
+          await onUpdateBalance(data.updatedBalance.coins, data.updatedBalance.tickets);
         }
 
         const rival = data.rival;
@@ -410,7 +411,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
         if (data.battleScript && data.battleScript.events) {
           let events = data.battleScript.events;
-          // Если последнее событие не battle-end, добавляем его
           if (events.length > 0 && events[events.length - 1].type !== 'battle-end') {
             events = [
               ...events,
@@ -418,7 +418,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 type: 'battle-end',
                 result: data.battleScript.result || {
                   isOpen: true,
-                  result: 'win', // или другой результат на основе data
+                  result: 'win',
                   resultType: 'decision-unanimous'
                 }
               }
@@ -427,7 +427,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           setBattleScript(events);
           await preloadImages(events);
         } else {
-          // fallback
           const script = calculateBattleScript(userSelections, rivalSelections, []);
           setBattleScript(script);
           await preloadImages(script);
