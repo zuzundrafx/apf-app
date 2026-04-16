@@ -27,7 +27,7 @@ export interface Tournament {
   name: string;
   league: string;
   date: string;
-  status: 'active' | 'upcoming';
+  status: 'active' | 'upcoming' | 'completed';
   filename: string;
   data: Fighter[] | null;
   url: string;
