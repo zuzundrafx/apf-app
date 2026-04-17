@@ -34,6 +34,13 @@ interface ArenaModalProps {
   }>;
   loadingTip?: string;
   authToken?: string;
+  onUpdateExperience?: (expData: { 
+    totalExp: number; 
+    level: number; 
+    currentExp: number; 
+    nextLevelExp: number 
+  }) => void;
+
 }
 
 const DEFAULT_LOADING_TIPS = [
@@ -134,6 +141,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   loadTournamentData,
   loadingTip,
   authToken,
+  onUpdateExperience,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
@@ -248,6 +256,16 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
         if (onUpdateBalance && data.updatedBalance) {
           await onUpdateBalance(data.updatedBalance.coins, data.updatedBalance.tickets);
+        }
+
+        // Если пользователь победил и есть данные об опыте – обновляем
+        if (data.updatedWinner && data.updatedWinner.userId === userId && onUpdateExperience) {
+          onUpdateExperience({
+          totalExp: data.updatedWinner.totalExp,
+          level: data.updatedWinner.level,
+          currentExp: data.updatedWinner.currentExp,
+          nextLevelExp: data.updatedWinner.nextLevelExp
+          });
         }
 
         const rival = data.rival;

@@ -327,6 +327,16 @@ function App() {
     };
   };
 
+  const handleUpdateExperience = (expData: { totalExp: number; level: number; currentExp: number; nextLevelExp: number }) => {
+  setUserData(prev => ({
+    ...prev,
+    totalExp: expData.totalExp,
+    level: expData.level,
+    currentExp: expData.currentExp,
+    nextLevelExp: expData.nextLevelExp
+  }));
+};
+
   useEffect(() => {
     const initTelegram = async () => {
       if (window.Telegram?.WebApp) {
@@ -706,6 +716,7 @@ function App() {
             }}
             loadTournamentData={loadTournamentData}
             authToken={authToken ?? undefined}
+            onUpdateExperience={handleUpdateExperience}
           />
         )}
       </main>

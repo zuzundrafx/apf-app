@@ -22,6 +22,12 @@ interface PvpProps {
     fightersData: Fighter[];
   }>;
   authToken?: string; // <-- ДОБАВИТЬ
+  onUpdateExperience?: (expData: { 
+    totalExp: number; 
+    level: number; 
+    currentExp: number; 
+    nextLevelExp: number 
+  }) => void;
 }
 
 export interface PvpRef {
@@ -52,6 +58,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   onClaimRewards,
   loadTournamentData,
   authToken, // <-- ДОБАВИТЬ
+  onUpdateExperience,
 }, ref) => {
   const [arenaData, setArenaData] = useState<{
     tournament: Tournament;
@@ -267,6 +274,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           loadTournamentData={loadTournamentData}
           loadingTip={currentTip}
           authToken={authToken}
+          onUpdateExperience={onUpdateExperience}
         />
       )}
     </div>
