@@ -1,4 +1,4 @@
-﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ (исправлены уровни и опыт, модалки сохранены)
+﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ (исправлены уровни, модалки сохранены)
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
