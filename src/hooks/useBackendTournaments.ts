@@ -1,3 +1,4 @@
+// hooks/useBackendTournaments.ts
 import { useState, useEffect } from 'react';
 import { Tournament, Fighter } from '../types';
 
@@ -66,13 +67,40 @@ export function useBackendTournaments(authToken: string | null, userId: string |
           url: '',
         }));
 
+        // Разделяем по статусу
         const upcoming = allTournaments.filter(t => t.status !== 'completed');
         const completedAll = allTournaments.filter(t => t.status === 'completed');
-        const activeWithBet = completedAll.filter(t => betsMap.has(Number(t.id)));
+
+        // Сортируем завершённые по дате (новые сначала)
+        const sortedCompleted = [...completedAll].sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        // Для ACTIVE: последний завершённый с моей ставкой для каждой лиги
+        const activeWithBet: Tournament[] = [];
+        const leaguesForActive = new Set<string>();
+        for (const t of sortedCompleted) {
+          const league = t.league || 'UFC';
+          if (!leaguesForActive.has(league) && betsMap.has(Number(t.id))) {
+            activeWithBet.push(t);
+            leaguesForActive.add(league);
+          }
+        }
+
+        // Для PvP: последний завершённый для каждой лиги (независимо от ставки)
+        const latestPerLeague: Tournament[] = [];
+        const leaguesForPvp = new Set<string>();
+        for (const t of sortedCompleted) {
+          const league = t.league || 'UFC';
+          if (!leaguesForPvp.has(league)) {
+            latestPerLeague.push(t);
+            leaguesForPvp.add(league);
+          }
+        }
 
         setPastTournaments(activeWithBet);
         setUpcomingTournaments(upcoming);
-        setAllCompletedTournaments(completedAll);
+        setAllCompletedTournaments(latestPerLeague);
       } catch (err: any) {
         console.error('❌ Error loading tournaments:', err);
         setError(err.message);
