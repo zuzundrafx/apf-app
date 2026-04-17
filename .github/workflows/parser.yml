@@ -3,7 +3,7 @@ name: Run UFC Parser Every Hour
 on:
   schedule:
     - cron: '0 * * * *'  # Каждый час в 0 минут
-  workflow_dispatch:      # Ручной запуск
+  workflow_dispatch:      # Ручной запуск парсера
 
 jobs:
   run-parser:
