@@ -38,7 +38,8 @@ interface ArenaModalProps {
     totalExp: number; 
     level: number; 
     currentExp: number; 
-    nextLevelExp: number 
+    nextLevelExp: number;
+    expPoints: number;
   }) => void;
 
 }
@@ -260,13 +261,14 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
         // Если пользователь победил и есть данные об опыте – обновляем
         if (data.updatedWinner && data.updatedWinner.userId === userId && onUpdateExperience) {
-          onUpdateExperience({
-          totalExp: data.updatedWinner.totalExp,
-          level: data.updatedWinner.level,
-          currentExp: data.updatedWinner.currentExp,
-          nextLevelExp: data.updatedWinner.nextLevelExp
-          });
-        }
+  onUpdateExperience({
+    totalExp: data.updatedWinner.totalExp,
+    level: data.updatedWinner.level,
+    currentExp: data.updatedWinner.currentExp,
+    nextLevelExp: data.updatedWinner.nextLevelExp,
+    expPoints: data.updatedWinner.expPoints || 1   // ← добавить это поле
+  });
+}
 
         const rival = data.rival;
         const rivalSelections = rival.selections.map((sel: any) => ({

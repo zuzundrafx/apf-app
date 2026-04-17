@@ -26,7 +26,8 @@ interface PvpProps {
     totalExp: number; 
     level: number; 
     currentExp: number; 
-    nextLevelExp: number 
+    nextLevelExp: number;
+    expPoints: number;
   }) => void;
 }
 

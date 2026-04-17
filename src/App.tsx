@@ -165,7 +165,8 @@ function App() {
         nextLevelExp: data.user.nextLevelExp,
         coins: data.user.coins,
         tickets: data.user.tickets,
-        myUserId: data.user.id
+        myUserId: data.user.id,
+        expPoints: data.user.exp_points
       }));
       return true;
     } catch (err) {
@@ -194,7 +195,8 @@ function App() {
         totalExp: result.newExp,
         currentExp: result.currentExp,
         nextLevelExp: result.nextLevelExp,
-        level: result.level
+        level: result.level,
+        expPoints: result.expPoints
       }));
       setNotifications([]);
       setShowNotificationsModal(false);
@@ -252,7 +254,8 @@ function App() {
         totalExp: profile.experience,
         level: profile.level,
         currentExp: profile.currentExp,
-        nextLevelExp: profile.nextLevelExp
+        nextLevelExp: profile.nextLevelExp,
+        expPoints: profile.exp_points
       }));
       setShowRewardsModal(false);
       setPendingRewards(null);
@@ -327,13 +330,14 @@ function App() {
     };
   };
 
-  const handleUpdateExperience = (expData: { totalExp: number; level: number; currentExp: number; nextLevelExp: number }) => {
+  const handleUpdateExperience = (expData: { totalExp: number; level: number; currentExp: number; nextLevelExp: number; expPoints: number; }) => {
   setUserData(prev => ({
     ...prev,
     totalExp: expData.totalExp,
     level: expData.level,
     currentExp: expData.currentExp,
-    nextLevelExp: expData.nextLevelExp
+    nextLevelExp: expData.nextLevelExp,
+    expPoints: expData.expPoints
   }));
 };
 
