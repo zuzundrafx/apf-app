@@ -65,6 +65,24 @@ function getStyleIconFilename(style: string): string {
 }
 
 function App() {
+
+  const [isLandscape, setIsLandscape] = useState(false);
+
+useEffect(() => {
+  const checkOrientation = () => {
+    setIsLandscape(window.innerWidth > window.innerHeight);
+  };
+  
+  checkOrientation();
+  window.addEventListener('resize', checkOrientation);
+  window.addEventListener('orientationchange', checkOrientation);
+  
+  return () => {
+    window.removeEventListener('resize', checkOrientation);
+    window.removeEventListener('orientationchange', checkOrientation);
+  };
+}, []);
+
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [telegramUser, setTelegramUser] = useState<{ id: string; username: string; photoUrl?: string } | null>(null);
   const { pastTournaments, upcomingTournaments, allCompletedTournaments, loading, error, loadFighters, userBets } = useBackendTournaments(authToken, telegramUser?.id || null);
@@ -238,33 +256,41 @@ function App() {
         totalExp: notification.data.experience
       });
       setShowRewardsModal(true);
-      setNotifications(prev => prev.filter(n => n.id !== notification.id));
+      // ❌ Удалите эту строку: setNotifications(prev => prev.filter(n => n.id !== notification.id));
     }
   };
 
   const acceptRewards = async () => {
-    if (!pendingRewards) return;
-    setIsAcceptingRewards(true);
-    try {
-      const profile = await apiRequest('/api/user/profile');
-      setUserData(prev => ({
-        ...prev,
-        coins: profile.coins,
-        tickets: profile.tickets,
-        totalExp: profile.experience,
-        level: profile.level,
-        currentExp: profile.currentExp,
-        nextLevelExp: profile.nextLevelExp,
-        expPoints: profile.exp_points
-      }));
-      setShowRewardsModal(false);
-      setPendingRewards(null);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsAcceptingRewards(false);
-    }
-  };
+  if (!pendingRewards || !selectedNotification) return;
+  setIsAcceptingRewards(true);
+  try {
+    // Отправляем запрос на начисление конкретной награды
+    const result = await apiRequest(`/api/notifications/${selectedNotification.id}/claim`, { 
+      method: 'POST' 
+    });
+    
+    // Обновляем состояние пользователя
+    setUserData(prev => ({
+      ...prev,
+      coins: result.newCoins,
+      tickets: result.newTickets,
+      totalExp: result.newExp,
+      level: result.level,
+      currentExp: result.currentExp,
+      nextLevelExp: result.nextLevelExp,
+      expPoints: result.expPoints
+    }));
+    
+    setShowRewardsModal(false);
+    setPendingRewards(null);
+    setSelectedNotification(null);
+  } catch (e) {
+    console.error(e);
+    alert('Failed to claim rewards');
+  } finally {
+    setIsAcceptingRewards(false);
+  }
+};
 
   const saveSelectionsBackend = useCallback(async (selections: Map<string, Fighter>) => {
     if (!telegramUser || isSavingBet) return;
@@ -471,6 +497,20 @@ function App() {
 
   return (
     <div className="app">
+
+      {isLandscape && (
+      <div className="orientation-overlay">
+        <img 
+          src={`${BASE_URL}/icons/Rotate_error_icon.webp`} 
+          alt="Please rotate your device" 
+          className="orientation-icon" 
+        />
+        <div className="orientation-text">
+          Please rotate your device to portrait mode
+        </div>
+      </div>
+    )}
+
       <header className="profile-header">
         <div className="profile-avatar">
           {telegramUser?.photoUrl ? <img src={telegramUser.photoUrl} alt="avatar" /> : <img src={`${BASE_URL}/Home_button.png`} alt="avatar" />}
