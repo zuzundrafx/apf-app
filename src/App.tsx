@@ -1,8 +1,9 @@
-﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ (исправлены уровни, модалки сохранены)
+﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ с добавлением StyleModal и исправлениями
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
 import LeaderboardItem from './components/LeaderboardItem';
+import StyleModal from './components/StyleModal';
 import { Fighter, Tournament, SelectedFighter } from './types';
 import { groupFightersByWeight } from './data/loadFighters';
 import { useBackendTournaments } from './hooks/useBackendTournaments';
@@ -65,23 +66,22 @@ function getStyleIconFilename(style: string): string {
 }
 
 function App() {
-
   const [isLandscape, setIsLandscape] = useState(false);
 
-useEffect(() => {
-  const checkOrientation = () => {
-    setIsLandscape(window.innerWidth > window.innerHeight);
-  };
-  
-  checkOrientation();
-  window.addEventListener('resize', checkOrientation);
-  window.addEventListener('orientationchange', checkOrientation);
-  
-  return () => {
-    window.removeEventListener('resize', checkOrientation);
-    window.removeEventListener('orientationchange', checkOrientation);
-  };
-}, []);
+  useEffect(() => {
+    const checkOrientation = () => {
+      setIsLandscape(window.innerWidth > window.innerHeight);
+    };
+    
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
 
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [telegramUser, setTelegramUser] = useState<{ id: string; username: string; photoUrl?: string } | null>(null);
@@ -126,8 +126,11 @@ useEffect(() => {
 
   const [selectedUpcomingTournament, setSelectedUpcomingTournament] = useState<Tournament | null>(null);
   const [upcomingBetData, setUpcomingBetData] = useState<any>(null);
-
   const [selectedActiveTournament, setSelectedActiveTournament] = useState<Tournament | null>(null);
+
+  // Состояния для StyleModal
+  const [showStyleModal, setShowStyleModal] = useState(false);
+  const [userStyle, setUserStyle] = useState<'striker' | 'grappler' | null>(null);
 
   const [userData, setUserData] = useState({
     username: 'Player', level: 1, currentExp: 0, totalExp: 0, nextLevelExp: 5,
@@ -186,6 +189,13 @@ useEffect(() => {
         myUserId: data.user.id,
         expPoints: data.user.exp_points
       }));
+      
+      // Загружаем стиль пользователя
+      try {
+        const styleData = await apiRequest('/api/user/style');
+        setUserStyle(styleData.style);
+      } catch (e) { console.error('Failed to load style:', e); }
+      
       return true;
     } catch (err) {
       console.error('Auth error', err);
@@ -256,41 +266,49 @@ useEffect(() => {
         totalExp: notification.data.experience
       });
       setShowRewardsModal(true);
-      // ❌ Удалите эту строку: setNotifications(prev => prev.filter(n => n.id !== notification.id));
+      // НЕ удаляем уведомление сразу — только после claim
     }
   };
 
   const acceptRewards = async () => {
-  if (!pendingRewards || !selectedNotification) return;
-  setIsAcceptingRewards(true);
-  try {
-    // Отправляем запрос на начисление конкретной награды
-    const result = await apiRequest(`/api/notifications/${selectedNotification.id}/claim`, { 
-      method: 'POST' 
+    if (!pendingRewards || !selectedNotification) return;
+    setIsAcceptingRewards(true);
+    try {
+      const result = await apiRequest(`/api/notifications/${selectedNotification.id}/claim`, { 
+        method: 'POST' 
+      });
+      
+      setUserData(prev => ({
+        ...prev,
+        coins: result.newCoins,
+        tickets: result.newTickets,
+        totalExp: result.newExp,
+        level: result.level,
+        currentExp: result.currentExp,
+        nextLevelExp: result.nextLevelExp,
+        expPoints: result.expPoints
+      }));
+      
+      // Удаляем уведомление из списка после успешного claim
+      setNotifications(prev => prev.filter(n => n.id !== selectedNotification.id));
+      setShowRewardsModal(false);
+      setPendingRewards(null);
+      setSelectedNotification(null);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to claim rewards');
+    } finally {
+      setIsAcceptingRewards(false);
+    }
+  };
+
+  const handleSaveStyle = async (style: 'striker' | 'grappler') => {
+    await apiRequest('/api/user/style', {
+      method: 'POST',
+      body: JSON.stringify({ style })
     });
-    
-    // Обновляем состояние пользователя
-    setUserData(prev => ({
-      ...prev,
-      coins: result.newCoins,
-      tickets: result.newTickets,
-      totalExp: result.newExp,
-      level: result.level,
-      currentExp: result.currentExp,
-      nextLevelExp: result.nextLevelExp,
-      expPoints: result.expPoints
-    }));
-    
-    setShowRewardsModal(false);
-    setPendingRewards(null);
-    setSelectedNotification(null);
-  } catch (e) {
-    console.error(e);
-    alert('Failed to claim rewards');
-  } finally {
-    setIsAcceptingRewards(false);
-  }
-};
+    setUserStyle(style);
+  };
 
   const saveSelectionsBackend = useCallback(async (selections: Map<string, Fighter>) => {
     if (!telegramUser || isSavingBet) return;
@@ -357,15 +375,15 @@ useEffect(() => {
   };
 
   const handleUpdateExperience = (expData: { totalExp: number; level: number; currentExp: number; nextLevelExp: number; expPoints: number; }) => {
-  setUserData(prev => ({
-    ...prev,
-    totalExp: expData.totalExp,
-    level: expData.level,
-    currentExp: expData.currentExp,
-    nextLevelExp: expData.nextLevelExp,
-    expPoints: expData.expPoints
-  }));
-};
+    setUserData(prev => ({
+      ...prev,
+      totalExp: expData.totalExp,
+      level: expData.level,
+      currentExp: expData.currentExp,
+      nextLevelExp: expData.nextLevelExp,
+      expPoints: expData.expPoints
+    }));
+  };
 
   useEffect(() => {
     const initTelegram = async () => {
@@ -497,22 +515,21 @@ useEffect(() => {
 
   return (
     <div className="app">
-
       {isLandscape && (
-      <div className="orientation-overlay">
-        <img 
-          src={`${BASE_URL}/icons/Rotate_error_icon.webp`} 
-          alt="Please rotate your device" 
-          className="orientation-icon" 
-        />
-        <div className="orientation-text">
-          Please rotate your device to portrait mode
+        <div className="orientation-overlay">
+          <img 
+            src={`${BASE_URL}/icons/Rotate_error_icon.webp`} 
+            alt="Please rotate your device" 
+            className="orientation-icon" 
+          />
+          <div className="orientation-text">
+            Please rotate your device to portrait mode
+          </div>
         </div>
-      </div>
-    )}
+      )}
 
       <header className="profile-header">
-        <div className="profile-avatar">
+        <div className="profile-avatar" onClick={() => setShowStyleModal(true)} style={{ cursor: 'pointer' }}>
           {telegramUser?.photoUrl ? <img src={telegramUser.photoUrl} alt="avatar" /> : <img src={`${BASE_URL}/Home_button.png`} alt="avatar" />}
         </div>
         <div className="profile-info">
@@ -720,8 +737,10 @@ useEffect(() => {
         )}
 
         {currentView === 'leaderboard' && (
-          <div className="leaderboard-screen">
-            <h2 className="leaderboard-header">{activeTournaments.length > 0 ? activeTournaments[0].name : 'LEADERBOARD'}</h2>
+  <div className="leaderboard-screen">
+    <h2 className="leaderboard-header">
+      {activeTournaments.length > 0 ? activeTournaments[0].name : 'LEADERBOARD'}
+    </h2>
             {leaderboardLoading ? <div className="leaderboard-loading">LOADING...</div> : leaderboardData.length > 0 ? (
               <div className="leaderboard-list">
                 {leaderboardData.map(entry => (
@@ -911,6 +930,14 @@ useEffect(() => {
         <button className={`nav-button ${currentView === 'pvp' ? 'active' : ''}`} onClick={() => setCurrentView('pvp')}><img src={`${BASE_URL}/PvP_button.png`} alt="PvP" /></button>
         <button className="nav-button disabled"><img src={`${BASE_URL}/Shop_button.png`} alt="Shop" /></button>
       </nav>
+
+      {/* Style Modal */}
+      <StyleModal
+        isOpen={showStyleModal}
+        onClose={() => setShowStyleModal(false)}
+        currentStyle={userStyle}
+        onSaveStyle={handleSaveStyle}
+      />
     </div>
   );
 }
