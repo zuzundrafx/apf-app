@@ -52,13 +52,14 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
 
   return (
     <div className="rewards-modal-overlay">
-      <div className="rewards-modal" style={{ height: '85%' }}>
+      <div className="rewards-modal" style={{ height: '30%' }}>
         <div className="rewards-header">
           <h2>{getTitle()}</h2>
           <button className="cancelled-modal-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="rewards-winners-list" style={{ 
+          height: '90%',
           display: 'flex', 
           flexDirection: 'row', 
           justifyContent: 'center', 
