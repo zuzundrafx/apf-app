@@ -52,7 +52,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
 
   return (
     <div className="rewards-modal-overlay">
-      <div className="rewards-modal" style={{ height: '30%' }}>
+      <div className="rewards-modal" style={{ height: '40%' }}>
         <div className="rewards-header">
           <h2>{getTitle()}</h2>
           <button className="cancelled-modal-close" onClick={onClose}>✕</button>
@@ -64,7 +64,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
           flexDirection: 'row', 
           justifyContent: 'center', 
           alignItems: 'center',
-          gap: isConfirming || isStyleSelected ? '0' : '5%',
+          gap: isConfirming || isStyleSelected ? '0' : '0%',
           flex: 1
         }}>
           {/* Striker */}
