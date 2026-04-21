@@ -76,7 +76,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
             flexDirection: 'row', 
             justifyContent: 'center', 
             alignItems: 'center',
-            gap: '0%',
+            gap: '5%',
             height: '90%',
             width: '85%',      // компенсация внешних отступов из CSS
             padding: '0',
