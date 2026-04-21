@@ -55,15 +55,15 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
       <div 
         className="rewards-modal no-summary" 
         style={{ 
-          height: '40vh',                // фиксированная высота в vh
-          minHeight: '40vh',
+          height: '35%',                // фиксированная высота в vh
+          //minHeight: '40vh',
           display: 'flex', 
           flexDirection: 'column',
           margin: '0',
           padding: '0'
         }}
       >
-        <div className="rewards-header">
+        <div className="rewards-header" style={{ top: '-12%' }}>
           <h2>{getTitle()}</h2>
           <button className="cancelled-modal-close" onClick={onClose}>✕</button>
         </div>
