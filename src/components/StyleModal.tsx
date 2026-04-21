@@ -77,7 +77,8 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
             justifyContent: 'center', 
             alignItems: 'center',
             gap: '0%',
-            margin: '-5% 0 -5% 0',       // компенсация внешних отступов из CSS
+            height: '90%',
+            width: '85%',      // компенсация внешних отступов из CSS
             padding: '0',
             maxHeight: 'none',            // убираем ограничение 65%
             overflow: 'visible'
