@@ -135,6 +135,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         {/* Кнопки для подтверждения выбора (только при выборе нового стиля) */}
         {isConfirming && !isStyleSelected && (
           <div style={{ 
+            height: '10%',
             display: 'flex', 
             justifyContent: 'center', 
             gap: '5%', 
