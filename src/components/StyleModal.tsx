@@ -168,14 +168,14 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         }}>
           <button 
             className="rewards-claim-button"
-            style={{ width: '40%' }}
+            style={{ width: '40%',  height: '6vh'}}
             onClick={handleChangeStyle}
           >
             Change Style
           </button>
           <button 
             className="rewards-claim-button"
-            style={{ width: '40%' }}
+            style={{ width: '40%',  height: '6vh' }}
             onClick={handleAccept}
             disabled={isSaving}
           >
