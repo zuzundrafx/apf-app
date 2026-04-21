@@ -3772,3 +3772,19 @@ body {
 .rewards-modal.no-summary .rewards-summary {
   display: none;
 }
+
+/* В конец App.css добавьте: */
+.rewards-modal.no-summary {
+  grid-template-rows: auto 1fr !important; /* если используется grid */
+  /* или */
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.rewards-modal.no-summary .rewards-summary {
+  display: none !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
