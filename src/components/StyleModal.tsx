@@ -1,4 +1,4 @@
-// src/components/StyleModal.tsx – полный контроль через инлайн-стили
+// src/components/StyleModal.tsx – финальная версия (исправлены отступы)
 import React, { useState } from 'react';
 
 interface StyleModalProps {
@@ -51,37 +51,15 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
   };
 
   return (
-    <div className="rewards-modal-overlay" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      {/* Основной контейнер — используем класс для фона, но переопределяем всё остальное */}
-      <div 
-        className="rewards-modal" 
-        style={{ 
-          height: '40%', 
-          width: '85%',
-          display: 'flex', 
-          flexDirection: 'column',
-          padding: '0',           // ← убираем все внутренние отступы
-          margin: '0',
-          position: 'relative'
-        }}
-      >
-        {/* Заголовок */}
-        <div className="rewards-header" style={{ flexShrink: 0 }}>
+    <div className="rewards-modal-overlay">
+      <div className="rewards-modal no-summary" style={{ height: '40%' }}>
+        <div className="rewards-header">
           <h2>{getTitle()}</h2>
           <button className="cancelled-modal-close" onClick={onClose}>✕</button>
         </div>
 
-        {/* Скрываем .rewards-summary и .rewards-tournament-name глобально для этого окна */}
-        <style>{`
-          .rewards-modal .rewards-summary,
-          .rewards-modal .rewards-tournament-name {
-            display: none !important;
-          }
-        `}</style>
-
-        {/* Контейнер для иконок — ровно 90% высоты, центрирование */}
         <div 
-          className="rewards-winners-list"
+          className="rewards-winners-list" 
           style={{ 
             height: '90%',
             display: 'flex', 
@@ -89,9 +67,8 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
             justifyContent: 'center', 
             alignItems: 'center',
             gap: '0%',
-            padding: '0',
-            margin: '0',
-            flexShrink: 0
+            marginTop: '-2%',    // ← компенсируем верхний padding родителя
+            marginBottom: '-2%'  // ← компенсируем нижний padding родителя
           }}
         >
           {/* Striker */}
@@ -174,8 +151,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
           display: 'flex', 
           justifyContent: 'center', 
           gap: '5%', 
-          marginTop: '2vh',
-          width: '85%'
+          marginTop: '2vh'
         }}>
           <button 
             className="rewards-claim-button"
