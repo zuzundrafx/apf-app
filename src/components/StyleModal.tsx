@@ -82,7 +82,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
             padding: '0',
             maxHeight: 'none',            // убираем ограничение 65%
             overflow: 'visible',
-            margin: '0 0',
+            margin: 'auto auto',
           }}
         >
           {/* Striker */}
