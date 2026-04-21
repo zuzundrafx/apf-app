@@ -1,4 +1,4 @@
-// src/components/StyleModal.tsx – финальная версия с классом no-summary
+// src/components/StyleModal.tsx – финальная версия с правильным позиционированием
 import React, { useState } from 'react';
 
 interface StyleModalProps {
@@ -51,7 +51,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
   };
 
   return (
-    <div className="rewards-modal-overlay">
+    <div className="rewards-modal-overlay" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div className="rewards-modal no-summary" style={{ height: '40%', display: 'flex', flexDirection: 'column' }}>
         <div className="rewards-header">
           <h2>{getTitle()}</h2>
@@ -59,12 +59,12 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         </div>
 
         <div className="rewards-winners-list" style={{ 
-          flex: 1,
+          height: '90%',
           display: 'flex', 
           flexDirection: 'row', 
           justifyContent: 'center', 
           alignItems: 'center',
-          gap: isConfirming || isStyleSelected ? '0' : '0%'
+          gap: '0%'
         }}>
           {/* Striker */}
           {(!isConfirming || selectedStyle === 'striker' || currentStyle === 'striker') && (
@@ -138,33 +138,34 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
             </div>
           )}
         </div>
-
-        {/* Кнопки для подтверждения выбора (только при выборе нового стиля) */}
-        {isConfirming && !isStyleSelected && (
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: '5%', 
-            padding: 'clamp(12px, 2vh, 20px) clamp(12px, 3vw, 20px)'
-          }}>
-            <button 
-              className="rewards-claim-button"
-              style={{ width: '40%' }}
-              onClick={handleChangeStyle}
-            >
-              Change Style
-            </button>
-            <button 
-              className="rewards-claim-button"
-              style={{ width: '40%' }}
-              onClick={handleAccept}
-              disabled={isSaving}
-            >
-              {isSaving ? 'SAVING...' : 'Accept'}
-            </button>
-          </div>
-        )}
       </div>
+
+      {/* Кнопки — за пределами модального окна, чуть ниже */}
+      {isConfirming && !isStyleSelected && (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '5%', 
+          marginTop: '2vh',
+          width: '85%'
+        }}>
+          <button 
+            className="rewards-claim-button"
+            style={{ width: '40%' }}
+            onClick={handleChangeStyle}
+          >
+            Change Style
+          </button>
+          <button 
+            className="rewards-claim-button"
+            style={{ width: '40%' }}
+            onClick={handleAccept}
+            disabled={isSaving}
+          >
+            {isSaving ? 'SAVING...' : 'Accept'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
