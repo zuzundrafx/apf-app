@@ -85,40 +85,54 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
           }}
         >
           {/* Striker */}
-          {(!isConfirming || selectedStyle === 'striker' || currentStyle === 'striker') && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vh, 16px)' }}>
-              <div 
-                style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 0 0 0.8vw #f0bf21',
-                  borderRadius: '20%',
-                  aspectRatio: '1 / 1',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.1)' : 'scale(1)',
-                  transition: 'transform 0.3s ease'
-                }}
-              >
-                <img 
-                  src={`${BASE_URL}/icons/Striker_style_icon.webp`}
-                  alt="Striker"
-                  style={{ 
-                    width: '70%',
-                    cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
-                  }}
-                  onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('striker')}
-                />
-              </div>
-              <span style={{ 
-                color: '#FFFFFF', 
-                fontSize: 'clamp(14px, 4vw, 18px)',
-                padding: '5% 0 0 0',   // ← отступ сверху 5% 
-                fontWeight: 600 
-              }}>STRIKER</span>
-            </div>
-          )}
+{(!isConfirming || selectedStyle === 'striker' || currentStyle === 'striker') && (
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vh, 16px)' }}>
+    {/* Подложка с градиентом */}
+    <div 
+      style={{ 
+        background: 'linear-gradient(180deg, #f0d929 0%, #c8b727 100%)',
+        borderRadius: '20%',
+        padding: '6%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.1)' : 'scale(1)',
+        transition: 'transform 0.3s ease'
+      }}
+    >
+      <div 
+        style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 0 0 0.8vw #f0bf21',
+          borderRadius: '20%',
+          aspectRatio: '1 / 1',
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          width: '100%',
+          height: '100%'
+        }}
+      >
+        <img 
+          src={`${BASE_URL}/icons/Striker_style_icon.webp`}
+          alt="Striker"
+          style={{ 
+            width: '70%',
+            cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
+          }}
+          onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('striker')}
+        />
+      </div>
+    </div>
+    <span style={{ 
+      color: '#FFFFFF', 
+      fontSize: 'clamp(14px, 4vw, 18px)',
+      padding: '5% 0 0 0',
+      fontWeight: 600 
+    }}>STRIKER</span>
+  </div>
+)}
 
           {/* Grappler */}
           {(!isConfirming || selectedStyle === 'grappler' || currentStyle === 'grappler') && (
