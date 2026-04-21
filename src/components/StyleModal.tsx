@@ -1,4 +1,4 @@
-// src/components/StyleModal.tsx – финальная версия с фиксированным размером окна
+// src/components/StyleModal.tsx – финальная версия с правильными размерами
 import React, { useState } from 'react';
 
 interface StyleModalProps {
@@ -55,7 +55,8 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
       <div 
         className="rewards-modal no-summary" 
         style={{ 
-          height: '30%',
+          height: '30%',                // фиксированная высота в %
+          //minHeight: '40vh',
           display: 'flex', 
           flexDirection: 'column',
           margin: '0',
@@ -70,109 +71,89 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         <div 
           className="rewards-winners-list" 
           style={{ 
-            flex: 'none',
+            flex: 'none',                    // занимает всё доступное пространство
             display: 'flex', 
             flexDirection: 'row', 
             justifyContent: 'center', 
             alignItems: 'center',
-            gap: '10%',
+            gap: '10%',           // расстояние между иконками
             height: '90%',
-            width: '85%',
+            width: '85%',      // компенсация внешних отступов из CSS
             padding: '0',
-            maxHeight: 'none',
+            maxHeight: 'none',            // убираем ограничение 65%
             overflow: 'visible',
             margin: 'auto auto',
           }}
         >
           {/* Striker */}
-          {(!isConfirming || selectedStyle === 'striker' || currentStyle === 'striker') && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vh, 16px)' }}>
-              <div style={{ 
-                width: 'clamp(80px, 25vw, 140px)', 
-                height: 'clamp(80px, 25vw, 140px)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'visible'
-              }}>
-                <div 
-                  style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 0 0 0.8vw #f0bf21',
-                    borderRadius: '20%',
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                    transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.2)' : 'scale(1)',
-                    transition: 'transform 0.3s ease',
-                  }}
-                >
-                  <img 
-                    src={`${BASE_URL}/icons/Striker_style_icon.webp`}
-                    alt="Striker"
-                    style={{ 
-                      width: '70%',
-                      cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
-                    }}
-                    onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('striker')}
-                  />
-                </div>
-              </div>
-              <span style={{ 
-                color: '#FFFFFF', 
-                fontSize: 'clamp(14px, 4vw, 18px)', 
-                fontWeight: 600 
-              }}>STRIKER</span>
-            </div>
-          )}
+{(!isConfirming || selectedStyle === 'striker' || currentStyle === 'striker') && (
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vh, 16px)' }}>
+    <div 
+      style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 0 0 0.8vw #f0bf21',
+        borderRadius: '20%',
+        aspectRatio: '1 / 1',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.2)' : 'scale(1)',
+        transition: 'transform 0.3s ease'
+      }}
+    >
+      <img 
+        src={`${BASE_URL}/icons/Striker_style_icon.webp`}
+        alt="Striker"
+        style={{ 
+          width: '70%',
+          cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
+        }}
+        onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('striker')}
+      />
+    </div>
+    <span style={{ 
+      color: '#FFFFFF', 
+      fontSize: 'clamp(14px, 4vw, 18px)', 
+      fontWeight: 600 
+    }}>STRIKER</span>
+  </div>
+)}
 
           {/* Grappler */}
-          {(!isConfirming || selectedStyle === 'grappler' || currentStyle === 'grappler') && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vh, 16px)' }}>
-              <div style={{ 
-                width: 'clamp(80px, 25vw, 140px)', 
-                height: 'clamp(80px, 25vw, 140px)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'visible'
-              }}>
-                <div 
-                  style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 0 0 0.8vw #f0bf21',
-                    borderRadius: '20%',
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                    transform: (isConfirming && selectedStyle === 'grappler') || currentStyle === 'grappler' ? 'scale(1.2)' : 'scale(1)',
-                    transition: 'transform 0.3s ease',
-                  }}
-                >
-                  <img 
-                    src={`${BASE_URL}/icons/Grappler_style_icon.webp`}
-                    alt="Grappler"
-                    style={{ 
-                      width: '70%',
-                      cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
-                    }}
-                    onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('grappler')}
-                  />
-                </div>
-              </div>
-              <span style={{ 
-                color: '#FFFFFF', 
-                fontSize: 'clamp(14px, 4vw, 18px)', 
-                fontWeight: 600 
-              }}>GRAPPLER</span>
-            </div>
-          )}
+{(!isConfirming || selectedStyle === 'grappler' || currentStyle === 'grappler') && (
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vh, 16px)' }}>
+    <div 
+      style={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 0 0 0.8vw #f0bf21',
+        borderRadius: '20%',
+        aspectRatio: '1 / 1',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        transform: (isConfirming && selectedStyle === 'grappler') || currentStyle === 'grappler' ? 'scale(1.2)' : 'scale(1)',
+        transition: 'transform 0.3s ease'
+      }}
+    >
+      <img 
+        src={`${BASE_URL}/icons/Grappler_style_icon.webp`}
+        alt="Grappler"
+        style={{ 
+          width: '70%',
+          cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
+        }}
+        onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('grappler')}
+      />
+    </div>
+    <span style={{ 
+      color: '#FFFFFF', 
+      fontSize: 'clamp(14px, 4vw, 18px)', 
+      fontWeight: 600 
+    }}>GRAPPLER</span>
+  </div>
+)}
         </div>
       </div>
 
@@ -187,14 +168,14 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         }}>
           <button 
             className="rewards-claim-button"
-            style={{ width: '40%', height: '6vh' }}
+            style={{ width: '40%',  height: '6vh'}}
             onClick={handleChangeStyle}
           >
             Change Style
           </button>
           <button 
             className="rewards-claim-button"
-            style={{ width: '40%', height: '6vh' }}
+            style={{ width: '40%',  height: '6vh' }}
             onClick={handleAccept}
             disabled={isSaving}
           >
