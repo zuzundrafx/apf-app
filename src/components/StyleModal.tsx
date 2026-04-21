@@ -1,4 +1,4 @@
-// src/components/StyleModal.tsx – адаптивная версия
+// src/components/StyleModal.tsx – финальная версия с классом no-summary
 import React, { useState } from 'react';
 
 interface StyleModalProps {
@@ -52,20 +52,19 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
 
   return (
     <div className="rewards-modal-overlay">
-      <div className="rewards-modal" style={{ height: '40%' }}>
+      <div className="rewards-modal no-summary" style={{ height: '40%', display: 'flex', flexDirection: 'column' }}>
         <div className="rewards-header">
           <h2>{getTitle()}</h2>
           <button className="cancelled-modal-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="rewards-winners-list" style={{ 
-          height: '90%',
+          flex: 1,
           display: 'flex', 
           flexDirection: 'row', 
           justifyContent: 'center', 
           alignItems: 'center',
-          gap: isConfirming || isStyleSelected ? '0' : '0%',
-          flex: 1
+          gap: isConfirming || isStyleSelected ? '0' : '0%'
         }}>
           {/* Striker */}
           {(!isConfirming || selectedStyle === 'striker' || currentStyle === 'striker') && (
@@ -74,10 +73,10 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                 display: 'flex', 
                 flexDirection: 'column',
                 alignItems: 'center',
-                boxShadow: '0 0 0 3vw #f0bf21',
+                boxShadow: '0 0 0 0.8vw #f0bf21',
                 borderRadius: '20%',
                 aspectRatio: '1 / 1',
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',  // ← лёгкий фон для контраста
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
                 transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.2)' : 'scale(1)',
                 transition: 'transform 0.3s ease'
               }}
@@ -86,8 +85,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                 src={`${BASE_URL}/icons/Striker_style_icon.webp`}
                 alt="Striker"
                 style={{ 
-                  width: '70%', 
-                  
+                  width: '70%',
                   cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
                   borderRadius: '20%'
                 }}
@@ -109,8 +107,12 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
             <div 
               style={{ 
                 display: 'flex', 
-                flexDirection: 'column', 
+                flexDirection: 'column',
                 alignItems: 'center',
+                boxShadow: '0 0 0 0.8vw #f0bf21',
+                borderRadius: '20%',
+                aspectRatio: '1 / 1',
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
                 transform: (isConfirming && selectedStyle === 'grappler') || currentStyle === 'grappler' ? 'scale(1.2)' : 'scale(1)',
                 transition: 'transform 0.3s ease'
               }}
@@ -119,9 +121,9 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                 src={`${BASE_URL}/icons/Grappler_style_icon.webp`}
                 alt="Grappler"
                 style={{ 
-                  width: 'clamp(80px, 25vw, 140px)', 
-                  height: 'clamp(80px, 25vw, 140px)', 
-                  cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default' 
+                  width: '70%',
+                  cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
+                  borderRadius: '20%'
                 }}
                 onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('grappler')}
               />
@@ -140,12 +142,10 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         {/* Кнопки для подтверждения выбора (только при выборе нового стиля) */}
         {isConfirming && !isStyleSelected && (
           <div style={{ 
-            height: '10%',
             display: 'flex', 
             justifyContent: 'center', 
             gap: '5%', 
-            padding: 'clamp(16px, 3vh, 24px) clamp(12px, 3vw, 20px)',
-            marginBottom: 'clamp(16px, 3vh, 24px)'
+            padding: 'clamp(12px, 2vh, 20px) clamp(12px, 3vw, 20px)'
           }}>
             <button 
               className="rewards-claim-button"

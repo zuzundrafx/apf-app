@@ -3768,3 +3768,7 @@ body {
 .notification-item:hover {
   background: #3D3D3B;
 }
+
+.rewards-modal.no-summary .rewards-summary {
+  display: none;
+}
