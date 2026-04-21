@@ -150,6 +150,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
               <span style={{ 
                 color: '#FFFFFF', 
                 fontSize: 'clamp(14px, 4vw, 18px)', 
+                padding: '5% 0 0 0',   // ← отступ сверху 5%
                 fontWeight: 600 
               }}>GRAPPLER</span>
             </div>
