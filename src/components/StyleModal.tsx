@@ -55,7 +55,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
       <div 
         className="rewards-modal no-summary" 
         style={{ 
-          height: '35%',                // фиксированная высота в vh
+          height: '25%',                // фиксированная высота в vh
           //minHeight: '40vh',
           display: 'flex', 
           flexDirection: 'column',
