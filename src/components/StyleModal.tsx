@@ -1,4 +1,4 @@
-// src/components/StyleModal.tsx – финальная версия с правильным позиционированием
+// src/components/StyleModal.tsx – полный контроль через инлайн-стили
 import React, { useState } from 'react';
 
 interface StyleModalProps {
@@ -51,21 +51,49 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
   };
 
   return (
-    <div className="rewards-modal-overlay" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div className="rewards-modal no-summary" style={{ height: '40%', display: 'flex', flexDirection: 'column' }}>
-        <div className="rewards-header">
+    <div className="rewards-modal-overlay" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      {/* Основной контейнер — используем класс для фона, но переопределяем всё остальное */}
+      <div 
+        className="rewards-modal" 
+        style={{ 
+          height: '40%', 
+          width: '85%',
+          display: 'flex', 
+          flexDirection: 'column',
+          padding: '0',           // ← убираем все внутренние отступы
+          margin: '0',
+          position: 'relative'
+        }}
+      >
+        {/* Заголовок */}
+        <div className="rewards-header" style={{ flexShrink: 0 }}>
           <h2>{getTitle()}</h2>
           <button className="cancelled-modal-close" onClick={onClose}>✕</button>
         </div>
 
-        <div className="rewards-winners-list" style={{ 
-          height: '90%',
-          display: 'flex', 
-          flexDirection: 'row', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          gap: '0%'
-        }}>
+        {/* Скрываем .rewards-summary и .rewards-tournament-name глобально для этого окна */}
+        <style>{`
+          .rewards-modal .rewards-summary,
+          .rewards-modal .rewards-tournament-name {
+            display: none !important;
+          }
+        `}</style>
+
+        {/* Контейнер для иконок — ровно 90% высоты, центрирование */}
+        <div 
+          className="rewards-winners-list"
+          style={{ 
+            height: '90%',
+            display: 'flex', 
+            flexDirection: 'row', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            gap: '0%',
+            padding: '0',
+            margin: '0',
+            flexShrink: 0
+          }}
+        >
           {/* Striker */}
           {(!isConfirming || selectedStyle === 'striker' || currentStyle === 'striker') && (
             <div 
@@ -140,7 +168,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         </div>
       </div>
 
-      {/* Кнопки — за пределами модального окна, чуть ниже */}
+      {/* Кнопки — за пределами модального окна */}
       {isConfirming && !isStyleSelected && (
         <div style={{ 
           display: 'flex', 
