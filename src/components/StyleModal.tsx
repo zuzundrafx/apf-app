@@ -1,4 +1,4 @@
-// src/components/StyleModal.tsx – финальная версия с правильным позиционированием
+// src/components/StyleModal.tsx – финальная версия с правильными размерами
 import React, { useState } from 'react';
 
 interface StyleModalProps {
@@ -52,20 +52,37 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
 
   return (
     <div className="rewards-modal-overlay" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div className="rewards-modal no-summary" style={{ height: '40%', display: 'flex', flexDirection: 'column' }}>
+      <div 
+        className="rewards-modal no-summary" 
+        style={{ 
+          height: '40vh',                // фиксированная высота в vh
+          minHeight: '40vh',
+          display: 'flex', 
+          flexDirection: 'column',
+          margin: '0',
+          padding: '0'
+        }}
+      >
         <div className="rewards-header">
           <h2>{getTitle()}</h2>
           <button className="cancelled-modal-close" onClick={onClose}>✕</button>
         </div>
 
-        <div className="rewards-winners-list" style={{ 
-          height: '90%',
-          display: 'flex', 
-          flexDirection: 'row', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          gap: '0%'
-        }}>
+        <div 
+          className="rewards-winners-list" 
+          style={{ 
+            flex: 1,                      // занимает всё доступное пространство
+            display: 'flex', 
+            flexDirection: 'row', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            gap: '0%',
+            margin: '-5% 0 -5% 0',       // компенсация внешних отступов из CSS
+            padding: '0',
+            maxHeight: 'none',            // убираем ограничение 65%
+            overflow: 'visible'
+          }}
+        >
           {/* Striker */}
           {(!isConfirming || selectedStyle === 'striker' || currentStyle === 'striker') && (
             <div 
@@ -140,7 +157,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         </div>
       </div>
 
-      {/* Кнопки — за пределами модального окна, чуть ниже */}
+      {/* Кнопки — за пределами модального окна */}
       {isConfirming && !isStyleSelected && (
         <div style={{ 
           display: 'flex', 
