@@ -72,9 +72,11 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
             <div 
               style={{ 
                 display: 'flex', 
-                flexDirection: 'column', 
+                flexDirection: 'column',
                 alignItems: 'center',
                 border: '1vw #f0bf21',
+                borderRadius: '20%',
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',  // ← лёгкий фон для контраста
                 transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.2)' : 'scale(1)',
                 transition: 'transform 0.3s ease'
               }}
