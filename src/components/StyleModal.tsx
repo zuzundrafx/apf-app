@@ -1,4 +1,4 @@
-// src/components/StyleModal.tsx – финальная версия (исправлены отступы)
+// src/components/StyleModal.tsx – финальная версия с правильным позиционированием
 import React, { useState } from 'react';
 
 interface StyleModalProps {
@@ -51,26 +51,21 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
   };
 
   return (
-    <div className="rewards-modal-overlay">
-      <div className="rewards-modal no-summary" style={{ height: '40%' }}>
+    <div className="rewards-modal-overlay" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div className="rewards-modal no-summary" style={{ height: '40%', display: 'flex', flexDirection: 'column' }}>
         <div className="rewards-header">
           <h2>{getTitle()}</h2>
           <button className="cancelled-modal-close" onClick={onClose}>✕</button>
         </div>
 
-        <div 
-          className="rewards-winners-list" 
-          style={{ 
-            height: '90%',
-            display: 'flex', 
-            flexDirection: 'row', 
-            justifyContent: 'center', 
-            alignItems: 'center',
-            gap: '0%',
-            marginTop: '-2%',    // ← компенсируем верхний padding родителя
-            marginBottom: '-2%'  // ← компенсируем нижний padding родителя
-          }}
-        >
+        <div className="rewards-winners-list" style={{ 
+          height: '90%',
+          display: 'flex', 
+          flexDirection: 'row', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          gap: '0%'
+        }}>
           {/* Striker */}
           {(!isConfirming || selectedStyle === 'striker' || currentStyle === 'striker') && (
             <div 
@@ -145,13 +140,14 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         </div>
       </div>
 
-      {/* Кнопки — за пределами модального окна */}
+      {/* Кнопки — за пределами модального окна, чуть ниже */}
       {isConfirming && !isStyleSelected && (
         <div style={{ 
           display: 'flex', 
           justifyContent: 'center', 
           gap: '5%', 
-          marginTop: '2vh'
+          marginTop: '2vh',
+          width: '85%'
         }}>
           <button 
             className="rewards-claim-button"
