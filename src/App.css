@@ -3775,7 +3775,7 @@ body {
 
 /* В конец App.css добавьте: */
 .rewards-modal.no-summary {
-  grid-template-rows: auto 1fr !important; /* если используется grid */
+ /* grid-template-rows: auto 1fr !important; /* если используется grid */
   /* или */
   display: flex !important;
   flex-direction: column !important;

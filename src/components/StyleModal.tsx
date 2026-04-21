@@ -76,12 +76,13 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
             flexDirection: 'row', 
             justifyContent: 'center', 
             alignItems: 'center',
-            gap: '5%',
+            gap: '5%',           // расстояние между иконками
             height: '90%',
             width: '85%',      // компенсация внешних отступов из CSS
             padding: '0',
             maxHeight: 'none',            // убираем ограничение 65%
-            overflow: 'visible'
+            overflow: 'visible',
+            margin: '0 auto'
           }}
         >
           {/* Striker */}
