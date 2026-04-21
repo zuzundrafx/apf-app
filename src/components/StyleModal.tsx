@@ -71,7 +71,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         <div 
           className="rewards-winners-list" 
           style={{ 
-            flex: 1,                      // занимает всё доступное пространство
+            /*flex: 1,    */                  // занимает всё доступное пространство
             display: 'flex', 
             flexDirection: 'row', 
             justifyContent: 'center', 
