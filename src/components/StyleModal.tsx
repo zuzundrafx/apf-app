@@ -71,7 +71,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         <div 
           className="rewards-winners-list" 
           style={{ 
-            /*flex: 1,    */                  // занимает всё доступное пространство
+            flex: 'none',                    // занимает всё доступное пространство
             display: 'flex', 
             flexDirection: 'row', 
             justifyContent: 'center', 
@@ -82,7 +82,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
             padding: '0',
             maxHeight: 'none',            // убираем ограничение 65%
             overflow: 'visible',
-            margin: '0 auto'
+            margin: '0 auto',
           }}
         >
           {/* Striker */}
