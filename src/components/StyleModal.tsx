@@ -85,10 +85,9 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                 src={`${BASE_URL}/icons/Striker_style_icon.webp`}
                 alt="Striker"
                 style={{ 
-                  width: '80%', 
-                  height: '80%', 
+                  width: '70%', 
+                  aspectRatio: '1 / 1',
                   cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
-                  
                   borderRadius: '20%'
                 }}
                 onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('striker')}
