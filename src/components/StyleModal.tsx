@@ -65,7 +65,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
       >
         <div className="rewards-header" style={{ top: '-14%' }}>
           <h2>{getTitle()}</h2>
-          <button className="cancelled-modal-close" style={{ top: '100%' }} onClick={onClose}>✕</button>
+          <button className="cancelled-modal-close" style={{ top: '150%' }} onClick={onClose}>✕</button>
         </div>
 
         <div 
@@ -92,6 +92,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                 display: 'flex', 
                 flexDirection: 'column',
                 alignItems: 'center',
+                justifyContent: 'center',
                 boxShadow: '0 0 0 0.8vw #f0bf21',
                 borderRadius: '20%',
                 aspectRatio: '1 / 1',
