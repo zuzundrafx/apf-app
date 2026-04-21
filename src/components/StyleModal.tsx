@@ -1,4 +1,4 @@
-// src/components/StyleModal.tsx – финальная версия с правильным позиционированием
+// src/components/StyleModal.tsx – исправлено на основе прилагаемой версии
 import React, { useState } from 'react';
 
 interface StyleModalProps {
@@ -64,7 +64,9 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
           flexDirection: 'row', 
           justifyContent: 'center', 
           alignItems: 'center',
-          gap: '0%'
+          gap: '0%',
+          marginTop: '-3%',      // ← компенсация верхнего padding родителя
+          marginBottom: '-3%'    // ← компенсация нижнего padding родителя
         }}>
           {/* Striker */}
           {(!isConfirming || selectedStyle === 'striker' || currentStyle === 'striker') && (
