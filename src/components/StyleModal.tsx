@@ -95,7 +95,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                 borderRadius: '20%',
                 aspectRatio: '1 / 1',
                 backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                gap: '5%',
+               // gap: '5%',
                 transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.2)' : 'scale(1)',
                 transition: 'transform 0.3s ease'
               }}
@@ -133,7 +133,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                 borderRadius: '20%',
                 aspectRatio: '1 / 1',
                 backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                gap: '5%',
+                //gap: '5%',
                 transform: (isConfirming && selectedStyle === 'grappler') || currentStyle === 'grappler' ? 'scale(1.2)' : 'scale(1)',
                 transition: 'transform 0.3s ease'
               }}
