@@ -74,7 +74,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'center',
-                
+                border: '1vw #f0bf21',
                 transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.2)' : 'scale(1)',
                 transition: 'transform 0.3s ease'
               }}
@@ -86,7 +86,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                   width: 'clamp(80px, 25vw, 140px)', 
                   height: 'clamp(80px, 25vw, 140px)', 
                   cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
-                  border: '1vw #f0bf21',
+                  
                   borderRadius: '20%'
                 }}
                 onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('striker')}
