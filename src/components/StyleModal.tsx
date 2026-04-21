@@ -87,32 +87,33 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         >
           {/* Striker */}
 {(!isConfirming || selectedStyle === 'striker' || currentStyle === 'striker') && (
-  <div 
-    style={{ 
-      display: 'flex', 
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      boxShadow: '0 0 0 0.8vw #f0bf21',
-      borderRadius: '20%',
-      aspectRatio: '1 / 1',
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-      transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.2)' : 'scale(1)',
-      transition: 'transform 0.3s ease'
-    }}
-  >
-    <img 
-      src={`${BASE_URL}/icons/Striker_style_icon.webp`}
-      alt="Striker"
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vh, 16px)' }}>
+    <div 
       style={{ 
-        width: '70%',
-        cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 0 0 0.8vw #f0bf21',
+        borderRadius: '20%',
+        aspectRatio: '1 / 1',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.2)' : 'scale(1)',
+        transition: 'transform 0.3s ease'
       }}
-      onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('striker')}
-    />
+    >
+      <img 
+        src={`${BASE_URL}/icons/Striker_style_icon.webp`}
+        alt="Striker"
+        style={{ 
+          width: '70%',
+          cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
+        }}
+        onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('striker')}
+      />
+    </div>
     <span style={{ 
       color: '#FFFFFF', 
-      marginTop: 'clamp(8px, 2vh, 16px)', 
       fontSize: 'clamp(14px, 4vw, 18px)', 
       fontWeight: 600 
     }}>STRIKER</span>
@@ -121,32 +122,33 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
 
           {/* Grappler */}
 {(!isConfirming || selectedStyle === 'grappler' || currentStyle === 'grappler') && (
-  <div 
-    style={{ 
-      display: 'flex', 
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      boxShadow: '0 0 0 0.8vw #f0bf21',
-      borderRadius: '20%',
-      aspectRatio: '1 / 1',
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-      transform: (isConfirming && selectedStyle === 'grappler') || currentStyle === 'grappler' ? 'scale(1.2)' : 'scale(1)',
-      transition: 'transform 0.3s ease'
-    }}
-  >
-    <img 
-      src={`${BASE_URL}/icons/Grappler_style_icon.webp`}
-      alt="Grappler"
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vh, 16px)' }}>
+    <div 
       style={{ 
-        width: '70%',
-        cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 0 0 0.8vw #f0bf21',
+        borderRadius: '20%',
+        aspectRatio: '1 / 1',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        transform: (isConfirming && selectedStyle === 'grappler') || currentStyle === 'grappler' ? 'scale(1.2)' : 'scale(1)',
+        transition: 'transform 0.3s ease'
       }}
-      onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('grappler')}
-    />
+    >
+      <img 
+        src={`${BASE_URL}/icons/Grappler_style_icon.webp`}
+        alt="Grappler"
+        style={{ 
+          width: '70%',
+          cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
+        }}
+        onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('grappler')}
+      />
+    </div>
     <span style={{ 
       color: '#FFFFFF', 
-      marginTop: 'clamp(8px, 2vh, 16px)', 
       fontSize: 'clamp(14px, 4vw, 18px)', 
       fontWeight: 600 
     }}>GRAPPLER</span>
