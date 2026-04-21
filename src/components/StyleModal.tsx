@@ -76,6 +76,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                 alignItems: 'center',
                 boxShadow: '0 0 0 3vw #f0bf21',
                 borderRadius: '20%',
+                aspectRatio: '1 / 1',
                 backgroundColor: 'rgba(0, 0, 0, 0.3)',  // ← лёгкий фон для контраста
                 transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.2)' : 'scale(1)',
                 transition: 'transform 0.3s ease'
@@ -86,7 +87,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                 alt="Striker"
                 style={{ 
                   width: '70%', 
-                  aspectRatio: '1 / 1',
+                  
                   cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
                   borderRadius: '20%'
                 }}
