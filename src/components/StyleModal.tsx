@@ -106,7 +106,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                 style={{ 
                   width: '70%',
                   cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
-                  borderRadius: '20%',
+                 // borderRadius: '20%',
                   
                 }}
                 onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('striker')}
@@ -144,7 +144,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
                 style={{ 
                   width: '70%',
                   cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
-                  borderRadius: '20%'
+                  //borderRadius: '20%'
                 }}
                 onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('grappler')}
               />
