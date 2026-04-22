@@ -1,9 +1,10 @@
-﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ с добавлением StyleModal и исправлениями
+﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ с добавлением StyleViewModal и исправлениями
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
 import LeaderboardItem from './components/LeaderboardItem';
 import StyleModal from './components/StyleModal';
+import StyleViewModal from './components/StyleViewModal';
 import { Fighter, Tournament, SelectedFighter } from './types';
 import { groupFightersByWeight } from './data/loadFighters';
 import { useBackendTournaments } from './hooks/useBackendTournaments';
@@ -128,8 +129,9 @@ function App() {
   const [upcomingBetData, setUpcomingBetData] = useState<any>(null);
   const [selectedActiveTournament, setSelectedActiveTournament] = useState<Tournament | null>(null);
 
-  // Состояния для StyleModal
+  // Состояния для StyleModal и StyleViewModal
   const [showStyleModal, setShowStyleModal] = useState(false);
+  const [showStyleViewModal, setShowStyleViewModal] = useState(false);
   const [userStyle, setUserStyle] = useState<'striker' | 'grappler' | null>(null);
 
   const [userData, setUserData] = useState({
@@ -308,6 +310,14 @@ function App() {
       body: JSON.stringify({ style })
     });
     setUserStyle(style);
+  };
+
+  const handleAvatarClick = () => {
+    if (userStyle) {
+      setShowStyleViewModal(true);
+    } else {
+      setShowStyleModal(true);
+    }
   };
 
   const saveSelectionsBackend = useCallback(async (selections: Map<string, Fighter>) => {
@@ -529,7 +539,7 @@ function App() {
       )}
 
       <header className="profile-header">
-        <div className="profile-avatar" onClick={() => setShowStyleModal(true)} style={{ cursor: 'pointer' }}>
+        <div className="profile-avatar" onClick={handleAvatarClick} style={{ cursor: 'pointer' }}>
           {telegramUser?.photoUrl ? <img src={telegramUser.photoUrl} alt="avatar" /> : <img src={`${BASE_URL}/Home_button.png`} alt="avatar" />}
         </div>
         <div className="profile-info">
@@ -737,10 +747,10 @@ function App() {
         )}
 
         {currentView === 'leaderboard' && (
-  <div className="leaderboard-screen">
-    <h2 className="leaderboard-header">
-      {activeTournaments.length > 0 ? activeTournaments[0].name : 'LEADERBOARD'}
-    </h2>
+          <div className="leaderboard-screen">
+            <h2 className="leaderboard-header">
+              {activeTournaments.length > 0 ? activeTournaments[0].name : 'LEADERBOARD'}
+            </h2>
             {leaderboardLoading ? <div className="leaderboard-loading">LOADING...</div> : leaderboardData.length > 0 ? (
               <div className="leaderboard-list">
                 {leaderboardData.map(entry => (
@@ -931,13 +941,23 @@ function App() {
         <button className="nav-button disabled"><img src={`${BASE_URL}/Shop_button.png`} alt="Shop" /></button>
       </nav>
 
-      {/* Style Modal */}
+      {/* Style Selection Modal */}
       <StyleModal
         isOpen={showStyleModal}
         onClose={() => setShowStyleModal(false)}
         currentStyle={userStyle}
         onSaveStyle={handleSaveStyle}
+        onStyleSaved={() => setShowStyleViewModal(true)}
       />
+
+      {/* Style View Modal */}
+      {userStyle && (
+        <StyleViewModal
+          isOpen={showStyleViewModal}
+          onClose={() => setShowStyleViewModal(false)}
+          style={userStyle}
+        />
+      )}
     </div>
   );
 }
