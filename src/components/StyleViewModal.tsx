@@ -28,9 +28,9 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({ isOpen, onClose, style 
           position: 'relative'
         }}
       >
-        <div className="rewards-header" style={{ top: '-14%' }}>
+        <div className="rewards-header" style={{ top: '-8%' }}>
           <h2>{title}</h2>
-          <button className="cancelled-modal-close" style={{ top: '50%' }} onClick={onClose}>✕</button>
+          <button className="cancelled-modal-close" style={{ top: '100%' }} onClick={onClose}>✕</button>
         </div>
 
         <div 
