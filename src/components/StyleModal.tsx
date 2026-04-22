@@ -109,7 +109,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
           boxShadow: '0 0 0 0.8vw #f0bf21',
           borderRadius: '20%',
           aspectRatio: '1 / 1',
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          backgroundColor: '#141416',
           width: '100%',
           height: '100%'
         }}
