@@ -951,13 +951,16 @@ function App() {
       />
 
       {/* Style View Modal */}
-      {userStyle && (
-        <StyleViewModal
-          isOpen={showStyleViewModal}
-          onClose={() => setShowStyleViewModal(false)}
-          style={userStyle}
-        />
-      )}
+{userStyle && (
+  <StyleViewModal
+    isOpen={showStyleViewModal}
+    onClose={() => setShowStyleViewModal(false)}
+    style={userStyle}
+    userLevel={userData.level}
+    userExpPoints={userData.expPoints}
+    authToken={authToken ?? undefined}
+  />
+)}
     </div>
   );
 }

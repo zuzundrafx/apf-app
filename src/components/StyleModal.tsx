@@ -98,7 +98,7 @@ const StyleModal: React.FC<StyleModalProps> = ({
               <div 
                 style={{ 
                   background: 'linear-gradient(180deg, #FF0000 0%, #8C1519 100%)',
-                  borderRadius: '20%',
+                  borderRadius: '10%',
                   padding: '8%',
                   display: 'flex',
                   alignItems: 'center',
@@ -115,7 +115,7 @@ const StyleModal: React.FC<StyleModalProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     boxShadow: '0 0 0 0.6vw #000000',
-                    borderRadius: '20%',
+                    borderRadius: '10%',
                     aspectRatio: '1 / 1',
                     backgroundColor: '#141416',
                     width: '100%',
@@ -148,7 +148,7 @@ const StyleModal: React.FC<StyleModalProps> = ({
               <div 
                 style={{ 
                   background: 'linear-gradient(180deg, #FF9933 0%, #663300 100%)',
-                  borderRadius: '20%',
+                  borderRadius: '10%',
                   padding: '8%',
                   display: 'flex',
                   alignItems: 'center',
@@ -165,7 +165,7 @@ const StyleModal: React.FC<StyleModalProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     boxShadow: '0 0 0 0.6vw #000000',
-                    borderRadius: '20%',
+                    borderRadius: '10%',
                     aspectRatio: '1 / 1',
                     backgroundColor: '#141416',
                     width: '100%',
