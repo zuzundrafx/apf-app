@@ -90,7 +90,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
     {/* Подложка с градиентом */}
     <div 
       style={{ 
-        background: 'linear-gradient(180deg, #f0d929 0%, #c8b727 100%)',
+        background: 'linear-gradient(180deg, #FF0000 0%, #8C1519 100%)',
         borderRadius: '20%',
         padding: '6%',
         display: 'flex',
@@ -106,7 +106,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 0 0 0.8vw #f0bf21',
+          boxShadow: '0 0 0 0.6vw #000000',
           borderRadius: '20%',
           aspectRatio: '1 / 1',
           backgroundColor: '#141416',
