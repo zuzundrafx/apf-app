@@ -422,8 +422,8 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                             }}
                           >
                             <div style={{
-                              width: '92%',
-                              height: '66%',
+                              width: '96%',
+                              height: '67%',
                               background: '#091422',
                               borderRadius: '10%',
                               boxShadow: '0 0 0 0.3vw #000000',
@@ -437,7 +437,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                                 <img 
                                   src={`${BASE_URL}/icons/${ability.icon_path}`}
                                   alt={ability.name}
-                                  style={{ width: '92%', height: '90%', objectFit: 'contain' }}
+                                  style={{ width: '95%', height: '90%', objectFit: 'contain' }}
                                 />
                               ) : (
                                 <div style={{
@@ -449,7 +449,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                   color: '#FFFFFF',
-                                  fontSize: 'clamp(8px, 2vw, 12px)'
+                                  fontSize: 'clamp(8px, 2.2vw, 14px)'
                                 }}>
                                   {ability.type === 'combo' ? '⚡' : '📈'}
                                 </div>
