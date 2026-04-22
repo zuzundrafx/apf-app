@@ -275,11 +275,12 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
         <div 
           className="rewards-modal no-summary" 
           style={{ 
+            flex: 'none',
             height: '95%',
             width: '95%',
             display: 'flex', 
             flexDirection: 'column',
-            margin: '0',
+            margin: 'auto auto',
             padding: '0',
             position: 'relative'
           }}
