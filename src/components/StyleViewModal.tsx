@@ -22,6 +22,7 @@ interface AbilityLevel {
   damage_multiplier?: number;
   health_bonus?: number;
   damage_bonus?: number;
+  head_damage_bonus?: number;
   cost: number;
 }
 
