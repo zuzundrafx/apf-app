@@ -92,12 +92,13 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
       style={{ 
         background: 'linear-gradient(180deg, #FF0000 0%, #8C1519 100%)',
         borderRadius: '20%',
-        padding: '6%',
+        padding: '8%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.1)' : 'scale(1)',
-        transition: 'transform 0.3s ease'
+        transition: 'transform 0.3s ease',
+        boxShadow: '0 0 0 0.6vw #000000'
       }}
     >
       <div 
