@@ -276,6 +276,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
           className="rewards-modal no-summary" 
           style={{ 
             height: '90%',
+            width: '95%',
             display: 'flex', 
             flexDirection: 'column',
             margin: '0',
@@ -296,9 +297,9 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
               flexDirection: 'column', 
               alignItems: 'center',
               justifyContent: 'center',
-              width: '85%',
+              width: '95%',
               height: '90%',
-              padding: '4% 0',
+              padding: '0% 0',
               maxHeight: 'none',
               overflow: 'visible',
               margin: 'auto auto',
@@ -402,7 +403,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                             }}
                             onClick={() => !isLocked && handleAbilityClick(ability)}
                             style={{
-                              width: '23%',
+                              width: '24%',
                               aspectRatio: '1/1',
                               background: gradientColors,
                               borderRadius: '10%',
@@ -411,7 +412,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                               flexDirection: 'column',
                               alignItems: 'center',
                               justifyContent: 'space-between',
-                              padding: '3%',
+                              padding: '1%',
                               position: 'relative',
                               cursor: isLocked ? 'not-allowed' : 'pointer',
                               opacity: isLocked ? 0.5 : 1,
@@ -435,12 +436,12 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                                 <img 
                                   src={`${BASE_URL}/icons/${ability.icon_path}`}
                                   alt={ability.name}
-                                  style={{ width: '80%', height: '80%', objectFit: 'contain' }}
+                                  style={{ width: '90%', height: '90%', objectFit: 'contain' }}
                                 />
                               ) : (
                                 <div style={{
-                                  width: '80%',
-                                  height: '80%',
+                                  width: '95%',
+                                  height: '95%',
                                   background: '#3D3D3B',
                                   borderRadius: '10%',
                                   display: 'flex',
