@@ -276,7 +276,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
           className="rewards-modal no-summary" 
           style={{ 
             flex: 'none',
-            height: '95%',
+            height: '90%',
             width: '95%',
             display: 'flex', 
             flexDirection: 'column',
@@ -299,7 +299,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               width: '95%',
-              height: '90%',
+              height: '95%',
               padding: '0% 0',
               maxHeight: 'none',
               overflow: 'visible',
