@@ -469,12 +469,12 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
 
                             <div style={{
                               width: '92%',
-                              height: '13%',
+                              height: '14%',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               color: '#FFFFFF',
-                              fontSize: 'clamp(8px, 2vw, 11px)',
+                              fontSize: 'clamp(8px, 2.1vw, 13px)',
                               fontWeight: 600,
                               textAlign: 'center',
                               lineHeight: 1.2,
@@ -487,12 +487,12 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
 
                             <div style={{
                               width: '92%',
-                              height: '13%',
+                              height: '14%',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               color: '#FFD966',
-                              fontSize: 'clamp(7px, 2.2vw, 11px)',
+                              fontSize: 'clamp(8px, 2.4vw, 14px)',
                               fontWeight: 500,
                               textAlign: 'center',
                               textTransform: 'uppercase'
