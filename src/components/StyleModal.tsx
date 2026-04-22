@@ -98,7 +98,7 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
         justifyContent: 'center',
         transform: (isConfirming && selectedStyle === 'striker') || currentStyle === 'striker' ? 'scale(1.1)' : 'scale(1)',
         transition: 'transform 0.3s ease',
-        boxShadow: '0 0 0 0.6vw #000000'
+        boxShadow: '0 0 0 0.3vw #000000'
       }}
     >
       <div 
@@ -137,39 +137,54 @@ const StyleModal: React.FC<StyleModalProps> = ({ isOpen, onClose, currentStyle, 
 
           {/* Grappler */}
           {(!isConfirming || selectedStyle === 'grappler' || currentStyle === 'grappler') && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vh, 16px)' }}>
-              <div 
-                style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 0 0 0.8vw #f0bf21',
-                  borderRadius: '20%',
-                  aspectRatio: '1 / 1',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                  transform: (isConfirming && selectedStyle === 'grappler') || currentStyle === 'grappler' ? 'scale(1.1)' : 'scale(1)',
-                  transition: 'transform 0.3s ease'
-                }}
-              >
-                <img 
-                  src={`${BASE_URL}/icons/Grappler_style_icon.webp`}
-                  alt="Grappler"
-                  style={{ 
-                    width: '70%',
-                    cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
-                  }}
-                  onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('grappler')}
-                />
-              </div>
-              <span style={{ 
-                color: '#FFFFFF', 
-                fontSize: 'clamp(14px, 4vw, 18px)', 
-                padding: '5% 0 0 0',   // ← отступ сверху 5%
-                fontWeight: 600 
-              }}>GRAPPLER</span>
-            </div>
-          )}
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vh, 16px)' }}>
+    {/* Подложка с градиентом */}
+    <div 
+      style={{ 
+        background: 'linear-gradient(180deg, #FF9933 0%, #663300 100%)',
+        borderRadius: '20%',
+        padding: '8%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transform: (isConfirming && selectedStyle === 'grappler') || currentStyle === 'grappler' ? 'scale(1.1)' : 'scale(1)',
+        transition: 'transform 0.3s ease',
+        boxShadow: '0 0 0 0.3vw #000000'
+      }}
+    >
+      <div 
+        style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 0 0 0.6vw #000000',
+          borderRadius: '20%',
+          aspectRatio: '1 / 1',
+          backgroundColor: '#141416',
+          width: '100%',
+          height: '100%'
+        }}
+      >
+        <img 
+          src={`${BASE_URL}/icons/Grappler_style_icon.webp`}
+          alt="Grappler"
+          style={{ 
+            width: '70%',
+            cursor: !isStyleSelected && !isConfirming ? 'pointer' : 'default',
+          }}
+          onClick={() => !isStyleSelected && !isConfirming && handleStyleSelect('grappler')}
+        />
+      </div>
+    </div>
+    <span style={{ 
+      color: '#FFFFFF', 
+      fontSize: 'clamp(14px, 4vw, 18px)',
+      padding: '5% 0 0 0',
+      fontWeight: 600 
+    }}>GRAPPLER</span>
+  </div>
+)}
         </div>
       </div>
 
