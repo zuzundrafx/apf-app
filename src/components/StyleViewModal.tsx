@@ -1,4 +1,4 @@
-// src/components/StyleViewModal.tsx – ИСПРАВЛЕННАЯ ВЕРСИЯ с сохранением оригинального UI
+// src/components/StyleViewModal.tsx – ИСПРАВЛЕННАЯ ВЕРСИЯ на основе вашего оригинала
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface Ability {
@@ -47,6 +47,8 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
   userExpPoints,
   authToken
 }) => {
+  const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
+  
   const [abilities, setAbilities] = useState<Ability[]>([]);
   const [userAbilities, setUserAbilities] = useState<Map<number, number>>(new Map());
   const [loading, setLoading] = useState(true);
@@ -190,13 +192,12 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
       ctx.strokeStyle = isParentLearned ? lineColor : inactiveLineColor;
       ctx.lineWidth = Math.max(2, rect.width * 0.005);
       ctx.lineCap = 'round';
-      
-      const angle = Math.atan2(childTopY - parentBottomY, childCenterX - parentCenterX);
-      const arrowSize = rect.width * 0.015;
-      
       ctx.stroke();
       
       if (isParentLearned) {
+        const angle = Math.atan2(childTopY - parentBottomY, childCenterX - parentCenterX);
+        const arrowSize = rect.width * 0.015;
+        
         ctx.beginPath();
         ctx.moveTo(childCenterX, childTopY);
         ctx.lineTo(
@@ -282,37 +283,62 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
             position: 'relative'
           }}
         >
-          <div className="rewards-header" style={{ top: '-4%' }}>
+          <div className="rewards-header" style={{ top: '-8%' }}>
             <h2>{title}</h2>
-            <button className="cancelled-modal-close" style={{ top: '120%' }} onClick={onClose}>✕</button>
+            <button className="cancelled-modal-close" style={{ top: '100%' }} onClick={onClose}>✕</button>
           </div>
 
           <div 
             className="rewards-winners-list" 
             style={{ 
-              flex: 1,
+              flex: 'none',
               display: 'flex', 
-              flexDirection: 'column',
-              width: '100%',
-              padding: '2% 0',
+              flexDirection: 'column', 
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '85%',
+              height: '90%',
+              padding: '4% 0',
               maxHeight: 'none',
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              margin: '0',
-              gap: '0',
-              position: 'relative'
+              overflow: 'visible',
+              margin: 'auto auto',
             }}
           >
             {loading ? (
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                height: '100%',
+              <div style={{
                 color: '#FFFFFF',
-                fontSize: 'clamp(14px, 4vw, 18px)'
+                fontSize: 'clamp(16px, 4vw, 24px)',
+                textAlign: 'center'
               }}>
                 Loading abilities...
+              </div>
+            ) : abilities.length === 0 ? (
+              <div style={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '2vh',
+              }}>
+                <div style={{
+                  color: '#FFD966',
+                  fontSize: 'clamp(16px, 4vw, 24px)',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em'
+                }}>
+                  Coming Soon
+                </div>
+                <div style={{
+                  color: '#FFFFFF',
+                  fontSize: 'clamp(12px, 3vw, 16px)',
+                  textAlign: 'center',
+                  opacity: 0.7,
+                  padding: '0 10%'
+                }}>
+                  Skill tree for {style} style will be available in the next update.
+                </div>
               </div>
             ) : (
               <div 
@@ -320,9 +346,11 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 style={{ 
                   position: 'relative',
                   width: '100%',
-                  minHeight: '100%',
+                  height: '100%',
                   display: 'flex',
-                  flexDirection: 'column'
+                  flexDirection: 'column',
+                  overflowY: 'auto',
+                  overflowX: 'hidden'
                 }}
               >
                 <canvas
@@ -363,21 +391,137 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                         const isLocked = status === 'locked';
                         
                         return (
-                          <AbilityCard
+                          <div 
                             key={ability.id}
-                            ability={ability}
-                            currentLevel={currentLevel}
-                            isLocked={isLocked}
-                            gradientColors={gradientColors}
-                            onClick={() => !isLocked && handleAbilityClick(ability)}
-                            cardRef={(el) => {
+                            ref={(el) => {
                               if (el) {
                                 cardRefs.current.set(ability.id, el);
                               } else {
                                 cardRefs.current.delete(ability.id);
                               }
                             }}
-                          />
+                            onClick={() => !isLocked && handleAbilityClick(ability)}
+                            style={{
+                              width: '23%',
+                              aspectRatio: '1/1',
+                              background: gradientColors,
+                              borderRadius: '10%',
+                              boxShadow: '0 0 0 0.6vw #000000',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '3%',
+                              position: 'relative',
+                              cursor: isLocked ? 'not-allowed' : 'pointer',
+                              opacity: isLocked ? 0.5 : 1,
+                              filter: isLocked ? 'grayscale(0.5)' : 'none',
+                              transition: 'transform 0.2s ease, opacity 0.2s ease',
+                            }}
+                          >
+                            <div style={{
+                              width: '92%',
+                              height: '66%',
+                              background: '#091422',
+                              borderRadius: '10%',
+                              boxShadow: '0 0 0 0.3vw #000000',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginBottom: '2%',
+                              position: 'relative'
+                            }}>
+                              {ability.icon_path ? (
+                                <img 
+                                  src={`${BASE_URL}/icons/${ability.icon_path}`}
+                                  alt={ability.name}
+                                  style={{ width: '80%', height: '80%', objectFit: 'contain' }}
+                                />
+                              ) : (
+                                <div style={{
+                                  width: '80%',
+                                  height: '80%',
+                                  background: '#3D3D3B',
+                                  borderRadius: '10%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: '#FFFFFF',
+                                  fontSize: 'clamp(8px, 2vw, 12px)'
+                                }}>
+                                  {ability.type === 'combo' ? '⚡' : '📈'}
+                                </div>
+                              )}
+                              {isLocked && (
+                                <div style={{
+                                  position: 'absolute',
+                                  top: '50%',
+                                  left: '50%',
+                                  transform: 'translate(-50%, -50%)',
+                                  fontSize: 'clamp(20px, 6vw, 30px)',
+                                  opacity: 0.8
+                                }}>
+                                  🔒
+                                </div>
+                              )}
+                            </div>
+
+                            <div style={{
+                              width: '92%',
+                              height: '13%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#FFFFFF',
+                              fontSize: 'clamp(8px, 2vw, 11px)',
+                              fontWeight: 600,
+                              textAlign: 'center',
+                              lineHeight: 1.2,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {ability.name}
+                            </div>
+
+                            <div style={{
+                              width: '92%',
+                              height: '13%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#FFD966',
+                              fontSize: 'clamp(7px, 1.8vw, 9px)',
+                              fontWeight: 500,
+                              textAlign: 'center',
+                              textTransform: 'uppercase'
+                            }}>
+                              {ability.type}
+                            </div>
+
+                            {!isLocked && currentLevel > 0 && (
+                              <div style={{
+                                position: 'absolute',
+                                right: '-8%',
+                                bottom: '-8%',
+                                width: '30%',
+                                height: '12%',
+                                background: '#000000',
+                                borderRadius: '10%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#FFFFFF',
+                                fontSize: 'clamp(8px, 2vw, 10px)',
+                                fontWeight: 600,
+                                border: '1px solid #FFD966',
+                                boxShadow: '0 0 5px rgba(0,0,0,0.5)',
+                                zIndex: 10
+                              }}>
+                                {currentLevel}/{ability.max_level}
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -390,261 +534,96 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
       </div>
 
       {showLearnModal && selectedAbility && (
-        <LearnAbilityModal
-          ability={selectedAbility}
-          currentLevel={userAbilities.get(selectedAbility.id) || 0}
-          userExpPoints={userExpPoints}
-          onLearn={handleLearn}
-          onClose={() => {
-            setShowLearnModal(false);
-            setSelectedAbility(null);
-          }}
-          gradientColors={gradientColors}
-        />
-      )}
-    </>
-  );
-};
-
-const AbilityCard: React.FC<{
-  ability: Ability;
-  currentLevel: number;
-  isLocked: boolean;
-  gradientColors: string;
-  onClick: () => void;
-  cardRef: (el: HTMLDivElement | null) => void;
-}> = ({ ability, currentLevel, isLocked, gradientColors, onClick, cardRef }) => {
-  const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
-  
-  return (
-    <div 
-      ref={cardRef}
-      onClick={onClick}
-      style={{
-        width: '23%',
-        aspectRatio: '1/1',
-        background: gradientColors,
-        borderRadius: '10%',
-        boxShadow: '0 0 0 0.6vw #000000',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '3%',
-        position: 'relative',
-        cursor: isLocked ? 'not-allowed' : 'pointer',
-        opacity: isLocked ? 0.5 : 1,
-        filter: isLocked ? 'grayscale(0.5)' : 'none',
-        transition: 'transform 0.2s ease, opacity 0.2s ease',
-      }}
-    >
-      <div style={{
-        width: '92%',
-        height: '66%',
-        background: '#091422',
-        borderRadius: '10%',
-        boxShadow: '0 0 0 0.3vw #000000',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: '2%',
-        position: 'relative'
-      }}>
-        {ability.icon_path ? (
-          <img 
-            src={`${BASE_URL}/icons/${ability.icon_path}`}
-            alt={ability.name}
-            style={{ width: '80%', height: '80%', objectFit: 'contain' }}
-          />
-        ) : (
-          <div style={{
-            width: '80%',
-            height: '80%',
-            background: '#3D3D3B',
-            borderRadius: '10%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-            fontSize: 'clamp(8px, 2vw, 12px)'
-          }}>
-            {ability.type === 'combo' ? '⚡' : '📈'}
-          </div>
-        )}
-        {isLocked && (
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            fontSize: 'clamp(20px, 6vw, 30px)',
-            opacity: 0.8
-          }}>
-            🔒
-          </div>
-        )}
-      </div>
-
-      <div style={{
-        width: '92%',
-        height: '13%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#FFFFFF',
-        fontSize: 'clamp(8px, 2vw, 11px)',
-        fontWeight: 600,
-        textAlign: 'center',
-        lineHeight: 1.2,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap'
-      }}>
-        {ability.name}
-      </div>
-
-      <div style={{
-        width: '92%',
-        height: '13%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#FFD966',
-        fontSize: 'clamp(7px, 1.8vw, 9px)',
-        fontWeight: 500,
-        textAlign: 'center',
-        textTransform: 'uppercase'
-      }}>
-        {ability.type}
-      </div>
-
-      {!isLocked && currentLevel > 0 && (
-        <div style={{
-          position: 'absolute',
-          right: '-8%',
-          bottom: '-8%',
-          width: '30%',
-          height: '12%',
-          background: '#000000',
-          borderRadius: '10%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#FFFFFF',
-          fontSize: 'clamp(8px, 2vw, 10px)',
-          fontWeight: 600,
-          border: '1px solid #FFD966',
-          boxShadow: '0 0 5px rgba(0,0,0,0.5)',
-          zIndex: 10
-        }}>
-          {currentLevel}/{ability.max_level}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const LearnAbilityModal: React.FC<{
-  ability: Ability;
-  currentLevel: number;
-  userExpPoints: number;
-  onLearn: () => void;
-  onClose: () => void;
-  gradientColors: string;
-}> = ({ ability, currentLevel, userExpPoints, onLearn, onClose, gradientColors }) => {
-  const nextLevel = currentLevel + 1;
-  const canLearn = nextLevel <= ability.max_level;
-  const levelData = ability.levels.find(l => l.level === nextLevel);
-  const cost = levelData?.cost || 0;
-  const hasEnoughExp = userExpPoints >= cost;
-
-  return (
-    <div className="rewards-modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000 }}>
-      <div 
-        className="rewards-modal no-summary" 
-        style={{ 
-          height: '40%',
-          display: 'flex', 
-          flexDirection: 'column',
-          margin: '0',
-          padding: '0',
-          position: 'relative'
-        }}
-      >
-        <div className="rewards-header" style={{ top: '-10%' }}>
-          <h2>{ability.name}</h2>
-          <button className="cancelled-modal-close" style={{ top: '130%' }} onClick={onClose}>✕</button>
-        </div>
-
-        <div 
-          className="rewards-winners-list" 
-          style={{ 
-            flex: 1,
-            display: 'flex', 
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '85%',
-            padding: '4%',
-            margin: '0 auto',
-            gap: '4%'
-          }}
-        >
-          <div style={{
-            width: '100%',
-            color: '#FFFFFF',
-            fontSize: 'clamp(12px, 3.5vw, 14px)',
-            textAlign: 'center'
-          }}>
-            {levelData?.description || ability.description}
-          </div>
-
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'space-around',
-            alignItems: 'center',
-            padding: '3%',
-            background: '#313130',
-            borderRadius: '8px'
-          }}>
-            <div style={{ color: '#FFD966', fontSize: 'clamp(12px, 3.5vw, 14px)' }}>
-              Level {currentLevel} → {nextLevel}
+        <div className="rewards-modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000 }}>
+          <div 
+            className="rewards-modal no-summary" 
+            style={{ 
+              height: '40%',
+              display: 'flex', 
+              flexDirection: 'column',
+              margin: '0',
+              padding: '0',
+              position: 'relative'
+            }}
+          >
+            <div className="rewards-header" style={{ top: '-10%' }}>
+              <h2>{selectedAbility.name}</h2>
+              <button className="cancelled-modal-close" style={{ top: '130%' }} onClick={() => {
+                setShowLearnModal(false);
+                setSelectedAbility(null);
+              }}>✕</button>
             </div>
+
+            <div 
+              className="rewards-winners-list" 
+              style={{ 
+                flex: 1,
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '85%',
+                padding: '4%',
+                margin: '0 auto',
+                gap: '4%'
+              }}
+            >
+              <div style={{
+                width: '100%',
+                color: '#FFFFFF',
+                fontSize: 'clamp(12px, 3.5vw, 14px)',
+                textAlign: 'center'
+              }}>
+                {selectedAbility.levels.find(l => l.level === (userAbilities.get(selectedAbility.id) || 0) + 1)?.description || selectedAbility.description}
+              </div>
+
+              <div style={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'space-around',
+                alignItems: 'center',
+                padding: '3%',
+                background: '#313130',
+                borderRadius: '8px'
+              }}>
+                <div style={{ color: '#FFD966', fontSize: 'clamp(12px, 3.5vw, 14px)' }}>
+                  Level {userAbilities.get(selectedAbility.id) || 0} → {(userAbilities.get(selectedAbility.id) || 0) + 1}
+                </div>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '4px',
+                  color: userExpPoints >= (selectedAbility.levels.find(l => l.level === (userAbilities.get(selectedAbility.id) || 0) + 1)?.cost || 0) ? '#FFFFFF' : '#FF6B6B'
+                }}>
+                  <span>Cost: {selectedAbility.levels.find(l => l.level === (userAbilities.get(selectedAbility.id) || 0) + 1)?.cost || 0} EXP</span>
+                </div>
+              </div>
+            </div>
+
             <div style={{ 
               display: 'flex', 
-              alignItems: 'center', 
-              gap: '4px',
-              color: hasEnoughExp ? '#FFFFFF' : '#FF6B6B'
+              justifyContent: 'center', 
+              marginTop: '2vh',
+              marginBottom: '2vh',
+              width: '100%'
             }}>
-              <span>Cost: {cost} EXP</span>
+              <button 
+                className="rewards-claim-button"
+                style={{ 
+                  width: '60%', 
+                  height: '6vh',
+                  opacity: 1,
+                  cursor: 'pointer'
+                }}
+                onClick={handleLearn}
+              >
+                LEARN
+              </button>
             </div>
           </div>
         </div>
-
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          marginTop: '2vh',
-          marginBottom: '2vh',
-          width: '100%'
-        }}>
-          <button 
-            className="rewards-claim-button"
-            style={{ 
-              width: '60%', 
-              height: '6vh',
-              opacity: canLearn && hasEnoughExp ? 1 : 0.5,
-              cursor: canLearn && hasEnoughExp ? 'pointer' : 'not-allowed'
-            }}
-            onClick={canLearn && hasEnoughExp ? onLearn : undefined}
-            disabled={!canLearn || !hasEnoughExp}
-          >
-            {!canLearn ? 'MAX LEVEL' : !hasEnoughExp ? 'NOT ENOUGH EXP POINTS' : 'LEARN'}
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 
