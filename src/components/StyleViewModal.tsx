@@ -1,4 +1,4 @@
-// src/components/StyleViewModal.tsx – ИСПРАВЛЕННАЯ ВЕРСИЯ с правильным canvas
+// src/components/StyleViewModal.tsx – ИСПРАВЛЕННАЯ ВЕРСИЯ с сохранением оригинального UI
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface Ability {
@@ -145,7 +145,6 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
     return 'locked';
   };
 
-  // Отрисовка линий между способностями
   const drawLines = useCallback(() => {
     const canvas = canvasRef.current;
     const grid = gridRef.current;
@@ -154,21 +153,17 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Устанавливаем размеры canvas равными размерам grid
     const rect = grid.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
     canvas.style.width = `${rect.width}px`;
     canvas.style.height = `${rect.height}px`;
 
-    // Очищаем canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Цвета линий в зависимости от стиля
     const lineColor = style === 'striker' ? '#FF4500' : '#FF8C00';
     const inactiveLineColor = '#666666';
 
-    // Для каждой способности с родителем рисуем линию
     abilities.forEach(ability => {
       if (!ability.parent_ability_id) return;
 
@@ -180,18 +175,15 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
       const childRect = childCard.getBoundingClientRect();
       const parentRect = parentCard.getBoundingClientRect();
 
-      // Координаты относительно grid
       const childCenterX = childRect.left + childRect.width / 2 - rect.left;
       const childTopY = childRect.top - rect.top;
       
       const parentCenterX = parentRect.left + parentRect.width / 2 - rect.left;
       const parentBottomY = parentRect.bottom - rect.top;
 
-      // Проверяем, изучена ли родительская способность
       const parentLevel = userAbilities.get(ability.parent_ability_id) || 0;
       const isParentLearned = parentLevel > 0;
 
-      // Настройки линии
       ctx.beginPath();
       ctx.moveTo(parentCenterX, parentBottomY);
       ctx.lineTo(childCenterX, childTopY);
@@ -199,13 +191,11 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
       ctx.lineWidth = Math.max(2, rect.width * 0.005);
       ctx.lineCap = 'round';
       
-      // Добавляем небольшую стрелку
       const angle = Math.atan2(childTopY - parentBottomY, childCenterX - parentCenterX);
       const arrowSize = rect.width * 0.015;
       
       ctx.stroke();
       
-      // Рисуем стрелку только если родитель изучен
       if (isParentLearned) {
         ctx.beginPath();
         ctx.moveTo(childCenterX, childTopY);
@@ -224,10 +214,8 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
     });
   }, [abilities, userAbilities, style]);
 
-  // Обновление линий при изменении данных или скролле
   useEffect(() => {
     if (!loading && isOpen && abilities.length > 0) {
-      // Небольшая задержка для рендеринга DOM
       setTimeout(() => drawLines(), 100);
     }
   }, [loading, isOpen, abilities, drawLines]);
@@ -244,7 +232,6 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
       scrollContainer.addEventListener('scroll', handleUpdate);
     }
 
-    // Наблюдатель за изменениями размеров
     const observer = new ResizeObserver(handleUpdate);
     if (gridRef.current) {
       observer.observe(gridRef.current);
@@ -267,7 +254,6 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
     ? 'linear-gradient(180deg, #FF0000 0%, #8C1519 100%)'
     : 'linear-gradient(180deg, #FF9933 0%, #663300 100%)';
 
-  // Группируем способности по строкам
   const abilitiesByRow = abilities.reduce((acc, ability) => {
     const row = ability.row_position;
     if (!acc[row]) acc[row] = [];
@@ -275,7 +261,6 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
     return acc;
   }, {} as Record<number, Ability[]>);
 
-  // Сортируем способности в каждой строке по позиции
   Object.values(abilitiesByRow).forEach(row => {
     row.sort((a, b) => a.col_position - b.col_position);
   });
@@ -297,9 +282,9 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
             position: 'relative'
           }}
         >
-          <div className="rewards-header" style={{ top: '-4%', zIndex: 10 }}>
+          <div className="rewards-header" style={{ top: '-4%' }}>
             <h2>{title}</h2>
-            <button className="cancelled-modal-close" style={{ top: '120%', zIndex: 11 }} onClick={onClose}>✕</button>
+            <button className="cancelled-modal-close" style={{ top: '120%' }} onClick={onClose}>✕</button>
           </div>
 
           <div 
@@ -340,7 +325,6 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                   flexDirection: 'column'
                 }}
               >
-                {/* Canvas для линий - только внутри grid */}
                 <canvas
                   ref={canvasRef}
                   style={{
@@ -405,7 +389,6 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
         </div>
       </div>
 
-      {/* Модальное окно изучения способности */}
       {showLearnModal && selectedAbility && (
         <LearnAbilityModal
           ability={selectedAbility}
@@ -423,7 +406,6 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
   );
 };
 
-// Компонент карточки способности
 const AbilityCard: React.FC<{
   ability: Ability;
   currentLevel: number;
@@ -456,7 +438,6 @@ const AbilityCard: React.FC<{
         transition: 'transform 0.2s ease, opacity 0.2s ease',
       }}
     >
-      {/* Верхний контейнер для иконки */}
       <div style={{
         width: '92%',
         height: '66%',
@@ -504,7 +485,6 @@ const AbilityCard: React.FC<{
         )}
       </div>
 
-      {/* Средний контейнер для названия */}
       <div style={{
         width: '92%',
         height: '13%',
@@ -523,7 +503,6 @@ const AbilityCard: React.FC<{
         {ability.name}
       </div>
 
-      {/* Нижний контейнер для типа */}
       <div style={{
         width: '92%',
         height: '13%',
@@ -539,7 +518,6 @@ const AbilityCard: React.FC<{
         {ability.type}
       </div>
 
-      {/* Контейнер уровня */}
       {!isLocked && currentLevel > 0 && (
         <div style={{
           position: 'absolute',
@@ -566,7 +544,6 @@ const AbilityCard: React.FC<{
   );
 };
 
-// Компонент модального окна изучения
 const LearnAbilityModal: React.FC<{
   ability: Ability;
   currentLevel: number;
