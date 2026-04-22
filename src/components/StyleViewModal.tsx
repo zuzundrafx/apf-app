@@ -275,7 +275,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
         <div 
           className="rewards-modal no-summary" 
           style={{ 
-            height: '90%',
+            height: '95%',
             width: '95%',
             display: 'flex', 
             flexDirection: 'column',
