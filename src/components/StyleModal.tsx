@@ -135,7 +135,7 @@ const StyleModal: React.FC<StyleModalProps> = ({
               </div>
               <span style={{ 
                 color: '#FFFFFF', 
-                fontSize: 'clamp(1.4vh, 4vw, 1.8vh)',
+                fontSize: 'clamp(clamp(1.8vh, 4vw, 2.2vh))',
                 padding: '5% 0 0 0',
                 fontWeight: 600 
               }}>STRIKER</span>
@@ -185,7 +185,7 @@ const StyleModal: React.FC<StyleModalProps> = ({
               </div>
               <span style={{ 
                 color: '#FFFFFF', 
-                fontSize: 'clamp(1.4vh, 4vw, 1.8vh)',
+                fontSize: 'clamp(1.8vh, 4vw, 2.2vh)',
                 padding: '5% 0 0 0',
                 fontWeight: 600 
               }}>GRAPPLER</span>
