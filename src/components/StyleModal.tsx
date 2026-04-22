@@ -1,4 +1,4 @@
-// src/components/StyleModal.tsx – обновлённая версия с открытием StyleViewModal
+// src/components/StyleModal.tsx – ИСПРАВЛЕННАЯ версия с оригинальными размерами
 import React, { useState } from 'react';
 
 interface StyleModalProps {
@@ -6,7 +6,7 @@ interface StyleModalProps {
   onClose: () => void;
   currentStyle: 'striker' | 'grappler' | null;
   onSaveStyle: (style: 'striker' | 'grappler') => Promise<void>;
-  onStyleSaved: () => void; // Новый пропс для открытия StyleViewModal
+  onStyleSaved: () => void;
 }
 
 const StyleModal: React.FC<StyleModalProps> = ({ 
@@ -42,8 +42,8 @@ const StyleModal: React.FC<StyleModalProps> = ({
     setIsSaving(true);
     try {
       await onSaveStyle(displayStyle);
-      onStyleSaved(); // Открываем StyleViewModal
-      onClose(); // Закрываем StyleModal
+      onStyleSaved();
+      onClose();
     } catch (error) {
       console.error('Failed to save style:', error);
     } finally {
@@ -94,7 +94,7 @@ const StyleModal: React.FC<StyleModalProps> = ({
         >
           {/* Striker */}
           {(!isConfirming || selectedStyle === 'striker' || currentStyle === 'striker') && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(0.8vh, 2vh, 1.6vh)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vh, 16px)' }}>
               <div 
                 style={{ 
                   background: 'linear-gradient(180deg, #FF0000 0%, #8C1519 100%)',
@@ -135,7 +135,7 @@ const StyleModal: React.FC<StyleModalProps> = ({
               </div>
               <span style={{ 
                 color: '#FFFFFF', 
-                fontSize: 'clamp(clamp(1.8vh, 4vw, 2.2vh))',
+                fontSize: 'clamp(14px, 4vw, 18px)',
                 padding: '5% 0 0 0',
                 fontWeight: 600 
               }}>STRIKER</span>
@@ -144,7 +144,7 @@ const StyleModal: React.FC<StyleModalProps> = ({
 
           {/* Grappler */}
           {(!isConfirming || selectedStyle === 'grappler' || currentStyle === 'grappler') && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(0.8vh, 2vh, 1.6vh)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(8px, 2vh, 16px)' }}>
               <div 
                 style={{ 
                   background: 'linear-gradient(180deg, #FF9933 0%, #663300 100%)',
@@ -185,7 +185,7 @@ const StyleModal: React.FC<StyleModalProps> = ({
               </div>
               <span style={{ 
                 color: '#FFFFFF', 
-                fontSize: 'clamp(1.8vh, 4vw, 2.2vh)',
+                fontSize: 'clamp(14px, 4vw, 18px)',
                 padding: '5% 0 0 0',
                 fontWeight: 600 
               }}>GRAPPLER</span>
