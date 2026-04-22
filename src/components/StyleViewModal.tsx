@@ -1,4 +1,4 @@
-// src/components/StyleViewModal.tsx – с отрисовкой линий дерева способностей
+// src/components/StyleViewModal.tsx – ИСПРАВЛЕННАЯ ВЕРСИЯ с правильным canvas
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface Ability {
@@ -154,7 +154,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Устанавливаем размеры canvas
+    // Устанавливаем размеры canvas равными размерам grid
     const rect = grid.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
@@ -205,7 +205,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
       
       ctx.stroke();
       
-      // Рисуем стрелку
+      // Рисуем стрелку только если родитель изучен
       if (isParentLearned) {
         ctx.beginPath();
         ctx.moveTo(childCenterX, childTopY);
@@ -226,11 +226,11 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
 
   // Обновление линий при изменении данных или скролле
   useEffect(() => {
-    if (!loading && isOpen) {
+    if (!loading && isOpen && abilities.length > 0) {
       // Небольшая задержка для рендеринга DOM
-      setTimeout(() => drawLines(), 50);
+      setTimeout(() => drawLines(), 100);
     }
-  }, [loading, isOpen, drawLines]);
+  }, [loading, isOpen, abilities, drawLines]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -297,9 +297,9 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
             position: 'relative'
           }}
         >
-          <div className="rewards-header" style={{ top: '-4%' }}>
+          <div className="rewards-header" style={{ top: '-4%', zIndex: 10 }}>
             <h2>{title}</h2>
-            <button className="cancelled-modal-close" style={{ top: '120%' }} onClick={onClose}>✕</button>
+            <button className="cancelled-modal-close" style={{ top: '120%', zIndex: 11 }} onClick={onClose}>✕</button>
           </div>
 
           <div 
@@ -335,12 +335,12 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 style={{ 
                   position: 'relative',
                   width: '100%',
-                  height: '100%',
+                  minHeight: '100%',
                   display: 'flex',
                   flexDirection: 'column'
                 }}
               >
-                {/* Canvas для линий */}
+                {/* Canvas для линий - только внутри grid */}
                 <canvas
                   ref={canvasRef}
                   style={{
@@ -396,25 +396,6 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                           />
                         );
                       })}
-                      
-                      {/* Пустые слоты */}
-                      {rowAbilities.length === 0 && (
-                        <div style={{ 
-                          width: '23%', 
-                          aspectRatio: '1/1',
-                          opacity: 0.3,
-                          background: '#313130',
-                          borderRadius: '10%',
-                          border: '1px dashed #4A4A48',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#666D74',
-                          fontSize: 'clamp(10px, 3vw, 14px)'
-                        }}>
-                          Empty
-                        </div>
-                      )}
                     </div>
                   );
                 })}
