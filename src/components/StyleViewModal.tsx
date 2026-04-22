@@ -36,16 +36,17 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({ isOpen, onClose, style 
         <div 
           className="rewards-winners-list" 
           style={{ 
-            flex: 1,
+            flex: 'none',
             display: 'flex', 
             flexDirection: 'column', 
             alignItems: 'center',
             justifyContent: 'center',
             width: '85%',
+            height: '90%',
             padding: '4% 0',
             maxHeight: 'none',
             overflow: 'visible',
-            margin: '0 auto',
+            margin: 'auto auto',
           }}
         >
           {/* Заглушка */}
