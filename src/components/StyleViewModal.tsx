@@ -436,7 +436,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                                 <img 
                                   src={`${BASE_URL}/icons/${ability.icon_path}`}
                                   alt={ability.name}
-                                  style={{ width: '90%', height: '90%', objectFit: 'contain' }}
+                                  style={{ width: '92%', height: '90%', objectFit: 'contain' }}
                                 />
                               ) : (
                                 <div style={{
@@ -492,7 +492,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                               alignItems: 'center',
                               justifyContent: 'center',
                               color: '#FFD966',
-                              fontSize: 'clamp(7px, 1.8vw, 9px)',
+                              fontSize: 'clamp(7px, 2.2vw, 11px)',
                               fontWeight: 500,
                               textAlign: 'center',
                               textTransform: 'uppercase'
@@ -506,16 +506,16 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                                 right: '-8%',
                                 bottom: '-8%',
                                 width: '30%',
-                                height: '12%',
+                                height: '15%',
                                 background: '#000000',
                                 borderRadius: '10%',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 color: '#FFFFFF',
-                                fontSize: 'clamp(8px, 2vw, 10px)',
+                                fontSize: 'clamp(8px, 2.2vw, 12px)',
                                 fontWeight: 600,
-                                border: '1px solid #FFD966',
+                                /*border: '1px solid #FFD966',*/
                                 boxShadow: '0 0 5px rgba(0,0,0,0.5)',
                                 zIndex: 10
                               }}>
