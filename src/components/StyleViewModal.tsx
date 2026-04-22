@@ -405,7 +405,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                             onClick={() => !isLocked && handleAbilityClick(ability)}
                             style={{
                               width: '24%',
-                              aspectRatio: '1/1',
+                              aspectRatio: '1/1.1',
                               background: gradientColors,
                               borderRadius: '10%',
                               boxShadow: '0 0 0 0.6vw #000000',
