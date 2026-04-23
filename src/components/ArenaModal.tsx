@@ -1,4 +1,4 @@
-// src/components/ArenaModal.tsx – ФИНАЛЬНАЯ ВЕРСИЯ (исправлено отображение наград)
+// src/components/ArenaModal.tsx – ИСПРАВЛЕНО: здоровье с бонусами и урон с бонусами
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Tournament, SelectedFighter, UserResult, Fighter } from '../types';
 import { UserProfile } from '../api/userProfiles';
@@ -151,6 +151,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const [showRoundText, setShowRoundText] = useState(false);
   const [userHealth, setUserHealth] = useState(1000);
   const [rivalHealth, setRivalHealth] = useState(1000);
+  const [baseUserHealth, setBaseUserHealth] = useState(1000);
+  const [baseRivalHealth, setBaseRivalHealth] = useState(1000);
   const [userActiveCards, setUserActiveCards] = useState<SelectedFighter[]>([]);
   const [rivalActiveCards, setRivalActiveCards] = useState<SelectedFighter[]>([]);
   const [usedWeightClasses, setUsedWeightClasses] = useState<string[]>([]);
@@ -261,14 +263,45 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
         // Если пользователь победил и есть данные об опыте – обновляем
         if (data.updatedWinner && data.updatedWinner.userId === userId && onUpdateExperience) {
-  onUpdateExperience({
-    totalExp: data.updatedWinner.totalExp,
-    level: data.updatedWinner.level,
-    currentExp: data.updatedWinner.currentExp,
-    nextLevelExp: data.updatedWinner.nextLevelExp,
-    expPoints: data.updatedWinner.expPoints || 1   // ← добавить это поле
-  });
-}
+          onUpdateExperience({
+            totalExp: data.updatedWinner.totalExp,
+            level: data.updatedWinner.level,
+            currentExp: data.updatedWinner.currentExp,
+            nextLevelExp: data.updatedWinner.nextLevelExp,
+            expPoints: data.updatedWinner.expPoints || 1
+          });
+        }
+
+        // Устанавливаем начальное здоровье с учётом бонусов
+        if (data.healthBonuses) {
+          const userBaseHealth = 1000;
+          const rivalBaseHealth = 1000;
+          const userInitialHealth = userBaseHealth + Math.round(userBaseHealth * (data.healthBonuses.user / 100));
+          const rivalInitialHealth = rivalBaseHealth + Math.round(rivalBaseHealth * (data.healthBonuses.rival / 100));
+          
+          setUserHealth(userInitialHealth);
+          setRivalHealth(rivalInitialHealth);
+          setBaseUserHealth(userInitialHealth);
+          setBaseRivalHealth(rivalInitialHealth);
+          
+          console.log(`❤️ Arena health: User ${userInitialHealth}/${userInitialHealth}, Rival ${rivalInitialHealth}/${rivalInitialHealth}`);
+        } else {
+          // Fallback: ищем первое событие damage для определения начального здоровья
+          if (data.battleScript && data.battleScript.events) {
+            for (const event of data.battleScript.events) {
+              if (event.type === 'damage') {
+                const userInitialHealth = event.userHealthAfter + (event.rivalDamage || 0);
+                const rivalInitialHealth = event.rivalHealthAfter + (event.userDamage || 0);
+                setUserHealth(userInitialHealth);
+                setRivalHealth(rivalInitialHealth);
+                setBaseUserHealth(userInitialHealth);
+                setBaseRivalHealth(rivalInitialHealth);
+                console.log(`❤️ Arena health (fallback): User ${userInitialHealth}, Rival ${rivalInitialHealth}`);
+                break;
+              }
+            }
+          }
+        }
 
         const rival = data.rival;
         const rivalSelections = rival.selections.map((sel: any) => ({
@@ -418,7 +451,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         break;
 
       case 'battle-end':
-        // Награды уже установлены из ответа сервера (для PvP) или будут рассчитаны (для обычного режима)
         setBattleResult(event.result);
         break;
     }
@@ -508,8 +540,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           {showDamageNumber.rival && <div className="damage-number rival-damage">-{showDamageNumber.rival}</div>}
           <div className="arena-rival-health">
             <div className={`arena-health-bar ${healthFlash === 'rival' ? 'damage-flash' : ''}`}>
-              <div className="arena-health-fill" style={{ width: `${(rivalHealth / 1000) * 100}%` }}></div>
-              <span className="arena-health-text">HP {rivalHealth}/1000</span>
+              <div className="arena-health-fill" style={{ width: `${baseRivalHealth > 0 ? (rivalHealth / baseRivalHealth) * 100 : 0}%` }}></div>
+              <span className="arena-health-text">HP {rivalHealth}/{baseRivalHealth}</span>
             </div>
           </div>
           <div className="arena-rival-fighters">
@@ -617,8 +649,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           </div>
           <div className="arena-player-health">
             <div className={`arena-health-bar ${healthFlash === 'player' ? 'damage-flash' : ''}`}>
-              <div className="arena-health-fill" style={{ width: `${(userHealth / 1000) * 100}%` }}></div>
-              <span className="arena-health-text">HP {userHealth}/1000</span>
+              <div className="arena-health-fill" style={{ width: `${baseUserHealth > 0 ? (userHealth / baseUserHealth) * 100 : 0}%` }}></div>
+              <span className="arena-health-text">HP {userHealth}/{baseUserHealth}</span>
             </div>
           </div>
           <div className="arena-avatar-container">
