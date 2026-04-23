@@ -19,10 +19,11 @@ interface Ability {
 interface AbilityLevel {
   level: number;
   description: string;
-  damage_multiplier?: number;
-  health_bonus?: number;
-  damage_bonus?: number;
-  head_damage_bonus?: number;
+  damage_multiplier?: number;        // для COMBO (множитель урона)
+  health_bonus?: number;             // для Raised Stamina (+% к здоровью)
+  striker_damage_bonus?: number;     // для Accurate Kicks (только Striker)
+  head_damage_bonus?: number;        // для Smashed Heads (все, но только голова)
+  grappler_damage_bonus?: number;    // для Submission Expert (только Grappler)
   cost: number;
 }
 
@@ -423,7 +424,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                             onClick={() => !isLocked && handleAbilityClick(ability)}
                             style={{
                               width: '24%',
-                              aspectRatio: '1/1.1',
+                              aspectRatio: '1/1.3',
                               background: gradientColors,
                               borderRadius: '10%',
                               boxShadow: '0 0 0 0.6vw #000000',
@@ -441,7 +442,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                           >
                             <div style={{
                               width: '96%',
-                              height: '67%',
+                              height: '71%',
                               background: '#091422',
                               borderRadius: '10%',
                               boxShadow: '0 0 0 0.3vw #000000',
@@ -488,7 +489,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
 
                             <div style={{
                               width: '92%',
-                              height: '14%',
+                              height: '12%',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -506,7 +507,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
 
                             <div style={{
                               width: '92%',
-                              height: '14%',
+                              height: '12%',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
