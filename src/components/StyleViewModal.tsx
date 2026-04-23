@@ -442,7 +442,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                           >
                             <div style={{
                               width: '96%',
-                              height: '71%',
+                              height: '73%',
                               background: '#091422',
                               borderRadius: '10%',
                               boxShadow: '0 0 0 0.3vw #000000',
@@ -489,7 +489,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
 
                             <div style={{
                               width: '92%',
-                              height: '12%',
+                              height: '11%',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -507,7 +507,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
 
                             <div style={{
                               width: '92%',
-                              height: '12%',
+                              height: '11%',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
