@@ -1,4 +1,4 @@
-// src/components/StyleViewModal.tsx – ИСПРАВЛЕННАЯ ВЕРСИЯ на основе вашего оригинала
+// src/components/StyleViewModal.tsx – ИСПРАВЛЕННАЯ ВЕРСИЯ (исправлено закрытие)
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface Ability {
@@ -248,6 +248,17 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
     };
   }, [isOpen, drawLines]);
 
+  // Обработчик закрытия с защитой от всплытия
+  const handleClose = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    // Сбрасываем все внутренние состояния перед закрытием
+    setShowLearnModal(false);
+    setSelectedAbility(null);
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   const isStriker = style === 'striker';
@@ -286,9 +297,15 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
             position: 'relative'
           }}
         >
-          <div className="rewards-header" style={{ top: '-8%' }}>
+          <div className="rewards-header" style={{ top: '-8%', zIndex: 100 }}>
             <h2>{title}</h2>
-            <button className="cancelled-modal-close" style={{ top: '100%' }} onClick={onClose}>✕</button>
+            <button 
+              className="cancelled-modal-close" 
+              style={{ top: '100%', zIndex: 101, cursor: 'pointer' }} 
+              onClick={handleClose}
+            >
+              ✕
+            </button>
           </div>
 
           <div 
@@ -517,7 +534,6 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                                 color: '#FFFFFF',
                                 fontSize: 'clamp(10px, 2.4vw, 14px)',
                                 fontWeight: 600,
-                                /*border: '1px solid #FFD966',*/
                                 boxShadow: '0 0 5px rgba(0,0,0,0.5)',
                                 zIndex: 10
                               }}>
@@ -549,12 +565,18 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
               position: 'relative'
             }}
           >
-            <div className="rewards-header" style={{ top: '-10%' }}>
+            <div className="rewards-header" style={{ top: '-10%', zIndex: 100 }}>
               <h2>{selectedAbility.name}</h2>
-              <button className="cancelled-modal-close" style={{ top: '130%' }} onClick={() => {
-                setShowLearnModal(false);
-                setSelectedAbility(null);
-              }}>✕</button>
+              <button 
+                className="cancelled-modal-close" 
+                style={{ top: '130%', zIndex: 101, cursor: 'pointer' }} 
+                onClick={() => {
+                  setShowLearnModal(false);
+                  setSelectedAbility(null);
+                }}
+              >
+                ✕
+              </button>
             </div>
 
             <div 
