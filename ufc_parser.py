@@ -1,4 +1,4 @@
-# ufc_parser.py – финальная версия с округлением Total Damage
+# ufc_parser.py – версия без расчёта Total Damage (расчёт на сервере)
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -8,30 +8,13 @@ import tempfile
 from datetime import datetime
 import re
 import time
-import math   # <-- добавлено для округления
 
 YA_TOKEN = "y0__xCOz-U8GI3sPSCOyp-2FnBLBQ7drGtOupKGVfu4CpN2qtUs"
 EVENTS_LIST_URL = "http://www.ufcstats.com/statistics/events/completed"
 FIGHTERS_LIST_URL = "http://www.ufcstats.com/statistics/fighters?char=a&page=all"
 RESULTS_FOLDER = "UFC_Bot_Results"
 BACKEND_URL = "https://apf-app-backend.onrender.com/api/tournaments/sync"
-
-KD_COEF = 25.0
-TD_COEF = 10.0
-SUB_COEF = 15.0
-HEAD_COEF = 1.0
-BODY_COEF = 0.9
-LEG_COEF = 0.8
-WIN_COEF = 1.0
-LOSE_COEF = 0.7
-DRAW_COEF = 0.9
-
-WEIGHT_COEFFICIENTS = {
-    'Flyweight': 1.0, 'Bantamweight': 1.1, 'Featherweight': 1.2,
-    'Lightweight': 1.3, 'Welterweight': 1.4, 'Middleweight': 1.5,
-    'Light Heavyweight': 1.6, 'Heavyweight': 1.7, "Catch Weight": 1.0,
-    "Women's Strawweight": 0.9, "Women's Flyweight": 1.0, "Women's Bantamweight": 1.1
-}
+RECALCULATE_URL = "https://apf-app-backend.onrender.com/api/tournaments"
 
 def clean_stat(val):
     if val in ('View', 'Matchup', ''):
@@ -110,7 +93,6 @@ def parse_tournament(event_url, fighters_list):
         method = clean_text(cols[7].get_text())
         round_num = clean_text(cols[8].get_text())
         time_str = clean_text(cols[9].get_text())
-        weight_coef = get_weight_coefficient(weight)
 
         wl_parts = wl_text.split() if wl_text else []
         kd_parts = kd_text.split() if kd_text else []
@@ -121,7 +103,7 @@ def parse_tournament(event_url, fighters_list):
         name1, name2 = extract_fighter_names(fighter_text, fighters_list)
         if not name1 or not name2: continue
 
-        # Определение победителя (надёжный метод)
+        # Определение победителя
         wl1, wl2 = '', ''
         if 'draw' in wl_text.lower():
             wl1, wl2 = 'draw', 'draw'
@@ -176,11 +158,10 @@ def parse_tournament(event_url, fighters_list):
             'Body': body_strikes["fighter1"],
             'Leg': leg_strikes["fighter1"],
             'Weight class': weight,
-            'Weight Coefficient': weight_coef,
             'Method': method,
             'Round': round_num,
             'Time': time_str,
-            'Total Damage': 0
+            'Total Damage': 0  # Больше не считаем в парсере
         }
         fighter2 = {
             'Fight_ID': row_index + 1,
@@ -194,17 +175,11 @@ def parse_tournament(event_url, fighters_list):
             'Body': body_strikes["fighter2"],
             'Leg': leg_strikes["fighter2"],
             'Weight class': weight,
-            'Weight Coefficient': weight_coef,
             'Method': method,
             'Round': round_num,
             'Time': time_str,
-            'Total Damage': 0
+            'Total Damage': 0  # Больше не считаем в парсере
         }
-
-        if str1 != '0' or kd1 != '0':
-            fighter1['Total Damage'] = round(calculate_total_damage(fighter1))
-        if str2 != '0' or kd2 != '0':
-            fighter2['Total Damage'] = round(calculate_total_damage(fighter2))
 
         all_fighters.append(fighter1)
         all_fighters.append(fighter2)
@@ -322,41 +297,6 @@ def get_fight_details(fight_url, fighter1_name, fighter2_name, str_fighter1, str
         return {"head": head, "body": body, "leg": leg}
     except: return {"head": {"fighter1":"0","fighter2":"0"}, "body": {"fighter1":"0","fighter2":"0"}, "leg": {"fighter1":"0","fighter2":"0"}}
 
-def calculate_total_damage(row):
-    try:
-        kd = float(row['Kd']) if row['Kd'] and row['Kd'] != 'View' else 0
-        td = float(row['Td']) if row['Td'] and row['Td'] != 'View' else 0
-        sub = float(row['Sub']) if row['Sub'] and row['Sub'] != 'View' else 0
-        head = float(row['Head']) if row['Head'] and row['Head'] != 'View' else 0
-        body = float(row['Body']) if row['Body'] and row['Body'] != 'View' else 0
-        leg = float(row['Leg']) if row['Leg'] and row['Leg'] != 'View' else 0
-        wl = row['W/L']
-        method = row['Method'].upper() if row['Method'] else ""
-        weight_coef = float(row['Weight Coefficient']) if row['Weight Coefficient'] else 1.0
-        kd_bonus = 65 - KD_COEF if wl == 'win' and ('KO' in method or 'TKO' in method) else 0
-        sub_bonus = 50 - SUB_COEF if wl == 'win' and 'SUB' in method else 0
-
-        # Выбор коэффициента результата
-        if wl == 'win':
-            wk_coef = WIN_COEF
-        elif wl == 'draw':
-            wk_coef = DRAW_COEF
-        else:
-            wk_coef = LOSE_COEF
-
-        total = (kd*KD_COEF + kd_bonus + td*TD_COEF + sub*SUB_COEF + sub_bonus +
-                 head*HEAD_COEF + body*BODY_COEF + leg*LEG_COEF) * wk_coef * weight_coef
-        return round(total, 2)
-    except:
-        return 0
-
-def get_weight_coefficient(weight_class):
-    weight_class = weight_class.strip()
-    if weight_class in WEIGHT_COEFFICIENTS: return WEIGHT_COEFFICIENTS[weight_class]
-    for key, value in WEIGHT_COEFFICIENTS.items():
-        if key.lower() in weight_class.lower() or weight_class.lower() in key.lower(): return value
-    return 1.0
-
 def save_to_yadisk(df, filename):
     filepath = os.path.join(tempfile.gettempdir(), filename)
     if os.path.exists(filepath): os.remove(filepath)
@@ -385,6 +325,16 @@ def sync_to_backend(tournament_name, tournament_date, league, fighters_df, is_co
         response = requests.post(BACKEND_URL, json=payload, timeout=30)
         if response.status_code == 200:
             print("✅ Данные успешно отправлены в бэкенд")
+            
+            # После успешной синхронизации — отправляем сигнал на пересчёт урона
+            data = response.json()
+            # Получаем ID турнира из ответа сервера (если есть) или ищем по имени
+            recalc_response = requests.post(f"{RECALCULATE_URL}/recalculate", json={"tournament_name": tournament_name}, timeout=30)
+            if recalc_response.status_code == 200:
+                print("✅ Сигнал на пересчёт урона отправлен")
+            else:
+                print(f"⚠️ Ошибка при отправке сигнала на пересчёт: {recalc_response.status_code}")
+            
             return True
         else:
             print(f"❌ Ошибка отправки в бэкенд: {response.status_code} - {response.text}")
@@ -427,8 +377,22 @@ def cleanup_old_past_tournaments(current_name, current_date):
                     print(f"🗑️ Удалён старый файл: {file['name']}")
     except Exception as e: print(f"⚠️ Ошибка при очистке старых турниров: {e}")
 
+def recalculate_tournament_damage(tournament_id):
+    """Отправляет сигнал серверу на пересчёт урона для турнира"""
+    try:
+        response = requests.post(f"{RECALCULATE_URL}/{tournament_id}/recalculate", timeout=30)
+        if response.status_code == 200:
+            print(f"🔄 Пересчёт урона для турнира {tournament_id} выполнен")
+            return True
+        else:
+            print(f"⚠️ Ошибка пересчёта: {response.status_code} - {response.text}")
+            return False
+    except Exception as e:
+        print(f"❌ Ошибка соединения при пересчёте: {e}")
+        return False
+
 # ========== ОСНОВНАЯ ПРОГРАММА ==========
-print("🚀 Запуск парсера версии 1.29 (округление Total Damage)...")
+print("🚀 Запуск парсера версии 2.0 (расчёт урона на сервере)...")
 fighters_master_list = get_all_fighters()
 if not fighters_master_list: exit()
 
