@@ -52,9 +52,13 @@ export function useBackendTournaments(authToken: string | null, userId: string |
         setLoading(true);
         const tournamentsData: BackendTournament[] = await apiRequest('/api/tournaments');
         const betsData = await apiRequest(`/api/bets/user/${userId}`);
-        const betsMap = new Map();
-        betsData.forEach((bet: any) => betsMap.set(bet.tournament_id, bet));
-        setUserBets(betsMap);
+const betsMap = new Map();
+betsData.forEach((bet: any) => {
+  if (!bet.cancelled) {  // ← только активные ставки
+    betsMap.set(bet.tournament_id, bet);
+  }
+});
+setUserBets(betsMap);
 
         const allTournaments: Tournament[] = tournamentsData.map(t => ({
           id: t.id.toString(),
