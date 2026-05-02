@@ -520,7 +520,8 @@ function App() {
     </div>
   );
 
-  const activeTournaments = pastTournaments.filter(t => t.status === 'completed' && userBets.has(Number(t.id)));
+  // Показываем ВСЕ турниры из pastTournaments (без фильтрации по ставке)
+const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
   const upcoming = upcomingTournaments.filter(t => t.status !== 'completed');
 
   return (
@@ -573,7 +574,7 @@ function App() {
                   <span className="tournament-status active">COMPLETED</span>
                 </div>
               </div>
-              <div className="tournament-content">
+                            <div className="tournament-content">
                 {selectedActiveTournament ? (
                   <>
                     <div className="selected-fighters-grid">
@@ -601,26 +602,39 @@ function App() {
                       <button className="footer-close-button" onClick={() => setSelectedActiveTournament(null)}>CLOSE</button>
                     </div>
                   </>
-                ) : (
-                  activeTournaments.length > 0 ? (
-                    <div className="tournament-cards-grid">
-                      {activeTournaments.map(tournament => {
-                        const bet = userBets.get(Number(tournament.id));
-                        const totalDamage = bet ? bet.total_damage : 0;
-                        return (
-                          <div key={tournament.id} className="tournament-card-wrapper" onClick={() => handleActiveTournamentClick(tournament)}>
-                            <div className="tournament-card">
-                              <div className="tournament-card-damage-box">TOTAL: {totalDamage}</div>
-                              <div className="tournament-card-image"><img src={`${BASE_URL}/UFC_cardpack.png`} alt="pack" /></div>
-                              <div className="tournament-card-name">{tournament.name}</div>
+                ) : activeTournaments.length > 0 ? (
+                  <div className="tournament-cards-grid">
+                    {activeTournaments.map(tournament => {
+                      const bet = userBets.get(Number(tournament.id));
+                      const isCancelled = bet?.cancelled;
+                      const hasActiveBet = bet && !isCancelled;
+                      const totalDamage = bet ? bet.total_damage : 0;
+                      
+                      return (
+                        <div 
+                          key={tournament.id} 
+                          className="tournament-card-wrapper" 
+                          onClick={() => hasActiveBet ? handleActiveTournamentClick(tournament) : null}
+                          style={{ 
+                            cursor: hasActiveBet ? 'pointer' : 'not-allowed', 
+                            opacity: hasActiveBet ? 1 : 0.6 
+                          }}
+                        >
+                          <div className="tournament-card">
+                            <div className="tournament-card-damage-box">
+                              {hasActiveBet ? `TOTAL: ${totalDamage}` : 'NO BET'}
                             </div>
+                            <div className="tournament-card-image">
+                              <img src={`${BASE_URL}/UFC_cardpack.png`} alt="pack" />
+                            </div>
+                            <div className="tournament-card-name">{tournament.name}</div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="tournament-message">No active tournaments</div>
-                  )
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="tournament-message">No active tournaments</div>
                 )}
               </div>
             </section>

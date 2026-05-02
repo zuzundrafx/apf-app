@@ -1,4 +1,4 @@
-// hooks/useBackendTournaments.ts
+// hooks/useBackendTournaments.ts – ИСПРАВЛЕННАЯ ВЕРСИЯ
 import { useState, useEffect } from 'react';
 import { Tournament, Fighter } from '../types';
 
@@ -52,13 +52,12 @@ export function useBackendTournaments(authToken: string | null, userId: string |
         setLoading(true);
         const tournamentsData: BackendTournament[] = await apiRequest('/api/tournaments');
         const betsData = await apiRequest(`/api/bets/user/${userId}`);
-const betsMap = new Map();
-betsData.forEach((bet: any) => {
-  if (!bet.cancelled) {  // ← только активные ставки
-    betsMap.set(bet.tournament_id, bet);
-  }
-});
-setUserBets(betsMap);
+        
+        const betsMap = new Map();
+        betsData.forEach((bet: any) => {
+          betsMap.set(bet.tournament_id, bet);
+        });
+        setUserBets(betsMap);
 
         const allTournaments: Tournament[] = tournamentsData.map(t => ({
           id: t.id.toString(),
@@ -80,29 +79,18 @@ setUserBets(betsMap);
           new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
-        // Для ACTIVE: последний завершённый с моей ставкой для каждой лиги
-        const activeWithBet: Tournament[] = [];
-        const leaguesForActive = new Set<string>();
-        for (const t of sortedCompleted) {
-          const league = t.league || 'UFC';
-          if (!leaguesForActive.has(league) && betsMap.has(Number(t.id))) {
-            activeWithBet.push(t);
-            leaguesForActive.add(league);
-          }
-        }
-
-        // Для PvP: последний завершённый для каждой лиги (независимо от ставки)
+        // Для ACTIVE: последний завершённый для каждой лиги (ВСЕГДА, независимо от ставки)
         const latestPerLeague: Tournament[] = [];
-        const leaguesForPvp = new Set<string>();
+        const leaguesSeen = new Set<string>();
         for (const t of sortedCompleted) {
           const league = t.league || 'UFC';
-          if (!leaguesForPvp.has(league)) {
+          if (!leaguesSeen.has(league)) {
             latestPerLeague.push(t);
-            leaguesForPvp.add(league);
+            leaguesSeen.add(league);
           }
         }
 
-        setPastTournaments(activeWithBet);
+        setPastTournaments(latestPerLeague);
         setUpcomingTournaments(upcoming);
         setAllCompletedTournaments(latestPerLeague);
       } catch (err: any) {
