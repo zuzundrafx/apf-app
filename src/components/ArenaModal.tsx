@@ -261,16 +261,32 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           await onUpdateBalance(data.updatedBalance.coins, data.updatedBalance.tickets);
         }
 
-        // Если пользователь победил и есть данные об опыте – обновляем
-        if (data.updatedWinner && data.updatedWinner.userId === userId && onUpdateExperience) {
-          onUpdateExperience({
-            totalExp: data.updatedWinner.totalExp,
-            level: data.updatedWinner.level,
-            currentExp: data.updatedWinner.currentExp,
-            nextLevelExp: data.updatedWinner.nextLevelExp,
-            expPoints: data.updatedWinner.expPoints || 1
-          });
-        }
+        // Обновляем опыт ВСЕГДА (теперь сервер начисляет опыт при любом исходе)
+if (onUpdateExperience) {
+  // Запрашиваем актуальный профиль после боя
+  try {
+    const profileResponse = await fetch(`${API_BASE}/api/user/profile`, {
+      headers: { 'Authorization': `Bearer ${authToken || ''}` }
+    });
+    if (profileResponse.ok) {
+      const profile = await profileResponse.json();
+      onUpdateExperience({
+        totalExp: profile.experience,
+        level: profile.level,
+        currentExp: profile.currentExp,
+        nextLevelExp: profile.nextLevelExp,
+        expPoints: profile.exp_points
+      });
+    }
+  } catch (e) {
+    console.error('Failed to update experience:', e);
+  }
+}
+
+// Обновляем монеты победителю (если есть)
+if (data.updatedWinner && data.updatedWinner.userId === userId && onUpdateBalance) {
+  await onUpdateBalance(data.updatedWinner.coins, userTickets || 0);
+}
 
         // Устанавливаем начальное здоровье с учётом бонусов
         if (data.healthBonuses) {
