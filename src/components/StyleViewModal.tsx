@@ -302,7 +302,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
   <div style={{
     position: 'absolute',
     left: '5%',
-    top: '100%',
+    top: '115%',
     color: '#FFFFFF',
     fontSize: 'clamp(10px, 2.5vw, 12px)',
     fontWeight: 500,
