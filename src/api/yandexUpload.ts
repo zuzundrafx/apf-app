@@ -7,9 +7,11 @@ const RESULTS_FOLDER = "UFC_Bot_Results";
 export interface LeaderboardEntry {
   rank: number;
   username: string;
+  style?: 'striker' | 'grappler' | null;
   totalDamage: number;
   userId: string;
   timestamp: string;
+
 }
 
 // Функция для получения ссылки на загрузку файла

@@ -540,7 +540,18 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
       )}
 
       <header className="profile-header">
-        <div className="profile-avatar" onClick={handleAvatarClick} style={{ cursor: 'pointer' }}>
+        <div className="profile-avatar" onClick={handleAvatarClick} style={{ 
+  cursor: 'pointer',
+  background: userStyle === 'striker' 
+    ? 'linear-gradient(180deg, #FF0000 0%, #8C1519 100%)'
+    : userStyle === 'grappler'
+    ? 'linear-gradient(180deg, #FF9933 0%, #663300 100%)'
+    : '#313130',
+  borderRadius: '10%',
+  padding: userStyle ? '2%' : '0',
+  boxShadow: userStyle ? '0 0 0 0.3vw #000000' : 'none',
+  overflow: 'hidden'
+}}>
           {telegramUser?.photoUrl ? <img src={telegramUser.photoUrl} alt="avatar" /> : <img src={`${BASE_URL}/Home_button.png`} alt="avatar" />}
         </div>
         <div className="profile-info">
@@ -768,7 +779,7 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
             {leaderboardLoading ? <div className="leaderboard-loading">LOADING...</div> : leaderboardData.length > 0 ? (
               <div className="leaderboard-list">
                 {leaderboardData.map(entry => (
-                  <LeaderboardItem key={entry.userId} entry={entry} currentUserId={telegramUser?.id} currentUserPhoto={telegramUser?.photoUrl} profile={allProfiles.get(entry.userId)} />
+                  <LeaderboardItem key={entry.userId} entry={entry} currentUserId={telegramUser?.id} currentUserPhoto={telegramUser?.photoUrl} profile={allProfiles.get(entry.userId)} userStyle={userStyle} />
                 ))}
               </div>
             ) : <div className="leaderboard-empty">NO RESULTS YET</div>}
@@ -785,6 +796,7 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
             userName={userData.username}
             userCoins={userData.coins}
             userTickets={userData.tickets}
+            userStyle={userStyle}
             allProfiles={allProfiles}
             onOpenBetModal={(tournament: Tournament) => {
               setPvpSelectedTournament(tournament);

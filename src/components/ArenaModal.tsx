@@ -10,11 +10,13 @@ interface ArenaModalProps {
   userAvatar?: string;
   userDamage: number;
   userName: string;
+  userStyle?: 'striker' | 'grappler' | null;
   rivalData: {
     username: string;
     photoUrl?: string;
     totalDamage: number;
     selections: SelectedFighter[];
+    style?: 'striker' | 'grappler' | null;
   };
   weightClasses: string[];
   isOpen: boolean;
@@ -146,6 +148,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   loadingTip,
   authToken,
   onUpdateExperience,
+  userStyle,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
@@ -181,6 +184,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     photoUrl?: string;
     totalDamage: number;
     selections: SelectedFighter[];
+    style?: 'striker' | 'grappler' | null;
   } | null>(null);
   const [weightClasses, setWeightClasses] = useState<string[]>([]);
 
@@ -340,11 +344,12 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         }));
 
         setRivalData({
-          username: rival.username,
-          photoUrl: rival.photoUrl,
-          totalDamage: rivalSelections.reduce((s: number, c: any) => s + c.fighter['Total Damage'], 0),
-          selections: rivalSelections
-        });
+  username: rival.username,
+  photoUrl: rival.photoUrl,
+  style: rival.style || null,
+  totalDamage: rivalSelections.reduce((s: number, c: any) => s + c.fighter['Total Damage'], 0),
+  selections: rivalSelections
+});
 
         setBattleRewards(data.rewards);
         setWeightClasses(['Flyweight', 'Bantamweight', 'Featherweight', 'Lightweight', 'Heavyweight']);
@@ -525,10 +530,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     return null;
   };
 
+  
+
   if (!isOpen) return null;
 
   const countdownText = getCountdownText();
   const displayRivalData = rivalData;
+  const rivalStyle = displayRivalData?.style || null;
   const displayWeightClasses = weightClasses;
 
   if (isLoading || !displayRivalData || displayWeightClasses.length === 0) {
@@ -579,9 +587,21 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
             </div>
             <div className="arena-avatar-center">
-              <div className="arena-avatar">
-                <img src={displayRivalData.photoUrl || `${BASE_URL}/default-avatar.png`} alt="rival" onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`; }} />
-              </div>
+              <div className="arena-avatar" style={{
+  background: rivalStyle === 'striker' 
+    ? 'linear-gradient(180deg, #FF0000 0%, #8C1519 100%)'
+    : rivalStyle === 'grappler'
+    ? 'linear-gradient(180deg, #FF9933 0%, #663300 100%)'
+    : '#3D3D3B',
+  borderRadius: '1vw',
+  padding: rivalStyle ? '3%' : '0',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxShadow: rivalStyle ? '0 0 0 0.3vw #000000' : 'none'
+}}>
+  <img src={displayRivalData.photoUrl || `${BASE_URL}/default-avatar.png`} alt="rival" onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`; }} style={{ width: '100%', height: '100%', borderRadius: '0.5vw', objectFit: 'cover' }} />
+</div>
             </div>
             <div className="arena-avatar-right"></div>
           </div>
@@ -713,9 +733,21 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
             </div>
             <div className="arena-avatar-center">
-              <div className="arena-avatar">
-                <img src={userAvatar || `${BASE_URL}/Home_button.png`} alt="player" onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`; }} />
-              </div>
+              <div className="arena-avatar" style={{
+  background: userStyle === 'striker' 
+    ? 'linear-gradient(180deg, #FF0000 0%, #8C1519 100%)'
+    : userStyle === 'grappler'
+    ? 'linear-gradient(180deg, #FF9933 0%, #663300 100%)'
+    : '#3D3D3B',
+  borderRadius: '1vw',
+  padding: userStyle ? '3%' : '0',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxShadow: userStyle ? '0 0 0 0.3vw #000000' : 'none'
+}}>
+  <img src={userAvatar || `${BASE_URL}/Home_button.png`} alt="player" onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`; }} style={{ width: '100%', height: '100%', borderRadius: '0.5vw', objectFit: 'cover' }} />
+</div>
             </div>
             <div className="arena-avatar-right"></div>
           </div>

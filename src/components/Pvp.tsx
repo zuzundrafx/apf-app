@@ -10,6 +10,7 @@ interface PvpProps {
   userAvatar?: string;
   userId?: string;
   userName: string;
+  userStyle?: 'striker' | 'grappler' | null;
   userCoins: number;
   userTickets: number;
   allProfiles: Map<string, UserProfile>;
@@ -53,6 +54,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   userName,
   userCoins,
   userTickets,
+  userStyle,
   allProfiles,
   onOpenBetModal,
   onUpdateBalance,
@@ -276,6 +278,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           loadingTip={currentTip}
           authToken={authToken}
           onUpdateExperience={onUpdateExperience}
+          userStyle={userStyle}
         />
       )}
     </div>
