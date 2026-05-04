@@ -1,4 +1,5 @@
 // src/utils/styleUtils.ts – единая утилита для работы со стилями
+import React from 'react';  // ← ДОБАВИТЬ
 
 export type FighterStyle = 'striker' | 'grappler' | 'universal' | 'simple';
 export type UserStyle = 'striker' | 'grappler' | null | undefined;
@@ -17,16 +18,25 @@ export function getStyleGradient(style: UserStyle): string {
 }
 
 // Стили для аватарки
-export function getAvatarStyle(style: UserStyle): React.CSSProperties {
+export function getAvatarWrapperStyle(style: UserStyle | undefined): React.CSSProperties {
   const hasStyle = style === 'striker' || style === 'grappler';
   return {
-    background: getStyleGradient(style),
+    background: hasStyle ? STYLE_GRADIENTS[style!] : 'transparent',
     borderRadius: '10%',
-    padding: hasStyle ? '3%' : '0',
+    padding: hasStyle ? '0.6vw' : '0',
     boxShadow: hasStyle ? '0 0 0 0.3vw #000000' : 'none',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
+  };
+}
+
+// Внутренняя аватарка (без обводки)
+export function getAvatarInnerStyle(): React.CSSProperties {
+  return {
+    width: '100%',
+    height: '100%',
+    borderRadius: '8%',
+    objectFit: 'cover',
   };
 }

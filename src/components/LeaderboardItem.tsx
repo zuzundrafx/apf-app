@@ -1,7 +1,7 @@
 import React from 'react';
 import { LeaderboardEntry } from '../api/yandexUpload';
 import { UserProfile } from '../api/userProfiles';
-import { getStyleGradient } from '../utils/styleUtils';
+import { getAvatarWrapperStyle, getAvatarInnerStyle } from '../utils/styleUtils';
 
 interface LeaderboardItemProps {
   entry: LeaderboardEntry;
@@ -38,36 +38,19 @@ const LeaderboardItem: React.FC<LeaderboardItemProps> = ({
   
   // Определяем стиль для обводки
   const entryStyle = entry.userId === currentUserId ? userStyle : entry.style;
-  const hasStyle = entryStyle === 'striker' || entryStyle === 'grappler';
+  
   
   return (
     <div className="leaderboard-item">
       <span className="leaderboard-rank">#{entry.rank}</span>
       <div className="leaderboard-user-info">
-        <div className="leaderboard-avatar" style={{
-  background: getStyleGradient(entryStyle),
-  borderRadius: '10%',
-  padding: entryStyle ? '3%' : '0',
-  boxShadow: entryStyle ? '0 0 0 0.2vw #000000' : 'none',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center'
-}}>
-          {avatarUrl ? (
-            <img 
-              src={avatarUrl} 
-              alt={entry.username}
-              onError={(e) => {
-                // Если фото не загрузилось, показываем заглушку
-                (e.target as HTMLImageElement).style.display = 'none';
-                const parent = (e.target as HTMLImageElement).parentElement;
-                if (parent) parent.innerHTML = '👤';
-              }}
-            />
-          ) : (
-            <span>👤</span>
-          )}
-        </div>
+        <div className="leaderboard-avatar" style={getAvatarWrapperStyle(entryStyle)}>
+  {avatarUrl ? (
+    <img src={avatarUrl} alt={entry.username} style={getAvatarInnerStyle()} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const parent = (e.target as HTMLImageElement).parentElement; if (parent) parent.innerHTML = '👤'; }} />
+  ) : (
+    <span>👤</span>
+  )}
+</div>
         <span className="leaderboard-username">{entry.username}</span>
       </div>
       <span className="leaderboard-score">{entry.totalDamage}</span>

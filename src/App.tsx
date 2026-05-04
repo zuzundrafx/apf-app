@@ -8,7 +8,7 @@ import StyleViewModal from './components/StyleViewModal';
 import { Fighter, Tournament, SelectedFighter } from './types';
 import { groupFightersByWeight } from './data/loadFighters';
 import { useBackendTournaments } from './hooks/useBackendTournaments';
-import { getAvatarStyle } from './utils/styleUtils';
+import { getAvatarWrapperStyle, getAvatarInnerStyle } from './utils/styleUtils';
 
 declare global {
   interface Window {
@@ -541,9 +541,13 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
       )}
 
       <header className="profile-header">
-        <div className="profile-avatar" onClick={handleAvatarClick} style={{ cursor: 'pointer', ...getAvatarStyle(userStyle) }}>
-          {telegramUser?.photoUrl ? <img src={telegramUser.photoUrl} alt="avatar" /> : <img src={`${BASE_URL}/Home_button.png`} alt="avatar" />}
-        </div>
+        <div className="profile-avatar" onClick={handleAvatarClick} style={{ cursor: 'pointer', ...getAvatarWrapperStyle(userStyle) }}>
+  {telegramUser?.photoUrl ? 
+    <img src={telegramUser.photoUrl} alt="avatar" style={getAvatarInnerStyle()} /> 
+    : 
+    <img src={`${BASE_URL}/Home_button.png`} alt="avatar" style={getAvatarInnerStyle()} />
+  }
+</div>
         <div className="profile-info">
           <div className="profile-name">{userData.username}</div>
           <div className="level-bar">

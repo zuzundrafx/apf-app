@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Tournament, SelectedFighter, UserResult, Fighter } from '../types';
 import { UserProfile } from '../api/userProfiles';
 import BattleResultModal from './BattleResultModal';
-import { getAvatarStyle } from '../utils/styleUtils';
+import { getAvatarWrapperStyle, getAvatarInnerStyle } from '../utils/styleUtils';
 
 interface ArenaModalProps {
   tournament: Tournament;
@@ -588,8 +588,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
             </div>
             <div className="arena-avatar-center">
-              <div className="arena-avatar" style={getAvatarStyle(rivalStyle)}>
-  <img src={displayRivalData.photoUrl || `${BASE_URL}/default-avatar.png`} alt="rival" onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`; }} style={{ width: '100%', height: '100%', borderRadius: '0.5vw', objectFit: 'cover' }} />
+              <div className="arena-avatar" style={getAvatarWrapperStyle(rivalStyle)}>
+  <img 
+    src={displayRivalData.photoUrl || `${BASE_URL}/default-avatar.png`} 
+    alt="rival" 
+    style={getAvatarInnerStyle()}
+    onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`; }} 
+  />
 </div>
             </div>
             <div className="arena-avatar-right"></div>
@@ -722,8 +727,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
             </div>
             <div className="arena-avatar-center">
-              <div className="arena-avatar" style={getAvatarStyle(userStyle)}>
-  <img src={userAvatar || `${BASE_URL}/Home_button.png`} alt="player" onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`; }} style={{ width: '100%', height: '100%', borderRadius: '0.5vw', objectFit: 'cover' }} />
+              <div className="arena-avatar" style={getAvatarWrapperStyle(userStyle)}>
+  <img 
+    src={userAvatar || `${BASE_URL}/Home_button.png`} 
+    alt="player" 
+    style={getAvatarInnerStyle()}
+    onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`; }} 
+  />
 </div>
             </div>
             <div className="arena-avatar-right"></div>
