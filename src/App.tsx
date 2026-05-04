@@ -541,12 +541,38 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
       )}
 
       <header className="profile-header">
-        <div className="profile-avatar" onClick={handleAvatarClick} style={{ cursor: 'pointer', ...getAvatarWrapperStyle(userStyle) }}>
+        <div className="profile-avatar" onClick={handleAvatarClick} style={{ cursor: 'pointer', ...getAvatarWrapperStyle(userStyle), position: 'relative', overflow: 'visible' }}>
   {telegramUser?.photoUrl ? 
     <img src={telegramUser.photoUrl} alt="avatar" style={getAvatarInnerStyle()} /> 
     : 
     <img src={`${BASE_URL}/Home_button.png`} alt="avatar" style={getAvatarInnerStyle()} />
   }
+  {userData.expPoints > 0 && (
+    <div style={{
+      position: 'absolute',
+      top: '-6px',
+      right: '-6px',
+      width: '18px',
+      height: '18px',
+      background: '#FFD966',
+      borderRadius: '50%',
+      border: '2px solid #1C1D1F',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      animation: 'pulse 1.5s infinite',
+      zIndex: 10
+    }}>
+      <span style={{
+        color: '#1C1D1F',
+        fontSize: '11px',
+        fontWeight: '900',
+        lineHeight: 1
+      }}>
+        !
+      </span>
+    </div>
+  )}
 </div>
         <div className="profile-info">
           <div className="profile-name">{userData.username}</div>
