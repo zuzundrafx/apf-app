@@ -1,4 +1,4 @@
-// src/components/ArenaModal.tsx – ИСПРАВЛЕНО: здоровье с бонусами и урон с бонусами
+// src/components/ArenaModal.tsx – ПОЛНАЯ ВЕРСИЯ с COMBO анимацией и всеми обработчиками
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Tournament, SelectedFighter, UserResult, Fighter } from '../types';
 import { UserProfile } from '../api/userProfiles';
@@ -41,7 +41,6 @@ interface ArenaModalProps {
     nextLevelExp: number;
     expPoints: number;
   }) => void;
-
 }
 
 const DEFAULT_LOADING_TIPS = [
@@ -119,6 +118,10 @@ type BattleEvent = {
   rivalDamage?: number;
   userHealthAfter?: number;
   rivalHealthAfter?: number;
+  userHitCount?: number;
+  rivalHitCount?: number;
+  userCombo?: { name: string; multiplier: number } | null;
+  rivalCombo?: { name: string; multiplier: number } | null;
   result?: any;
 };
 
@@ -170,6 +173,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const [shakeScreen, setShakeScreen] = useState(false);
   const [healthFlash, setHealthFlash] = useState<'player' | 'rival' | null>(null);
   const [isBattleLoaded, setIsBattleLoaded] = useState(false);
+  const [comboText, setComboText] = useState<string | null>(null);
   const [currentLoadingTip, setCurrentLoadingTip] = useState<string>(loadingTip || DEFAULT_LOADING_TIPS[0]);
   const tipIntervalRef = useRef<IntervalId | null>(null);
   const [rivalData, setRivalData] = useState<{
@@ -262,31 +266,30 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         }
 
         // Обновляем опыт ВСЕГДА (теперь сервер начисляет опыт при любом исходе)
-if (onUpdateExperience) {
-  // Запрашиваем актуальный профиль после боя
-  try {
-    const profileResponse = await fetch(`${API_BASE}/api/user/profile`, {
-      headers: { 'Authorization': `Bearer ${authToken || ''}` }
-    });
-    if (profileResponse.ok) {
-      const profile = await profileResponse.json();
-      onUpdateExperience({
-        totalExp: profile.experience,
-        level: profile.level,
-        currentExp: profile.currentExp,
-        nextLevelExp: profile.nextLevelExp,
-        expPoints: profile.exp_points
-      });
-    }
-  } catch (e) {
-    console.error('Failed to update experience:', e);
-  }
-}
+        if (onUpdateExperience) {
+          try {
+            const profileResponse = await fetch(`${API_BASE}/api/user/profile`, {
+              headers: { 'Authorization': `Bearer ${authToken || ''}` }
+            });
+            if (profileResponse.ok) {
+              const profile = await profileResponse.json();
+              onUpdateExperience({
+                totalExp: profile.experience,
+                level: profile.level,
+                currentExp: profile.currentExp,
+                nextLevelExp: profile.nextLevelExp,
+                expPoints: profile.exp_points
+              });
+            }
+          } catch (e) {
+            console.error('Failed to update experience:', e);
+          }
+        }
 
-// Обновляем монеты победителю (если есть)
-if (data.updatedWinner && data.updatedWinner.userId === userId && onUpdateBalance) {
-  await onUpdateBalance(data.updatedWinner.coins, userTickets || 0);
-}
+        // Обновляем монеты победителю (если есть)
+        if (data.updatedWinner && data.updatedWinner.userId === userId && onUpdateBalance) {
+          await onUpdateBalance(data.updatedWinner.coins, userTickets || 0);
+        }
 
         // Устанавливаем начальное здоровье с учётом бонусов
         if (data.healthBonuses) {
@@ -363,7 +366,6 @@ if (data.updatedWinner && data.updatedWinner.userId === userId && onUpdateBalanc
             img.onerror = reject;
           })));
         } else {
-          // fallback (не должен вызываться)
           setBattleScript([{ type: 'countdown' }, { type: 'battle-end', result: { isOpen: true, result: 'draw' } }]);
         }
 
@@ -432,33 +434,62 @@ if (data.updatedWinner && data.updatedWinner.userId === userId && onUpdateBalanc
       case 'damage':
         const playerDamageDealt = event.userDamage || 0;
         const rivalDamageDealt = event.rivalDamage || 0;
-        setRivalHealth(event.rivalHealthAfter!);
-        if (playerDamageDealt > 0) {
-          setShowDamageNumber({ player: null, rival: playerDamageDealt });
-          setHealthFlash('rival');
-          applyHitEffect('rival', playerDamageDealt);
-          if (playerDamageDealt > 50) {
-            setShakeScreen(true);
-            setTimeout(() => setShakeScreen(false), 400);
-          }
+        const userHitCount = event.userHitCount || 1;
+        const rivalHitCount = event.rivalHitCount || 1;
+
+        // Показываем COMBO текст перед уроном
+        if (event.userCombo) {
+          setComboText(`🔥 ${event.userCombo.name} COMBO! x${event.userCombo.multiplier}`);
         }
-        setTimeout(() => {
-          setUserHealth(event.userHealthAfter!);
-          if (rivalDamageDealt > 0) {
-            setShowDamageNumber({ player: rivalDamageDealt, rival: null });
-            setHealthFlash('player');
-            applyHitEffect('player', rivalDamageDealt);
-            if (rivalDamageDealt > 50) {
-              setShakeScreen(true);
-              setTimeout(() => setShakeScreen(false), 400);
-            }
+        if (event.rivalCombo) {
+          setComboText((prev) => prev ? `${prev} | 🛡️ ${event.rivalCombo!.name} COMBO! x${event.rivalCombo!.multiplier}` : `🛡️ ${event.rivalCombo!.name} COMBO! x${event.rivalCombo!.multiplier}`);
+        }
+        if (event.userCombo || event.rivalCombo) {
+          setTimeout(() => setComboText(null), 2000);
+        }
+
+        // Анимация ударов (быстрая последовательность)
+        const animateHits = (target: 'rival' | 'player', damage: number, hits: number) => {
+          if (damage <= 0 || hits === 0) return;
+          const damagePerHit = Math.round(damage / hits);
+          
+          for (let i = 0; i < hits; i++) {
+            setTimeout(() => {
+              if (target === 'rival') {
+                setShowDamageNumber({ player: null, rival: damagePerHit });
+                setHealthFlash('rival');
+                applyHitEffect('rival', damagePerHit);
+              } else {
+                setShowDamageNumber({ player: damagePerHit, rival: null });
+                setHealthFlash('player');
+                applyHitEffect('player', damagePerHit);
+              }
+              if (damagePerHit > 50) {
+                setShakeScreen(true);
+                setTimeout(() => setShakeScreen(false), 400);
+              }
+            }, i * 200); // 200ms между ударами
           }
+          
           setTimeout(() => {
             setShowDamageNumber({ player: null, rival: null });
             setHealthFlash(null);
-          }, 1000);
-          setTimeout(() => setCurrentEventIndex(prev => prev + 1), 750);
-        }, 750);
+          }, hits * 200 + 500);
+        };
+
+        // Наносим урон противнику (анимация ударов игрока)
+        setRivalHealth(event.rivalHealthAfter!);
+        animateHits('rival', playerDamageDealt, userHitCount);
+
+        // Затем наносим урон игроку (анимация ударов противника)
+        const userHitDuration = userHitCount > 0 ? (userHitCount * 200 + 400) : 100;
+        setTimeout(() => {
+          setUserHealth(event.userHealthAfter!);
+          animateHits('player', rivalDamageDealt, rivalHitCount);
+          
+          const rivalHitDuration = rivalHitCount > 0 ? (rivalHitCount * 200 + 500) : 100;
+          setTimeout(() => setCurrentEventIndex(prev => prev + 1), rivalHitDuration);
+        }, userHitDuration);
         break;
 
       case 'round-end':
@@ -527,6 +558,7 @@ if (data.updatedWinner && data.updatedWinner.userId === userId && onUpdateBalanc
         </div>
         {countdownText && <div className="battle-overlay-text">{countdownText}</div>}
         {showRoundText && <div className="battle-overlay-text">ROUND {currentRound}</div>}
+        {comboText && <div className="battle-overlay-text">{comboText}</div>}
         <div className="arena-header">
           <div className="arena-header-left">{tournament.name}</div>
           <div className="arena-header-right">
