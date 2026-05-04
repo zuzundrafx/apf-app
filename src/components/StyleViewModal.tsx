@@ -304,11 +304,11 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
     left: '5%',
     top: '115%',
     color: '#FFFFFF',
-    fontSize: 'clamp(10px, 2.5vw, 12px)',
+    fontSize: 'clamp(12px, 3.2vw, 16px)',
     fontWeight: 500,
     whiteSpace: 'nowrap',
     zIndex: 102,
-    background: 'rgba(28, 29, 31, 0.9)',
+    //background: 'rgba(28, 29, 31, 0.9)',
     padding: '0.4vh 2vw',
     borderRadius: '1vw',
     pointerEvents: 'none'
