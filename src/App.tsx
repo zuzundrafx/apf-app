@@ -548,31 +548,26 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
     <img src={`${BASE_URL}/Home_button.png`} alt="avatar" style={getAvatarInnerStyle()} />
   }
   {userData.expPoints > 0 && (
-    <div style={{
-      position: 'absolute',
-      top: '-6px',
-      right: '-6px',
-      width: '18px',
-      height: '18px',
-      background: '#FFD966',
-      borderRadius: '50%',
-      border: '2px solid #1C1D1F',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      animation: 'pulse 1.5s infinite',
-      zIndex: 10
-    }}>
-      <span style={{
-        color: '#1C1D1F',
-        fontSize: '11px',
-        fontWeight: '900',
-        lineHeight: 1
-      }}>
-        !
-      </span>
-    </div>
-  )}
+  <span style={{
+    position: 'absolute',
+    top: '-4px',
+    right: '-4px',
+    width: '18px',
+    height: '18px',
+    background: '#B20101',
+    borderRadius: '50%',
+    color: '#FFFFFF',
+    fontSize: '12px',
+    fontWeight: '700',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    animation: 'pulse 1s infinite',
+    zIndex: 10
+  }}>
+    {userData.expPoints}
+  </span>
+)}
 </div>
         <div className="profile-info">
           <div className="profile-name">{userData.username}</div>
