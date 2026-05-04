@@ -299,15 +299,31 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
           }}
         >
           <div className="rewards-header" style={{ top: '-8%', zIndex: 100 }}>
-            <h2>{title}</h2>
-            <button 
-              className="cancelled-modal-close" 
-              style={{ top: '100%', zIndex: 101, cursor: 'pointer' }} 
-              onClick={handleClose}
-            >
-              ✕
-            </button>
-          </div>
+  <div style={{
+    position: 'absolute',
+    left: '5%',
+    top: '100%',
+    color: '#FFFFFF',
+    fontSize: 'clamp(10px, 2.5vw, 12px)',
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+    zIndex: 102,
+    background: 'rgba(28, 29, 31, 0.9)',
+    padding: '0.4vh 2vw',
+    borderRadius: '1vw',
+    pointerEvents: 'none'
+  }}>
+    EXP Points: {userExpPoints}
+  </div>
+  <h2>{title}</h2>
+  <button 
+    className="cancelled-modal-close" 
+    style={{ top: '100%', zIndex: 101, cursor: 'pointer' }} 
+    onClick={handleClose}
+  >
+    ✕
+  </button>
+</div>
 
           <div 
             className="rewards-winners-list" 
