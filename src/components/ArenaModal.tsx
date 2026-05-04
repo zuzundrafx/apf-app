@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Tournament, SelectedFighter, UserResult, Fighter } from '../types';
 import { UserProfile } from '../api/userProfiles';
 import BattleResultModal from './BattleResultModal';
+import { getAvatarStyle } from '../utils/styleUtils';
 
 interface ArenaModalProps {
   tournament: Tournament;
@@ -587,19 +588,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
             </div>
             <div className="arena-avatar-center">
-              <div className="arena-avatar" style={{
-  background: rivalStyle === 'striker' 
-    ? 'linear-gradient(180deg, #FF0000 0%, #8C1519 100%)'
-    : rivalStyle === 'grappler'
-    ? 'linear-gradient(180deg, #FF9933 0%, #663300 100%)'
-    : '#3D3D3B',
-  borderRadius: '1vw',
-  padding: rivalStyle ? '3%' : '0',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  boxShadow: rivalStyle ? '0 0 0 0.3vw #000000' : 'none'
-}}>
+              <div className="arena-avatar" style={getAvatarStyle(rivalStyle)}>
   <img src={displayRivalData.photoUrl || `${BASE_URL}/default-avatar.png`} alt="rival" onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`; }} style={{ width: '100%', height: '100%', borderRadius: '0.5vw', objectFit: 'cover' }} />
 </div>
             </div>
@@ -733,19 +722,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               </div>
             </div>
             <div className="arena-avatar-center">
-              <div className="arena-avatar" style={{
-  background: userStyle === 'striker' 
-    ? 'linear-gradient(180deg, #FF0000 0%, #8C1519 100%)'
-    : userStyle === 'grappler'
-    ? 'linear-gradient(180deg, #FF9933 0%, #663300 100%)'
-    : '#3D3D3B',
-  borderRadius: '1vw',
-  padding: userStyle ? '3%' : '0',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  boxShadow: userStyle ? '0 0 0 0.3vw #000000' : 'none'
-}}>
+              <div className="arena-avatar" style={getAvatarStyle(userStyle)}>
   <img src={userAvatar || `${BASE_URL}/Home_button.png`} alt="player" onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`; }} style={{ width: '100%', height: '100%', borderRadius: '0.5vw', objectFit: 'cover' }} />
 </div>
             </div>

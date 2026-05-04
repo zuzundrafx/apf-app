@@ -8,6 +8,7 @@ import StyleViewModal from './components/StyleViewModal';
 import { Fighter, Tournament, SelectedFighter } from './types';
 import { groupFightersByWeight } from './data/loadFighters';
 import { useBackendTournaments } from './hooks/useBackendTournaments';
+import { getAvatarStyle } from './utils/styleUtils';
 
 declare global {
   interface Window {
@@ -540,18 +541,7 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
       )}
 
       <header className="profile-header">
-        <div className="profile-avatar" onClick={handleAvatarClick} style={{ 
-  cursor: 'pointer',
-  background: userStyle === 'striker' 
-    ? 'linear-gradient(180deg, #FF0000 0%, #8C1519 100%)'
-    : userStyle === 'grappler'
-    ? 'linear-gradient(180deg, #FF9933 0%, #663300 100%)'
-    : '#313130',
-  borderRadius: '10%',
-  padding: userStyle ? '2%' : '0',
-  boxShadow: userStyle ? '0 0 0 0.3vw #000000' : 'none',
-  overflow: 'hidden'
-}}>
+        <div className="profile-avatar" onClick={handleAvatarClick} style={{ cursor: 'pointer', ...getAvatarStyle(userStyle) }}>
           {telegramUser?.photoUrl ? <img src={telegramUser.photoUrl} alt="avatar" /> : <img src={`${BASE_URL}/Home_button.png`} alt="avatar" />}
         </div>
         <div className="profile-info">
