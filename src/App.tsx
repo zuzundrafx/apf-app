@@ -1000,6 +1000,9 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
     userLevel={userData.level}
     userExpPoints={userData.expPoints}
     authToken={authToken ?? undefined}
+    onExpPointsUpdate={(newPoints) => {
+    setUserData(prev => ({ ...prev, expPoints: newPoints }));
+  }}
   />
 )}
     </div>

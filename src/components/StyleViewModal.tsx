@@ -39,6 +39,7 @@ interface StyleViewModalProps {
   userLevel: number;
   userExpPoints: number;
   authToken?: string;
+  onExpPointsUpdate?: (newExpPoints: number) => void;
 }
 
 const StyleViewModal: React.FC<StyleViewModalProps> = ({ 
@@ -47,6 +48,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
   style,
   userLevel,
   userExpPoints,
+  onExpPointsUpdate,
   authToken
 }) => {
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
@@ -120,9 +122,13 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
       });
       
       if (response.ok) {
-        setUserAbilities(prev => new Map(prev).set(selectedAbility.id, nextLevel));
-        setShowLearnModal(false);
-        setSelectedAbility(null);
+        const data = await response.json();
+  setUserAbilities(prev => new Map(prev).set(selectedAbility.id, nextLevel));
+  if (onExpPointsUpdate) {
+    onExpPointsUpdate(data.new_exp_points);
+  }
+  setShowLearnModal(false);
+  setSelectedAbility(null);
       }
     } catch (error) {
       console.error('Failed to learn ability:', error);

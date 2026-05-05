@@ -438,65 +438,76 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         break;
 
       case 'damage':
-        const playerDamageDealt = event.userDamage || 0;
-        const rivalDamageDealt = event.rivalDamage || 0;
-        const userHitCount = event.userHitCount || 1;
-        const rivalHitCount = event.rivalHitCount || 1;
+  const playerDamageDealt = event.userDamage || 0;
+  const rivalDamageDealt = event.rivalDamage || 0;
+  const userHitCount = event.userHitCount || 1;
+  const rivalHitCount = event.rivalHitCount || 1;
 
-        // Показываем COMBO текст перед уроном
-        if (event.userCombo) {
-          setComboText(`🔥 ${event.userCombo.name} COMBO! x${event.userCombo.multiplier}`);
+  // Показываем COMBO текст перед уроном
+  if (event.userCombo) {
+    setComboText(`🔥 ${event.userCombo.name} COMBO! x${event.userCombo.multiplier}`);
+  }
+  if (event.rivalCombo) {
+    setComboText((prev) => prev ? `${prev} | 🛡️ ${event.rivalCombo!.name} COMBO! x${event.rivalCombo!.multiplier}` : `🛡️ ${event.rivalCombo!.name} COMBO! x${event.rivalCombo!.multiplier}`);
+  }
+  if (event.userCombo || event.rivalCombo) {
+    setTimeout(() => setComboText(null), 2000);
+  }
+
+  // Коэффициент длительности для COMBO (1 удар = 1.0, 2 удара = 1.4, 3 удара = 1.8)
+  const getComboSpeedMultiplier = (hits: number): number => {
+    if (hits <= 1) return 1.0;
+    return 1.0 + (hits - 1) * 0.4; // 1→1.0, 2→1.4, 3→1.8
+  };
+
+  // Анимация ударов
+  const animateHits = (target: 'rival' | 'player', damage: number, hits: number, speedMultiplier: number) => {
+    if (damage <= 0 || hits === 0) return;
+    const damagePerHit = Math.round(damage / hits);
+    const hitDelay = 200 * speedMultiplier;
+    
+    for (let i = 0; i < hits; i++) {
+      setTimeout(() => {
+        if (target === 'rival') {
+          setShowDamageNumber({ player: null, rival: damagePerHit });
+          setHealthFlash('rival');
+          applyHitEffect('rival', damagePerHit);
+        } else {
+          setShowDamageNumber({ player: damagePerHit, rival: null });
+          setHealthFlash('player');
+          applyHitEffect('player', damagePerHit);
         }
-        if (event.rivalCombo) {
-          setComboText((prev) => prev ? `${prev} | 🛡️ ${event.rivalCombo!.name} COMBO! x${event.rivalCombo!.multiplier}` : `🛡️ ${event.rivalCombo!.name} COMBO! x${event.rivalCombo!.multiplier}`);
+        if (damagePerHit > 50) {
+          setShakeScreen(true);
+          setTimeout(() => setShakeScreen(false), 400);
         }
-        if (event.userCombo || event.rivalCombo) {
-          setTimeout(() => setComboText(null), 2000);
-        }
+      }, i * hitDelay);
+    }
+    
+    setTimeout(() => {
+      setShowDamageNumber({ player: null, rival: null });
+      setHealthFlash(null);
+    }, hits * hitDelay + 300);
+  };
 
-        // Анимация ударов (быстрая последовательность)
-        const animateHits = (target: 'rival' | 'player', damage: number, hits: number) => {
-          if (damage <= 0 || hits === 0) return;
-          const damagePerHit = Math.round(damage / hits);
-          
-          for (let i = 0; i < hits; i++) {
-            setTimeout(() => {
-              if (target === 'rival') {
-                setShowDamageNumber({ player: null, rival: damagePerHit });
-                setHealthFlash('rival');
-                applyHitEffect('rival', damagePerHit);
-              } else {
-                setShowDamageNumber({ player: damagePerHit, rival: null });
-                setHealthFlash('player');
-                applyHitEffect('player', damagePerHit);
-              }
-              if (damagePerHit > 50) {
-                setShakeScreen(true);
-                setTimeout(() => setShakeScreen(false), 400);
-              }
-            }, i * 200); // 200ms между ударами
-          }
-          
-          setTimeout(() => {
-            setShowDamageNumber({ player: null, rival: null });
-            setHealthFlash(null);
-          }, hits * 200 + 500);
-        };
+  const userSpeedMultiplier = getComboSpeedMultiplier(userHitCount);
+  const rivalSpeedMultiplier = getComboSpeedMultiplier(rivalHitCount);
 
-        // Наносим урон противнику (анимация ударов игрока)
-        setRivalHealth(event.rivalHealthAfter!);
-        animateHits('rival', playerDamageDealt, userHitCount);
+  // Наносим урон противнику
+  setRivalHealth(event.rivalHealthAfter!);
+  animateHits('rival', playerDamageDealt, userHitCount, userSpeedMultiplier);
 
-        // Затем наносим урон игроку (анимация ударов противника)
-        const userHitDuration = userHitCount > 0 ? (userHitCount * 200 + 400) : 100;
-        setTimeout(() => {
-          setUserHealth(event.userHealthAfter!);
-          animateHits('player', rivalDamageDealt, rivalHitCount);
-          
-          const rivalHitDuration = rivalHitCount > 0 ? (rivalHitCount * 200 + 500) : 100;
-          setTimeout(() => setCurrentEventIndex(prev => prev + 1), rivalHitDuration);
-        }, userHitDuration);
-        break;
+  // Затем наносим урон игроку
+  const userHitDuration = userHitCount > 0 ? (userHitCount * 200 * userSpeedMultiplier + 500) : 100;
+  
+  setTimeout(() => {
+    setUserHealth(event.userHealthAfter!);
+    animateHits('player', rivalDamageDealt, rivalHitCount, rivalSpeedMultiplier);
+    
+    const rivalHitDuration = rivalHitCount > 0 ? (rivalHitCount * 200 * rivalSpeedMultiplier + 500) : 100;
+    setTimeout(() => setCurrentEventIndex(prev => prev + 1), rivalHitDuration);
+  }, userHitDuration);
+  break;
 
       case 'round-end':
         setCurrentRound(prev => prev + 1);
