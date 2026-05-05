@@ -177,7 +177,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const [shakeScreen, setShakeScreen] = useState(false);
   const [healthFlash, setHealthFlash] = useState<'player' | 'rival' | null>(null);
   const [isBattleLoaded, setIsBattleLoaded] = useState(false);
-  const [comboText, setComboText] = useState<string | null>(null);
+  const [userComboText, setUserComboText] = useState<string | null>(null);
+  const [rivalComboText, setRivalComboText] = useState<string | null>(null);
   const [currentLoadingTip, setCurrentLoadingTip] = useState<string>(loadingTip || DEFAULT_LOADING_TIPS[0]);
   const tipIntervalRef = useRef<IntervalId | null>(null);
   const [rivalData, setRivalData] = useState<{
@@ -443,31 +444,46 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const userHitCount = event.userHitCount || 1;
   const rivalHitCount = event.rivalHitCount || 1;
 
-  // Показываем COMBO текст перед уроном
+  // Показываем COMBO текст раздельно: игрок над аватаркой, противник под аватаркой
   if (event.userCombo) {
-    setComboText(`🔥 ${event.userCombo.name} COMBO! x${event.userCombo.multiplier}`);
+    setUserComboText(`🔥 ${event.userCombo.name} COMBO!`);
+    setTimeout(() => setUserComboText(null), 1500);
   }
   if (event.rivalCombo) {
-    setComboText((prev) => prev ? `${prev} | 🛡️ ${event.rivalCombo!.name} COMBO! x${event.rivalCombo!.multiplier}` : `🛡️ ${event.rivalCombo!.name} COMBO! x${event.rivalCombo!.multiplier}`);
-  }
-  if (event.userCombo || event.rivalCombo) {
-    setTimeout(() => setComboText(null), 2000);
+    setRivalComboText(`🛡️ ${event.rivalCombo.name} COMBO!`);
+    setTimeout(() => setRivalComboText(null), 1500);
   }
 
-  // Коэффициент длительности для COMBO (1 удар = 1.0, 2 удара = 1.4, 3 удара = 1.8)
+  // Коэффициент длительности для COMBO
   const getComboSpeedMultiplier = (hits: number): number => {
     if (hits <= 1) return 1.0;
-    return 1.0 + (hits - 1) * 0.4; // 1→1.0, 2→1.4, 3→1.8
+    return 1.0 + (hits - 1) * 0.4;
   };
 
-  // Анимация ударов
-  const animateHits = (target: 'rival' | 'player', damage: number, hits: number, speedMultiplier: number) => {
-    if (damage <= 0 || hits === 0) return;
-    const damagePerHit = Math.round(damage / hits);
+  // Анимация ударов — каждый удар управляет своим временем жизни
+  const animateHits = (
+    target: 'rival' | 'player',
+    totalDamage: number,
+    hits: number,
+    speedMultiplier: number,
+    healthAfter: number,
+    setHealth: (val: number) => void
+  ) => {
+    if (totalDamage <= 0 || hits === 0) {
+      setHealth(healthAfter);
+      return;
+    }
+    const damagePerHit = Math.round(totalDamage / hits);
     const hitDelay = 200 * speedMultiplier;
+    // Считаем здоровье до анимации
+    const startHealth = healthAfter + totalDamage;
     
     for (let i = 0; i < hits; i++) {
       setTimeout(() => {
+        // Обновляем здоровье после каждого удара
+        const newHealth = startHealth - damagePerHit * (i + 1);
+        setHealth(Math.max(0, newHealth));
+        
         if (target === 'rival') {
           setShowDamageNumber({ player: null, rival: damagePerHit });
           setHealthFlash('rival');
@@ -481,28 +497,34 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           setShakeScreen(true);
           setTimeout(() => setShakeScreen(false), 400);
         }
+        
+        // Каждый удар сбрасывает свой damage number через 400ms
+        setTimeout(() => {
+          setShowDamageNumber({ player: null, rival: null });
+          setHealthFlash(null);
+        }, 400);
+        
+        // После последнего удара гарантируем точное здоровье
+        if (i === hits - 1) {
+          setTimeout(() => {
+            setHealth(healthAfter);
+          }, 100);
+        }
       }, i * hitDelay);
     }
-    
-    setTimeout(() => {
-      setShowDamageNumber({ player: null, rival: null });
-      setHealthFlash(null);
-    }, hits * hitDelay + 300);
   };
 
   const userSpeedMultiplier = getComboSpeedMultiplier(userHitCount);
   const rivalSpeedMultiplier = getComboSpeedMultiplier(rivalHitCount);
 
-  // Наносим урон противнику
-  setRivalHealth(event.rivalHealthAfter!);
-  animateHits('rival', playerDamageDealt, userHitCount, userSpeedMultiplier);
+  // Наносим урон противнику (здоровье обновляется после каждого удара)
+  animateHits('rival', playerDamageDealt, userHitCount, userSpeedMultiplier, event.rivalHealthAfter!, setRivalHealth);
 
   // Затем наносим урон игроку
   const userHitDuration = userHitCount > 0 ? (userHitCount * 200 * userSpeedMultiplier + 500) : 100;
   
   setTimeout(() => {
-    setUserHealth(event.userHealthAfter!);
-    animateHits('player', rivalDamageDealt, rivalHitCount, rivalSpeedMultiplier);
+    animateHits('player', rivalDamageDealt, rivalHitCount, rivalSpeedMultiplier, event.userHealthAfter!, setUserHealth);
     
     const rivalHitDuration = rivalHitCount > 0 ? (rivalHitCount * 200 * rivalSpeedMultiplier + 500) : 100;
     setTimeout(() => setCurrentEventIndex(prev => prev + 1), rivalHitDuration);
@@ -578,7 +600,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         </div>
         {countdownText && <div className="battle-overlay-text">{countdownText}</div>}
         {showRoundText && <div className="battle-overlay-text">ROUND {currentRound}</div>}
-        {comboText && <div className="battle-overlay-text">{comboText}</div>}
         <div className="arena-header">
           <div className="arena-header-left">{tournament.name}</div>
           <div className="arena-header-right">
@@ -587,6 +608,26 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         </div>
 
         <div className="arena-top">
+          {/* COMBO текст противника — под аватаркой */}
+          {rivalComboText && (
+            <div style={{
+              position: 'absolute',
+              top: '32%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              color: '#FFFFFF',
+              fontSize: 'clamp(12px, 3.5vw, 18px)',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              textShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
+              zIndex: 3000,
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              animation: 'fadeInOut 1.5s ease-in-out'
+            }}>
+              {rivalComboText}
+            </div>
+          )}
           <div className="arena-avatar-container">
             <div className="arena-avatar-left">
               <div className="arena-damage-display rival-damage">
@@ -750,6 +791,26 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             <div className="arena-avatar-right"></div>
           </div>
           {showDamageNumber.player && <div className="damage-number player-damage">-{showDamageNumber.player}</div>}
+          {/* COMBO текст игрока — над аватаркой */}
+          {userComboText && (
+            <div style={{
+              position: 'absolute',
+              bottom: '32%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              color: '#FFFFFF',
+              fontSize: 'clamp(12px, 3.5vw, 18px)',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              textShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
+              zIndex: 3000,
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              animation: 'fadeInOut 1.5s ease-in-out'
+            }}>
+              {userComboText}
+            </div>
+          )}
         </div>
       </div>
       {battleResult && (
