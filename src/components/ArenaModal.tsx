@@ -179,6 +179,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const [isBattleLoaded, setIsBattleLoaded] = useState(false);
   const [userComboText, setUserComboText] = useState<string | null>(null);
   const [rivalComboText, setRivalComboText] = useState<string | null>(null);
+  const [isPlayingDamage, setIsPlayingDamage] = useState(false);
   const [currentLoadingTip, setCurrentLoadingTip] = useState<string>(loadingTip || DEFAULT_LOADING_TIPS[0]);
   const tipIntervalRef = useRef<IntervalId | null>(null);
   const [rivalData, setRivalData] = useState<{
@@ -237,6 +238,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     }, 300);
   };
 
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
   // ========== PvP через API ==========
   useEffect(() => {
     if (!isOpen || !pvpMode || !userId || !tournament.id || pvpBetAmount === undefined) return;
@@ -271,7 +274,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           await onUpdateBalance(data.updatedBalance.coins, data.updatedBalance.tickets);
         }
 
-        // Обновляем опыт ВСЕГДА (теперь сервер начисляет опыт при любом исходе)
         if (onUpdateExperience) {
           try {
             const profileResponse = await fetch(`${API_BASE}/api/user/profile`, {
@@ -292,12 +294,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           }
         }
 
-        // Обновляем монеты победителю (если есть)
         if (data.updatedWinner && data.updatedWinner.userId === userId && onUpdateBalance) {
           await onUpdateBalance(data.updatedWinner.coins, userTickets || 0);
         }
 
-        // Устанавливаем начальное здоровье с учётом бонусов
         if (data.healthBonuses) {
           const userBaseHealth = 1000;
           const rivalBaseHealth = 1000;
@@ -311,7 +311,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           
           console.log(`❤️ Arena health: User ${userInitialHealth}/${userInitialHealth}, Rival ${rivalInitialHealth}/${rivalInitialHealth}`);
         } else {
-          // Fallback: ищем первое событие damage для определения начального здоровья
           if (data.battleScript && data.battleScript.events) {
             for (const event of data.battleScript.events) {
               if (event.type === 'damage') {
@@ -346,19 +345,18 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         }));
 
         setRivalData({
-  username: rival.username,
-  photoUrl: rival.photoUrl,
-  style: rival.style || null,
-  totalDamage: rivalSelections.reduce((s: number, c: any) => s + c.fighter['Total Damage'], 0),
-  selections: rivalSelections
-});
+          username: rival.username,
+          photoUrl: rival.photoUrl,
+          style: rival.style || null,
+          totalDamage: rivalSelections.reduce((s: number, c: any) => s + c.fighter['Total Damage'], 0),
+          selections: rivalSelections
+        });
 
         setBattleRewards(data.rewards);
         setWeightClasses(['Flyweight', 'Bantamweight', 'Featherweight', 'Lightweight', 'Heavyweight']);
 
         if (data.battleScript && data.battleScript.events) {
           setBattleScript(data.battleScript.events);
-          // Предзагрузка изображений
           const allCards = new Set<string>();
           data.battleScript.events.forEach((event: any) => {
             if (event.type === 'card-appear') {
@@ -390,8 +388,80 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     startPvpBattle();
   }, [isOpen, pvpMode, tournament.id, pvpBetAmount, userId, authToken]);
 
+  // Асинхронное воспроизведение события damage — строго последовательно
+  const playDamageEvent = async (event: BattleEvent) => {
+    setIsPlayingDamage(true);
+
+    const playerDamageDealt = event.userDamage || 0;
+    const rivalDamageDealt = event.rivalDamage || 0;
+    const userHitCount = event.userHitCount || 1;
+    const rivalHitCount = event.rivalHitCount || 1;
+
+    // 1. Показываем COMBO текст
+    if (event.userCombo) {
+      setUserComboText(`🔥 ${event.userCombo.name} COMBO!`);
+    }
+    if (event.rivalCombo) {
+      setRivalComboText(`🛡️ ${event.rivalCombo.name} COMBO!`);
+    }
+    if (event.userCombo || event.rivalCombo) {
+      await delay(1500);
+      setUserComboText(null);
+      setRivalComboText(null);
+    }
+
+    // 2. Наносим урон противнику (здоровье мгновенно)
+    setRivalHealth(event.rivalHealthAfter!);
+
+    // 3. Анимируем удары по противнику последовательно
+    for (let i = 0; i < userHitCount; i++) {
+      const damagePerHit = Math.round(playerDamageDealt / userHitCount);
+      setShowDamageNumber({ player: null, rival: damagePerHit });
+      setHealthFlash('rival');
+      applyHitEffect('rival', damagePerHit);
+      if (damagePerHit > 50) {
+        setShakeScreen(true);
+        setTimeout(() => setShakeScreen(false), 400);
+      }
+      await delay(400);
+      setShowDamageNumber({ player: null, rival: null });
+      setHealthFlash(null);
+      if (i < userHitCount - 1) {
+        await delay(200);
+      }
+    }
+
+    // 4. Наносим урон игроку (здоровье мгновенно)
+    setUserHealth(event.userHealthAfter!);
+
+    // 5. Анимируем удары по игроку последовательно
+    for (let i = 0; i < rivalHitCount; i++) {
+      const damagePerHit = Math.round(rivalDamageDealt / rivalHitCount);
+      setShowDamageNumber({ player: damagePerHit, rival: null });
+      setHealthFlash('player');
+      applyHitEffect('player', damagePerHit);
+      if (damagePerHit > 50) {
+        setShakeScreen(true);
+        setTimeout(() => setShakeScreen(false), 400);
+      }
+      await delay(400);
+      setShowDamageNumber({ player: null, rival: null });
+      setHealthFlash(null);
+      if (i < rivalHitCount - 1) {
+        await delay(200);
+      }
+    }
+
+    // 6. Переход к следующему событию
+    await delay(300);
+    setIsPlayingDamage(false);
+    setCurrentEventIndex(prev => prev + 1);
+  };
+
   const playNextEvent = () => {
     if (currentEventIndex >= battleScript.length) return;
+    if (isPlayingDamage) return;
+
     const event = battleScript[currentEventIndex];
     console.log('🎬 Event:', event);
 
@@ -439,97 +509,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         break;
 
       case 'damage':
-  const playerDamageDealt = event.userDamage || 0;
-  const rivalDamageDealt = event.rivalDamage || 0;
-  const userHitCount = event.userHitCount || 1;
-  const rivalHitCount = event.rivalHitCount || 1;
-
-  // Показываем COMBO текст раздельно: игрок над аватаркой, противник под аватаркой
-  if (event.userCombo) {
-    setUserComboText(`🔥 ${event.userCombo.name} COMBO!`);
-    setTimeout(() => setUserComboText(null), 1500);
-  }
-  if (event.rivalCombo) {
-    setRivalComboText(`🛡️ ${event.rivalCombo.name} COMBO!`);
-    setTimeout(() => setRivalComboText(null), 1500);
-  }
-
-  // Коэффициент длительности для COMBO
-  const getComboSpeedMultiplier = (hits: number): number => {
-    if (hits <= 1) return 1.0;
-    return 1.0 + (hits - 1) * 0.4;
-  };
-
-  // Анимация ударов — каждый удар управляет своим временем жизни
-  const animateHits = (
-    target: 'rival' | 'player',
-    totalDamage: number,
-    hits: number,
-    speedMultiplier: number,
-    healthAfter: number,
-    setHealth: (val: number) => void
-  ) => {
-    if (totalDamage <= 0 || hits === 0) {
-      setHealth(healthAfter);
-      return;
-    }
-    const damagePerHit = Math.round(totalDamage / hits);
-    const hitDelay = 200 * speedMultiplier;
-    // Считаем здоровье до анимации
-    const startHealth = healthAfter + totalDamage;
-    
-    for (let i = 0; i < hits; i++) {
-      setTimeout(() => {
-        // Обновляем здоровье после каждого удара
-        const newHealth = startHealth - damagePerHit * (i + 1);
-        setHealth(Math.max(0, newHealth));
-        
-        if (target === 'rival') {
-          setShowDamageNumber({ player: null, rival: damagePerHit });
-          setHealthFlash('rival');
-          applyHitEffect('rival', damagePerHit);
-        } else {
-          setShowDamageNumber({ player: damagePerHit, rival: null });
-          setHealthFlash('player');
-          applyHitEffect('player', damagePerHit);
-        }
-        if (damagePerHit > 50) {
-          setShakeScreen(true);
-          setTimeout(() => setShakeScreen(false), 400);
-        }
-        
-        // Каждый удар сбрасывает свой damage number через 400ms
-        setTimeout(() => {
-          setShowDamageNumber({ player: null, rival: null });
-          setHealthFlash(null);
-        }, 400);
-        
-        // После последнего удара гарантируем точное здоровье
-        if (i === hits - 1) {
-          setTimeout(() => {
-            setHealth(healthAfter);
-          }, 100);
-        }
-      }, i * hitDelay);
-    }
-  };
-
-  const userSpeedMultiplier = getComboSpeedMultiplier(userHitCount);
-  const rivalSpeedMultiplier = getComboSpeedMultiplier(rivalHitCount);
-
-  // Наносим урон противнику (здоровье обновляется после каждого удара)
-  animateHits('rival', playerDamageDealt, userHitCount, userSpeedMultiplier, event.rivalHealthAfter!, setRivalHealth);
-
-  // Затем наносим урон игроку
-  const userHitDuration = userHitCount > 0 ? (userHitCount * 200 * userSpeedMultiplier + 500) : 100;
-  
-  setTimeout(() => {
-    animateHits('player', rivalDamageDealt, rivalHitCount, rivalSpeedMultiplier, event.userHealthAfter!, setUserHealth);
-    
-    const rivalHitDuration = rivalHitCount > 0 ? (rivalHitCount * 200 * rivalSpeedMultiplier + 500) : 100;
-    setTimeout(() => setCurrentEventIndex(prev => prev + 1), rivalHitDuration);
-  }, userHitDuration);
-  break;
+        playDamageEvent(event);
+        break;
 
       case 'round-end':
         setCurrentRound(prev => prev + 1);
@@ -563,8 +544,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     if (countdownStep === 'fight') return 'FIGHT!';
     return null;
   };
-
-  
 
   if (!isOpen) return null;
 
@@ -608,7 +587,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         </div>
 
         <div className="arena-top">
-          {/* COMBO текст противника — под аватаркой */}
           {rivalComboText && (
             <div style={{
               position: 'absolute',
@@ -641,13 +619,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             </div>
             <div className="arena-avatar-center">
               <div className="arena-avatar" style={getAvatarWrapperStyle(rivalStyle)}>
-  <img 
-    src={displayRivalData.photoUrl || `${BASE_URL}/default-avatar.png`} 
-    alt="rival" 
-    style={getAvatarInnerStyle()}
-    onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`; }} 
-  />
-</div>
+                <img 
+                  src={displayRivalData.photoUrl || `${BASE_URL}/default-avatar.png`} 
+                  alt="rival" 
+                  style={getAvatarInnerStyle()}
+                  onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/default-avatar.png`; }} 
+                />
+              </div>
             </div>
             <div className="arena-avatar-right"></div>
           </div>
@@ -780,18 +758,17 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             </div>
             <div className="arena-avatar-center">
               <div className="arena-avatar" style={getAvatarWrapperStyle(userStyle)}>
-  <img 
-    src={userAvatar || `${BASE_URL}/Home_button.png`} 
-    alt="player" 
-    style={getAvatarInnerStyle()}
-    onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`; }} 
-  />
-</div>
+                <img 
+                  src={userAvatar || `${BASE_URL}/Home_button.png`} 
+                  alt="player" 
+                  style={getAvatarInnerStyle()}
+                  onError={(e) => { (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`; }} 
+                />
+              </div>
             </div>
             <div className="arena-avatar-right"></div>
           </div>
           {showDamageNumber.player && <div className="damage-number player-damage">-{showDamageNumber.player}</div>}
-          {/* COMBO текст игрока — над аватаркой */}
           {userComboText && (
             <div style={{
               position: 'absolute',
