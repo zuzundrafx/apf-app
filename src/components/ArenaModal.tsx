@@ -453,7 +453,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setRivalComboText(null);
           }
 
-                              // Удары по противнику
+                                        // Удары по противнику
           if (userHitCount > 0) {
             const damagePerHit = Math.round(playerDamageDealt / userHitCount);
             const startHealth = event.rivalHealthAfter! + playerDamageDealt;
@@ -461,7 +461,12 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             
             for (let i = 0; i < userHitCount; i++) {
               currentHealth = Math.max(0, currentHealth - damagePerHit);
-              setRivalHealth(currentHealth); // Обновляем на каждом шаге
+              setRivalHealth(currentHealth);
+              
+              // Принудительно ждём перерисовку React
+              await new Promise(resolve => {
+                setTimeout(resolve, 0);
+              });
               
               setShowDamageNumber({ player: null, rival: damagePerHit });
               setHealthFlash('rival');
@@ -471,9 +476,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 setTimeout(() => setShakeScreen(false), 400);
               }
               
-              // Даём React время применить обновление
-              await delay(50);
-              await delay(350); // Оставшаяся часть задержки
+              await delay(400);
               
               setShowDamageNumber({ player: null, rival: null });
               setHealthFlash(null);
@@ -483,7 +486,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setRivalHealth(event.rivalHealthAfter!);
           }
 
-                                        // Удары по игроку
+                                                  // Удары по игроку
           if (rivalHitCount > 0) {
             const damagePerHit = Math.round(rivalDamageDealt / rivalHitCount);
             const startHealth = event.userHealthAfter! + rivalDamageDealt;
@@ -493,6 +496,11 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               currentHealth = Math.max(0, currentHealth - damagePerHit);
               setUserHealth(currentHealth);
               
+              // Принудительно ждём перерисовку React
+              await new Promise(resolve => {
+                setTimeout(resolve, 0);
+              });
+              
               setShowDamageNumber({ player: damagePerHit, rival: null });
               setHealthFlash('player');
               applyHitEffect('player', damagePerHit);
@@ -501,8 +509,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 setTimeout(() => setShakeScreen(false), 400);
               }
               
-              await delay(50);
-              await delay(350);
+              await delay(400);
               
               setShowDamageNumber({ player: null, rival: null });
               setHealthFlash(null);
