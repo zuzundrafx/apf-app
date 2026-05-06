@@ -191,6 +191,11 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   } | null>(null);
   const [weightClasses, setWeightClasses] = useState<string[]>([]);
 
+  const rivalHealthFillRef = useRef<HTMLDivElement>(null);
+  const userHealthFillRef = useRef<HTMLDivElement>(null);
+  const rivalHealthTextRef = useRef<HTMLSpanElement>(null);
+  const userHealthTextRef = useRef<HTMLSpanElement>(null);
+
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
   const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
 
@@ -454,7 +459,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setRivalComboText(null);
           }
 
-                                        // Удары по противнику
+                    // Удары по противнику
           if (userHitCount > 0) {
             const damagePerHit = Math.round(playerDamageDealt / userHitCount);
             const startHealth = event.rivalHealthAfter! + playerDamageDealt;
@@ -462,12 +467,15 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             
             for (let i = 0; i < userHitCount; i++) {
               currentHealth = Math.max(0, currentHealth - damagePerHit);
-              setRivalHealth(currentHealth);
               
-              // Принудительно ждём перерисовку React
-              await new Promise(resolve => {
-                setTimeout(resolve, 0);
-              });
+              // Напрямую обновляем DOM шкалы здоровья
+              if (rivalHealthFillRef.current) {
+                rivalHealthFillRef.current.style.width = `${(currentHealth / baseRivalHealth) * 100}%`;
+              }
+              if (rivalHealthTextRef.current) {
+                rivalHealthTextRef.current.textContent = `HP ${currentHealth}/${baseRivalHealth}`;
+              }
+              setRivalHealth(currentHealth); // Для синхронизации state
               
               setShowDamageNumber({ player: null, rival: damagePerHit });
               setHealthFlash('rival');
@@ -487,7 +495,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setRivalHealth(event.rivalHealthAfter!);
           }
 
-                                                  // Удары по игроку
+          // Удары по игроку
           if (rivalHitCount > 0) {
             const damagePerHit = Math.round(rivalDamageDealt / rivalHitCount);
             const startHealth = event.userHealthAfter! + rivalDamageDealt;
@@ -495,12 +503,15 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             
             for (let i = 0; i < rivalHitCount; i++) {
               currentHealth = Math.max(0, currentHealth - damagePerHit);
-              setUserHealth(currentHealth);
               
-              // Принудительно ждём перерисовку React
-              await new Promise(resolve => {
-                setTimeout(resolve, 0);
-              });
+              // Напрямую обновляем DOM шкалы здоровья
+              if (userHealthFillRef.current) {
+                userHealthFillRef.current.style.width = `${(currentHealth / baseUserHealth) * 100}%`;
+              }
+              if (userHealthTextRef.current) {
+                userHealthTextRef.current.textContent = `HP ${currentHealth}/${baseUserHealth}`;
+              }
+              setUserHealth(currentHealth);
               
               setShowDamageNumber({ player: damagePerHit, rival: null });
               setHealthFlash('player');
@@ -646,8 +657,11 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           {showDamageNumber.rival && <div className="damage-number rival-damage">-{showDamageNumber.rival}</div>}
           <div className="arena-rival-health">
             <div className={`arena-health-bar ${healthFlash === 'rival' ? 'damage-flash' : ''}`}>
-              <div className="arena-health-fill" style={{ width: `${baseRivalHealth > 0 ? (rivalHealth / baseRivalHealth) * 100 : 0}%` }}></div>
-              <span className="arena-health-text">HP {rivalHealth}/{baseRivalHealth}</span>
+              <div className="arena-health-fill" 
+  ref={rivalHealthFillRef}
+  style={{ width: `${baseRivalHealth > 0 ? (rivalHealth / baseRivalHealth) * 100 : 0}%` }}>
+</div>
+<span className="arena-health-text" ref={rivalHealthTextRef}>HP {rivalHealth}/{baseRivalHealth}</span>
             </div>
           </div>
           <div className="arena-rival-fighters">
@@ -755,8 +769,11 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           </div>
           <div className="arena-player-health">
             <div className={`arena-health-bar ${healthFlash === 'player' ? 'damage-flash' : ''}`}>
-              <div className="arena-health-fill" style={{ width: `${baseUserHealth > 0 ? (userHealth / baseUserHealth) * 100 : 0}%` }}></div>
-              <span className="arena-health-text">HP {userHealth}/{baseUserHealth}</span>
+              <div className="arena-health-fill" 
+  ref={userHealthFillRef}
+  style={{ width: `${baseUserHealth > 0 ? (userHealth / baseUserHealth) * 100 : 0}%` }}>
+</div>
+<span className="arena-health-text" ref={userHealthTextRef}>HP {userHealth}/{baseUserHealth}</span>
             </div>
           </div>
           <div className="arena-avatar-container">
