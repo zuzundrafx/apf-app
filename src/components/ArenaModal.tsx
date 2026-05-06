@@ -457,7 +457,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                                         // Удары по противнику
           if (userHitCount > 0) {
             const damagePerHit = Math.round(playerDamageDealt / userHitCount);
-            const startHealth = event.rivalHealthAfter! + playerDamageDealt;
+            const startHealth = rivalHealth;
             let currentHealth = startHealth;
             
             for (let i = 0; i < userHitCount; i++) {
@@ -490,7 +490,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                                                   // Удары по игроку
           if (rivalHitCount > 0) {
             const damagePerHit = Math.round(rivalDamageDealt / rivalHitCount);
-            const startHealth = event.userHealthAfter! + rivalDamageDealt;
+            const startHealth = userHealth;
             let currentHealth = startHealth;
             
             for (let i = 0; i < rivalHitCount; i++) {
