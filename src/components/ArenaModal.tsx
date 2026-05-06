@@ -4,6 +4,7 @@ import { Tournament, SelectedFighter, UserResult, Fighter } from '../types';
 import { UserProfile } from '../api/userProfiles';
 import BattleResultModal from './BattleResultModal';
 import { getAvatarWrapperStyle, getAvatarInnerStyle } from '../utils/styleUtils';
+import { flushSync } from 'react-dom';
 
 interface ArenaModalProps {
   tournament: Tournament;
@@ -453,7 +454,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setRivalComboText(null);
           }
 
-                                        // Удары по противнику
+                    // Удары по противнику
           if (userHitCount > 0) {
             const damagePerHit = Math.round(playerDamageDealt / userHitCount);
             const startHealth = event.rivalHealthAfter! + playerDamageDealt;
@@ -461,11 +462,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             
             for (let i = 0; i < userHitCount; i++) {
               currentHealth = Math.max(0, currentHealth - damagePerHit);
-              setRivalHealth(currentHealth);
               
-              // Принудительно ждём перерисовку React
-              await new Promise(resolve => {
-                setTimeout(resolve, 0);
+              // Принудительная синхронная перерисовка
+              flushSync(() => {
+                setRivalHealth(currentHealth);
               });
               
               setShowDamageNumber({ player: null, rival: damagePerHit });
@@ -486,7 +486,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setRivalHealth(event.rivalHealthAfter!);
           }
 
-                                                  // Удары по игроку
+                    // Удары по игроку
           if (rivalHitCount > 0) {
             const damagePerHit = Math.round(rivalDamageDealt / rivalHitCount);
             const startHealth = event.userHealthAfter! + rivalDamageDealt;
@@ -494,11 +494,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             
             for (let i = 0; i < rivalHitCount; i++) {
               currentHealth = Math.max(0, currentHealth - damagePerHit);
-              setUserHealth(currentHealth);
               
-              // Принудительно ждём перерисовку React
-              await new Promise(resolve => {
-                setTimeout(resolve, 0);
+              // Принудительная синхронная перерисовка
+              flushSync(() => {
+                setUserHealth(currentHealth);
               });
               
               setShowDamageNumber({ player: damagePerHit, rival: null });
