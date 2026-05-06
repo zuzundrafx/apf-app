@@ -453,12 +453,16 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setRivalComboText(null);
           }
 
-          // Удары по противнику
+                    // Удары по противнику
           if (userHitCount > 0) {
             const damagePerHit = Math.round(playerDamageDealt / userHitCount);
+            const startHealth = event.rivalHealthAfter! + playerDamageDealt;
             for (let i = 0; i < userHitCount; i++) {
-              const newHealth = Math.max(0, event.rivalHealthAfter! + playerDamageDealt - damagePerHit * (i + 1));
-              setRivalHealth(newHealth);
+              const newHealth = Math.max(0, startHealth - damagePerHit * (i + 1));
+              // Обновляем здоровье только если оно реально изменилось (не ушло в минус)
+              if (newHealth > 0 || (newHealth === 0 && i === userHitCount - 1)) {
+                setRivalHealth(newHealth);
+              }
               setShowDamageNumber({ player: null, rival: damagePerHit });
               setHealthFlash('rival');
               applyHitEffect('rival', damagePerHit);
@@ -475,12 +479,15 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setRivalHealth(event.rivalHealthAfter!);
           }
 
-          // Удары по игроку
+                              // Удары по игроку
           if (rivalHitCount > 0) {
             const damagePerHit = Math.round(rivalDamageDealt / rivalHitCount);
+            const startHealth = event.userHealthAfter! + rivalDamageDealt;
             for (let i = 0; i < rivalHitCount; i++) {
-              const newHealth = Math.max(0, event.userHealthAfter! + rivalDamageDealt - damagePerHit * (i + 1));
-              setUserHealth(newHealth);
+              const newHealth = Math.max(0, startHealth - damagePerHit * (i + 1));
+              if (newHealth > 0 || (newHealth === 0 && i === rivalHitCount - 1)) {
+                setUserHealth(newHealth);
+              }
               setShowDamageNumber({ player: damagePerHit, rival: null });
               setHealthFlash('player');
               applyHitEffect('player', damagePerHit);
@@ -521,6 +528,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
   const handleResultClose = () => {
     setBattleResult(null);
+    setIsBattleLoaded(false); // сразу убираем арену
     onSurrender();
   };
 
