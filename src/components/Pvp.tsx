@@ -155,10 +155,27 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     setArenaData({ tournament, pvpBetAmount: betAmount });
   };
 
-  const handleSurrender = () => {
-    stopTipRotation();
-    setArenaData(null);
-  };
+  const handleSurrender = async () => {
+  stopTipRotation();
+  
+  // Обновляем баланс после боя (запрашиваем актуальный с сервера)
+  if (authToken && onUpdateBalance) {
+    try {
+      const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
+      const profileResponse = await fetch(`${API_BASE}/api/user/profile`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (profileResponse.ok) {
+        const profile = await profileResponse.json();
+        await onUpdateBalance(profile.coins, profile.tickets);
+      }
+    } catch (e) {
+      console.error('Failed to update balance:', e);
+    }
+  }
+  
+  setArenaData(null);
+};
 
   useImperativeHandle(ref, () => ({
     engage: handleEngage
