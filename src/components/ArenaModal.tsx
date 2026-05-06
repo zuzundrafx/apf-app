@@ -389,73 +389,76 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   }, [isOpen, pvpMode, tournament.id, pvpBetAmount, userId, authToken]);
 
   // Асинхронное воспроизведение события damage — строго последовательно
-  const playDamageEvent = useCallback(async (event: BattleEvent) => {
+  const playDamageEvent = async (event: BattleEvent) => {
     setIsPlayingDamage(true);
 
     const playerDamageDealt = event.userDamage || 0;
     const rivalDamageDealt = event.rivalDamage || 0;
-    const userHitCount = (playerDamageDealt > 0) ? (event.userHitCount || 1) : 0;
-    const rivalHitCount = (rivalDamageDealt > 0) ? (event.rivalHitCount || 1) : 0;
+    const userHitCount = event.userHitCount || 1;
+    const rivalHitCount = event.rivalHitCount || 1;
 
-    // 1. COMBO текст (1.5 сек)
-    if (event.userCombo) setUserComboText(`🔥 ${event.userCombo.name} COMBO!`);
-    if (event.rivalCombo) setRivalComboText(`🛡️ ${event.rivalCombo.name} COMBO!`);
+    // 1. Показываем COMBO текст
+    if (event.userCombo) {
+      setUserComboText(`🔥 ${event.userCombo.name} COMBO!`);
+    }
+    if (event.rivalCombo) {
+      setRivalComboText(`🛡️ ${event.rivalCombo.name} COMBO!`);
+    }
     if (event.userCombo || event.rivalCombo) {
       await delay(1500);
       setUserComboText(null);
       setRivalComboText(null);
     }
 
-    // 2. Удары по противнику — здоровье меняется ПОСЛЕ каждого удара
-    if (userHitCount > 0) {
+    // 2. Наносим урон противнику (здоровье мгновенно)
+    setRivalHealth(event.rivalHealthAfter!);
+
+    // 3. Анимируем удары по противнику последовательно
+    for (let i = 0; i < userHitCount; i++) {
       const damagePerHit = Math.round(playerDamageDealt / userHitCount);
-      for (let i = 0; i < userHitCount; i++) {
-        const newHealth = Math.max(0, rivalHealth - damagePerHit);
-        setRivalHealth(newHealth);
-        setShowDamageNumber({ player: null, rival: damagePerHit });
-        setHealthFlash('rival');
-        applyHitEffect('rival', damagePerHit);
-        if (damagePerHit > 50) {
-          setShakeScreen(true);
-          setTimeout(() => setShakeScreen(false), 400);
-        }
-        await delay(400);
-        setShowDamageNumber({ player: null, rival: null });
-        setHealthFlash(null);
-        if (i < userHitCount - 1) await delay(200);
+      setShowDamageNumber({ player: null, rival: damagePerHit });
+      setHealthFlash('rival');
+      applyHitEffect('rival', damagePerHit);
+      if (damagePerHit > 50) {
+        setShakeScreen(true);
+        setTimeout(() => setShakeScreen(false), 400);
       }
-    } else {
-      setRivalHealth(event.rivalHealthAfter!);
+      await delay(400);
+      setShowDamageNumber({ player: null, rival: null });
+      setHealthFlash(null);
+      if (i < userHitCount - 1) {
+        await delay(200);
+      }
     }
 
-    // 3. Удары по игроку — здоровье меняется ПОСЛЕ каждого удара
-    if (rivalHitCount > 0) {
+    // 4. Наносим урон игроку (здоровье мгновенно)
+    setUserHealth(event.userHealthAfter!);
+
+    // 5. Анимируем удары по игроку последовательно
+    for (let i = 0; i < rivalHitCount; i++) {
       const damagePerHit = Math.round(rivalDamageDealt / rivalHitCount);
-      for (let i = 0; i < rivalHitCount; i++) {
-        const newHealth = Math.max(0, userHealth - damagePerHit);
-        setUserHealth(newHealth);
-        setShowDamageNumber({ player: damagePerHit, rival: null });
-        setHealthFlash('player');
-        applyHitEffect('player', damagePerHit);
-        if (damagePerHit > 50) {
-          setShakeScreen(true);
-          setTimeout(() => setShakeScreen(false), 400);
-        }
-        await delay(400);
-        setShowDamageNumber({ player: null, rival: null });
-        setHealthFlash(null);
-        if (i < rivalHitCount - 1) await delay(200);
+      setShowDamageNumber({ player: damagePerHit, rival: null });
+      setHealthFlash('player');
+      applyHitEffect('player', damagePerHit);
+      if (damagePerHit > 50) {
+        setShakeScreen(true);
+        setTimeout(() => setShakeScreen(false), 400);
       }
-    } else {
-      setUserHealth(event.userHealthAfter!);
+      await delay(400);
+      setShowDamageNumber({ player: null, rival: null });
+      setHealthFlash(null);
+      if (i < rivalHitCount - 1) {
+        await delay(200);
+      }
     }
 
+    // 6. Переход к следующему событию
     await delay(300);
     setIsPlayingDamage(false);
     setCurrentEventIndex(prev => prev + 1);
-  }, [rivalHealth, userHealth]);
+  };
 
-  const playNextEvent = useCallback(() => {
+  const playNextEvent = () => {
     if (currentEventIndex >= battleScript.length) return;
     if (isPlayingDamage) return;
 
@@ -518,30 +521,15 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         setBattleResult(event.result);
         break;
     }
-  }, [currentEventIndex, battleScript, isPlayingDamage, userActiveCards, rivalActiveCards, playDamageEvent]);
+  };
 
   useEffect(() => {
     if (!isLoading && battleScript.length > 0) {
       playNextEvent();
     }
-  }, [currentEventIndex, isLoading, battleScript, playNextEvent]);
+  }, [currentEventIndex, isLoading, battleScript]);
 
-  const handleResultClose = async () => {
-    // Обновляем баланс после боя
-    if (onUpdateBalance) {
-      try {
-        const profileResponse = await fetch(`${API_BASE}/api/user/profile`, {
-          headers: { 'Authorization': `Bearer ${authToken || ''}` }
-        });
-        if (profileResponse.ok) {
-          const profile = await profileResponse.json();
-          await onUpdateBalance(profile.coins, profile.tickets);
-        }
-      } catch (e) {
-        console.error('Failed to update balance after battle:', e);
-      }
-    }
-    
+  const handleResultClose = () => {
     setBattleResult(null);
     onSurrender();
   };
