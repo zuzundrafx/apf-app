@@ -454,69 +454,66 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setRivalComboText(null);
           }
 
-                    // Вспомогательная функция для одного удара
-          const performHit = (
-            target: 'rival' | 'player',
-            damagePerHit: number,
-            currentHealth: number
-          ): Promise<number> => {
-            return new Promise((resolve) => {
-              const newHealth = Math.max(0, currentHealth - damagePerHit);
-              
-              if (target === 'rival') {
-                setRivalHealth(newHealth);
-                setShowDamageNumber({ player: null, rival: damagePerHit });
-                setHealthFlash('rival');
-                applyHitEffect('rival', damagePerHit);
-              } else {
-                setUserHealth(newHealth);
-                setShowDamageNumber({ player: damagePerHit, rival: null });
-                setHealthFlash('player');
-                applyHitEffect('player', damagePerHit);
-              }
-              
-              if (damagePerHit > 50) {
-                setShakeScreen(true);
-                setTimeout(() => setShakeScreen(false), 400);
-              }
-              
-              // Скрываем цифры через 400ms
-              setTimeout(() => {
-                setShowDamageNumber({ player: null, rival: null });
-                setHealthFlash(null);
-              }, 400);
-              
-              // Ждём перерисовку шкалы здоровья
-              requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                  resolve(newHealth);
-                });
-              });
-            });
-          };
-
-          // Удары по противнику
+                                        // Удары по противнику
           if (userHitCount > 0) {
             const damagePerHit = Math.round(playerDamageDealt / userHitCount);
             const startHealth = event.rivalHealthAfter! + playerDamageDealt;
             let currentHealth = startHealth;
             
             for (let i = 0; i < userHitCount; i++) {
-              currentHealth = await performHit('rival', damagePerHit, currentHealth);
+              currentHealth = Math.max(0, currentHealth - damagePerHit);
+              setRivalHealth(currentHealth);
+              
+              // Принудительно ждём перерисовку React
+              await new Promise(resolve => {
+                setTimeout(resolve, 0);
+              });
+              
+              setShowDamageNumber({ player: null, rival: damagePerHit });
+              setHealthFlash('rival');
+              applyHitEffect('rival', damagePerHit);
+              if (damagePerHit > 50) {
+                setShakeScreen(true);
+                setTimeout(() => setShakeScreen(false), 400);
+              }
+              
+              await delay(400);
+              
+              setShowDamageNumber({ player: null, rival: null });
+              setHealthFlash(null);
               if (i < userHitCount - 1) await delay(200);
             }
           } else {
             setRivalHealth(event.rivalHealthAfter!);
           }
 
-          // Удары по игроку
+                                                  // Удары по игроку
           if (rivalHitCount > 0) {
             const damagePerHit = Math.round(rivalDamageDealt / rivalHitCount);
             const startHealth = event.userHealthAfter! + rivalDamageDealt;
             let currentHealth = startHealth;
             
             for (let i = 0; i < rivalHitCount; i++) {
-              currentHealth = await performHit('player', damagePerHit, currentHealth);
+              currentHealth = Math.max(0, currentHealth - damagePerHit);
+              setUserHealth(currentHealth);
+              
+              // Принудительно ждём перерисовку React
+              await new Promise(resolve => {
+                setTimeout(resolve, 0);
+              });
+              
+              setShowDamageNumber({ player: damagePerHit, rival: null });
+              setHealthFlash('player');
+              applyHitEffect('player', damagePerHit);
+              if (damagePerHit > 50) {
+                setShakeScreen(true);
+                setTimeout(() => setShakeScreen(false), 400);
+              }
+              
+              await delay(400);
+              
+              setShowDamageNumber({ player: null, rival: null });
+              setHealthFlash(null);
               if (i < rivalHitCount - 1) await delay(200);
             }
           } else {
