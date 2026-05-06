@@ -459,23 +459,27 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setRivalComboText(null);
           }
 
-                    // Удары по противнику
+                     // Удары по противнику
           if (userHitCount > 0) {
             const damagePerHit = Math.round(playerDamageDealt / userHitCount);
             const startHealth = event.rivalHealthAfter! + playerDamageDealt;
             let currentHealth = startHealth;
             
+            // Убираем CSS transition на время ударов
+            if (rivalHealthFillRef.current) {
+              rivalHealthFillRef.current.style.transition = 'none';
+            }
+            
             for (let i = 0; i < userHitCount; i++) {
               currentHealth = Math.max(0, currentHealth - damagePerHit);
               
-              // Напрямую обновляем DOM шкалы здоровья
               if (rivalHealthFillRef.current) {
                 rivalHealthFillRef.current.style.width = `${(currentHealth / baseRivalHealth) * 100}%`;
               }
               if (rivalHealthTextRef.current) {
                 rivalHealthTextRef.current.textContent = `HP ${currentHealth}/${baseRivalHealth}`;
               }
-              setRivalHealth(currentHealth); // Для синхронизации state
+              setRivalHealth(currentHealth);
               
               setShowDamageNumber({ player: null, rival: damagePerHit });
               setHealthFlash('rival');
@@ -491,20 +495,29 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               setHealthFlash(null);
               if (i < userHitCount - 1) await delay(200);
             }
+            
+            // Возвращаем CSS transition
+            if (rivalHealthFillRef.current) {
+              rivalHealthFillRef.current.style.transition = 'width 0.3s ease';
+            }
           } else {
             setRivalHealth(event.rivalHealthAfter!);
           }
 
-          // Удары по игроку
+                    // Удары по игроку
           if (rivalHitCount > 0) {
             const damagePerHit = Math.round(rivalDamageDealt / rivalHitCount);
             const startHealth = event.userHealthAfter! + rivalDamageDealt;
             let currentHealth = startHealth;
             
+            // Убираем CSS transition на время ударов
+            if (userHealthFillRef.current) {
+              userHealthFillRef.current.style.transition = 'none';
+            }
+            
             for (let i = 0; i < rivalHitCount; i++) {
               currentHealth = Math.max(0, currentHealth - damagePerHit);
               
-              // Напрямую обновляем DOM шкалы здоровья
               if (userHealthFillRef.current) {
                 userHealthFillRef.current.style.width = `${(currentHealth / baseUserHealth) * 100}%`;
               }
@@ -526,6 +539,11 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
               setShowDamageNumber({ player: null, rival: null });
               setHealthFlash(null);
               if (i < rivalHitCount - 1) await delay(200);
+            }
+            
+            // Возвращаем CSS transition
+            if (userHealthFillRef.current) {
+              userHealthFillRef.current.style.transition = 'width 0.3s ease';
             }
           } else {
             setUserHealth(event.userHealthAfter!);
