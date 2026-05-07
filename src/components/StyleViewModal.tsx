@@ -580,7 +580,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
           <div 
             className="rewards-modal no-summary" 
             style={{ 
-              height: '40%',
+              height: '50%',
               display: 'flex', 
               flexDirection: 'column',
               margin: '0',
@@ -605,18 +605,17 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
             <div 
               className="rewards-winners-list" 
               style={{ 
-                flex: 1,
+                flex: 'none',
                 display: 'flex', 
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'flex-start',
+                justifyContent: 'center',
                 width: '85%',
                 padding: '4%',
-                margin: '0 auto',
+                margin: 'auto auto',
                 gap: '3%',
-                height: '120%', // Увеличена на 20%
-                maxHeight: 'none',
-                overflow: 'visible'
+                maxHeight: '85%',
+                overflow: 'hidden',
               }}
             >
               {/* Иконка способности с градиентной подложкой */}
