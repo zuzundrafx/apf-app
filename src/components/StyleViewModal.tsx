@@ -647,7 +647,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 display: 'flex', 
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'top',
                 width: '85%',
                 //padding: '4%',
                 //transform: 'translate(0%, 0%)',
