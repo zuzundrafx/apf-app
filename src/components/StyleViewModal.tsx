@@ -580,7 +580,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
           <div 
             className="rewards-modal no-summary" 
             style={{ 
-              height: '40%',
+              height: '45%',
               display: 'flex', 
               flexDirection: 'column',
               margin: '0',
@@ -595,7 +595,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 aspectRatio: '1/1',
                 background: gradientColors,
                 borderRadius: '10%',
-                padding: '3%',
+                padding: '2%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -603,7 +603,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 position: 'absolute',
                 left: '50%',
                 top: '50%',
-                transform: 'translate(-50%, -90%)',
+                transform: 'translate(-50%, -100%)',
               }}>
                 <div style={{
                   width: '100%',
@@ -652,8 +652,8 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 padding: '4%',
                 //margin: 'auto auto',
                 gap: '3%',
-                maxHeight: '75%',
-                minHeight: '75%',
+                maxHeight: '85%',
+                minHeight: '85%',
                 overflow: 'hidden',
               }}
             >
