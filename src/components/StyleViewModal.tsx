@@ -580,7 +580,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
           <div 
             className="rewards-modal no-summary" 
             style={{ 
-              height: '50%',
+              height: '40%',
               display: 'flex', 
               flexDirection: 'column',
               margin: '0',
@@ -588,8 +588,46 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
               position: 'relative'
             }}
           >
+            {/* Иконка способности в заголовке */}
             <div className="rewards-header" style={{ top: '-10%', zIndex: 100 }}>
-              <h2>{selectedAbility.name}</h2>
+              <div style={{
+                width: 'clamp(40px, 10vw, 55px)',
+                aspectRatio: '1/1',
+                background: gradientColors,
+                borderRadius: '10%',
+                padding: '3%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 0 0.3vw #000000',
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+              }}>
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  background: '#091422',
+                  borderRadius: '10%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                }}>
+                  {selectedAbility.icon_path ? (
+                    <img 
+                      src={`${BASE_URL}/icons/${selectedAbility.icon_path}`}
+                      alt={selectedAbility.name}
+                      style={{ width: '90%', height: '90%', objectFit: 'contain' }}
+                    />
+                  ) : (
+                    <div style={{ color: '#FFFFFF', fontSize: 'clamp(16px, 4vw, 24px)' }}>
+                      {selectedAbility.type === 'combo' ? '⚡' : '📈'}
+                    </div>
+                  )}
+                </div>
+              </div>
               <button 
                 className="cancelled-modal-close" 
                 style={{ top: '130%', zIndex: 101, cursor: 'pointer' }} 
@@ -618,42 +656,18 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 overflow: 'hidden',
               }}
             >
-              {/* Иконка способности с градиентной подложкой */}
+              {/* Название способности */}
               <div style={{
-                width: '30%',
-                aspectRatio: '1/1',
-                background: gradientColors,
-                borderRadius: '10%',
-                padding: '3%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 0 0 0.3vw #000000',
+                width: '100%',
+                color: '#FFD966',
+                fontSize: 'clamp(14px, 4vw, 18px)',
+                fontWeight: 700,
+                textAlign: 'center',
+                textTransform: 'uppercase',
+                textShadow: '0 0 5px rgba(255, 217, 102, 0.5)',
                 flexShrink: 0,
               }}>
-                <div style={{
-                  width: '100%',
-                  height: '100%',
-                  background: '#091422',
-                  borderRadius: '10%',
-                  boxShadow: '0 0 0 0.2vw #000000',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                }}>
-                  {selectedAbility.icon_path ? (
-                    <img 
-                      src={`${BASE_URL}/icons/${selectedAbility.icon_path}`}
-                      alt={selectedAbility.name}
-                      style={{ width: '90%', height: '90%', objectFit: 'contain' }}
-                    />
-                  ) : (
-                    <div style={{ color: '#FFFFFF', fontSize: 'clamp(16px, 5vw, 28px)' }}>
-                      {selectedAbility.type === 'combo' ? '⚡' : '📈'}
-                    </div>
-                  )}
-                </div>
+                {selectedAbility.name}
               </div>
 
               {/* Current Level */}
@@ -698,27 +712,41 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 </div>
               </div>
 
-              {/* Level & Cost (без фона) */}
-              <div style={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'space-around',
-                alignItems: 'center',
-                padding: '3% 4%',
-                flexShrink: 0,
-              }}>
-                <div style={{ color: '#FFD966', fontSize: 'clamp(12px, 3.5vw, 14px)' }}>
-                  Level {userAbilities.get(selectedAbility.id) || 0} → {(userAbilities.get(selectedAbility.id) || 0) + 1}
-                </div>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '4px',
-                  color: userExpPoints >= (selectedAbility.levels.find(l => l.level === (userAbilities.get(selectedAbility.id) || 0) + 1)?.cost || 0) ? '#FFFFFF' : '#FF6B6B'
+              {/* Level & Cost (без фона, скрыт на максимальном уровне) */}
+              {(userAbilities.get(selectedAbility.id) || 0) < selectedAbility.max_level && (
+                <div style={{
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'space-around',
+                  alignItems: 'center',
+                  padding: '3% 4%',
+                  flexShrink: 0,
                 }}>
-                  <span>Cost: {selectedAbility.levels.find(l => l.level === (userAbilities.get(selectedAbility.id) || 0) + 1)?.cost || 0} EXP</span>
+                  <div style={{ color: '#FFD966', fontSize: 'clamp(12px, 3.5vw, 14px)' }}>
+                    {userAbilities.get(selectedAbility.id) ? (
+                      `Level ${userAbilities.get(selectedAbility.id)} → ${(userAbilities.get(selectedAbility.id) || 0) + 1}`
+                    ) : (
+                      'Train Skill →'
+                    )}
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px',
+                    color: userExpPoints >= (selectedAbility.levels.find(l => l.level === (userAbilities.get(selectedAbility.id) || 0) + 1)?.cost || 0) ? '#FFFFFF' : '#FF6B6B'
+                  }}>
+                    <span 
+                      id={`cost-text-${selectedAbility.id}`}
+                      style={{
+                        display: 'inline-block',
+                        transition: 'transform 0.3s ease',
+                      }}
+                    >
+                      Cost: {selectedAbility.levels.find(l => l.level === (userAbilities.get(selectedAbility.id) || 0) + 1)?.cost || 0} EXP
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div style={{ 
@@ -736,7 +764,21 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                   opacity: (userAbilities.get(selectedAbility.id) || 0) < selectedAbility.max_level ? 1 : 0.5,
                   cursor: (userAbilities.get(selectedAbility.id) || 0) < selectedAbility.max_level ? 'pointer' : 'not-allowed'
                 }}
-                onClick={handleLearn}
+                onClick={() => {
+                  const cost = selectedAbility.levels.find(l => l.level === (userAbilities.get(selectedAbility.id) || 0) + 1)?.cost || 0;
+                  if (userExpPoints < cost) {
+                    // Анимация только текста Cost
+                    const costElement = document.getElementById(`cost-text-${selectedAbility.id}`);
+                    if (costElement) {
+                      costElement.style.transform = 'scale(1.3)';
+                      setTimeout(() => {
+                        costElement.style.transform = 'scale(1)';
+                      }, 300);
+                    }
+                    return;
+                  }
+                  handleLearn();
+                }}
                 disabled={(userAbilities.get(selectedAbility.id) || 0) >= selectedAbility.max_level}
               >
                 {(userAbilities.get(selectedAbility.id) || 0) >= selectedAbility.max_level ? 'MAX LEVEL' : 'LEARN'}
