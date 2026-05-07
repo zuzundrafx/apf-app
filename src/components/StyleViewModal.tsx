@@ -575,7 +575,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
         </div>
       </div>
 
-      {showLearnModal && selectedAbility && (
+            {showLearnModal && selectedAbility && (
         <div className="rewards-modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000 }}>
           <div 
             className="rewards-modal no-summary" 
@@ -609,30 +609,104 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 display: 'flex', 
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'flex-start',
                 width: '85%',
                 padding: '4%',
                 margin: '0 auto',
-                gap: '4%'
+                gap: '3%',
+                height: '120%', // Увеличена на 20%
+                maxHeight: 'none',
+                overflow: 'visible'
               }}
             >
+              {/* Иконка способности с градиентной подложкой */}
               <div style={{
-                width: '100%',
-                color: '#FFFFFF',
-                fontSize: 'clamp(12px, 3.5vw, 14px)',
-                textAlign: 'center'
+                width: '30%',
+                aspectRatio: '1/1',
+                background: gradientColors,
+                borderRadius: '10%',
+                padding: '3%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 0 0.3vw #000000',
+                flexShrink: 0,
               }}>
-                {selectedAbility.levels.find(l => l.level === (userAbilities.get(selectedAbility.id) || 0) + 1)?.description || selectedAbility.description}
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  background: '#091422',
+                  borderRadius: '10%',
+                  boxShadow: '0 0 0 0.2vw #000000',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                }}>
+                  {selectedAbility.icon_path ? (
+                    <img 
+                      src={`${BASE_URL}/icons/${selectedAbility.icon_path}`}
+                      alt={selectedAbility.name}
+                      style={{ width: '90%', height: '90%', objectFit: 'contain' }}
+                    />
+                  ) : (
+                    <div style={{ color: '#FFFFFF', fontSize: 'clamp(16px, 5vw, 28px)' }}>
+                      {selectedAbility.type === 'combo' ? '⚡' : '📈'}
+                    </div>
+                  )}
+                </div>
               </div>
 
+              {/* Current Level */}
+              <div style={{
+                width: '100%',
+                padding: '3% 4%',
+                background: '#313130',
+                borderRadius: '8px',
+                flexShrink: 0,
+              }}>
+                <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 3vw, 12px)', textAlign: 'center', lineHeight: 1.4 }}>
+                  {userAbilities.get(selectedAbility.id) ? (
+                    <>
+                      Current level: {userAbilities.get(selectedAbility.id)}/{selectedAbility.max_level}
+                      <br />
+                      {selectedAbility.levels.find(l => l.level === userAbilities.get(selectedAbility.id))?.description || selectedAbility.description}
+                    </>
+                  ) : (
+                    'The skill has not been learned yet!'
+                  )}
+                </div>
+              </div>
+
+              {/* Next Level */}
+              <div style={{
+                width: '100%',
+                padding: '3% 4%',
+                background: '#313130',
+                borderRadius: '8px',
+                flexShrink: 0,
+              }}>
+                <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 3vw, 12px)', textAlign: 'center', lineHeight: 1.4 }}>
+                  {(userAbilities.get(selectedAbility.id) || 0) >= selectedAbility.max_level ? (
+                    'The maximum level has been reached'
+                  ) : (
+                    <>
+                      Next level: {(userAbilities.get(selectedAbility.id) || 0) + 1}/{selectedAbility.max_level}
+                      <br />
+                      {selectedAbility.levels.find(l => l.level === (userAbilities.get(selectedAbility.id) || 0) + 1)?.description || selectedAbility.description}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Level & Cost (без фона) */}
               <div style={{
                 width: '100%',
                 display: 'flex',
                 justifyContent: 'space-around',
                 alignItems: 'center',
-                padding: '3%',
-                background: '#313130',
-                borderRadius: '8px'
+                padding: '3% 4%',
+                flexShrink: 0,
               }}>
                 <div style={{ color: '#FFD966', fontSize: 'clamp(12px, 3.5vw, 14px)' }}>
                   Level {userAbilities.get(selectedAbility.id) || 0} → {(userAbilities.get(selectedAbility.id) || 0) + 1}
@@ -660,12 +734,13 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 style={{ 
                   width: '60%', 
                   height: '6vh',
-                  opacity: 1,
-                  cursor: 'pointer'
+                  opacity: (userAbilities.get(selectedAbility.id) || 0) < selectedAbility.max_level ? 1 : 0.5,
+                  cursor: (userAbilities.get(selectedAbility.id) || 0) < selectedAbility.max_level ? 'pointer' : 'not-allowed'
                 }}
                 onClick={handleLearn}
+                disabled={(userAbilities.get(selectedAbility.id) || 0) >= selectedAbility.max_level}
               >
-                LEARN
+                {(userAbilities.get(selectedAbility.id) || 0) >= selectedAbility.max_level ? 'MAX LEVEL' : 'LEARN'}
               </button>
             </div>
           </div>
