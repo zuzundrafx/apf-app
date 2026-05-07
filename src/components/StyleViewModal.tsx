@@ -651,7 +651,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 width: '85%',
                 //padding: '4%',
                 //transform: 'translate(0%, 0%)',
-                margin: 'auto center',
+                margin: 'center center',
                 gap: '4%',
                 maxHeight: '77%',
                 minHeight: '77%',
