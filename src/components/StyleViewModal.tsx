@@ -591,7 +591,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
             {/* Иконка способности в заголовке */}
             <div className="rewards-header" style={{ top: '-10%', zIndex: 100 }}>
               <div style={{
-                width: '20vw',
+                width: '25vw',
                 aspectRatio: '1/1',
                 background: gradientColors,
                 borderRadius: '10%',
@@ -603,7 +603,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 position: 'absolute',
                 left: '50%',
                 top: '50%',
-                transform: 'translate(-50%, -70%)',
+                transform: 'translate(-50%, -90%)',
               }}>
                 <div style={{
                   width: '100%',
@@ -619,7 +619,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                     <img 
                       src={`${BASE_URL}/icons/${selectedAbility.icon_path}`}
                       alt={selectedAbility.name}
-                      style={{ width: '90%', height: '90%', objectFit: 'contain' }}
+                      style={{ width: '95%', height: '95%', objectFit: 'contain' }}
                     />
                   ) : (
                     <div style={{ color: '#FFFFFF', fontSize: 'clamp(16px, 4vw, 24px)' }}>
