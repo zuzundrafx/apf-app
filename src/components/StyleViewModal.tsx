@@ -591,7 +591,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
             {/* Иконка способности в заголовке */}
             <div className="rewards-header" style={{ top: '-10%', zIndex: 100 }}>
               <div style={{
-                width: 'clamp(40px, 10vw, 55px)',
+                width: '20vw',
                 aspectRatio: '1/1',
                 background: gradientColors,
                 borderRadius: '10%',
@@ -603,7 +603,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 position: 'absolute',
                 left: '50%',
                 top: '50%',
-                transform: 'translate(-50%, -50%)',
+                transform: 'translate(-50%, -70%)',
               }}>
                 <div style={{
                   width: '100%',
@@ -653,6 +653,7 @@ const StyleViewModal: React.FC<StyleViewModalProps> = ({
                 margin: 'auto auto',
                 gap: '3%',
                 maxHeight: '85%',
+                minHeight: '85%',
                 overflow: 'hidden',
               }}
             >
