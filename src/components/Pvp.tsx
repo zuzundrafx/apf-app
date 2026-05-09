@@ -220,88 +220,95 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   }}>
     
     {/* ===== ЯЧЕЙКА 1 (строка 1, колонка 1) ===== */}
+    {/* Контейнер №1: BaseLeague_icon.webp — 90% ширины ячейки, по центру */}
     <div style={{
       position: 'relative',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
+      width: '90%',
+      aspectRatio: '1/1',
+      margin: 'auto',
     }}>
-      {/* Слой 1: BaseLeague_icon.webp — 85% ширины ячейки */}
       <img 
         src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
         alt="base league"
         style={{
-          width: '85%',
-          aspectRatio: '1/1',
+          width: '100%',
+          height: '100%',
           objectFit: 'contain',
-          position: 'absolute',
         }}
       />
-      {/* Слой 2: ContenderLeague_icon.webp — 80% ширины ячейки */}
+      
+      {/* Контейнер №2: ContenderLeague_icon.webp — 80% ширины КОНТЕЙНЕРА №1, по центру */}
       <img 
         src={`${BASE_URL}/icons/ContenderLeague_icon.webp`}
         alt="contender league"
         style={{
-          width: '60%',
+          width: '80%',
           aspectRatio: '1/1',
           objectFit: 'contain',
           position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
         }}
       />
-      {/* Слой 3: BaseLeague_icon.webp — 20% ширины ячейки, правый нижний угол */}
-      <img 
-        src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
-        alt="small base league"
-        style={{
-          width: '35%',
-          aspectRatio: '1/1',
-          objectFit: 'contain',
-          position: 'absolute',
-          right: 0,
-          bottom: '10%',
-        }}
-      />
-      {/* Слой 4: BaseLeague_icon.webp — 70% от маленькой, чёрный фильтр, по центру */}
-      <img 
-        src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
-        alt="black small base league"
-        style={{
-          width: '25%', // 35% * 0.7 = 14% от ширины ячейки
-          aspectRatio: '1/1',
-          objectFit: 'contain',
-          position: 'absolute',
-          right: '5%', // центрирование относительно маленькой иконки (35% - 25%) / 2 = 5%
-          bottom: '12%',
-          filter: 'brightness(0)',
-        }}
-      />
-      {/* Текст "3" поверх чёрной иконки */}
-      <span style={{
+
+      {/* Контейнер №3: BaseLeague_icon.webp — 20% ширины КОНТЕЙНЕРА №1, правый нижний угол */}
+      <div style={{
         position: 'absolute',
-        right: '5%',
-        bottom: '12%',
-        width: '21%',
+        right: 0,
+        bottom: 0,
+        width: '20%',
         aspectRatio: '1/1',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#FFFFFF',
-        fontSize: 'clamp(10px, 4vw, 20px)',
-        fontWeight: 700,
-        zIndex: 10,
       }}>
-        3
-      </span>
+        <img 
+          src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+          alt="small base league"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+          }}
+        />
+        
+        {/* Контейнер №4: BaseLeague_icon.webp — 70% от КОНТЕЙНЕРА №3, чёрный, по центру */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '70%',
+          aspectRatio: '1/1',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <img 
+            src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+            alt="black small base league"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              filter: 'brightness(0)',
+            }}
+          />
+          {/* Текст "3" поверх чёрной иконки */}
+          <span style={{
+            position: 'absolute',
+            color: '#FFFFFF',
+            fontSize: 'clamp(10px, 4vw, 20px)',
+            fontWeight: 700,
+          }}>
+            3
+          </span>
+        </div>
+      </div>
     </div>
 
-    {/* Ячейки 2-8 пока пустые */}
-    <div /> {/* строка 1, колонка 2 */}
-    <div /> {/* строка 1, колонка 3 */}
-    <div /> {/* строка 1, колонка 4 */}
-    <div /> {/* строка 2, колонка 1 */}
-    <div /> {/* строка 2, колонка 2 */}
-    <div /> {/* строка 2, колонка 3 */}
-    <div /> {/* строка 2, колонка 4 */}
+    {/* Ячейки 2-4 пока пустые */}
+    <div />
+    <div />
+    <div />
 
   </div>
 </div>
