@@ -258,7 +258,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           objectFit: 'contain',
           position: 'absolute',
           right: 0,
-          bottom: 10%,
+          bottom: '10%',
         }}
       />
       {/* Слой 4: BaseLeague_icon.webp — 70% от маленькой, чёрный фильтр, по центру */}
@@ -278,8 +278,8 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
       {/* Текст "3" поверх чёрной иконки */}
       <span style={{
         position: 'absolute',
-        right: '6%',
-        bottom: '8%',
+        right: '3%',
+        bottom: '3%',
         width: '21%',
         aspectRatio: '1/1',
         display: 'flex',
