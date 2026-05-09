@@ -271,7 +271,8 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
             width: '100%',
             height: '100%',
             objectFit: 'contain',
-            filter: 'saturate(0)',
+            filter: 'saturate(0) brightness(0.7)',
+            
           }}
         />
         
