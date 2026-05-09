@@ -266,7 +266,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
         alt="black small base league"
         style={{
-          width: '32%', // 40% * 0.7 = 14% от ширины ячейки
+          width: '33%', // 40% * 0.7 = 14% от ширины ячейки
           aspectRatio: '1/1',
           objectFit: 'contain',
           position: 'absolute',
@@ -278,8 +278,8 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
       {/* Текст "3" поверх чёрной иконки */}
       <span style={{
         position: 'absolute',
-        right: '3%',
-        bottom: '3%',
+        right: '5%',
+        bottom: '12%',
         width: '21%',
         aspectRatio: '1/1',
         display: 'flex',
