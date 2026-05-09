@@ -252,12 +252,12 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         }}
       />
 
-      {/* Контейнер №3: BaseLeague_icon.webp — 20% ширины КОНТЕЙНЕРА №1, правый нижний угол */}
+      {/* Контейнер №3: BaseLeague_icon.webp — 40% ширины КОНТЕЙНЕРА №1, правый нижний угол */}
       <div style={{
         position: 'absolute',
-        right: 0,
-        bottom: 0,
-        width: '35%',
+        right: '-5%',
+        bottom: '-5%',
+        width: '40%',
         aspectRatio: '1/1',
         display: 'flex',
         alignItems: 'center',
