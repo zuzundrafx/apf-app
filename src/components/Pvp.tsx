@@ -259,6 +259,9 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         bottom: 0,
         width: '35%',
         aspectRatio: '1/1',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}>
         <img 
           src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
