@@ -270,8 +270,8 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           aspectRatio: '1/1',
           objectFit: 'contain',
           position: 'absolute',
-          right: '4,5%', // центрирование относительно маленькой иконки (20% - 14%) / 2 = 3%
-          bottom: '4,5',
+          right: '4.5%', // центрирование относительно маленькой иконки (20% - 14%) / 2 = 3%
+          bottom: '4.5%',
           filter: 'brightness(0)',
         }}
       />
@@ -286,7 +286,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         alignItems: 'center',
         justifyContent: 'center',
         color: '#FFFFFF',
-        fontSize: 'clamp(8px, 2vw, 12px)',
+        fontSize: 'clamp(10px, 4vw, 20px)',
         fontWeight: 700,
         zIndex: 10,
       }}>
