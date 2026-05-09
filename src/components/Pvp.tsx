@@ -231,7 +231,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
         alt="base league"
         style={{
-          width: '90%',
+          width: '80%',
           aspectRatio: '1/1',
           objectFit: 'contain',
           position: 'absolute',
@@ -242,7 +242,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         src={`${BASE_URL}/icons/ContenderLeague_icon.webp`}
         alt="contender league"
         style={{
-          width: '80%',
+          width: '65%',
           aspectRatio: '1/1',
           objectFit: 'contain',
           position: 'absolute',
@@ -253,7 +253,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
         alt="small base league"
         style={{
-          width: '20%',
+          width: '30%',
           aspectRatio: '1/1',
           objectFit: 'contain',
           position: 'absolute',
@@ -266,7 +266,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
         alt="black small base league"
         style={{
-          width: '14%', // 20% * 0.7 = 14% от ширины ячейки
+          width: '21%', // 20% * 0.7 = 14% от ширины ячейки
           aspectRatio: '1/1',
           objectFit: 'contain',
           position: 'absolute',
