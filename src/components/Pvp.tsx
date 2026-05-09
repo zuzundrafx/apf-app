@@ -242,7 +242,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         src={`${BASE_URL}/icons/ContenderLeague_icon.webp`}
         alt="contender league"
         style={{
-          width: '65%',
+          width: '55%',
           aspectRatio: '1/1',
           objectFit: 'contain',
           position: 'absolute',
