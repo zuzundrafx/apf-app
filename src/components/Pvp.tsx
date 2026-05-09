@@ -223,7 +223,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     {/* Контейнер №1: BaseLeague_icon.webp — 90% ширины ячейки, по центру */}
     <div style={{
       position: 'relative',
-      width: '90%',
+      width: '85%',
       aspectRatio: '1/1',
       margin: 'auto',
     }}>
@@ -242,7 +242,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         src={`${BASE_URL}/icons/ContenderLeague_icon.webp`}
         alt="contender league"
         style={{
-          width: '80%',
+          width: '70%',
           aspectRatio: '1/1',
           objectFit: 'contain',
           position: 'absolute',
@@ -257,7 +257,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         position: 'absolute',
         right: 0,
         bottom: 0,
-        width: '20%',
+        width: '35%',
         aspectRatio: '1/1',
       }}>
         <img 
