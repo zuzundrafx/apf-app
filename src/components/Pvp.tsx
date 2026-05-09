@@ -210,10 +210,10 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
               </div>
 
               <div className="pvp-card-middle">
-  {/* Grid: 2 строки, 4 столбца */}
+  {/* Grid: 1 строка, 4 столбца */}
   <div style={{
     display: 'grid',
-    gridTemplateRows: '80% 20%',
+    gridTemplateRows: '100%',
     gridTemplateColumns: 'repeat(4, 25%)',
     width: '100%',
     height: '100%',
@@ -253,7 +253,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
         alt="small base league"
         style={{
-          width: '30%',
+          width: '40%',
           aspectRatio: '1/1',
           objectFit: 'contain',
           position: 'absolute',
@@ -266,12 +266,12 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
         alt="black small base league"
         style={{
-          width: '21%', // 20% * 0.7 = 14% от ширины ячейки
+          width: '28%', // 40% * 0.7 = 14% от ширины ячейки
           aspectRatio: '1/1',
           objectFit: 'contain',
           position: 'absolute',
-          right: '4.5%', // центрирование относительно маленькой иконки (20% - 14%) / 2 = 3%
-          bottom: '4.5%',
+          right: '6%', // центрирование относительно маленькой иконки (40% - 28%) / 2 = 6%
+          bottom: '6%',
           filter: 'brightness(0)',
         }}
       />
