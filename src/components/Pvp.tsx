@@ -266,12 +266,12 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
         alt="black small base league"
         style={{
-          width: '35%', // 40% * 0.7 = 14% от ширины ячейки
+          width: '32%', // 40% * 0.7 = 14% от ширины ячейки
           aspectRatio: '1/1',
           objectFit: 'contain',
           position: 'absolute',
-          right: '5%', // центрирование относительно маленькой иконки (40% - 28%) / 2 = 6%
-          bottom: '16%',
+          right: '4%', // центрирование относительно маленькой иконки (40% - 28%) / 2 = 6%
+          bottom: '12%',
           filter: 'brightness(0)',
         }}
       />
