@@ -210,32 +210,101 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
               </div>
 
               <div className="pvp-card-middle">
-                <div className="pvp-middle-left">
-                  <div className="pvp-player-avatar">
-                    <img 
-                      src={userAvatar || `${BASE_URL}/Home_button.png`} 
-                      alt="player"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = `${BASE_URL}/Home_button.png`;
-                      }}
-                    />
-                  </div>
-                </div>
+  {/* Grid: 2 строки, 4 столбца */}
+  <div style={{
+    display: 'grid',
+    gridTemplateRows: '80% 20%',
+    gridTemplateColumns: 'repeat(4, 25%)',
+    width: '100%',
+    height: '100%',
+  }}>
+    
+    {/* ===== ЯЧЕЙКА 1 (строка 1, колонка 1) ===== */}
+    <div style={{
+      position: 'relative',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      {/* Слой 1: BaseLeague_icon.webp — 90% ширины ячейки */}
+      <img 
+        src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+        alt="base league"
+        style={{
+          width: '90%',
+          aspectRatio: '1/1',
+          objectFit: 'contain',
+          position: 'absolute',
+        }}
+      />
+      {/* Слой 2: ContenderLeague_icon.webp — 80% ширины ячейки */}
+      <img 
+        src={`${BASE_URL}/icons/ContenderLeague_icon.webp`}
+        alt="contender league"
+        style={{
+          width: '80%',
+          aspectRatio: '1/1',
+          objectFit: 'contain',
+          position: 'absolute',
+        }}
+      />
+      {/* Слой 3: BaseLeague_icon.webp — 20% ширины ячейки, правый нижний угол */}
+      <img 
+        src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+        alt="small base league"
+        style={{
+          width: '20%',
+          aspectRatio: '1/1',
+          objectFit: 'contain',
+          position: 'absolute',
+          right: 0,
+          bottom: 0,
+        }}
+      />
+      {/* Слой 4: BaseLeague_icon.webp — 70% от маленькой, чёрный фильтр, по центру */}
+      <img 
+        src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+        alt="black small base league"
+        style={{
+          width: '14%', // 20% * 0.7 = 14% от ширины ячейки
+          aspectRatio: '1/1',
+          objectFit: 'contain',
+          position: 'absolute',
+          right: '3%', // центрирование относительно маленькой иконки (20% - 14%) / 2 = 3%
+          bottom: '3%',
+          filter: 'brightness(0)',
+        }}
+      />
+      {/* Текст "3" поверх чёрной иконки */}
+      <span style={{
+        position: 'absolute',
+        right: '3%',
+        bottom: '3%',
+        width: '14%',
+        aspectRatio: '1/1',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#FFFFFF',
+        fontSize: 'clamp(8px, 2vw, 12px)',
+        fontWeight: 700,
+        zIndex: 10,
+      }}>
+        3
+      </span>
+    </div>
 
-                <div className="pvp-middle-center">
-                  <img 
-                    src={`${BASE_URL}/VS_logo.webp`} 
-                    alt="VS" 
-                    className="pvp-vs-logo"
-                  />
-                </div>
+    {/* Ячейки 2-8 пока пустые */}
+    <div /> {/* строка 1, колонка 2 */}
+    <div /> {/* строка 1, колонка 3 */}
+    <div /> {/* строка 1, колонка 4 */}
+    <div /> {/* строка 2, колонка 1 */}
+    <div /> {/* строка 2, колонка 2 */}
+    <div /> {/* строка 2, колонка 3 */}
+    <div /> {/* строка 2, колонка 4 */}
 
-                <div className="pvp-middle-right">
-                  <div className="pvp-rival-avatar">
-                    <img src={`${BASE_URL}/default-avatar.png`} alt="rival" />
-                  </div>
-                </div>
-              </div>
+  </div>
+</div>
 
               <div className="pvp-card-bottom">
                 <div className="pvp-bottom-left">
