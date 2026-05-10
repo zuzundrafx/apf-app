@@ -448,8 +448,8 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                             height: '100%',
                             objectFit: 'contain',
                             filter: isSelected 
-      ? 'saturate(0) brightness(0.7) drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.4))' 
-      : `saturate(0) brightness(0.7)`,
+      ? 'saturate(1) hue-rotate(-35deg) brightness(0.9) drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.4))' 
+      : `saturate(1) hue-rotate(-35deg) brightness(0.9)`,
                             opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             position: 'relative',
                             zIndex: 1,
@@ -509,7 +509,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                               objectFit: 'contain',
                               filter: 'saturate(0) brightness(0.7)',
                               position: 'relative',
-                              
+                              opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             }}
                           />
                           
@@ -529,6 +529,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                                 height: '100%',
                                 objectFit: 'contain',
                                 filter: 'brightness(0)',
+                                opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                               }}
                             />
                             <span style={{
@@ -536,6 +537,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                               color: unlocked ? '#FFFFFF' : '#FF6B6B',
                               fontSize: 'clamp(10px, 4vw, 20px)',
                               fontWeight: 700,
+                              opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             }}>
                               {(() => {
                                 const progress = tiersProgress.get(`${tournament.id}_ufc_pro`);
@@ -571,8 +573,8 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                             height: '100%',
                             objectFit: 'contain',
                             filter: isSelected 
-      ? 'saturate(0) brightness(0.7) drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.4))' 
-      : `saturate(0) brightness(0.7)`,
+      ? 'saturate(0) brightness(1) drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.4))' 
+      : `saturate(0) brightness(1)`,
                             opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             position: 'relative',
                             zIndex: 1,
@@ -630,9 +632,9 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                               width: '100%',
                               height: '100%',
                               objectFit: 'contain',
-                              filter: 'saturate(0) brightness(0.7)',
+                              filter: 'saturate(0) brightness(1)',
                               position: 'relative',
-                              
+                              opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             }}
                           />
                           
@@ -652,6 +654,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                                 height: '100%',
                                 objectFit: 'contain',
                                 filter: 'brightness(0)',
+                                opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                               }}
                             />
                             <span style={{
@@ -659,6 +662,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                               color: unlocked ? '#FFFFFF' : '#FF6B6B',
                               fontSize: 'clamp(10px, 4vw, 20px)',
                               fontWeight: 700,
+                              opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             }}>
                               {(() => {
                                 const progress = tiersProgress.get(`${tournament.id}_ufc_elite`);
@@ -694,8 +698,8 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                             height: '100%',
                             objectFit: 'contain',
                             filter: isSelected 
-      ? 'saturate(0) brightness(0.7) drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.4))' 
-      : `saturate(0) brightness(0.7)`,
+      ? 'saturate(1) brightness(1) drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.4))' 
+      : `saturate(1) brightness(1)`,
                             opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             position: 'relative',
                             zIndex: 1,
@@ -753,9 +757,9 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                               width: '100%',
                               height: '100%',
                               objectFit: 'contain',
-                              filter: 'saturate(0) brightness(0.7)',
+                              filter: 'saturate(1) brightness(1)',
                               position: 'relative',
-                              
+                              opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             }}
                           />
                           
@@ -775,6 +779,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                                 height: '100%',
                                 objectFit: 'contain',
                                 filter: 'brightness(0)',
+                                opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                               }}
                             />
                             <span style={{
@@ -782,6 +787,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                               color: unlocked ? '#FFFFFF' : '#FF6B6B',
                               fontSize: 'clamp(10px, 4vw, 20px)',
                               fontWeight: 700,
+                              opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             }}>
                               {(() => {
                                 const progress = tiersProgress.get(`${tournament.id}_ufc_legend`);
