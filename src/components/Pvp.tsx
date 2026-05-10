@@ -310,7 +310,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                               objectFit: 'contain',
                               filter: 'saturate(0) brightness(0.7)',
                               position: 'relative',
-                              zIndex: 1,
+                              
                             }}
                           />
                           
@@ -433,7 +433,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                               objectFit: 'contain',
                               filter: 'saturate(0) brightness(0.7)',
                               position: 'relative',
-                              zIndex: 1,
+                              
                             }}
                           />
                           
@@ -556,7 +556,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                               objectFit: 'contain',
                               filter: 'saturate(0) brightness(0.7)',
                               position: 'relative',
-                              //zIndex: 1,
+                              
                             }}
                           />
                           
@@ -679,7 +679,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                               objectFit: 'contain',
                               filter: 'saturate(0) brightness(0.7)',
                               position: 'relative',
-                              zIndex: 1,
+                              
                             }}
                           />
                           
