@@ -241,6 +241,24 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                   width: '100%',
                   height: '100%',
                 }}>
+
+                  {/* Линии между лигами */}
+    {[1, 2, 3].map((lineIndex) => {
+      const tiers = ['ufc_contenders', 'ufc_pro', 'ufc_elite', 'ufc_legend'];
+      const leftUnlocked = isTierUnlocked(tiers[lineIndex - 1], tournament.id);
+      return (
+        <div key={`line-${lineIndex}`} style={{
+          position: 'absolute',
+          top: '50%',
+          left: `${lineIndex * 25}%`,
+          width: '4%',
+          height: '2px',
+          transform: 'translate(-50%, -50%)',
+          background: leftUnlocked ? 'rgba(0, 255, 100, 0.5)' : 'rgba(128, 128, 128, 0.5)',
+          zIndex: 10,
+        }} />
+      );
+    })}
                   
                   {/* ===== Contenders League ===== */}
                   {(() => {
