@@ -738,7 +738,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           </div>
           {/* Строка 2: Ranking Points */}
           <div style={{ color: '#FFD966', fontSize: 'clamp(8px, 2vw, 10px)' }}>
-            {rpName ? `${rpName}: ${rpValue}` : 'Training Tier'}
+            {rpName ? `${rpName}: ${rpValue}` : 'Training'}
           </div>
         </>
       );
