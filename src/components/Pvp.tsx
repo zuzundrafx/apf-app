@@ -104,23 +104,43 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
 
   // Загрузка конфигурации рейтинговых лиг
 useEffect(() => {
-  const loadTiersConfig = async () => {
-    if (!authToken) return;
+  const loadTiersData = async () => {
+    if (!authToken || pastTournaments.length === 0) return;
     try {
       const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
-      const response = await fetch(`${API_BASE}/api/ranking-tiers/config`, {
+      
+      // Загружаем конфигурацию лиг
+      const configResponse = await fetch(`${API_BASE}/api/ranking-tiers/config`, {
         headers: { 'Authorization': `Bearer ${authToken}` }
       });
-      if (response.ok) {
-        const configs = await response.json();
+      if (configResponse.ok) {
+        const configs = await configResponse.json();
         setTiersConfig(configs);
+        
+        // Для каждого турнира загружаем прогресс
+        for (const tournament of pastTournaments) {
+          const progressResponse = await fetch(
+            `${API_BASE}/api/ranking-tiers/progress?tournament_id=${tournament.id}`,
+            { headers: { 'Authorization': `Bearer ${authToken}` } }
+          );
+          if (progressResponse.ok) {
+            const data = await progressResponse.json();
+            setTiersProgress(prev => {
+              const newMap = new Map(prev);
+              data.progress?.forEach((p: any) => {
+                newMap.set(`${p.tournament_id}_${p.tier_name}`, p);
+              });
+              return newMap;
+            });
+          }
+        }
       }
     } catch (e) {
-      console.error('Failed to load tiers config:', e);
+      console.error('Failed to load tiers data:', e);
     }
   };
-  loadTiersConfig();
-}, [authToken]);
+  loadTiersData();
+}, [authToken, pastTournaments]);
 
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
     const bet = userBets.get(Number(tournament.id));
@@ -349,7 +369,7 @@ useEffect(() => {
             fontWeight: 700,
           }}>
             {(() => {
-              const progress = tiersProgress.get('ufc_contenders');
+              const progress = tiersProgress.get(`${tournament.id}_ufc_contenders`);
               if (!progress) return '3';
               return progress.tier_levels_remaining === 0 ? '✓' : progress.tier_levels_remaining;
             })()}
@@ -448,7 +468,7 @@ useEffect(() => {
             fontWeight: 700,
           }}>
             {(() => {
-              const progress = tiersProgress.get('ufc_pro');
+              const progress = tiersProgress.get(`${tournament.id}_ufc_pro`);
               if (!progress) return '10';
               return progress.tier_levels_remaining === 0 ? '✓' : progress.tier_levels_remaining;
             })()}
@@ -547,7 +567,7 @@ useEffect(() => {
             fontWeight: 700,
           }}>
             {(() => {
-              const progress = tiersProgress.get('ufc_elite');
+              const progress = tiersProgress.get(`${tournament.id}_ufc_elite`);
               if (!progress) return '25';
               return progress.tier_levels_remaining === 0 ? '✓' : progress.tier_levels_remaining;
             })()}
@@ -646,7 +666,7 @@ useEffect(() => {
             fontWeight: 700,
           }}>
             {(() => {
-              const progress = tiersProgress.get('ufc_legend');
+              const progress = tiersProgress.get(`${tournament.id}_ufc_legend`);
               if (!progress) return '30';
               return progress.tier_levels_remaining === 0 ? '✓' : progress.tier_levels_remaining;
             })()}
@@ -670,7 +690,7 @@ useEffect(() => {
       }}>
         {(() => {
           const config = tiersConfig.find(c => c.tier_name === selectedTier);
-          const progress = tiersProgress.get(selectedTier);
+          const progress = tiersProgress.get(`${tournament.id}_${selectedTier}`);
           const rpName = config?.ranking_points_name || '';
           const rpValue = progress?.ranking_points || 0;
           return (
