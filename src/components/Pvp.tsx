@@ -154,12 +154,20 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     return { canJoin: true, reason: '' };
   };
 
-  const isTierUnlocked = (tierName: string, tournamentId: string): boolean => {
-    if (tierName.endsWith('_contenders')) return true;
-    const progress = tiersProgress.get(`${tournamentId}_${tierName}`);
-    if (!progress) return false;
-    return progress.tier_levels_remaining === 0;
-  };
+ const isTierUnlocked = (tierName: string, tournamentId: string): boolean => {
+  if (tierName.endsWith('_contenders')) return true;
+  
+  // Определяем предыдущую лигу
+  const tierOrder = ['ufc_contenders', 'ufc_pro', 'ufc_elite', 'ufc_legend'];
+  const currentIdx = tierOrder.indexOf(tierName);
+  if (currentIdx <= 0) return false;
+  
+  const prevTier = tierOrder[currentIdx - 1];
+  const prevProgress = tiersProgress.get(`${tournamentId}_${prevTier}`);
+  
+  // Лига открыта, если предыдущая лига завершена (tier_levels_remaining === 0)
+  return prevProgress && prevProgress.tier_levels_remaining === 0;
+};
 
   const handlePvpClick = (tournament: Tournament) => {
     console.log('🖱️ Pvp button clicked for tournament:', tournament.name);
