@@ -692,7 +692,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
               <div className="pvp-card-bottom" style={{ display: 'flex', width: '100%', background: '#484d52', borderTop: '1px solid #4A4A48' }}>
   {/* Левая часть (75%) — информация о лиге */}
   <div style={{
-    width: '75%',
+    width: '65%',
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
@@ -733,11 +733,11 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
       return (
         <>
           {/* Строка 1: Tier Awards */}
-          <div style={{ color: '#FFFFFF', fontSize: 'clamp(8px, 2vw, 10px)', lineHeight: 1.3, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '2px' }}>
+          <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: 1.3, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '2px' }}>
             Tier Awards: {awardsParts}
           </div>
           {/* Строка 2: Ranking Points */}
-          <div style={{ color: '#FFD966', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+          <div style={{ color: '#FFD966', fontSize: 'clamp(10px, 2.5vw, 12px)' }}>
             {rpName ? `${rpName}: ${rpValue}` : 'Training'}
           </div>
         </>
@@ -745,8 +745,8 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     })()}
   </div>
 
-  {/* Правая часть (25%) — кнопка */}
-  <div style={{ width: '25%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2px' }}>
+  {/* Правая часть (35%) — кнопка */}
+  <div style={{ width: '35%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2px' }}>
     <button 
       className={`pvp-engage-button ${isDisabled ? 'disabled' : ''}`}
       onClick={() => {
@@ -760,21 +760,25 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
         }
       }}
       disabled={isDisabled}
-      style={{ width: '100%', height: '80%', fontSize: 'clamp(7px, 1.6vw, 10px)', lineHeight: 1.2 }}
+      style={{ width: '90%', height: '80%', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: 1.2 }}
     >
       {(() => {
         const config = tiersConfig.find(c => c.tier_name === selectedTier);
         if (!config) return 'ENTRY BET';
         return (
           <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-            <span>ENTRY Fee:</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-              {config.entry_fee_min}/{config.entry_fee_max}
-              <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
-              , {config.tickets_fee}
-              <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
-            </span>
-          </span>
+  <span>ENTRY Fee:</span>
+  <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+    {config.entry_fee_min}/{config.entry_fee_max}
+    <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
+    {config.tickets_fee > 0 && (
+      <>
+        , {config.tickets_fee}
+        <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
+      </>
+    )}
+  </span>
+</span>
         );
       })()}
     </button>
