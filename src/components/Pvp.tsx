@@ -249,10 +249,10 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
       return (
         <div key={`line-${lineIndex}`} style={{
           position: 'absolute',
-          top: '50%',
+          //top: '50%',
           left: `${lineIndex * 25}%`,
           width: '4%',
-          height: '2px',
+          height: '15%',
           transform: 'translate(-50%, -50%)',
           background: leftUnlocked ? 'rgba(0, 255, 100, 0.5)' : 'rgba(128, 128, 128, 0.5)',
           zIndex: 10,
