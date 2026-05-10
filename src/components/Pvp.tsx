@@ -689,71 +689,97 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                 </div>
               </div>
 
-              <div className="pvp-card-bottom">
-                <div className="pvp-bottom-left">
-                  <div style={{ 
-                    width: '100%', 
-                    padding: '0 4px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    height: '100%',
-                  }}>
-                    {(() => {
-                      const config = tiersConfig.find(c => c.tier_name === selectedTier);
-                      const progress = tiersProgress.get(`${tournament.id}_${selectedTier}`);
-                      const rpName = config?.ranking_points_name || '';
-                      const rpValue = progress?.ranking_points || 0;
-                      return (
-                        <>
-                          <div style={{ color: '#FFFFFF', fontSize: 'clamp(8px, 2vw, 10px)', lineHeight: 1.3 }}>
-                            Tier Awards: {config?.exp_multiplier || '?'}x EXP{config?.coin_reward ? ', Coins' : ''}{rpName ? `, ${rpName}` : ''}
-                          </div>
-                          {rpName ? (
-                            <div style={{ color: '#FFD966', fontSize: 'clamp(8px, 2vw, 10px)' }}>
-                              {rpName}: {rpValue}
-                            </div>
-                          ) : (
-                            <div style={{ color: '#FFD966', fontSize: 'clamp(8px, 2vw, 10px)' }}>
-                              Training Tier
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                </div>
+              <div className="pvp-card-bottom" style={{ display: 'flex', width: '100%', background: '#484d52', borderTop: '1px solid #4A4A48' }}>
+  {/* Левая часть (75%) — информация о лиге */}
+  <div style={{
+    width: '75%',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    padding: '2px 6px',
+    gap: '2px',
+  }}>
+    {(() => {
+      const config = tiersConfig.find(c => c.tier_name === selectedTier);
+      const progress = tiersProgress.get(`${tournament.id}_${selectedTier}`);
+      const rpName = config?.ranking_points_name || '';
+      const rpValue = progress?.ranking_points || 0;
+      
+      // Формируем строку наград с иконками
+      const awardsParts = [];
+      if (config?.exp_multiplier) {
+        awardsParts.push(
+          <span key="exp" style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+            {config.exp_multiplier}x <span style={{ color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>EXP</span>
+          </span>
+        );
+      }
+      if (config?.coin_reward) {
+        awardsParts.push(
+          <span key="coins" style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+            , <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
+          </span>
+        );
+      }
+      if (rpName) {
+        awardsParts.push(
+          <span key="rp" style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+            , {rpName}
+          </span>
+        );
+      }
+      
+      return (
+        <>
+          {/* Строка 1: Tier Awards */}
+          <div style={{ color: '#FFFFFF', fontSize: 'clamp(8px, 2vw, 10px)', lineHeight: 1.3, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '2px' }}>
+            Tier Awards: {awardsParts}
+          </div>
+          {/* Строка 2: Ranking Points */}
+          <div style={{ color: '#FFD966', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+            {rpName ? `${rpName}: ${rpValue}` : 'Training Tier'}
+          </div>
+        </>
+      );
+    })()}
+  </div>
 
-                <div className="pvp-bottom-right">
-                  <button 
-                    className={`pvp-engage-button ${isDisabled ? 'disabled' : ''}`}
-                    onClick={() => {
-                      const config = tiersConfig.find(c => c.tier_name === selectedTier);
-                      if (!config || !hasBet) return;
-                      
-                      if (selectedTier === 'ufc_contenders') {
-                        handleEngage(tournament, config.entry_fee_min);
-                      } else {
-                        onOpenBetModal(tournament);
-                      }
-                    }}
-                    disabled={isDisabled}
-                    style={{ width: '100%', fontSize: 'clamp(8px, 1.8vw, 11px)' }}
-                  >
-                    {(() => {
-                      const config = tiersConfig.find(c => c.tier_name === selectedTier);
-                      if (!config) return 'ENTRY BET';
-                      return (
-                        <>
-                          ENTRY Fee:
-                          <br />
-                          {config.entry_fee_min}/{config.entry_fee_max} coins, {config.tickets_fee} ticket
-                        </>
-                      );
-                    })()}
-                  </button>
-                </div>
-              </div>
+  {/* Правая часть (25%) — кнопка */}
+  <div style={{ width: '25%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2px' }}>
+    <button 
+      className={`pvp-engage-button ${isDisabled ? 'disabled' : ''}`}
+      onClick={() => {
+        const config = tiersConfig.find(c => c.tier_name === selectedTier);
+        if (!config || !hasBet) return;
+        
+        if (selectedTier === 'ufc_contenders') {
+          handleEngage(tournament, config.entry_fee_min);
+        } else {
+          onOpenBetModal(tournament);
+        }
+      }}
+      disabled={isDisabled}
+      style={{ width: '100%', height: '80%', fontSize: 'clamp(7px, 1.6vw, 10px)', lineHeight: 1.2 }}
+    >
+      {(() => {
+        const config = tiersConfig.find(c => c.tier_name === selectedTier);
+        if (!config) return 'ENTRY BET';
+        return (
+          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+            <span>ENTRY Fee:</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+              {config.entry_fee_min}/{config.entry_fee_max}
+              <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
+              , {config.tickets_fee}
+              <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
+            </span>
+          </span>
+        );
+      })()}
+    </button>
+  </div>
+</div>
 
               {showMessage && (
                 <div className="upcoming-overlay-text">
