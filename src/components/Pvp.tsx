@@ -267,6 +267,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             opacity: isSelected ? 1 : 1,
                             position: 'relative',
                             zIndex: 1,
+                            boxShadow: isSelected ? '0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.3)' : 'none',
                           }}
                         />
                         
@@ -297,19 +298,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                           justifyContent: 'center',
                           zIndex: 3,
                         }}>
-                          {isSelected && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '-8%',
-                              left: '-8%',
-                              width: '116%',
-                              height: '116%',
-                              borderRadius: '10%',
-                              background: 'rgba(255, 255, 255, 0.25)',
-                              boxShadow: '0 0 15px rgba(255, 255, 255, 0.5)',
-                              zIndex: 0,
-                            }} />
-                          )}
+                          
                           <img 
                             src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                             alt="small base league"
@@ -384,6 +373,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             position: 'relative',
                             zIndex: 1,
+                            boxShadow: isSelected ? '0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.3)' : 'none',
                           }}
                         />
                         
@@ -429,19 +419,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                           justifyContent: 'center',
                           zIndex: 3,
                         }}>
-                          {isSelected && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '-8%',
-                              left: '-8%',
-                              width: '116%',
-                              height: '116%',
-                              borderRadius: '10%',
-                              background: 'rgba(255, 255, 255, 0.25)',
-                              boxShadow: '0 0 15px rgba(255, 255, 255, 0.5)',
-                              zIndex: 0,
-                            }} />
-                          )}
+                          
                           <img 
                             src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                             alt="small base league"
@@ -516,6 +494,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             position: 'relative',
                             zIndex: 1,
+                            boxShadow: isSelected ? '0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.3)' : 'none',
                           }}
                         />
                         
@@ -561,19 +540,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                           justifyContent: 'center',
                           zIndex: 3,
                         }}>
-                          {isSelected && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '-8%',
-                              left: '-8%',
-                              width: '116%',
-                              height: '116%',
-                              borderRadius: '10%',
-                              background: 'rgba(255, 255, 255, 0.25)',
-                              boxShadow: '0 0 15px rgba(255, 255, 255, 0.5)',
-                              zIndex: 0,
-                            }} />
-                          )}
+                          
                           <img 
                             src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                             alt="small base league"
@@ -648,6 +615,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             position: 'relative',
                             zIndex: 1,
+                            boxShadow: isSelected ? '0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.3)' : 'none',
                           }}
                         />
                         
@@ -693,19 +661,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                           justifyContent: 'center',
                           zIndex: 3,
                         }}>
-                          {isSelected && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '-8%',
-                              left: '-8%',
-                              width: '116%',
-                              height: '116%',
-                              borderRadius: '10%',
-                              background: 'rgba(255, 255, 255, 0.25)',
-                              boxShadow: '0 0 15px rgba(255, 255, 255, 0.5)',
-                              zIndex: 0,
-                            }} />
-                          )}
+                          
                           <img 
                             src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                             alt="small base league"
