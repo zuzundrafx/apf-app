@@ -70,6 +70,10 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   
   const [showMessage, setShowMessage] = useState(false);
   const [messageText, setMessageText] = useState('');
+
+  const [selectedTier, setSelectedTier] = useState<string | null>(null);
+  const [tiersConfig, setTiersConfig] = useState<any[]>([]);
+  const [tiersProgress, setTiersProgress] = useState<Map<string, any>>(new Map());
   
   const [currentTip, setCurrentTip] = useState<string>(LOADING_TIPS[0]);
   const tipIntervalRef = useRef<IntervalId | null>(null);
@@ -97,6 +101,26 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   useEffect(() => {
     return () => stopTipRotation();
   }, [stopTipRotation]);
+
+  // Загрузка конфигурации рейтинговых лиг
+useEffect(() => {
+  const loadTiersConfig = async () => {
+    if (!authToken) return;
+    try {
+      const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
+      const response = await fetch(`${API_BASE}/api/ranking-tiers/config`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (response.ok) {
+        const configs = await response.json();
+        setTiersConfig(configs);
+      }
+    } catch (e) {
+      console.error('Failed to load tiers config:', e);
+    }
+  };
+  loadTiersConfig();
+}, [authToken]);
 
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
     const bet = userBets.get(Number(tournament.id));
@@ -140,6 +164,26 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     onOpenBetModal(tournament);
   };
   
+  const loadTiersProgress = async (tournamentId: number) => {
+  if (!authToken) return;
+  try {
+    const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
+    const response = await fetch(`${API_BASE}/api/ranking-tiers/progress?tournament_id=${tournamentId}`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      const progressMap = new Map<string, any>();
+      data.progress?.forEach((p: any) => {
+        progressMap.set(p.tier_name, p);
+      });
+      setTiersProgress(progressMap);
+    }
+  } catch (e) {
+    console.error('Failed to load tiers progress:', e);
+  }
+};
+
   const handleEngage = async (tournament: Tournament, betAmount: number): Promise<void> => {
     console.log('⚔️ engage called with tournament:', tournament.name, 'betAmount:', betAmount);
     if (!userId) {
@@ -210,7 +254,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
               </div>
 
               <div className="pvp-card-middle">
-  {/* Grid: 1 строка, 4 столбца */}
   <div style={{
     display: 'grid',
     gridTemplateRows: '100%',
@@ -219,13 +262,19 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     height: '100%',
   }}>
     
-    {/* ===== ЯЧЕЙКА 1 (строка 1, колонка 1) ===== */}
-    {/* Контейнер №1: BaseLeague_icon.webp — 90% ширины ячейки, по центру */}
+    {/* ===== Contenders League (ячейка 1) ===== */}
     <div style={{
       position: 'relative',
       width: '85%',
       aspectRatio: '1/1',
       margin: 'auto',
+      cursor: 'pointer',
+    }} onClick={() => {
+      const tierName = `ufc_contenders`;
+      const progress = tiersProgress.get(tierName);
+      if (progress && progress.tier_levels_remaining === 0) {
+        setSelectedTier(prev => prev === tierName ? null : tierName);
+      }
     }}>
       <img 
         src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
@@ -235,10 +284,10 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           height: '100%',
           objectFit: 'contain',
           filter: 'saturate(0) brightness(0.7)',
+          opacity: selectedTier === 'ufc_contenders' ? 1 : 0.6,
         }}
       />
       
-      {/* Контейнер №2: ContenderLeague_icon.webp — 80% ширины КОНТЕЙНЕРА №1, по центру */}
       <img 
         src={`${BASE_URL}/icons/ContenderLeague_icon.webp`}
         alt="contender league"
@@ -250,10 +299,10 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
+          opacity: selectedTier === 'ufc_contenders' ? 1 : 0.6,
         }}
       />
 
-      {/* Контейнер №3: BaseLeague_icon.webp — 40% ширины КОНТЕЙНЕРА №1, правый нижний угол */}
       <div style={{
         position: 'absolute',
         right: '-10%',
@@ -272,16 +321,11 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
             height: '100%',
             objectFit: 'contain',
             filter: 'saturate(0) brightness(0.7)',
-            
           }}
         />
         
-        {/* Контейнер №4: BaseLeague_icon.webp — 70% от КОНТЕЙНЕРА №3, чёрный, по центру */}
         <div style={{
           position: 'absolute',
-          //top: '50%',
-          //left: '50%',
-          //transform: 'translate(-50%, -50%)',
           width: '78%',
           aspectRatio: '1/1',
           display: 'flex',
@@ -298,51 +342,411 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
               filter: 'brightness(0)',
             }}
           />
-          {/* Текст "3" поверх чёрной иконки */}
           <span style={{
             position: 'absolute',
             color: '#FFFFFF',
             fontSize: 'clamp(10px, 4vw, 20px)',
             fontWeight: 700,
           }}>
-            3
+            {(() => {
+              const progress = tiersProgress.get('ufc_contenders');
+              if (!progress) return '3';
+              return progress.tier_levels_remaining === 0 ? '✓' : progress.tier_levels_remaining;
+            })()}
           </span>
         </div>
       </div>
     </div>
 
-    {/* Ячейки 2-4 пока пустые */}
-    <div />
-    <div />
-    <div />
+    {/* ===== Pro League (ячейка 2) ===== */}
+    <div style={{
+      position: 'relative',
+      width: '85%',
+      aspectRatio: '1/1',
+      margin: 'auto',
+      cursor: 'pointer',
+    }} onClick={() => {
+      const tierName = `ufc_pro`;
+      const progress = tiersProgress.get(tierName);
+      if (progress && progress.tier_levels_remaining === 0) {
+        setSelectedTier(prev => prev === tierName ? null : tierName);
+      }
+    }}>
+      <img 
+        src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+        alt="base league"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          filter: 'saturate(0) brightness(0.7)',
+          opacity: selectedTier === 'ufc_pro' ? 1 : 0.6,
+        }}
+      />
+      
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '70%',
+        aspectRatio: '1/1',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#FFFFFF',
+        fontSize: 'clamp(10px, 3vw, 16px)',
+        fontWeight: 700,
+        opacity: selectedTier === 'ufc_pro' ? 1 : 0.6,
+      }}>
+        PRO
+      </div>
+
+      <div style={{
+        position: 'absolute',
+        right: '-10%',
+        bottom: '-5%',
+        width: '40%',
+        aspectRatio: '1/1',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <img 
+          src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+          alt="small base league"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            filter: 'saturate(0) brightness(0.7)',
+          }}
+        />
+        
+        <div style={{
+          position: 'absolute',
+          width: '78%',
+          aspectRatio: '1/1',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <img 
+            src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+            alt="black small base league"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              filter: 'brightness(0)',
+            }}
+          />
+          <span style={{
+            position: 'absolute',
+            color: '#FFFFFF',
+            fontSize: 'clamp(10px, 4vw, 20px)',
+            fontWeight: 700,
+          }}>
+            {(() => {
+              const progress = tiersProgress.get('ufc_pro');
+              if (!progress) return '10';
+              return progress.tier_levels_remaining === 0 ? '✓' : progress.tier_levels_remaining;
+            })()}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {/* ===== Elite League (ячейка 3) ===== */}
+    <div style={{
+      position: 'relative',
+      width: '85%',
+      aspectRatio: '1/1',
+      margin: 'auto',
+      cursor: 'pointer',
+    }} onClick={() => {
+      const tierName = `ufc_elite`;
+      const progress = tiersProgress.get(tierName);
+      if (progress && progress.tier_levels_remaining === 0) {
+        setSelectedTier(prev => prev === tierName ? null : tierName);
+      }
+    }}>
+      <img 
+        src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+        alt="base league"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          filter: 'saturate(0) brightness(0.7)',
+          opacity: selectedTier === 'ufc_elite' ? 1 : 0.6,
+        }}
+      />
+      
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '70%',
+        aspectRatio: '1/1',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#FFFFFF',
+        fontSize: 'clamp(10px, 3vw, 16px)',
+        fontWeight: 700,
+        opacity: selectedTier === 'ufc_elite' ? 1 : 0.6,
+      }}>
+        ELITE
+      </div>
+
+      <div style={{
+        position: 'absolute',
+        right: '-10%',
+        bottom: '-5%',
+        width: '40%',
+        aspectRatio: '1/1',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <img 
+          src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+          alt="small base league"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            filter: 'saturate(0) brightness(0.7)',
+          }}
+        />
+        
+        <div style={{
+          position: 'absolute',
+          width: '78%',
+          aspectRatio: '1/1',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <img 
+            src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+            alt="black small base league"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              filter: 'brightness(0)',
+            }}
+          />
+          <span style={{
+            position: 'absolute',
+            color: '#FFFFFF',
+            fontSize: 'clamp(10px, 4vw, 20px)',
+            fontWeight: 700,
+          }}>
+            {(() => {
+              const progress = tiersProgress.get('ufc_elite');
+              if (!progress) return '25';
+              return progress.tier_levels_remaining === 0 ? '✓' : progress.tier_levels_remaining;
+            })()}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {/* ===== Legend League (ячейка 4) ===== */}
+    <div style={{
+      position: 'relative',
+      width: '85%',
+      aspectRatio: '1/1',
+      margin: 'auto',
+      cursor: 'pointer',
+    }} onClick={() => {
+      const tierName = `ufc_legend`;
+      const progress = tiersProgress.get(tierName);
+      if (progress && progress.tier_levels_remaining === 0) {
+        setSelectedTier(prev => prev === tierName ? null : tierName);
+      }
+    }}>
+      <img 
+        src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+        alt="base league"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          filter: 'saturate(0) brightness(0.7)',
+          opacity: selectedTier === 'ufc_legend' ? 1 : 0.6,
+        }}
+      />
+      
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '70%',
+        aspectRatio: '1/1',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#FFFFFF',
+        fontSize: 'clamp(10px, 3vw, 16px)',
+        fontWeight: 700,
+        opacity: selectedTier === 'ufc_legend' ? 1 : 0.6,
+      }}>
+        LEGEND
+      </div>
+
+      <div style={{
+        position: 'absolute',
+        right: '-10%',
+        bottom: '-5%',
+        width: '40%',
+        aspectRatio: '1/1',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <img 
+          src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+          alt="small base league"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            filter: 'saturate(0) brightness(0.7)',
+          }}
+        />
+        
+        <div style={{
+          position: 'absolute',
+          width: '78%',
+          aspectRatio: '1/1',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <img 
+            src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
+            alt="black small base league"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              filter: 'brightness(0)',
+            }}
+          />
+          <span style={{
+            position: 'absolute',
+            color: '#FFFFFF',
+            fontSize: 'clamp(10px, 4vw, 20px)',
+            fontWeight: 700,
+          }}>
+            {(() => {
+              const progress = tiersProgress.get('ufc_legend');
+              if (!progress) return '30';
+              return progress.tier_levels_remaining === 0 ? '✓' : progress.tier_levels_remaining;
+            })()}
+          </span>
+        </div>
+      </div>
+    </div>
 
   </div>
 </div>
 
               <div className="pvp-card-bottom">
-                <div className="pvp-bottom-left">
-                  <div className={`pvp-damage-block ${!hasBet ? 'disabled' : ''}`}>
-                    {userDamage !== null ? (
-                      <>
-                        <span className="pvp-damage-value">{userDamage}</span>
-                        <span className="pvp-fist-icon">👊</span>
-                      </>
-                    ) : (
-                      <span className="pvp-damage-na">No bet</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="pvp-bottom-right">
-                  <button 
-                    className={`pvp-engage-button ${isDisabled ? 'disabled' : ''}`}
-                    onClick={() => handlePvpClick(tournament)}
-                    disabled={isDisabled}
-                  >
-                    ENTRY BET
-                  </button>
-                </div>
+  <div className="pvp-bottom-left">
+    {selectedTier ? (
+      <div style={{ 
+        width: '100%', 
+        padding: '0 4px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+      }}>
+        {(() => {
+          const config = tiersConfig.find(c => c.tier_name === selectedTier);
+          const progress = tiersProgress.get(selectedTier);
+          const rpName = config?.ranking_points_name || '';
+          const rpValue = progress?.ranking_points || 0;
+          return (
+            <>
+              <div style={{ color: '#FFFFFF', fontSize: 'clamp(8px, 2vw, 10px)', lineHeight: 1.3 }}>
+                Tier Awards: {config?.exp_multiplier}x EXP{config?.coin_reward ? ', Coins' : ''}{rpName ? `, ${rpName}` : ''}
               </div>
+              {rpName ? (
+                <div style={{ color: '#FFD966', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                  {rpName}: {rpValue}
+                </div>
+              ) : (
+                <div style={{ color: '#FFD966', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                  Training Tier
+                </div>
+              )}
+            </>
+          );
+        })()}
+      </div>
+    ) : (
+      <div className={`pvp-damage-block ${!hasBet ? 'disabled' : ''}`}>
+        {userDamage !== null ? (
+          <>
+            <span className="pvp-damage-value">{userDamage}</span>
+            <span className="pvp-fist-icon">👊</span>
+          </>
+        ) : (
+          <span className="pvp-damage-na">No bet</span>
+        )}
+      </div>
+    )}
+  </div>
+
+  <div className="pvp-bottom-right">
+    {selectedTier ? (
+      <button 
+        className={`pvp-engage-button ${isDisabled ? 'disabled' : ''}`}
+        onClick={() => {
+          const config = tiersConfig.find(c => c.tier_name === selectedTier);
+          if (!config || !hasBet) return;
+          
+          if (selectedTier === 'ufc_contenders') {
+            // Contenders — сразу в бой с фиксированной ставкой
+            handleEngage(tournament, config.entry_fee_min);
+          } else {
+            // Pro/Elite/Legend — выбор ставки
+            onOpenBetModal(tournament);
+          }
+        }}
+        disabled={isDisabled || !selectedTier}
+        style={{ width: '100%', fontSize: 'clamp(8px, 1.8vw, 11px)' }}
+      >
+        {(() => {
+          const config = tiersConfig.find(c => c.tier_name === selectedTier);
+          if (!config) return 'ENTRY BET';
+          return (
+            <>
+              ENTRY Fee:
+              <br />
+              {config.entry_fee_min}/{config.entry_fee_max} coins, {config.tickets_fee} ticket
+            </>
+          );
+        })()}
+      </button>
+    ) : (
+      <button 
+        className={`pvp-engage-button ${isDisabled ? 'disabled' : ''}`}
+        onClick={() => handlePvpClick(tournament)}
+        disabled={isDisabled}
+      >
+        ENTRY BET
+      </button>
+    )}
+  </div>
+</div>
 
               {showMessage && (
                 <div className="upcoming-overlay-text">
