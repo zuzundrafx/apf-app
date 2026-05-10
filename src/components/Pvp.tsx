@@ -872,6 +872,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           onSurrender={handleSurrender}
           pvpMode={true}
           pvpBetAmount={arenaData.pvpBetAmount}
+          tierName={selectedTier}
           userId={userId}
           userCoins={userCoins}
           userTickets={userTickets}

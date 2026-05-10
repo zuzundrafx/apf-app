@@ -20,6 +20,7 @@ interface ArenaModalProps {
     selections: SelectedFighter[];
     style?: 'striker' | 'grappler' | null;
   };
+  tierName?: string;
   weightClasses: string[];
   isOpen: boolean;
   onSurrender: () => void;
@@ -151,6 +152,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   authToken,
   onUpdateExperience,
   userStyle,
+  tierName,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
@@ -258,7 +260,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           },
           body: JSON.stringify({
             tournamentId: Number(tournament.id),
-            betAmount: pvpBetAmount
+            betAmount: pvpBetAmount,
+            tier_name: tierName || null
           })
         });
 
