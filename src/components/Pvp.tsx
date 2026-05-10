@@ -71,7 +71,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   const [showMessage, setShowMessage] = useState(false);
   const [messageText, setMessageText] = useState('');
 
-  const [selectedTier, setSelectedTier] = useState<string>('ufc_contenders'); // По умолчанию Contenders
+  const [selectedTier, setSelectedTier] = useState<string>('ufc_contenders');
   const [tiersConfig, setTiersConfig] = useState<any[]>([]);
   const [tiersProgress, setTiersProgress] = useState<Map<string, any>>(new Map());
   
@@ -166,14 +166,10 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
     return { canJoin: true, reason: '' };
   };
 
-  // Функция проверки доступности лиги
-  const isTierUnlocked = (tierName: string, tournamentId: string, config: any, userLevel: number): boolean => {
-    if (tierName.endsWith('_contenders')) return true; // Contenders всегда открыта
+  // Проверка доступности лиги (без userLevel — будет проверяться на сервере)
+  const isTierUnlocked = (tierName: string, tournamentId: string): boolean => {
+    if (tierName.endsWith('_contenders')) return true;
     
-    // Проверка уровня игрока
-    if (userLevel < config.min_player_level) return false;
-    
-    // Проверка tier_levels_remaining (0 = открыта)
     const progress = tiersProgress.get(`${tournamentId}_${tierName}`);
     if (!progress) return false;
     return progress.tier_levels_remaining === 0;
@@ -247,7 +243,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
 
       <div className="pvp-list">
         {completedTournaments.map((tournament) => {
-          const userDamage = getUserDamageForTournament(tournament);
           const hasBet = userBets.has(Number(tournament.id));
           const isDisabled = !!arenaData || !hasBet;
           
@@ -271,16 +266,14 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                   height: '100%',
                 }}>
                   
-                  {/* ===== Contenders League (ячейка 1) ===== */}
+                  {/* ===== Contenders League ===== */}
                   <div style={{
                     position: 'relative',
                     width: '85%',
                     aspectRatio: '1/1',
                     margin: 'auto',
                     cursor: 'pointer',
-                  }} onClick={() => {
-                    setSelectedTier('ufc_contenders');
-                  }}>
+                  }} onClick={() => setSelectedTier('ufc_contenders')}>
                     <img 
                       src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                       alt="base league"
@@ -363,10 +356,9 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                     </div>
                   </div>
 
-                  {/* ===== Pro League (ячейка 2) ===== */}
+                  {/* ===== Pro League ===== */}
                   {(() => {
-                    const config = tiersConfig.find(c => c.tier_name === 'ufc_pro');
-                    const unlocked = isTierUnlocked('ufc_pro', tournament.id, config, userCoins > 0 ? 10 : 1); // userLevel нужно передавать
+                    const unlocked = isTierUnlocked('ufc_pro', tournament.id);
                     return (
                       <div style={{
                         position: 'relative',
@@ -374,9 +366,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                         aspectRatio: '1/1',
                         margin: 'auto',
                         cursor: unlocked ? 'pointer' : 'not-allowed',
-                      }} onClick={() => {
-                        if (unlocked) setSelectedTier('ufc_pro');
-                      }}>
+                      }} onClick={() => { if (unlocked) setSelectedTier('ufc_pro'); }}>
                         <img 
                           src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                           alt="base league"
@@ -416,9 +406,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             fontSize: 'clamp(20px, 6vw, 30px)',
                             opacity: 0.8,
                             zIndex: 10,
-                          }}>
-                            🔒
-                          </div>
+                          }}>🔒</div>
                         )}
 
                         <div style={{
@@ -478,10 +466,9 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                     );
                   })()}
 
-                  {/* ===== Elite League (ячейка 3) ===== */}
+                  {/* ===== Elite League ===== */}
                   {(() => {
-                    const config = tiersConfig.find(c => c.tier_name === 'ufc_elite');
-                    const unlocked = isTierUnlocked('ufc_elite', tournament.id, config, 1);
+                    const unlocked = isTierUnlocked('ufc_elite', tournament.id);
                     return (
                       <div style={{
                         position: 'relative',
@@ -489,9 +476,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                         aspectRatio: '1/1',
                         margin: 'auto',
                         cursor: unlocked ? 'pointer' : 'not-allowed',
-                      }} onClick={() => {
-                        if (unlocked) setSelectedTier('ufc_elite');
-                      }}>
+                      }} onClick={() => { if (unlocked) setSelectedTier('ufc_elite'); }}>
                         <img 
                           src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                           alt="base league"
@@ -531,9 +516,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             fontSize: 'clamp(20px, 6vw, 30px)',
                             opacity: 0.8,
                             zIndex: 10,
-                          }}>
-                            🔒
-                          </div>
+                          }}>🔒</div>
                         )}
 
                         <div style={{
@@ -593,10 +576,9 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                     );
                   })()}
 
-                  {/* ===== Legend League (ячейка 4) ===== */}
+                  {/* ===== Legend League ===== */}
                   {(() => {
-                    const config = tiersConfig.find(c => c.tier_name === 'ufc_legend');
-                    const unlocked = isTierUnlocked('ufc_legend', tournament.id, config, 1);
+                    const unlocked = isTierUnlocked('ufc_legend', tournament.id);
                     return (
                       <div style={{
                         position: 'relative',
@@ -604,9 +586,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                         aspectRatio: '1/1',
                         margin: 'auto',
                         cursor: unlocked ? 'pointer' : 'not-allowed',
-                      }} onClick={() => {
-                        if (unlocked) setSelectedTier('ufc_legend');
-                      }}>
+                      }} onClick={() => { if (unlocked) setSelectedTier('ufc_legend'); }}>
                         <img 
                           src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                           alt="base league"
@@ -646,9 +626,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             fontSize: 'clamp(20px, 6vw, 30px)',
                             opacity: 0.8,
                             zIndex: 10,
-                          }}>
-                            🔒
-                          </div>
+                          }}>🔒</div>
                         )}
 
                         <div style={{
