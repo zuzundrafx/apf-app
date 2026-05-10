@@ -256,6 +256,20 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                         transform: isSelected ? 'scale(1.06)' : 'scale(1)',
                         transition: 'transform 0.2s ease',
                       }} onClick={() => setSelectedTier('ufc_contenders')}>
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '-4%',
+                            left: '-4%',
+                            width: '108%',
+                            height: '108%',
+                            borderRadius: '10%',
+                            background: 'rgba(255, 255, 255, 0.15)',
+                            boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)',
+                            zIndex: 0,
+                          }} />
+                        )}
+                        
                         <img 
                           src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                           alt="base league"
@@ -263,13 +277,10 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             width: '100%',
                             height: '100%',
                             objectFit: 'contain',
-                            filter: isSelected 
-      ? 'saturate(0) brightness(0.7) drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.4))' 
-      : `saturate(0) brightness(0.7)`,
-                            opacity: isSelected ? 1 : 1,
+                            filter: 'saturate(0) brightness(0.7)',
+                            opacity: isSelected ? 1 : 0.6,
                             position: 'relative',
                             zIndex: 1,
-                            
                           }}
                         />
                         
@@ -284,7 +295,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             top: '50%',
                             left: '50%',
                             transform: 'translate(-50%, -50%)',
-                            opacity: isSelected ? 1 : 1,
+                            opacity: isSelected ? 1 : 0.6,
                             zIndex: 2,
                           }}
                         />
@@ -300,7 +311,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                           justifyContent: 'center',
                           zIndex: 3,
                         }}>
-                          
                           <img 
                             src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                             alt="small base league"
@@ -309,8 +319,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                               height: '100%',
                               objectFit: 'contain',
                               filter: 'saturate(0) brightness(0.7)',
-                              position: 'relative',
-                              zIndex: 1,
                             }}
                           />
                           
@@ -364,6 +372,20 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                         transform: isSelected ? 'scale(1.06)' : 'scale(1)',
                         transition: 'transform 0.2s ease',
                       }} onClick={() => setSelectedTier('ufc_pro')}>
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '-4%',
+                            left: '-4%',
+                            width: '108%',
+                            height: '108%',
+                            borderRadius: '10%',
+                            background: 'rgba(255, 255, 255, 0.15)',
+                            boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)',
+                            zIndex: 0,
+                          }} />
+                        )}
+                        
                         <img 
                           src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                           alt="base league"
@@ -371,13 +393,10 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             width: '100%',
                             height: '100%',
                             objectFit: 'contain',
-                            filter: isSelected 
-      ? 'saturate(0) brightness(0.7) drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.4))' 
-      : `saturate(0) brightness(0.7)`,
-                            opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
+                            filter: 'saturate(0) brightness(0.7)',
+                            opacity: isSelected ? 1 : 0.6,
                             position: 'relative',
                             zIndex: 1,
-                            
                           }}
                         />
                         
@@ -394,7 +413,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                           color: '#FFFFFF',
                           fontSize: 'clamp(10px, 3vw, 16px)',
                           fontWeight: 700,
-                          opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
+                          opacity: isSelected ? 1 : 0.6,
                           zIndex: 2,
                         }}>
                           PRO
@@ -423,7 +442,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                           justifyContent: 'center',
                           zIndex: 3,
                         }}>
-                          
                           <img 
                             src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                             alt="small base league"
@@ -432,8 +450,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                               height: '100%',
                               objectFit: 'contain',
                               filter: 'saturate(0) brightness(0.7)',
-                              position: 'relative',
-                              zIndex: 1,
                             }}
                           />
                           
@@ -487,6 +503,20 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                         transform: isSelected ? 'scale(1.06)' : 'scale(1)',
                         transition: 'transform 0.2s ease',
                       }} onClick={() => setSelectedTier('ufc_elite')}>
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '-4%',
+                            left: '-4%',
+                            width: '108%',
+                            height: '108%',
+                            borderRadius: '10%',
+                            background: 'rgba(255, 255, 255, 0.15)',
+                            boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)',
+                            zIndex: 0,
+                          }} />
+                        )}
+                        
                         <img 
                           src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                           alt="base league"
@@ -494,13 +524,10 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             width: '100%',
                             height: '100%',
                             objectFit: 'contain',
-                            filter: isSelected 
-      ? 'saturate(0) brightness(0.7) drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.4))' 
-      : `saturate(0) brightness(0.7)`,
-                            opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
+                            filter: 'saturate(0) brightness(0.7)',
+                            opacity: isSelected ? 1 : 0.6,
                             position: 'relative',
                             zIndex: 1,
-                            
                           }}
                         />
                         
@@ -517,7 +544,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                           color: '#FFFFFF',
                           fontSize: 'clamp(10px, 3vw, 16px)',
                           fontWeight: 700,
-                          opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
+                          opacity: isSelected ? 1 : 0.6,
                           zIndex: 2,
                         }}>
                           ELITE
@@ -546,7 +573,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                           justifyContent: 'center',
                           zIndex: 3,
                         }}>
-                          
                           <img 
                             src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                             alt="small base league"
@@ -555,8 +581,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                               height: '100%',
                               objectFit: 'contain',
                               filter: 'saturate(0) brightness(0.7)',
-                              position: 'relative',
-                              zIndex: 1,
                             }}
                           />
                           
@@ -610,6 +634,20 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                         transform: isSelected ? 'scale(1.06)' : 'scale(1)',
                         transition: 'transform 0.2s ease',
                       }} onClick={() => setSelectedTier('ufc_legend')}>
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '-4%',
+                            left: '-4%',
+                            width: '108%',
+                            height: '108%',
+                            borderRadius: '10%',
+                            background: 'rgba(255, 255, 255, 0.15)',
+                            boxShadow: '0 0 15px rgba(255, 255, 255, 0.3)',
+                            zIndex: 0,
+                          }} />
+                        )}
+                        
                         <img 
                           src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                           alt="base league"
@@ -617,13 +655,10 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             width: '100%',
                             height: '100%',
                             objectFit: 'contain',
-                            filter: isSelected 
-      ? 'saturate(0) brightness(0.7) drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.4))' 
-      : `saturate(0) brightness(0.7)`,
-                            opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
+                            filter: 'saturate(0) brightness(0.7)',
+                            opacity: isSelected ? 1 : 0.6,
                             position: 'relative',
                             zIndex: 1,
-                            
                           }}
                         />
                         
@@ -640,7 +675,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                           color: '#FFFFFF',
                           fontSize: 'clamp(10px, 3vw, 16px)',
                           fontWeight: 700,
-                          opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
+                          opacity: isSelected ? 1 : 0.6,
                           zIndex: 2,
                         }}>
                           LEGEND
@@ -669,7 +704,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                           justifyContent: 'center',
                           zIndex: 3,
                         }}>
-                          
                           <img 
                             src={`${BASE_URL}/icons/BaseLeague_icon.webp`}
                             alt="small base league"
@@ -678,8 +712,6 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                               height: '100%',
                               objectFit: 'contain',
                               filter: 'saturate(0) brightness(0.7)',
-                              position: 'relative',
-                              zIndex: 1,
                             }}
                           />
                           
@@ -777,11 +809,8 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                     
                     return (
                       <>
-                        <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: 1.3 }}>
-                          <div>Tier Awards:</div>
-                          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '2px' }}>
-                            {awardsParts}
-                          </div>
+                        <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: 1.3, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '2px' }}>
+                          Tier Awards: {awardsParts}
                         </div>
                         <div style={{ color: '#FFD966', fontSize: 'clamp(10px, 2.5vw, 12px)' }}>
                           {rpName ? `${rpName}: ${rpValue}` : 'Training'}
