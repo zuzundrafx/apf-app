@@ -742,7 +742,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
 
               <div className="pvp-card-bottom" style={{ display: 'flex', width: '100%', background: '#484d52', borderTop: '1px solid #4A4A48' }}>
                 <div style={{
-                  width: '65%',
+                  width: '55%',
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
@@ -809,7 +809,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                   })()}
                 </div>
 
-                <div style={{ width: '35%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2px' }}>
+                <div style={{ width: '45%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2px' }}>
                   <button 
                     className={`pvp-engage-button ${(isDisabled || !selectedUnlocked) ? 'disabled' : ''}`}
                     onClick={() => {
