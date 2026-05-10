@@ -611,11 +611,13 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                             width: '100%',
                             height: '100%',
                             objectFit: 'contain',
-                            filter: 'saturate(0) brightness(0.7)',
+                            filter: isSelected 
+      ? 'saturate(0) brightness(0.7) drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.4))' 
+      : `saturate(0) brightness(0.7)`,
                             opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             position: 'relative',
                             zIndex: 1,
-                            boxShadow: isSelected ? '0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.3)' : 'none',
+                            
                           }}
                         />
                         
