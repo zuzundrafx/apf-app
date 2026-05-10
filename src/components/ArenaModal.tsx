@@ -251,7 +251,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       startTipRotation();
 
       try {
-        console.log(`🚀 PvP API call: tournamentId=${tournament.id}, betAmount=${pvpBetAmount}`);
+        console.log(`🚀 PvP API call: tournamentId=${tournament.id}, betAmount=${pvpBetAmount}, tierName=${tierName}`);
         const response = await fetch(`${API_BASE}/api/pvp/start`, {
           method: 'POST',
           headers: {
