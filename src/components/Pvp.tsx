@@ -535,7 +535,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                             <span style={{
                               position: 'absolute',
                               color: unlocked ? '#FFFFFF' : '#FF6B6B',
-                              fontSize: 'clamp(10px, 4vw, 20px)',
+                              fontSize: 'clamp(12px, 6vw, 30px)',
                               fontWeight: 700,
                               opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                             }}>
