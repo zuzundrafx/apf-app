@@ -46,6 +46,29 @@ const LOADING_TIPS = [
   "💡 TIP: Each round features a random weight class, with fighters from that class participating in the tournament!"
 ];
 
+const calculateTierBetAmounts = (min: number, max: number, userCoins: number): number[] => {
+  if (userCoins < min) return [];
+  const actualMax = Math.min(max, userCoins);
+  const amounts: number[] = [min];
+  const steps = 7;
+  const step = (actualMax - min) / steps;
+  
+  for (let i = 1; i <= steps; i++) {
+    const value = Math.round(min + step * i);
+    const rounded = Math.floor(value / 5) * 5;
+    if (rounded > min && rounded < actualMax && !amounts.includes(rounded)) {
+      amounts.push(rounded);
+    }
+  }
+  
+  if (actualMax > min && !amounts.includes(actualMax)) {
+    amounts.push(actualMax);
+  }
+  
+  amounts.sort((a, b) => a - b);
+  return amounts.slice(0, 9);
+};
+
 const Pvp = forwardRef<PvpRef, PvpProps>(({
   pastTournaments,
   userBets,
@@ -72,6 +95,14 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   const [messageText, setMessageText] = useState('');
 
   const [selectedTier, setSelectedTier] = useState<string>('ufc_contenders');
+
+  const [pvpSelectedTournament, setPvpSelectedTournament] = useState<Tournament | null>(null);
+const [pvpSelectedBetAmount, setPvpSelectedBetAmount] = useState(5);
+const [pvpAvailableBetAmounts, setPvpAvailableBetAmounts] = useState<number[]>([]);
+const [showPvpBetModal, setShowPvpBetModal] = useState(false);
+const [animatedBetAmount, setAnimatedBetAmount] = useState(5);
+const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
+
   const [tiersConfig, setTiersConfig] = useState<any[]>([]);
   const [tiersProgress, setTiersProgress] = useState<Map<string, any>>(new Map());
   
@@ -170,18 +201,37 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
 };
 
   const handlePvpClick = (tournament: Tournament) => {
-    console.log('🖱️ Pvp button clicked for tournament:', tournament.name);
-    const { canJoin, reason } = checkCanJoinPvp(tournament);
-    if (!canJoin) {
-      if (reason) {
-        setMessageText(reason);
-        setShowMessage(true);
-        setTimeout(() => setShowMessage(false), 1000);
-      }
-      return;
+  console.log('🖱️ Pvp button clicked for tournament:', tournament.name);
+  const { canJoin, reason } = checkCanJoinPvp(tournament);
+  if (!canJoin) {
+    if (reason) {
+      setMessageText(reason);
+      setShowMessage(true);
+      setTimeout(() => setShowMessage(false), 1000);
     }
-    onOpenBetModal(tournament);
-  };
+    return;
+  }
+  
+  // Для Contenders — сразу запускаем бой с фиксированной ставкой
+  if (selectedTier === 'ufc_contenders' || selectedTier.endsWith('_contenders')) {
+    const config = tiersConfig.find(c => c.tier_name === selectedTier);
+    if (config) {
+      handleEngage(tournament, config.entry_fee_min);
+    }
+    return;
+  }
+  
+  // Для остальных лиг — показываем окно выбора ставки
+  const config = tiersConfig.find(c => c.tier_name === selectedTier);
+  if (!config) return;
+  
+  const amounts = calculateTierBetAmounts(config.entry_fee_min, config.entry_fee_max, userCoins);
+  setPvpAvailableBetAmounts(amounts);
+  setPvpSelectedBetAmount(amounts[0] || config.entry_fee_min);
+  setAnimatedBetAmount(amounts[0] || config.entry_fee_min);
+  setPvpSelectedTournament(tournament);
+  setShowPvpBetModal(true);
+};
 
   const handleEngage = async (tournament: Tournament, betAmount: number): Promise<void> => {
     console.log('⚔️ engage called with tournament:', tournament.name, 'betAmount:', betAmount);
@@ -821,16 +871,12 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
                   <button 
                     className={`pvp-engage-button ${(isDisabled || !selectedUnlocked) ? 'disabled' : ''}`}
                     onClick={() => {
-                      if (!selectedUnlocked) return;
-                      const config = selectedConfig;
-                      if (!config || !hasBet) return;
-                      
-                      if (selectedTier === 'ufc_contenders') {
-                        handleEngage(tournament, config.entry_fee_min);
-                      } else {
-                        onOpenBetModal(tournament);
-                      }
-                    }}
+  if (!selectedUnlocked) return;
+  const config = selectedConfig;
+  if (!config || !hasBet) return;
+  
+  handlePvpClick(tournament);
+}}
                     disabled={isDisabled || !selectedUnlocked}
                     style={{ width: '90%', height: '80%', fontSize: 'clamp(10px, 2.5vw, 12px)', lineHeight: 1.2 }}
                   >
@@ -866,6 +912,62 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
           );
         })}
       </div>
+
+      {showPvpBetModal && pvpSelectedTournament && (
+  <div className="bet-modal-overlay">
+    <div className="bet-modal">
+      <div className="bet-modal-header">
+        <span className="bet-modal-title">{pvpSelectedTournament.name}</span>
+        <button className="bet-modal-close" onClick={() => setShowPvpBetModal(false)}>CLOSE</button>
+      </div>
+      <div className="bet-modal-slider-container">
+        <div className="bet-slider-wrapper">
+          <div className="bet-slider">
+            <div className="bet-slider-fill" style={{ 
+              width: pvpAvailableBetAmounts.length > 1 
+                ? `${((pvpSelectedBetAmount - pvpAvailableBetAmounts[0]) / (pvpAvailableBetAmounts[pvpAvailableBetAmounts.length - 1] - pvpAvailableBetAmounts[0])) * 100}%` 
+                : '100%' 
+            }}></div>
+            {pvpAvailableBetAmounts.map(amount => {
+              const minAmount = pvpAvailableBetAmounts[0];
+              const maxAmount = pvpAvailableBetAmounts[pvpAvailableBetAmounts.length - 1];
+              const position = maxAmount > minAmount ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 : 50;
+              return (
+                <div key={amount} className="bet-slider-marker-container" style={{ left: `${position}%` }}>
+                  <div 
+                    className={`bet-slider-marker ${pvpSelectedBetAmount === amount ? 'active' : ''}`} 
+                    onClick={() => { 
+                      setAnimatedBetAmount(amount); 
+                      setShowBetAmountIncrease(true); 
+                      setPvpSelectedBetAmount(amount); 
+                      setTimeout(() => setShowBetAmountIncrease(false), 500); 
+                    }}
+                  ></div>
+                  <span className="bet-marker-value">{amount === minAmount ? 'MIN' : amount === maxAmount ? 'MAX' : amount}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+      <div className="bet-modal-footer">
+        <button 
+          className="bet-confirm-button" 
+          onClick={() => { 
+            console.log('🔥 PvP confirm button clicked, tournament:', pvpSelectedTournament?.name, 'betAmount:', pvpSelectedBetAmount); 
+            setShowPvpBetModal(false); 
+            handleEngage(pvpSelectedTournament, pvpSelectedBetAmount); 
+          }}
+        >
+          BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount}</span> 
+          <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /> 
+          + 1 <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" />
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {arenaData && (
         <ArenaModal

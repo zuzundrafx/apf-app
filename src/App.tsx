@@ -120,10 +120,7 @@ function App() {
   const [availableBetAmounts, setAvailableBetAmounts] = useState<number[]>([]);
   const [currentBetAmount, setCurrentBetAmount] = useState<number | null>(null);
   const [showNotEnoughCoins, setShowNotEnoughCoins] = useState(false);
-  const [showPvpBetModal, setShowPvpBetModal] = useState(false);
-  const [pvpSelectedBetAmount, setPvpSelectedBetAmount] = useState(5);
-  const [pvpAvailableBetAmounts, setPvpAvailableBetAmounts] = useState<number[]>([]);
-  const [pvpSelectedTournament, setPvpSelectedTournament] = useState<Tournament | null>(null);
+  
   const pvpRef = useRef<any>(null);
 
   const [selectedUpcomingTournament, setSelectedUpcomingTournament] = useState<Tournament | null>(null);
@@ -814,14 +811,8 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
             userStyle={userStyle}
             allProfiles={allProfiles}
             onOpenBetModal={(tournament: Tournament) => {
-              setPvpSelectedTournament(tournament);
-              const amounts = calculateAvailableBetAmounts(userData.coins);
-              setPvpAvailableBetAmounts(amounts);
-              const defaultAmount = amounts[0] || 5;
-              setPvpSelectedBetAmount(defaultAmount);
-              setAnimatedBetAmount(defaultAmount);
-              setShowPvpBetModal(true);
-            }}
+  // PvP теперь сам обрабатывает свои ставки
+}}
             onUpdateBalance={async (coins, tickets) => {
               setUserData(prev => ({ ...prev, coins, tickets }));
             }}
@@ -865,34 +856,7 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
         </div>
       )}
 
-      {showPvpBetModal && pvpSelectedTournament && (
-        <div className="bet-modal-overlay">
-          <div className="bet-modal">
-            <div className="bet-modal-header"><span className="bet-modal-title">{pvpSelectedTournament.name}</span><button className="bet-modal-close" onClick={() => setShowPvpBetModal(false)}>CLOSE</button></div>
-            <div className="bet-modal-slider-container">
-              <div className="bet-slider-wrapper">
-                <div className="bet-slider">
-                  <div className="bet-slider-fill" style={{ width: pvpAvailableBetAmounts.length > 1 ? `${((pvpSelectedBetAmount - pvpAvailableBetAmounts[0]) / (pvpAvailableBetAmounts[pvpAvailableBetAmounts.length - 1] - pvpAvailableBetAmounts[0])) * 100}%` : '100%' }}></div>
-                  {pvpAvailableBetAmounts.map(amount => {
-                    const minAmount = pvpAvailableBetAmounts[0];
-                    const maxAmount = pvpAvailableBetAmounts[pvpAvailableBetAmounts.length - 1];
-                    const position = maxAmount > minAmount ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 : 50;
-                    const isMin = amount === minAmount;
-                    const isMax = amount === maxAmount;
-                    return (
-                      <div key={amount} className="bet-slider-marker-container" style={{ left: `${position}%` }}>
-                        <div className={`bet-slider-marker ${pvpSelectedBetAmount === amount ? 'active' : ''}`} onClick={() => { setAnimatedBetAmount(amount); setShowBetAmountIncrease(true); setPvpSelectedBetAmount(amount); setTimeout(() => setShowBetAmountIncrease(false), 500); }}></div>
-                        <span className="bet-marker-value">{isMin ? 'MIN' : isMax ? 'MAX' : amount}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            <div className="bet-modal-footer"><button className="bet-confirm-button" onClick={() => { console.log('🔥 PvP confirm button clicked, tournament:', pvpSelectedTournament?.name, 'betAmount:', pvpSelectedBetAmount); setShowPvpBetModal(false); pvpRef.current?.engage(pvpSelectedTournament, pvpSelectedBetAmount); }}>BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount}</span> <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /> + 1 <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" /></button></div>
-          </div>
-        </div>
-      )}
+      
 
       {showNotificationsModal && (
         <div className="rewards-modal-overlay">
