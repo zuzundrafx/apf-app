@@ -374,7 +374,7 @@ function App() {
     }
   };
 
-  const loadTournamentData = async (tournamentName: string) => {
+  const loadTournamentData = async (_tournamentName: string) => {
     return {
       weightClasses: [] as string[],
       results: [] as any[],
@@ -810,7 +810,7 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
             userTickets={userData.tickets}
             userStyle={userStyle}
             allProfiles={allProfiles}
-            onOpenBetModal={(tournament: Tournament) => {
+            onOpenBetModal={(_tournament: Tournament) => {
   // PvP теперь сам обрабатывает свои ставки
 }}
             onUpdateBalance={async (coins, tickets) => {
