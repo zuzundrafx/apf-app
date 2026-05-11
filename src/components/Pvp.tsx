@@ -133,42 +133,43 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
     return () => stopTipRotation();
   }, [stopTipRotation]);
 
-  useEffect(() => {
-    const loadTiersData = async () => {
-      if (!authToken || pastTournaments.length === 0) return;
-      try {
-        const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
+    const loadTiersData = useCallback(async () => {
+    if (!authToken || pastTournaments.length === 0) return;
+    try {
+      const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
+      
+      const configResponse = await fetch(`${API_BASE}/api/ranking-tiers/config`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (configResponse.ok) {
+        const configs = await configResponse.json();
+        setTiersConfig(configs);
         
-        const configResponse = await fetch(`${API_BASE}/api/ranking-tiers/config`, {
-          headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        if (configResponse.ok) {
-          const configs = await configResponse.json();
-          setTiersConfig(configs);
-          
-          for (const tournament of pastTournaments) {
-            const progressResponse = await fetch(
-              `${API_BASE}/api/ranking-tiers/progress?tournament_id=${tournament.id}`,
-              { headers: { 'Authorization': `Bearer ${authToken}` } }
-            );
-            if (progressResponse.ok) {
-              const data = await progressResponse.json();
-              setTiersProgress(prev => {
-                const newMap = new Map(prev);
-                data.progress?.forEach((p: any) => {
-                  newMap.set(`${p.tournament_id}_${p.tier_name}`, p);
-                });
-                return newMap;
+        for (const tournament of pastTournaments) {
+          const progressResponse = await fetch(
+            `${API_BASE}/api/ranking-tiers/progress?tournament_id=${tournament.id}`,
+            { headers: { 'Authorization': `Bearer ${authToken}` } }
+          );
+          if (progressResponse.ok) {
+            const data = await progressResponse.json();
+            setTiersProgress(prev => {
+              const newMap = new Map(prev);
+              data.progress?.forEach((p: any) => {
+                newMap.set(`${p.tournament_id}_${p.tier_name}`, p);
               });
-            }
+              return newMap;
+            });
           }
         }
-      } catch (e) {
-        console.error('Failed to load tiers data:', e);
       }
-    };
-    loadTiersData();
+    } catch (e) {
+      console.error('Failed to load tiers data:', e);
+    }
   }, [authToken, pastTournaments]);
+
+  useEffect(() => {
+    loadTiersData();
+  }, [loadTiersData]);
 
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
     const bet = userBets.get(Number(tournament.id));
@@ -243,6 +244,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
 
   const handleSurrender = async () => {
     stopTipRotation();
+    await loadTiersData();
     if (authToken && onUpdateBalance) {
       try {
         const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
@@ -1000,6 +1002,9 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
           authToken={authToken}
           onUpdateExperience={onUpdateExperience}
           userStyle={userStyle}
+          onPvpComplete={async () => {
+            await loadTiersData();
+          }}
         />
       )}
     </div>
