@@ -468,10 +468,11 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                           alignItems: 'center',
                           justifyContent: 'center',
                           color: '#FFFFFF',
-                          fontSize: 'clamp(12px, 5vw, 20px)',
+                          fontSize: 'clamp(11px, 4.5vw, 18px)',
                           fontWeight: 700,
                           opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                           zIndex: 2,
+                          filter: 'drop-shadow(0 0 2px rgb(0, 0, 0))',
                         }}>
                           PRO
                         </div>
@@ -593,7 +594,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                           alignItems: 'center',
                           justifyContent: 'center',
                           color: '#FFFFFF',
-                          fontSize: 'clamp(12px, 5vw, 20px)',
+                          fontSize: 'clamp(11px, 4.5vw, 18px)',
                           fontWeight: 700,
                           opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                           zIndex: 2,
@@ -719,10 +720,11 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                           alignItems: 'center',
                           justifyContent: 'center',
                           color: '#FFFFFF',
-                          fontSize: 'clamp(12px, 5vw, 20px)',
+                          fontSize: 'clamp(11px, 4.5vw, 18px)',
                           fontWeight: 700,
                           opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                           zIndex: 2,
+                          filter: 'drop-shadow(0 0 2px rgb(0, 0, 0))',
                         }}>
                           LEGEND
                         </div>
