@@ -46,7 +46,6 @@ interface ArenaModalProps {
     nextLevelExp: number;
     expPoints: number;
   }) => void;
-  onPvpComplete?: () => Promise<void>;
 }
 
 const DEFAULT_LOADING_TIPS = [
@@ -154,7 +153,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   onUpdateExperience,
   userStyle,
   tierName,
-  onPvpComplete,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
@@ -359,10 +357,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
         setBattleRewards(data.rewards);
         setWeightClasses(['Flyweight', 'Bantamweight', 'Featherweight', 'Lightweight', 'Heavyweight']);
-
-        if (onPvpComplete) {
-  await onPvpComplete();
-}
 
         if (data.battleScript && data.battleScript.events) {
           setBattleScript(data.battleScript.events);

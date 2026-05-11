@@ -133,43 +133,42 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
     return () => stopTipRotation();
   }, [stopTipRotation]);
 
-    const loadTiersData = useCallback(async () => {
-    if (!authToken || pastTournaments.length === 0) return;
-    try {
-      const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
-      
-      const configResponse = await fetch(`${API_BASE}/api/ranking-tiers/config`, {
-        headers: { 'Authorization': `Bearer ${authToken}` }
-      });
-      if (configResponse.ok) {
-        const configs = await configResponse.json();
-        setTiersConfig(configs);
+  useEffect(() => {
+    const loadTiersData = async () => {
+      if (!authToken || pastTournaments.length === 0) return;
+      try {
+        const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
         
-        for (const tournament of pastTournaments) {
-          const progressResponse = await fetch(
-            `${API_BASE}/api/ranking-tiers/progress?tournament_id=${tournament.id}`,
-            { headers: { 'Authorization': `Bearer ${authToken}` } }
-          );
-          if (progressResponse.ok) {
-            const data = await progressResponse.json();
-            setTiersProgress(prev => {
-              const newMap = new Map(prev);
-              data.progress?.forEach((p: any) => {
-                newMap.set(`${p.tournament_id}_${p.tier_name}`, p);
+        const configResponse = await fetch(`${API_BASE}/api/ranking-tiers/config`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (configResponse.ok) {
+          const configs = await configResponse.json();
+          setTiersConfig(configs);
+          
+          for (const tournament of pastTournaments) {
+            const progressResponse = await fetch(
+              `${API_BASE}/api/ranking-tiers/progress?tournament_id=${tournament.id}`,
+              { headers: { 'Authorization': `Bearer ${authToken}` } }
+            );
+            if (progressResponse.ok) {
+              const data = await progressResponse.json();
+              setTiersProgress(prev => {
+                const newMap = new Map(prev);
+                data.progress?.forEach((p: any) => {
+                  newMap.set(`${p.tournament_id}_${p.tier_name}`, p);
+                });
+                return newMap;
               });
-              return newMap;
-            });
+            }
           }
         }
+      } catch (e) {
+        console.error('Failed to load tiers data:', e);
       }
-    } catch (e) {
-      console.error('Failed to load tiers data:', e);
-    }
-  }, [authToken, pastTournaments]);
-
-  useEffect(() => {
+    };
     loadTiersData();
-  }, [loadTiersData]);
+  }, [authToken, pastTournaments]);
 
   const getUserDamageForTournament = (tournament: Tournament): number | null => {
     const bet = userBets.get(Number(tournament.id));
@@ -244,7 +243,6 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
 
   const handleSurrender = async () => {
     stopTipRotation();
-    await loadTiersData();
     if (authToken && onUpdateBalance) {
       try {
         const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
@@ -599,6 +597,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                           fontWeight: 700,
                           opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                           zIndex: 2,
+                          filter: 'drop-shadow(0 0 2px rgba(0, 0, 0, 1))',
                         }}>
                           ELITE
                         </div>
@@ -1002,9 +1001,6 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
           authToken={authToken}
           onUpdateExperience={onUpdateExperience}
           userStyle={userStyle}
-          onPvpComplete={async () => {
-            await loadTiersData();
-          }}
         />
       )}
     </div>
