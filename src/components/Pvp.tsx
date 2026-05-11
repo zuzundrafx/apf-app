@@ -593,11 +593,11 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                           alignItems: 'center',
                           justifyContent: 'center',
                           color: '#FFFFFF',
-                          fontSize: 'clamp(10px, 3vw, 16px)',
+                          fontSize: 'clamp(12px, 5vw, 20px)',
                           fontWeight: 700,
                           opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                           zIndex: 2,
-                          filter: 'drop-shadow(0 0 2px rgba(0, 0, 0, 1))',
+                          filter: 'drop-shadow(0 0 2px rgb(0, 0, 0))',
                         }}>
                           ELITE
                         </div>
@@ -719,7 +719,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                           alignItems: 'center',
                           justifyContent: 'center',
                           color: '#FFFFFF',
-                          fontSize: 'clamp(10px, 3vw, 16px)',
+                          fontSize: 'clamp(12px, 5vw, 20px)',
                           fontWeight: 700,
                           opacity: isSelected ? 1 : (unlocked ? 1 : 0.4),
                           zIndex: 2,
