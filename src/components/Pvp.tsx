@@ -860,12 +860,16 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                       );
                     }
                     if (rpName) {
-                      awardsParts.push(
-                        <span key="rp" style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
-                          , {rpName}
-                        </span>
-                      );
-                    }
+  const rpIcon = selectedTier?.includes('legend') ? 'LegendRP_icon.webp' :
+                 selectedTier?.includes('elite') ? 'EliteRP_icon.webp' :
+                 selectedTier?.includes('pro') ? 'ProRP_icon.webp' :
+                 null;
+  awardsParts.push(
+    <span key="rp" style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+      , {rpIcon ? <img src={`${BASE_URL}/icons/${rpIcon}`} alt="RP" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} /> : rpName}
+    </span>
+  );
+}
                     
                     return (
                       <>
@@ -876,7 +880,18 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
                           </div>
                         </div>
                         <div style={{ color: '#FFD966', fontSize: 'clamp(10px, 2.5vw, 12px)' }}>
-                          {rpName ? `${rpName}: ${rpValue}` : 'Training'}
+                          {rpName ? (
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+    {(() => {
+      const rpIcon = selectedTier?.includes('legend') ? 'LegendRP_icon.webp' :
+                     selectedTier?.includes('elite') ? 'EliteRP_icon.webp' :
+                     selectedTier?.includes('pro') ? 'ProRP_icon.webp' :
+                     null;
+      return rpIcon ? <img src={`${BASE_URL}/icons/${rpIcon}`} alt="RP" style={{ width: 'auto', height: '1.2em', objectFit: 'contain' }} /> : rpName;
+    })()}
+    : {rpValue}
+  </span>
+) : 'Training'}
                         </div>
                       </>
                     );

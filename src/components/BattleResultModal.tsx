@@ -18,6 +18,7 @@ interface BattleResultModalProps {
   rivalAvatar?: string;
   userName?: string;
   rivalName?: string;
+  tierName?: string;
   onClose: () => void;
 }
 
@@ -32,6 +33,7 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   rivalAvatar,
   userName,
   rivalName,
+  tierName,
   onClose
 }) => {
   if (!isOpen) return null;
@@ -202,11 +204,20 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
     </div>
   )}
   {rewards?.rankingPoints !== undefined && rewards.rankingPoints > 0 && (
-    <div className="battle-result-rewards-item">
-      <span className="battle-result-rewards-label">RP</span>
-      <span className="battle-result-rewards-value">+{rewards.rankingPoints}</span>
-    </div>
-  )}
+  <div className="battle-result-rewards-item">
+    <img 
+      src={`${BASE_URL}/icons/${
+        tierName?.includes('legend') ? 'LegendRP_icon.webp' :
+        tierName?.includes('elite') ? 'EliteRP_icon.webp' :
+        tierName?.includes('pro') ? 'ProRP_icon.webp' :
+        'ProRP_icon.webp'
+      }`}
+      alt="RP"
+      className="battle-result-rewards-icon"
+    />
+    <span className="battle-result-rewards-value">+{rewards.rankingPoints}</span>
+  </div>
+)}
 </div>
 
         <div className="battle-result-footer">

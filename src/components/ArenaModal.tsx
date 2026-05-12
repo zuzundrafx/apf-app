@@ -831,6 +831,7 @@ if (data.tierProgress) {
           userName={userName}
           rivalName={displayRivalData?.username}
           onClose={handleResultClose}
+          tierName={tierName}
         />
       )}
     </div>
