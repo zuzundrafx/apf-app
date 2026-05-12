@@ -359,6 +359,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
         setBattleRewards(data.rewards);
 
+        console.log('🏆 Rewards received:', data.rewards);
+
         // Обновляем прогресс лиг из ответа сервера
 if (data.tierProgress) {
   // Передаём через колбэк в Pvp

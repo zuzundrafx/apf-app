@@ -8,9 +8,9 @@ interface BattleResultModalProps {
   resultType?: 'ko' | 'decision-unanimous' | 'decision-split';
   rewards?: {
       coins: number;
-  experience: number;
-  tickets?: number;
-  rankingPoints?: number;
+      experience: number;
+      tickets?: number;
+      rankingPoints?: number;
   };
   betAmount?: number;
   winningRound?: number;
