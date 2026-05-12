@@ -806,6 +806,8 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
             userAvatar={telegramUser?.photoUrl}
             userId={telegramUser?.id}
             userName={userData.username}
+            
+            userLevel={userData.level}
             userCoins={userData.coins}
             userTickets={userData.tickets}
             userStyle={userStyle}

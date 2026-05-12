@@ -7,8 +7,10 @@ interface BattleResultModalProps {
   result: 'win' | 'loss' | 'draw' | 'tech-loss';
   resultType?: 'ko' | 'decision-unanimous' | 'decision-split';
   rewards?: {
-    coins: number;
-    experience: number;
+      coins: number;
+  experience: number;
+  tickets?: number;
+  rankingPoints?: number;
   };
   betAmount?: number;
   winningRound?: number;
@@ -181,15 +183,31 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
 
         {/* Контейнер с наградами (как в окне наград за турнир) */}
         <div className="battle-result-rewards-summary">
-          <div className="battle-result-rewards-item">
-            <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="battle-result-rewards-icon" />
-            <span className="battle-result-rewards-value">{rewards?.coins || 0}</span>
-          </div>
-          <div className="battle-result-rewards-item">
-            <span className="battle-result-rewards-label">EXP</span>
-            <span className="battle-result-rewards-value">+{rewards?.experience || 0}</span>
-          </div>
-        </div>
+  {rewards?.coins !== undefined && rewards.coins > 0 && (
+    <div className="battle-result-rewards-item">
+      <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="Coins" className="battle-result-rewards-icon" />
+      <span className="battle-result-rewards-value">{rewards.coins}</span>
+    </div>
+  )}
+  {rewards?.experience !== undefined && rewards.experience > 0 && (
+    <div className="battle-result-rewards-item">
+      <span className="battle-result-rewards-label">EXP</span>
+      <span className="battle-result-rewards-value">+{rewards.experience}</span>
+    </div>
+  )}
+  {rewards?.tickets !== undefined && rewards.tickets > 0 && (
+    <div className="battle-result-rewards-item">
+      <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="Tickets" className="battle-result-rewards-icon" />
+      <span className="battle-result-rewards-value">+{rewards.tickets}</span>
+    </div>
+  )}
+  {rewards?.rankingPoints !== undefined && rewards.rankingPoints > 0 && (
+    <div className="battle-result-rewards-item">
+      <span className="battle-result-rewards-label">RP</span>
+      <span className="battle-result-rewards-value">+{rewards.rankingPoints}</span>
+    </div>
+  )}
+</div>
 
         <div className="battle-result-footer">
           <button className="battle-result-button" onClick={onClose}>

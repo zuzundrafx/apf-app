@@ -10,6 +10,7 @@ interface PvpProps {
   userAvatar?: string;
   userId?: string;
   userName: string;
+  userLevel?: number;
   userStyle?: 'striker' | 'grappler' | null;
   userCoins: number;
   userTickets: number;
@@ -77,6 +78,7 @@ const Pvp = forwardRef<PvpRef, PvpProps>(({
   userName,
   userCoins,
   userTickets,
+  userLevel,
   userStyle,
   allProfiles,
   onOpenBetModal,
@@ -188,7 +190,6 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
  const isTierUnlocked = (tierName: string, tournamentId: string): boolean => {
   if (tierName.endsWith('_contenders')) return true;
   
-  // Определяем предыдущую лигу
   const tierOrder = ['ufc_contenders', 'ufc_pro', 'ufc_elite', 'ufc_legend'];
   const currentIdx = tierOrder.indexOf(tierName);
   if (currentIdx <= 0) return false;
@@ -196,8 +197,14 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
   const prevTier = tierOrder[currentIdx - 1];
   const prevProgress = tiersProgress.get(`${tournamentId}_${prevTier}`);
   
-  // Лига открыта, если предыдущая лига завершена (tier_levels_remaining === 0)
-  return prevProgress && prevProgress.tier_levels_remaining === 0;
+  if (!prevProgress || prevProgress.tier_levels_remaining > 0) return false;
+  
+  const config = tiersConfig.find(c => c.tier_name === tierName);
+  if (config && config.min_player_level && userLevel && userLevel < config.min_player_level) {
+    return false;
+  }
+  
+  return true;
 };
 
   const handlePvpClick = (tournament: Tournament) => {
@@ -969,8 +976,17 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
           }}
         >
           BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount}</span> 
-          <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /> 
-          + 1 <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" />
+<img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
+{(() => {
+  const config = tiersConfig.find(c => c.tier_name === selectedTier);
+  const ticketsFee = config?.tickets_fee || 1;
+  if (ticketsFee > 0) {
+    return (
+      <> + {ticketsFee} <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" /></>
+    );
+  }
+  return null;
+})()}
         </button>
       </div>
     </div>
