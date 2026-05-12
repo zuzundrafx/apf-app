@@ -39,6 +39,7 @@ interface ArenaModalProps {
   }>;
   loadingTip?: string;
   authToken?: string;
+  onPvpComplete?: (tierProgress: any[]) => void;
   onUpdateExperience?: (expData: { 
     totalExp: number; 
     level: number; 
@@ -153,6 +154,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   onUpdateExperience,
   userStyle,
   tierName,
+  onPvpComplete,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
@@ -356,6 +358,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         });
 
         setBattleRewards(data.rewards);
+
+        // Обновляем прогресс лиг из ответа сервера
+if (data.tierProgress) {
+  // Передаём через колбэк в Pvp
+  onPvpComplete?.(data.tierProgress);
+}
+
         setWeightClasses(['Flyweight', 'Bantamweight', 'Featherweight', 'Lightweight', 'Heavyweight']);
 
         if (data.battleScript && data.battleScript.events) {

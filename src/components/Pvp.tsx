@@ -1019,6 +1019,17 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
           authToken={authToken}
           onUpdateExperience={onUpdateExperience}
           userStyle={userStyle}
+          onPvpComplete={(tierProgress: any[]) => {
+    if (tierProgress) {
+      setTiersProgress(prev => {
+        const newMap = new Map(prev);
+        tierProgress.forEach((p: any) => {
+          newMap.set(`${p.tournament_id}_${p.tier_name}`, p);
+        });
+        return newMap;
+      });
+    }
+  }}
         />
       )}
     </div>
