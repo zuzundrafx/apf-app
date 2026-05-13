@@ -981,6 +981,29 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
           </div>
         </div>
       </div>
+
+      {/* Рейк и итоговая сумма (только если комиссия > 0) */}
+{(() => {
+  const config = tiersConfig.find(c => c.tier_name === selectedTier);
+  const rakePercent = config?.rake_percent || 0;
+  if (rakePercent > 0) {
+    const rakeAmount = Math.floor(pvpSelectedBetAmount * rakePercent / 100);
+    return (
+      <>
+        <div className="bet-rake-info">
+          <span>Rake ({rakePercent}%):</span>
+          <span>{rakeAmount} 🪙</span>
+        </div>
+        <div className="bet-total-info">
+          <span>Total in pool:</span>
+          <span>{pvpSelectedBetAmount - rakeAmount} 🪙</span>
+        </div>
+      </>
+    );
+  }
+  return null;
+})()}
+
       <div className="bet-modal-footer">
         <button 
           className="bet-confirm-button" 
