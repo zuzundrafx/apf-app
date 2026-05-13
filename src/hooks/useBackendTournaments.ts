@@ -55,8 +55,10 @@ export function useBackendTournaments(authToken: string | null, userId: string |
         
         const betsMap = new Map();
         betsData.forEach((bet: any) => {
-          betsMap.set(bet.tournament_id, bet);
-        });
+  if (!bet.cancelled) {
+    betsMap.set(bet.tournament_id, bet);
+  }
+});
         setUserBets(betsMap);
 
         const allTournaments: Tournament[] = tournamentsData.map(t => ({
