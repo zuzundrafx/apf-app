@@ -9,6 +9,7 @@ import { Fighter, Tournament, SelectedFighter } from './types';
 import { groupFightersByWeight } from './data/loadFighters';
 import { useBackendTournaments } from './hooks/useBackendTournaments';
 import { getAvatarWrapperStyle, getAvatarInnerStyle } from './utils/styleUtils';
+import FightersViewModal from './components/FightersViewModal';
 
 declare global {
   interface Window {
@@ -101,7 +102,7 @@ function App() {
   const [animatedBetAmount, setAnimatedBetAmount] = useState(5);
   const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
   const [allProfiles] = useState<Map<string, any>>(new Map());
-
+  const [showFightersModal, setShowFightersModal] = useState(false);
   const [showRewardsModal, setShowRewardsModal] = useState(false);
   const [pendingRewards, setPendingRewards] = useState<any>(null);
   const [selectionData, setSelectionData] = useState<Fighter[] | null>(null);
@@ -591,12 +592,21 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
           <div className="tournaments-container">
             <section className="tournament-section past">
               <div className="tournament-header">
-                <h2>{selectedActiveTournament ? selectedActiveTournament.name : 'ACTIVE TOURNAMENTS'}</h2>
-                <div className="tournament-meta">
-                  <span>{selectedActiveTournament ? new Date(selectedActiveTournament.date).toLocaleDateString() : `${activeTournaments.length} events`}</span>
-                  <span className="tournament-status active">COMPLETED</span>
-                </div>
-              </div>
+  <h2>{selectedActiveTournament ? selectedActiveTournament.name : 'ACTIVE TOURNAMENTS'}</h2>
+  <div className="tournament-meta">
+    <span>{selectedActiveTournament ? new Date(selectedActiveTournament.date).toLocaleDateString() : `${activeTournaments.length} events`}</span>
+    {selectedActiveTournament ? (
+      <button 
+        className="fighters-check-button"
+        onClick={() => setShowFightersModal(true)}
+      >
+        CHECK FIGHTERS
+      </button>
+    ) : (
+      <span className="tournament-status active">COMPLETED</span>
+    )}
+  </div>
+</div>
                             <div className="tournament-content">
                 {selectedActiveTournament ? (
                   <>
@@ -992,6 +1002,13 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
   }}
   />
 )}
+
+    {/* Fighters View Modal */}
+      <FightersViewModal
+        isOpen={showFightersModal}
+        onClose={() => setShowFightersModal(false)}
+      />
+
     </div>
   );
 }

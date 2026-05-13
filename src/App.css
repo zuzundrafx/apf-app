@@ -3817,3 +3817,27 @@ body {
   align-items: center;
   gap: 4px;
 }
+
+/* Кнопка CHECK FIGHTERS (как CLAIM REWARDS) */
+.fighters-check-button {
+  background: linear-gradient(180deg, #5b5b5b 0%, #302f30 100%);
+  border: 0.15vh solid #666d75;
+  border-radius: 2vh;
+  color: #FFFFFF;
+  font-size: clamp(8px, 2.5vw, 10px);
+  font-weight: 700;
+  text-shadow: 0 0 2px #000000;
+  cursor: pointer;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fighters-check-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.fighters-check-button:active {
+  transform: translateY(0);
+}
