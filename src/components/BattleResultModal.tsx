@@ -13,6 +13,7 @@ interface BattleResultModalProps {
       rankingPoints?: number;
   };
   betAmount?: number;
+  betAmountWithRake?: number;
   winningRound?: number;
   userAvatar?: string;
   rivalAvatar?: string;
@@ -28,6 +29,7 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
   resultType,
   rewards,
   betAmount,
+  betAmountWithRake,
   winningRound,
   userAvatar,
   rivalAvatar,
@@ -158,16 +160,16 @@ const BattleResultModal: React.FC<BattleResultModalProps> = ({
         {/* Контейнер со ставкой и коэффициентом */}
         <div className="battle-result-bet-coef-container">
           {shouldShowBet && betAmount !== undefined && (
-            <div className="battle-result-bet-item">
-              <span className="battle-result-bet-label">
-                {result === 'loss' ? 'Spent:' : 'Your bet:'}
-              </span>
-              <div className="battle-result-bet-value-wrapper">
-                <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="battle-result-bet-icon" />
-                <span className="battle-result-bet-value">{betAmount}</span>
-              </div>
-            </div>
-          )}
+  <div className="battle-result-bet-item">
+    <span className="battle-result-bet-label">
+      {result === 'loss' ? 'Spent:' : 'Your bet:'}
+    </span>
+    <div className="battle-result-bet-value-wrapper">
+      <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="battle-result-bet-icon" />
+      <span className="battle-result-bet-value">{betAmountWithRake !== undefined ? betAmountWithRake : betAmount}</span>
+    </div>
+  </div>
+)}
 
           {shouldShowCoefficient && (
             <div className="battle-result-coef-item">

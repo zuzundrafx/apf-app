@@ -174,6 +174,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     resultType?: 'ko' | 'decision-unanimous' | 'decision-split';
   } | null>(null);
   const [battleRewards, setBattleRewards] = useState<{ coins: number; experience: number } | null>(null);
+  const [betAmountWithRake, setBetAmountWithRake] = useState<number | undefined>(undefined);
   const [countdownStep, setCountdownStep] = useState<'ready' | 'steady' | 'fight' | null>('ready');
   const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false, false, false]);
   const [animatedDamage, setAnimatedDamage] = useState<{ player: number; rival: number }>({ player: 0, rival: 0 });
@@ -358,7 +359,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         });
 
         setBattleRewards(data.rewards);
-
+        setBetAmountWithRake(data.betAmountWithRake);
         console.log('🏆 Rewards received:', data.rewards);
 
         // Обновляем прогресс лиг из ответа сервера
@@ -825,6 +826,7 @@ if (data.tierProgress) {
           resultType={battleResult.resultType}
           rewards={battleRewards || undefined}
           betAmount={pvpMode ? (pvpBetAmount || 0) : 0}
+          betAmountWithRake={betAmountWithRake}
           winningRound={currentRound}
           userAvatar={userAvatar}
           rivalAvatar={displayRivalData?.photoUrl}

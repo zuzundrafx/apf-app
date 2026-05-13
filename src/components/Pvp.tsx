@@ -995,7 +995,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
               const config = tiersConfig.find(c => c.tier_name === selectedTier);
               const rakePercent = config?.rake_percent ? config.rake_percent * 100 : 0;
               if (rakePercent > 0) {
-                return animatedBetAmount - Math.floor(animatedBetAmount * rakePercent / 100);
+                return animatedBetAmount - Math.ceil(animatedBetAmount * rakePercent / 100);
               }
               return animatedBetAmount;
             })()}
@@ -1018,7 +1018,7 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
         const config = tiersConfig.find(c => c.tier_name === selectedTier);
         const rakePercent = config?.rake_percent ? config.rake_percent * 100 : 0;
         if (rakePercent > 0) {
-          const rakeAmount = Math.floor(pvpSelectedBetAmount * rakePercent / 100);
+          const rakeAmount = Math.ceil(pvpSelectedBetAmount * rakePercent / 100);
           return (
             <div className="bet-rake-info">
               <span>Rake ({rakePercent}%):</span>
