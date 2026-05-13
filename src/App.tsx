@@ -853,6 +853,17 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
                 </div>
               </div>
             </div>
+
+           {/* Рейк и итоговая сумма */}
+<div className="bet-rake-info">
+  <span>Rake (10%):</span>
+  <span>{Math.floor(selectedBetAmount * 0.1)} 🪙</span>
+</div>
+<div className="bet-total-info">
+  <span>Total in pool:</span>
+  <span>{selectedBetAmount - Math.floor(selectedBetAmount * 0.1)} 🪙</span>
+</div> 
+
             <div className="bet-modal-footer"><button className="bet-confirm-button" onClick={openSelectionWithBet}>BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount}</span> <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /></button></div>
           </div>
         </div>
