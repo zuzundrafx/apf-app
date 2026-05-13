@@ -3798,7 +3798,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 80%;
+  width: 60%;
   margin: 4px auto 0;
   padding: 4px 8px;
   background: rgba(0, 0, 0, 0.4);
