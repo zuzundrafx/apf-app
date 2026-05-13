@@ -951,6 +951,8 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
         <span className="bet-modal-title">{pvpSelectedTournament.name}</span>
         <button className="bet-modal-close" onClick={() => setShowPvpBetModal(false)}>CLOSE</button>
       </div>
+      
+      {/* Контейнер со шкалой */}
       <div className="bet-modal-slider-container">
         <div className="bet-slider-wrapper">
           <div className="bet-slider">
@@ -980,22 +982,24 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
             })}
           </div>
         </div>
-        {/* Рейк под шкалой */}
-        {(() => {
-          const config = tiersConfig.find(c => c.tier_name === selectedTier);
-          const rakePercent = config?.rake_percent ? config.rake_percent * 100 : 0;
-          if (rakePercent > 0) {
-            const rakeAmount = Math.floor(pvpSelectedBetAmount * rakePercent / 100);
-            return (
-              <div className="bet-rake-info">
-                <span>Rake ({rakePercent}%):</span>
-                <span>{rakeAmount} 🪙</span>
-              </div>
-            );
-          }
-          return null;
-        })()}
       </div>
+      
+      {/* Рейк ПОСЛЕ контейнера со шкалой */}
+      {(() => {
+        const config = tiersConfig.find(c => c.tier_name === selectedTier);
+        const rakePercent = config?.rake_percent ? config.rake_percent * 100 : 0;
+        if (rakePercent > 0) {
+          const rakeAmount = Math.floor(pvpSelectedBetAmount * rakePercent / 100);
+          return (
+            <div className="bet-rake-info">
+              <span>Rake ({rakePercent}%):</span>
+              <span>{rakeAmount} 🪙</span>
+            </div>
+          );
+        }
+        return null;
+      })()}
+      
       <div className="bet-modal-footer">
         <button 
           className="bet-confirm-button" 

@@ -836,6 +836,8 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
         <span className="bet-modal-title">{selectedBetTournament.name}</span>
         <button className="bet-modal-close" onClick={() => setShowBetModal(false)}>CLOSE</button>
       </div>
+      
+      {/* Контейнер со шкалой */}
       <div className="bet-modal-slider-container">
         <div className="bet-slider-wrapper">
           <div className="bet-slider">
@@ -863,12 +865,14 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
             })}
           </div>
         </div>
-        {/* Рейк под шкалой */}
-        <div className="bet-rake-info">
-          <span>Rake (10%):</span>
-          <span>{Math.floor(selectedBetAmount * 10 / 100)} 🪙</span>
-        </div>
       </div>
+      
+      {/* Рейк ПОСЛЕ контейнера со шкалой */}
+      <div className="bet-rake-info">
+        <span>Rake (10%):</span>
+        <span>{Math.floor(selectedBetAmount * 10 / 100)} 🪙</span>
+      </div>
+      
       <div className="bet-modal-footer">
         <button className="bet-confirm-button" onClick={openSelectionWithBet}>
           BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount - Math.floor(animatedBetAmount * 10 / 100)}</span> 🪙
