@@ -983,7 +983,9 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
           </div>
         </div>
 
-        {/* Рейк ПОСЛЕ контейнера со шкалой */}
+       </div>
+      
+      {/* Рейк ПОСЛЕ контейнера со шкалой */}
       {(() => {
         const config = tiersConfig.find(c => c.tier_name === selectedTier);
         const rakePercent = config?.rake_percent ? config.rake_percent * 100 : 0;
@@ -992,16 +994,13 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
           return (
             <div className="bet-rake-info">
               <span>Rake ({rakePercent}%):</span>
-              <span>{rakeAmount} 🪙</span>
+              <span>{rakeAmount} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /></span>
             </div>
           );
         }
         return null;
       })()}
-
-      </div>
       
-            
       <div className="bet-modal-footer">
         <button 
           className="bet-confirm-button" 
