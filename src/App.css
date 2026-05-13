@@ -3793,36 +3793,27 @@ body {
 }
 
 /* ===== РЕЙК В ОКНЕ СТАВКИ ===== */
-.bet-rake-info,
-.bet-total-info {
+.bet-rake-info {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  width: 60%;
-  margin: 4px auto 0;
+  gap: 8px;
+  width: 80%;
+  margin: 8px auto 0;
   padding: 4px 8px;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
   font-size: clamp(10px, 2.5vw, 12px);
 }
 
-.bet-rake-info {
-  margin-top: 8px;
-}
-
-.bet-total-info {
-  margin-bottom: 4px;
- /* border-top: 1px solid rgba(255, 255, 255, 0.2);*/
-}
-
-.bet-rake-info span:first-child,
-.bet-total-info span:first-child {
+.bet-rake-info span:first-child {
   color: #FFD966;
-  font-weight: 500;
 }
 
-.bet-rake-info span:last-child,
-.bet-total-info span:last-child {
+.bet-rake-info span:last-child {
   color: #FFFFFF;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
