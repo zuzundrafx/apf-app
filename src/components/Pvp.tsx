@@ -980,30 +980,22 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
             })}
           </div>
         </div>
+        {/* Рейк под шкалой */}
+        {(() => {
+          const config = tiersConfig.find(c => c.tier_name === selectedTier);
+          const rakePercent = config?.rake_percent ? config.rake_percent * 100 : 0;
+          if (rakePercent > 0) {
+            const rakeAmount = Math.floor(pvpSelectedBetAmount * rakePercent / 100);
+            return (
+              <div className="bet-rake-info">
+                <span>Rake ({rakePercent}%):</span>
+                <span>{rakeAmount} 🪙</span>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
-
-      {/* Рейк и итоговая сумма (только если комиссия > 0) */}
-{(() => {
-  const config = tiersConfig.find(c => c.tier_name === selectedTier);
-  const rakePercent = config?.rake_percent || 0;
-  if (rakePercent > 0) {
-    const rakeAmount = Math.floor(pvpSelectedBetAmount * rakePercent / 100);
-    return (
-      <>
-        <div className="bet-rake-info">
-          <span>Rake ({rakePercent}%):</span>
-          <span>{rakeAmount} 🪙</span>
-        </div>
-        <div className="bet-total-info">
-          <span>Total in pool:</span>
-          <span>{pvpSelectedBetAmount - rakeAmount} 🪙</span>
-        </div>
-      </>
-    );
-  }
-  return null;
-})()}
-
       <div className="bet-modal-footer">
         <button 
           className="bet-confirm-button" 
@@ -1013,18 +1005,27 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
             handleEngage(pvpSelectedTournament, pvpSelectedBetAmount); 
           }}
         >
-          BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount}</span> 
-<img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
-{(() => {
-  const config = tiersConfig.find(c => c.tier_name === selectedTier);
-  const ticketsFee = config?.tickets_fee || 1;
-  if (ticketsFee > 0) {
-    return (
-      <> + {ticketsFee} <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" /></>
-    );
-  }
-  return null;
-})()}
+          BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>
+            {(() => {
+              const config = tiersConfig.find(c => c.tier_name === selectedTier);
+              const rakePercent = config?.rake_percent ? config.rake_percent * 100 : 0;
+              if (rakePercent > 0) {
+                return animatedBetAmount - Math.floor(animatedBetAmount * rakePercent / 100);
+              }
+              return animatedBetAmount;
+            })()}
+          </span> 
+          <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
+          {(() => {
+            const config = tiersConfig.find(c => c.tier_name === selectedTier);
+            const ticketsFee = config?.tickets_fee || 1;
+            if (ticketsFee > 0) {
+              return (
+                <> + {ticketsFee} <img src={`${BASE_URL}/icons/Ticket_icon.webp`} alt="tickets" className="bet-coin-icon" /></>
+              );
+            }
+            return null;
+          })()}
         </button>
       </div>
     </div>

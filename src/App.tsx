@@ -830,44 +830,53 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
 
       {/* Модальные окна */}
       {showBetModal && selectedBetTournament && (
-        <div className="bet-modal-overlay">
-          <div className="bet-modal">
-            <div className="bet-modal-header"><span className="bet-modal-title">{selectedBetTournament.name}</span><button className="bet-modal-close" onClick={() => setShowBetModal(false)}>CLOSE</button></div>
-            <div className="bet-modal-slider-container">
-              <div className="bet-slider-wrapper">
-                <div className="bet-slider">
-                  <div className="bet-slider-fill" style={{ width: availableBetAmounts.length > 1 ? `${((selectedBetAmount - availableBetAmounts[0]) / (availableBetAmounts[availableBetAmounts.length - 1] - availableBetAmounts[0])) * 100}%` : '100%' }}></div>
-                  {availableBetAmounts.map(amount => {
-                    const minAmount = availableBetAmounts[0];
-                    const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
-                    const position = maxAmount > minAmount ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 : 50;
-                    const isMin = amount === minAmount;
-                    const isMax = amount === maxAmount;
-                    return (
-                      <div key={amount} className="bet-slider-marker-container" style={{ left: `${position}%` }}>
-                        <div className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`} onClick={() => { setAnimatedBetAmount(amount); setShowBetAmountIncrease(true); setSelectedBetAmount(amount); setTimeout(() => setShowBetAmountIncrease(false), 500); }}></div>
-                        <span className="bet-marker-value">{isMin ? 'MIN' : isMax ? 'MAX' : amount}</span>
-                      </div>
-                    );
-                  })}
+  <div className="bet-modal-overlay">
+    <div className="bet-modal">
+      <div className="bet-modal-header">
+        <span className="bet-modal-title">{selectedBetTournament.name}</span>
+        <button className="bet-modal-close" onClick={() => setShowBetModal(false)}>CLOSE</button>
+      </div>
+      <div className="bet-modal-slider-container">
+        <div className="bet-slider-wrapper">
+          <div className="bet-slider">
+            <div className="bet-slider-fill" style={{ width: availableBetAmounts.length > 1 ? `${((selectedBetAmount - availableBetAmounts[0]) / (availableBetAmounts[availableBetAmounts.length - 1] - availableBetAmounts[0])) * 100}%` : '100%' }}></div>
+            {availableBetAmounts.map(amount => {
+              const minAmount = availableBetAmounts[0];
+              const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
+              const position = maxAmount > minAmount ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 : 50;
+              const isMin = amount === minAmount;
+              const isMax = amount === maxAmount;
+              return (
+                <div key={amount} className="bet-slider-marker-container" style={{ left: `${position}%` }}>
+                  <div 
+                    className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`} 
+                    onClick={() => { 
+                      setAnimatedBetAmount(amount); 
+                      setShowBetAmountIncrease(true); 
+                      setSelectedBetAmount(amount); 
+                      setTimeout(() => setShowBetAmountIncrease(false), 500); 
+                    }}
+                  ></div>
+                  <span className="bet-marker-value">{isMin ? 'MIN' : isMax ? 'MAX' : amount}</span>
                 </div>
-              </div>
-            </div>
-
-           {/* Рейк и итоговая сумма */}
-<div className="bet-rake-info">
-  <span>Rake (10%):</span>
-  <span>{Math.floor(selectedBetAmount * 0.1)} 🪙</span>
-</div>
-<div className="bet-total-info">
-  <span>Total in pool:</span>
-  <span>{selectedBetAmount - Math.floor(selectedBetAmount * 0.1)} 🪙</span>
-</div> 
-
-            <div className="bet-modal-footer"><button className="bet-confirm-button" onClick={openSelectionWithBet}>BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount}</span> <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /></button></div>
+              );
+            })}
           </div>
         </div>
-      )}
+        {/* Рейк под шкалой */}
+        <div className="bet-rake-info">
+          <span>Rake (10%):</span>
+          <span>{Math.floor(selectedBetAmount * 10 / 100)} 🪙</span>
+        </div>
+      </div>
+      <div className="bet-modal-footer">
+        <button className="bet-confirm-button" onClick={openSelectionWithBet}>
+          BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount - Math.floor(animatedBetAmount * 10 / 100)}</span> 🪙
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       
 
