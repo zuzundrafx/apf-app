@@ -982,9 +982,8 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
             })}
           </div>
         </div>
-      </div>
-      
-      {/* Рейк ПОСЛЕ контейнера со шкалой */}
+
+        {/* Рейк ПОСЛЕ контейнера со шкалой */}
       {(() => {
         const config = tiersConfig.find(c => c.tier_name === selectedTier);
         const rakePercent = config?.rake_percent ? config.rake_percent * 100 : 0;
@@ -999,7 +998,10 @@ const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
         }
         return null;
       })()}
+
+      </div>
       
+            
       <div className="bet-modal-footer">
         <button 
           className="bet-confirm-button" 
