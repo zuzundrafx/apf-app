@@ -10,6 +10,8 @@ import { groupFightersByWeight } from './data/loadFighters';
 import { useBackendTournaments } from './hooks/useBackendTournaments';
 import { getAvatarWrapperStyle, getAvatarInnerStyle } from './utils/styleUtils';
 import FightersViewModal from './components/FightersViewModal';
+import { getWeightClassColor, getAvatarFilename } from './utils/weightUtils';
+import { getFighterStyleFromSelected, getStyleIconFilename } from './utils/fighterUtils';
 
 declare global {
   interface Window {
@@ -29,44 +31,6 @@ declare global {
 const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
 
-function getAvatarFilename(weightClass: string): string {
-  const map: Record<string, string> = {
-    'Flyweight': 'Flyweight_avatar.png', 'Bantamweight': 'Bantamweight_avatar.png', 'Featherweight': 'Featherweight_avatar.png',
-    'Lightweight': 'Lightweight_avatar.png', 'Welterweight': 'Welterweight_avatar.png', 'Middleweight': 'Middleweight_avatar.png',
-    'Light Heavyweight': 'Light_Heavyweight_avatar.png', 'Heavyweight': 'Heavyweight_avatar.png',
-    "Women's Strawweight": "Women's_Strawweight_avatar.png", "Women's Flyweight": "Women's_Flyweight_avatar.png",
-    "Women's Bantamweight": "Women's_Bantamweight_avatar.png", "Catch Weight": 'default-avatar.png'
-  };
-  return map[weightClass] || 'default-avatar.png';
-}
-
-function getWeightClassColor(weightClass: string): string {
-  const colors: Record<string, string> = {
-    'Flyweight': '#00FFA3', 'Bantamweight': '#00E0FF', 'Featherweight': '#0075FF', 'Lightweight': '#AD00FF',
-    'Welterweight': '#FF00D6', 'Middleweight': '#FFD700', 'Light Heavyweight': '#FF5C00', 'Heavyweight': '#FF0000',
-    "Women's Strawweight": '#FF6B9D', "Women's Flyweight": '#5EEAD4', "Women's Bantamweight": '#818CF8', "Catch Weight": '#94A3B8'
-  };
-  return colors[weightClass] || '#666666';
-}
-
-function getFighterStyle(fighter: SelectedFighter): string {
-  const str = Number(fighter.fighter.Str) || 0;
-  const td = Number(fighter.fighter.Td) || 0;
-  const sub = Number(fighter.fighter.Sub) || 0;
-  const tdSubSum = td + sub;
-  if (tdSubSum >= 2 && str < 50) return 'Grappler';
-  if (str >= 50 && tdSubSum < 2) return 'Striker';
-  if (str >= 50 && tdSubSum >= 2) return 'Universal';
-  return 'Simple';
-}
-
-function getStyleIconFilename(style: string): string {
-  const icons: Record<string, string> = {
-    'Grappler': 'Grappler_style_icon.webp', 'Striker': 'Striker_style_icon.webp',
-    'Universal': 'Universal_style_icon.webp', 'Simple': 'Simple_style_icon.webp'
-  };
-  return icons[style] || 'Simple_style_icon.webp';
-}
 
 function App() {
   const [isLandscape, setIsLandscape] = useState(false);
@@ -613,7 +577,7 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
                     <div className="selected-fighters-grid">
                       {userBets.get(Number(selectedActiveTournament.id))?.selections.map((sel: any, idx: number) => {
                         const isWinner = sel.fighter.W_L === 'win';
-                        const style = getFighterStyle(sel as SelectedFighter);
+                        const style = getFighterStyleFromSelected(sel.fighter);
                         const styleIcon = getStyleIconFilename(style);
                         return (
                           <div key={idx} className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
@@ -685,7 +649,7 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
                   <>
                     <div className="selected-fighters-grid">
                       {upcomingBetData?.selections.map((sel: any, idx: number) => {
-                        const style = getFighterStyle(sel as SelectedFighter);
+                        const style = getFighterStyleFromSelected(sel.fighter);
                         const styleIcon = getStyleIconFilename(style);
                         return (
                           <div key={idx} className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
@@ -1004,10 +968,14 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
 )}
 
     {/* Fighters View Modal */}
-      <FightersViewModal
-        isOpen={showFightersModal}
-        onClose={() => setShowFightersModal(false)}
-      />
+<FightersViewModal
+  isOpen={showFightersModal}
+  onClose={() => setShowFightersModal(false)}
+  tournamentId={selectedActiveTournament?.id || ''}
+  selections={userBets.get(Number(selectedActiveTournament?.id))?.selections || []}
+  authToken={authToken || undefined}
+  userId={telegramUser?.id}
+/>
 
     </div>
   );

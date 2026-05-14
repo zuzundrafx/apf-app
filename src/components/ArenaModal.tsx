@@ -4,6 +4,8 @@ import { Tournament, SelectedFighter, UserResult, Fighter } from '../types';
 import { UserProfile } from '../api/userProfiles';
 import BattleResultModal from './BattleResultModal';
 import { getAvatarWrapperStyle, getAvatarInnerStyle } from '../utils/styleUtils';
+import { getWeightClassColor, getAvatarFilename } from '../utils/weightUtils';
+import { getFighterStyleFromSelected, getStyleIconFilename } from '../utils/fighterUtils';
 
 
 interface ArenaModalProps {
@@ -56,63 +58,6 @@ const DEFAULT_LOADING_TIPS = [
   "💡 TIP: Save your coins for upcoming tournaments — the more you bet, the bigger the prize pool!",
   "💡 TIP: Each round features a random weight class, with fighters from that class participating in the tournament!"
 ];
-
-const getAvatarFilename = (weightClass: string): string => {
-  const map: { [key: string]: string } = {
-    'Flyweight': 'Flyweight_avatar.png',
-    'Bantamweight': 'Bantamweight_avatar.png',
-    'Featherweight': 'Featherweight_avatar.png',
-    'Lightweight': 'Lightweight_avatar.png',
-    'Welterweight': 'Welterweight_avatar.png',
-    'Middleweight': 'Middleweight_avatar.png',
-    'Light Heavyweight': 'Light_Heavyweight_avatar.png',
-    'Heavyweight': 'Heavyweight_avatar.png',
-    "Women's Strawweight": "Women's_Strawweight_avatar.png",
-    "Women's Flyweight": "Women's_Flyweight_avatar.png",
-    "Women's Bantamweight": "Women's_Bantamweight_avatar.png",
-    "Catch Weight": 'default-avatar.png'
-  };
-  return map[weightClass] || 'default-avatar.png';
-};
-
-const getWeightClassColor = (weightClass: string): string => {
-  const colors: { [key: string]: string } = {
-    'Flyweight': '#00FFA3',
-    'Bantamweight': '#00E0FF',
-    'Featherweight': '#0075FF',
-    'Lightweight': '#AD00FF',
-    'Welterweight': '#FF00D6',
-    'Middleweight': '#FFD700',
-    'Light Heavyweight': '#FF5C00',
-    'Heavyweight': '#FF0000',
-    "Women's Strawweight": '#FF6B9D',
-    "Women's Flyweight": '#5EEAD4',
-    "Women's Bantamweight": '#818CF8',
-    "Catch Weight": '#94A3B8'
-  };
-  return colors[weightClass] || '#666666';
-};
-
-const getFighterStyle = (fighter: SelectedFighter): string => {
-  const str = Number(fighter.fighter.Str) || 0;
-  const td = Number(fighter.fighter.Td) || 0;
-  const sub = Number(fighter.fighter.Sub) || 0;
-  const tdSubSum = td + sub;
-  if (tdSubSum >= 2 && str < 50) return 'Grappler';
-  if (str >= 50 && tdSubSum < 2) return 'Striker';
-  if (str >= 50 && tdSubSum >= 2) return 'Universal';
-  return 'Simple';
-};
-
-const getStyleIconFilename = (style: string): string => {
-  const icons: { [key: string]: string } = {
-    'Grappler': 'Grappler_style_icon.webp',
-    'Striker': 'Striker_style_icon.webp',
-    'Universal': 'Universal_style_icon.webp',
-    'Simple': 'Simple_style_icon.webp'
-  };
-  return icons[style] || 'Simple_style_icon.webp';
-};
 
 type BattleEvent = {
   type: 'countdown' | 'round-start' | 'card-appear' | 'damage' | 'round-end' | 'battle-end';
@@ -667,7 +612,7 @@ if (data.tierProgress) {
           </div>
           <div className="arena-rival-fighters">
             {rivalActiveCards.map((card, index) => {
-              const style = getFighterStyle(card);
+              const style = getFighterStyleFromSelected(card.fighter);
               const styleIcon = getStyleIconFilename(style);
               return (
                 <div key={index} className="arena-fighter-card" data-weight={card.weightClass} style={{ backgroundColor: getWeightClassColor(card.weightClass) }}>
@@ -748,7 +693,7 @@ if (data.tierProgress) {
         <div className="arena-bottom">
           <div className="arena-player-fighters">
             {userActiveCards.map((card, index) => {
-              const style = getFighterStyle(card);
+              const style = getFighterStyleFromSelected(card.fighter);
               const styleIcon = getStyleIconFilename(style);
               return (
                 <div key={index} className="arena-fighter-card" data-weight={card.weightClass} style={{ backgroundColor: getWeightClassColor(card.weightClass) }}>
