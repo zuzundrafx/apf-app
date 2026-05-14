@@ -172,13 +172,13 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
             display: 'flex', 
             flexDirection: 'column', 
             alignItems: 'center',
-            width: '95%',
-            height: '95%',
+            width: '98%',
+            height: '98%',
             padding: '0% 0',
             maxHeight: 'none',
             overflowY: 'auto',
             margin: 'auto auto',
-            gap: '8px'
+            gap: '2px'
           }}
         >
           {loading ? (
@@ -198,7 +198,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                 minHeight: '30px',
                 background: '#313130',
                 borderRadius: '8px',
-                marginBottom: '8px'
+                marginBottom: '1px'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>FIGHTER</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>STATS</div>
@@ -223,7 +223,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     gridTemplateColumns: 'repeat(4, 1fr)',
                     width: '100%',
                     minHeight: '80px',
-                    padding: '4px'
+                    padding: '2px'
                   }}>
                     {/* 1-1: Карточка бойца */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -232,10 +232,10 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        width: '90%',
+                        width: '95%',
                         background: '#191a1f',
                         borderRadius: '8px',
-                        padding: '4px'
+                        padding: '2px'
                       }}>
                         <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                           <img 
