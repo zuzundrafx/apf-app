@@ -297,8 +297,8 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     display: 'flex', 
                     flexDirection: 'column', 
                     justifyContent: 'center',
-                    marginTop: '2%', 
-                    padding: '4% 2%', 
+                    //marginTop: '2%', 
+                    padding: '6% 2%', 
                     gap: '2%'
                   }}>
                     <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>{fighter.fighter.weightClass}</div>
@@ -358,7 +358,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     width: '100%',
                     background: '#1C1D1F',
                     borderTop: '1px solid #3D3D3B',
-                    fontSize: 'clamp(8px, 2vw, 10px)',
+                    fontSize: 'clamp(9px, 2.2vw, 11px)',
                     fontWeight: 500,
                     padding: '2% 0'
                   }}>
@@ -371,7 +371,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966' }}>
                       Base Dmg: {fighter.baseDamage.total}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', fontSize: 'clamp(10px, 2.5vw, 12px)', color: '#FFD966' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966' }}>
                       PvP Dmg: {fighter.pvpDamage.total}
                     </div>
                   </div>
