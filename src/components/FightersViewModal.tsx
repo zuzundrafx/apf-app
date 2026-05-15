@@ -217,6 +217,11 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                       style={{ 
                         backgroundColor: weightColor,
                         width: '98%',
+
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        
                         aspectRatio: '1 / 1.35',
                         borderRadius: '2vw',
                         position: 'relative',
