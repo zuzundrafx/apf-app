@@ -205,6 +205,10 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                   display: 'grid',
                   gridTemplateColumns: '24% 32% 22% 22%',
                   width: '95%',
+
+                  alignItems: 'center',
+                  justifyContent: 'center',
+
                   background: '#2A2A2A',
                   borderRadius: '2vw',
                   border: `2px solid ${weightColor}`,
@@ -350,7 +354,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     gridColumn: '1 / -1',
                     display: 'grid',
                     gridTemplateColumns: '24% 32% 22% 22%',
-                    width: '95%',
+                    width: '100%',
                     background: '#1C1D1F',
                     borderTop: '1px solid #3D3D3B',
                     fontSize: 'clamp(8px, 2vw, 10px)',
