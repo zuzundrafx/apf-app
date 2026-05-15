@@ -168,7 +168,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
         {/* Фиксированный заголовок */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '25% 37% 19% 19%',
+          gridTemplateColumns: '25% 31% 22% 22%',
           width: '100%',
           background: '#313130',
           padding: '2% 0',
