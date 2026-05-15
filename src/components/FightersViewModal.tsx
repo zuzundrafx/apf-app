@@ -186,7 +186,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
         <div style={{ 
           flex: 1,
           overflowY: 'auto',
-          paddingRight: '2%'
+          //paddingRight: '2%'
         }}>
           {loading ? (
             <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>LOADING FIGHTER DATA...</div>
