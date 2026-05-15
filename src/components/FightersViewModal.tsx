@@ -311,9 +311,10 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
                       Class: {fighter.fighter.weightClass}
                     </div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: getWLColor(fighter.fighter.wl), lineHeight: 1.3 }}>
-                      RESULT: {getWLBadge(fighter.fighter.wl)}
-                    </div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', lineHeight: 1.3 }}>
+  <span style={{ color: '#FFFFFF' }}>RESULT: </span>
+  <span style={{ color: getWLColor(fighter.fighter.wl) }}>{getWLBadge(fighter.fighter.wl)}</span>
+</div>
                     <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
                       BY: {fighter.fighter.method || '-'}
                     </div>
