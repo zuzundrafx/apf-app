@@ -1,7 +1,7 @@
 // src/components/FightersViewModal.tsx
 import React, { useState, useEffect } from 'react';
 import { SelectedFighter } from '../types';
-import { getWeightClassColor, getAvatarFilename } from '../utils/weightUtils';
+import { getWeightClassColor } from '../utils/weightUtils';
 import { getStyleDisplayName, getStyleIconFilename, getFighterStyleFromSelected } from '../utils/fighterUtils';
 
 interface FightersViewModalProps {
@@ -165,20 +165,13 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           </button>
         </div>
 
+        {/* Контейнер с прокруткой */}
         <div 
-          className="rewards-winners-list" 
           style={{ 
-            flex: 'none',
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center',
-            width: '100%',
-            height: '95%',
-            padding: '2%',
-            maxHeight: 'none',
+            flex: 1,
             overflowY: 'auto',
-            margin: '0 auto',
-            gap: '2%'
+            padding: '2%',
+            marginTop: '2%'
           }}
         >
           {loading ? (
@@ -189,17 +182,18 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
             <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>No fighter data available</div>
           ) : (
             <>
-              {/* Заголовочная строка */}
+              {/* Заголовочная строка - фиксированная */}
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(4, 1fr)',
                 width: '100%',
-                height: '5%',
-                minHeight: '30px',
                 background: '#313130',
                 borderRadius: '8px',
-                marginBottom: '1%',
-                flexShrink: 0
+                marginBottom: '2%',
+                padding: '2% 0',
+                position: 'sticky',
+                top: 0,
+                zIndex: 10
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>FIGHTER</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>STATS</div>
@@ -207,7 +201,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>PVP DAMAGE</div>
               </div>
 
-              {/* Блоки бойцов */}
+              {/* Блоки бойцов - динамическая высота */}
               {fightersDetails.map((fighter, idx) => {
                 const fighterStyle = getFighterStyleFromSelected({ Str: fighter.fighter.str, Td: fighter.fighter.td, Sub: 0 });
                 const styleIcon = getStyleIconFilename(fighterStyle);
@@ -224,18 +218,16 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     overflow: 'hidden',
                     marginBottom: '2%'
                   }}>
-                    {/* Первая строка (карточка бойца + данные) */}
+                    {/* Первая строка - высота зависит от контента */}
                     <div style={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(4, 1fr)',
                       width: '100%',
                       padding: '2%'
                     }}>
-                      {/* 1-1: Полная карточка бойца (как в selected-fighter-card) */}
+                      {/* 1-1: Полная карточка бойца */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2%' }}>
                         <div 
-                          className="selected-fighter-card" 
-                          data-weight={fighter.fighter.weightClass} 
                           style={{ 
                             backgroundColor: weightColor,
                             width: '95%',
@@ -246,7 +238,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                             margin: '0 auto'
                           }}
                         >
-                          <div className="selected-fighter-damage-box" style={{
+                          <div style={{
                             position: 'absolute',
                             top: 0,
                             right: 0,
@@ -264,7 +256,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                           }}>
                             {fighter.baseDamage.total}
                           </div>
-                          <div className="selected-fighter-inner" style={{
+                          <div style={{
                             width: '97%',
                             height: '90%',
                             background: '#191a1f',
@@ -276,7 +268,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                             overflow: 'hidden',
                             marginTop: '4%'
                           }}>
-                            <div className="selected-fighter-icon-container" style={{
+                            <div style={{
                               width: '95%',
                               aspectRatio: '1 / 1',
                               display: 'flex',
@@ -297,12 +289,12 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                                 }}
                               />
                             </div>
-                            <div className="selected-fighter-divider" style={{
+                            <div style={{
                               width: '100%',
                               height: '2%',
                               background: `linear-gradient(90deg, transparent 0%, ${weightColor} 20%, ${weightColor} 80%, transparent 100%)`
                             }}></div>
-                            <div className="selected-fighter-name" style={{
+                            <div style={{
                               width: '100%',
                               height: '23%',
                               display: 'flex',
@@ -322,19 +314,17 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                         </div>
                       </div>
 
-                      {/* 1-2: STATS - с прокруткой если нужно */}
+                      {/* 1-2: STATS */}
                       <div style={{ 
                         display: 'flex', 
                         flexDirection: 'column', 
                         justifyContent: 'flex-start', 
                         padding: '0 4%', 
-                        gap: '2%',
-                        overflowY: 'auto',
-                        maxHeight: '100%'
+                        gap: '2%'
                       }}>
-                        <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Weight: {fighter.fighter.weightClass}</div>
+                        <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>Weight: {fighter.fighter.weightClass}</div>
                         <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: getWLColor(fighter.fighter.wl), lineHeight: 1.3 }}>W/L: {getWLBadge(fighter.fighter.wl)}</div>
-                        <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Method: {fighter.fighter.method || '-'}</div>
+                        <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>Method: {fighter.fighter.method || '-'}</div>
                         <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Kd: {fighter.fighter.kd}</div>
                         <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Td: {fighter.fighter.td}</div>
                         <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Sub: {fighter.fighter.sub}</div>
@@ -349,9 +339,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                         flexDirection: 'column', 
                         justifyContent: 'flex-start', 
                         padding: '0 4%', 
-                        gap: '2%',
-                        overflowY: 'auto',
-                        maxHeight: '100%'
+                        gap: '2%'
                       }}>
                         <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>Weight: {fighter.baseDamage.components.weightCoef.toFixed(2)}</div>
                         <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>W/L: {fighter.baseDamage.components.wkCoef.toFixed(2)}</div>
@@ -370,9 +358,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                         flexDirection: 'column', 
                         justifyContent: 'flex-start', 
                         padding: '0 4%', 
-                        gap: '2%',
-                        overflowY: 'auto',
-                        maxHeight: '100%'
+                        gap: '2%'
                       }}>
                         <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>Weight: {fighter.pvpDamage.components.weightCoef.toFixed(2)}</div>
                         <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>W/L: {fighter.pvpDamage.components.wkCoef.toFixed(2)}</div>
@@ -386,7 +372,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                       </div>
                     </div>
 
-                    {/* Вторая строка (стиль и итоговый урон) */}
+                    {/* Вторая строка */}
                     <div style={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(4, 1fr)',
@@ -395,7 +381,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                       borderTop: '1px solid #3D3D3B',
                       fontSize: 'clamp(8px, 2vw, 10px)',
                       fontWeight: 500,
-                      padding: '1% 0'
+                      padding: '2% 0'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966' }}>
                         {getStyleDisplayName(fighter.style)}
