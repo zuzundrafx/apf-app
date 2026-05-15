@@ -371,7 +371,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966' }}>
                       Base Dmg: {fighter.baseDamage.total}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', fontSize: 'clamp(10px, 2.5vw, 12px)', color: '#FFD966' }}>
                       PvP Dmg: {fighter.pvpDamage.total}
                     </div>
                   </div>
