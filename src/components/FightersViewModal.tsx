@@ -222,7 +222,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                         alignItems: 'center',
                         justifyContent: 'center',
                         
-                        aspectRatio: '1 / 1.35',
+                        aspectRatio: '1 / 1.4',
                         borderRadius: '2vw',
                         position: 'relative',
                         overflow: 'visible',
