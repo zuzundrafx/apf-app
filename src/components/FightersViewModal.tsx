@@ -234,7 +234,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                         alignItems: 'center',
                         justifyContent: 'center',
                         overflow: 'hidden',
-                        margin: '4% auto 0'
+                        //margin: '4% auto 0'
                       }}>
                         <div style={{
                           height: '75%',
