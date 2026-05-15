@@ -137,6 +137,20 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
     return '#FFFFFF';
   };
 
+  const getWkCoefLabel = (wl: string): string => {
+    if (wl === 'win') return 'WIN Coef:';
+    if (wl === 'lose') return 'LOSE Coef:';
+    if (wl === 'draw') return 'DRAW Coef:';
+    return 'Coef:';
+  };
+
+  const getDiff = (pvpValue: number, baseValue: number): string => {
+    const diff = pvpValue - baseValue;
+    if (diff > 0) return ` (+${diff})`;
+    if (diff < 0) return ` (${diff})`;
+    return '';
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -170,24 +184,22 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           display: 'grid',
           gridTemplateColumns: '24% 32% 22% 22%',
           width: '95%',
-          //background: '#313130',
           padding: '2% 0',
           borderRadius: '8px',
-          marginLeft:'2.5%',
+          marginLeft: '2.5%',
           marginBottom: '2%',
           flexShrink: 0
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>FIGHTER</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>STATS</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>BASE</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>PVP</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>BASE</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>PVP</div>
         </div>
 
         {/* Контейнер для списка бойцов с прокруткой */}
         <div style={{ 
           flex: 1,
           overflowY: 'auto',
-          //paddingRight: '2%'
         }}>
           {loading ? (
             <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>LOADING FIGHTERS DATA...</div>
@@ -200,15 +212,14 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
               const fighterStyle = getFighterStyleFromDetail({ str: fighter.fighter.str, td: fighter.fighter.td, sub: fighter.fighter.sub });
               const styleIcon = getStyleIconFilename(fighterStyle);
               const weightColor = getWeightClassColor(fighter.fighter.weightClass);
+              const wkCoefLabel = getWkCoefLabel(fighter.fighter.wl);
               
               return (
                 <div key={idx} style={{
                   display: 'grid',
                   gridTemplateColumns: '24% 32% 22% 22%',
                   width: '95%',
-
-                  marginLeft:'2.5%',
-
+                  marginLeft: '2.5%',
                   background: '#2A2A2A',
                   borderRadius: '2vw',
                   border: `2px solid ${weightColor}`,
@@ -221,11 +232,9 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                       style={{ 
                         backgroundColor: weightColor,
                         width: '98%',
-
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        
                         aspectRatio: '1 / 1.4',
                         borderRadius: '2vw',
                         position: 'relative',
@@ -244,7 +253,6 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                         justifyContent: 'center',
                         overflow: 'hidden',
                         margin: 'auto auto',
-                        //margin: '4% auto 0'
                       }}>
                         <div style={{
                           height: '75%',
@@ -292,18 +300,23 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     </div>
                   </div>
 
-                  {/* 2-й столбец: STATS (без "Method: ") */}
+                  {/* 2-й столбец: STATS */}
                   <div style={{ 
                     display: 'flex', 
                     flexDirection: 'column', 
                     justifyContent: 'center',
-                    //marginTop: '2%', 
                     padding: '6% 2%', 
                     gap: '2%'
                   }}>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>{fighter.fighter.weightClass}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: getWLColor(fighter.fighter.wl), lineHeight: 1.3 }}>{getWLBadge(fighter.fighter.wl)}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>{fighter.fighter.method || '-'}</div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
+                      Class: {fighter.fighter.weightClass}
+                    </div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: getWLColor(fighter.fighter.wl), lineHeight: 1.3 }}>
+                      RESULT: {getWLBadge(fighter.fighter.wl)}
+                    </div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
+                      BY: {fighter.fighter.method || '-'}
+                    </div>
                     <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Kd: {fighter.fighter.kd}</div>
                     <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Td: {fighter.fighter.td}</div>
                     <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Sub: {fighter.fighter.sub}</div>
@@ -320,9 +333,9 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     padding: '4% 2%', 
                     gap: '2%'
                   }}>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>Weight: {fighter.baseDamage.components.weightCoef.toFixed(2)}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>W/L: {fighter.baseDamage.components.wkCoef.toFixed(2)}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>Bonus: {fighter.baseDamage.components.kdBonus || fighter.baseDamage.components.subBonus || 0}</div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>W.Coef: {fighter.baseDamage.components.weightCoef.toFixed(2)}</div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>{wkCoefLabel} {fighter.baseDamage.components.wkCoef.toFixed(2)}</div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Bonus: {fighter.baseDamage.components.kdBonus || fighter.baseDamage.components.subBonus || 0}</div>
                     <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>KD: {fighter.baseDamage.components.kdDamage}</div>
                     <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>TD: {fighter.baseDamage.components.tdDamage}</div>
                     <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>SUB: {fighter.baseDamage.components.subDamage}</div>
@@ -331,7 +344,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>LEG: {fighter.baseDamage.components.legDamage}</div>
                   </div>
 
-                  {/* 4-й столбец: PVP DAMAGE */}
+                  {/* 4-й столбец: PVP DAMAGE с разницей */}
                   <div style={{ 
                     display: 'flex', 
                     flexDirection: 'column', 
@@ -339,15 +352,33 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     padding: '4% 2%', 
                     gap: '2%'
                   }}>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>Weight: {fighter.pvpDamage.components.weightCoef.toFixed(2)}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>W/L: {fighter.pvpDamage.components.wkCoef.toFixed(2)}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>Bonus: {fighter.pvpDamage.components.kdBonus || fighter.pvpDamage.components.subBonus || 0}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>KD: {fighter.pvpDamage.components.kdDamage}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>TD: {fighter.pvpDamage.components.tdDamage}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>SUB: {fighter.pvpDamage.components.subDamage}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>HEAD: {fighter.pvpDamage.components.headDamage}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>BODY: {fighter.pvpDamage.components.bodyDamage}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>LEG: {fighter.pvpDamage.components.legDamage}</div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>W.Coef: {fighter.pvpDamage.components.weightCoef.toFixed(2)}</div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>{wkCoefLabel} {fighter.pvpDamage.components.wkCoef.toFixed(2)}</div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Bonus: {fighter.pvpDamage.components.kdBonus || fighter.pvpDamage.components.subBonus || 0}</div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                      KD: {fighter.pvpDamage.components.kdDamage}
+                      <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.kdDamage, fighter.baseDamage.components.kdDamage)}</span>
+                    </div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                      TD: {fighter.pvpDamage.components.tdDamage}
+                      <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.tdDamage, fighter.baseDamage.components.tdDamage)}</span>
+                    </div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                      SUB: {fighter.pvpDamage.components.subDamage}
+                      <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.subDamage, fighter.baseDamage.components.subDamage)}</span>
+                    </div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                      HEAD: {fighter.pvpDamage.components.headDamage}
+                      <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.headDamage, fighter.baseDamage.components.headDamage)}</span>
+                    </div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                      BODY: {fighter.pvpDamage.components.bodyDamage}
+                      <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.bodyDamage, fighter.baseDamage.components.bodyDamage)}</span>
+                    </div>
+                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                      LEG: {fighter.pvpDamage.components.legDamage}
+                      <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.legDamage, fighter.baseDamage.components.legDamage)}</span>
+                    </div>
                   </div>
 
                   {/* Строка со стилем и итоговым уроном (под всеми столбцами) */}
