@@ -295,7 +295,8 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                   <div style={{ 
                     display: 'flex', 
                     flexDirection: 'column', 
-                    justifyContent: 'center', 
+                    justifyContent: 'center',
+                    marginTop: '2%', 
                     padding: '4% 2%', 
                     gap: '2%'
                   }}>
