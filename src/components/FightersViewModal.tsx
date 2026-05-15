@@ -217,7 +217,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                       style={{ 
                         backgroundColor: weightColor,
                         width: '98%',
-                        aspectRatio: '1 / 1.2',
+                        aspectRatio: '1 / 1.3',
                         borderRadius: '2vw',
                         position: 'relative',
                         overflow: 'visible',
@@ -237,7 +237,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                         margin: '4% auto 0'
                       }}>
                         <div style={{
-                          width: '95%',
+                          height: '75%',
                           aspectRatio: '1 / 1',
                           display: 'flex',
                           alignItems: 'center',
