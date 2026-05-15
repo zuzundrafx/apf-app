@@ -168,8 +168,8 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
         {/* Фиксированный заголовок */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '25% 31% 22% 22%',
-          width: '100%',
+          gridTemplateColumns: '24% 32% 22% 22%',
+          width: '95%',
           //background: '#313130',
           padding: '2% 0',
           borderRadius: '8px',
@@ -203,8 +203,8 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
               return (
                 <div key={idx} style={{
                   display: 'grid',
-                  gridTemplateColumns: '25% 31% 22% 22%',
-                  width: '100%',
+                  gridTemplateColumns: '24% 32% 22% 22%',
+                  width: '95%',
                   background: '#2A2A2A',
                   borderRadius: '2vw',
                   border: `2px solid ${weightColor}`,
@@ -349,8 +349,8 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                   <div style={{
                     gridColumn: '1 / -1',
                     display: 'grid',
-                    gridTemplateColumns: '25% 37% 19% 19%',
-                    width: '100%',
+                    gridTemplateColumns: '24% 32% 22% 22%',
+                    width: '95%',
                     background: '#1C1D1F',
                     borderTop: '1px solid #3D3D3B',
                     fontSize: 'clamp(8px, 2vw, 10px)',
