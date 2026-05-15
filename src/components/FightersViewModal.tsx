@@ -189,11 +189,11 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           //paddingRight: '2%'
         }}>
           {loading ? (
-            <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>LOADING FIGHTER DATA...</div>
+            <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>LOADING FIGHTERS DATA...</div>
           ) : error ? (
             <div style={{ color: '#FF0000', textAlign: 'center', padding: '5%' }}>Error: {error}</div>
           ) : fightersDetails.length === 0 ? (
-            <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>No fighter data available</div>
+            <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>No fighters data available</div>
           ) : (
             fightersDetails.map((fighter, idx) => {
               const fighterStyle = getFighterStyleFromDetail({ str: fighter.fighter.str, td: fighter.fighter.td, sub: fighter.fighter.sub });
