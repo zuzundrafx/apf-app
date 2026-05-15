@@ -170,7 +170,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           display: 'grid',
           gridTemplateColumns: '25% 31% 22% 22%',
           width: '100%',
-          background: '#313130',
+          //background: '#313130',
           padding: '2% 0',
           borderRadius: '8px',
           marginBottom: '2%',
