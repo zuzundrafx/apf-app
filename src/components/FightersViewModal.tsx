@@ -216,8 +216,8 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     <div 
                       style={{ 
                         backgroundColor: weightColor,
-                        width: '90%',
-                        aspectRatio: '1 / 1',
+                        width: '98%',
+                        aspectRatio: '1 / 1.2',
                         borderRadius: '2vw',
                         position: 'relative',
                         overflow: 'visible',
