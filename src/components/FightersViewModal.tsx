@@ -173,13 +173,14 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           //background: '#313130',
           padding: '2% 0',
           borderRadius: '8px',
+          marginLeft:'2.5%',
           marginBottom: '2%',
           flexShrink: 0
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>FIGHTER</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>STATS</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>BASE DAMAGE</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>PVP DAMAGE</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>BASE</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>PVP</div>
         </div>
 
         {/* Контейнер для списка бойцов с прокруткой */}
@@ -367,11 +368,11 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3D3D3B' }}>
                       -
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966' }}>
-                      Base: {fighter.baseDamage.total}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966' }}>
+                      Base Dmg: {fighter.baseDamage.total}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966' }}>
-                      PvP: {fighter.pvpDamage.total}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966' }}>
+                      PvP Dmg: {fighter.pvpDamage.total}
                     </div>
                   </div>
                 </div>
