@@ -17,6 +17,11 @@ export const getFighterStyleFromSelected = (fighter: { Str?: number | string; Td
   return getFighterStyle(str, td, sub);
 };
 
+// Для полных данных FighterDetail (где поля str, td, sub - числа)
+export const getFighterStyleFromDetail = (fighter: { str: number; td: number; sub: number }): string => {
+  return getFighterStyle(fighter.str, fighter.td, fighter.sub);
+};
+
 // Получить отображаемое название стиля (для UI)
 export const getStyleDisplayName = (style: string): string => {
   const map: Record<string, string> = {
