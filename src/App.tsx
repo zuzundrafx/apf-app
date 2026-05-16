@@ -972,6 +972,7 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
   isOpen={showFightersModal}
   onClose={() => setShowFightersModal(false)}
   tournamentId={selectedActiveTournament?.id || ''}
+  tournamentName={selectedActiveTournament?.name}
   selections={userBets.get(Number(selectedActiveTournament?.id))?.selections || []}
   authToken={authToken || undefined}
   userId={telegramUser?.id}

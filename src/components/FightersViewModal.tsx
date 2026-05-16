@@ -8,6 +8,7 @@ interface FightersViewModalProps {
   isOpen: boolean;
   onClose: () => void;
   tournamentId: string;
+  tournamentName?: string;  // ← ДОБАВЛЕНО
   selections: SelectedFighter[];
   authToken?: string;
   userId?: string;
@@ -65,6 +66,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
   isOpen,
   onClose,
   tournamentId,
+  tournamentName,
   selections,
   authToken,
   userId
@@ -177,6 +179,82 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           >
             ✕
           </button>
+        </div>
+
+        {/* Новая строка с названием турнира и кнопками */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '24% 32% 22% 22%',
+          width: '95%',
+          padding: '2% 0',
+          borderRadius: '8px',
+          marginLeft: '2.5%',
+          marginBottom: '1%',
+          flexShrink: 0,
+          background: '#313130'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'flex-start', 
+            paddingLeft: '4%',
+            color: '#FFFFFF', 
+            fontWeight: 500, 
+            fontSize: 'clamp(9px, 2.2vw, 11px)',
+            wordBreak: 'break-word'
+          }}>
+            {tournamentName || 'Tournament'}
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            gap: '8%'
+          }}>
+            <button 
+              style={{
+                background: 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)',
+                border: '0.15vh solid #666d75',
+                borderRadius: '2vh',
+                color: '#FFFFFF',
+                fontSize: 'clamp(8px, 2vw, 10px)',
+                fontWeight: 600,
+                padding: '4% 8%',
+                cursor: 'not-allowed',
+                opacity: 0.6,
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap'
+              }}
+              disabled
+            >
+              ALL FIGHTERS
+            </button>
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            gridColumn: 'span 2'
+          }}>
+            <button 
+              style={{
+                background: 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)',
+                border: '0.15vh solid #666d75',
+                borderRadius: '2vh',
+                color: '#FFFFFF',
+                fontSize: 'clamp(8px, 2vw, 10px)',
+                fontWeight: 600,
+                padding: '4% 8%',
+                cursor: 'not-allowed',
+                opacity: 0.6,
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap'
+              }}
+              disabled
+            >
+              YOUR CARD
+            </button>
+          </div>
         </div>
 
         {/* Фиксированный заголовок */}
@@ -312,9 +390,9 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                       Class: {fighter.fighter.weightClass}
                     </div>
                     <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', lineHeight: 1.3 }}>
-  <span style={{ color: '#FFFFFF' }}>RESULT: </span>
-  <span style={{ color: getWLColor(fighter.fighter.wl) }}>{getWLBadge(fighter.fighter.wl)}</span>
-</div>
+                      <span style={{ color: '#FFFFFF' }}>RESULT: </span>
+                      <span style={{ color: getWLColor(fighter.fighter.wl) }}>{getWLBadge(fighter.fighter.wl)}</span>
+                    </div>
                     <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
                       BY: {fighter.fighter.method || '-'}
                     </div>
