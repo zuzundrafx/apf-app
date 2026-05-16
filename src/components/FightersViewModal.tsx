@@ -557,12 +557,12 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                       <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
                         BY: {fighter.fighter.method || '-'}
                       </div>
-                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Kd: {fighter.fighter.kd}</div>
-                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Td: {fighter.fighter.td}</div>
-                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Sub: {fighter.fighter.sub}</div>
-                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Head: {fighter.fighter.head}</div>
-                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Body: {fighter.fighter.body}</div>
-                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Leg: {fighter.fighter.leg}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>KD: {fighter.fighter.kd}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>TD: {fighter.fighter.td}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>SUB: {fighter.fighter.sub}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>HEAD: {fighter.fighter.head}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>BODY: {fighter.fighter.body}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>LEG: {fighter.fighter.leg}</div>
                     </div>
 
                     {/* 3-й столбец: BASE DAMAGE */}
@@ -707,7 +707,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                             <div 
                               style={{ 
                                 backgroundColor: weightColor,
-                                width: '60%',
+                                width: '96%',
                                 aspectRatio: '1 / 1',
                                 borderRadius: '2vw',
                                 display: 'flex',
