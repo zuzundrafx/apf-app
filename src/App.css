@@ -3829,7 +3829,7 @@ body {
   text-shadow: 0 0 2px #000000;
   cursor: pointer;
   text-transform: uppercase;
-  padding: 2px 8px;
+  padding: 1.2vh 2vw;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
