@@ -385,30 +385,48 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                   </div>
 
                   {/* 2-й столбец: STATS */}
-                  <div style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    justifyContent: 'center',
-                    padding: '6% 2%', 
-                    gap: '2%'
-                  }}>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
-                      Class: {fighter.fighter.weightClass}
-                    </div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', lineHeight: 1.3 }}>
-                      <span style={{ color: '#FFFFFF' }}>RESULT: </span>
-                      <span style={{ color: getWLColor(fighter.fighter.wl) }}>{getWLBadge(fighter.fighter.wl)}</span>
-                    </div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
-                      BY: {fighter.fighter.method || '-'}
-                    </div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Kd: {fighter.fighter.kd}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Td: {fighter.fighter.td}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Sub: {fighter.fighter.sub}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Head: {fighter.fighter.head}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Body: {fighter.fighter.body}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Leg: {fighter.fighter.leg}</div>
-                  </div>
+<div style={{ 
+  display: 'flex', 
+  flexDirection: 'column', 
+  justifyContent: 'center',
+  padding: '6% 2%', 
+  gap: '2%'
+}}>
+  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
+    Class: {fighter.fighter.weightClass}
+  </div>
+  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: '4px' }}>
+    <span style={{ color: '#FFFFFF' }}>RESULT:</span>
+    <span style={{ 
+      backgroundColor: (() => {
+        if (fighter.fighter.wl === 'win') return '#B29403';
+        if (fighter.fighter.wl === 'lose') return '#B20101';
+        if (fighter.fighter.wl === 'draw') return '#666D74';
+        return 'transparent';
+      })(),
+      color: (() => {
+        if (fighter.fighter.wl === 'draw') return '#000000';
+        return '#FFFFFF';
+      })(),
+      padding: '2px 6px',
+      borderRadius: '4px',
+      fontWeight: 600,
+      fontSize: 'clamp(7px, 1.8vw, 9px)',
+      display: 'inline-block'
+    }}>
+      {getWLBadge(fighter.fighter.wl)}
+    </span>
+  </div>
+  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
+    BY: {fighter.fighter.method || '-'}
+  </div>
+  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Kd: {fighter.fighter.kd}</div>
+  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Td: {fighter.fighter.td}</div>
+  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Sub: {fighter.fighter.sub}</div>
+  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Head: {fighter.fighter.head}</div>
+  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Body: {fighter.fighter.body}</div>
+  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Leg: {fighter.fighter.leg}</div>
+</div>
 
                   {/* 3-й столбец: BASE DAMAGE */}
                   <div style={{ 
