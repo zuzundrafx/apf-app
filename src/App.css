@@ -3841,3 +3841,95 @@ body {
 .fighters-check-button:active {
   transform: translateY(0);
 }
+
+/* Новая нижняя панель для активного турнира с двумя кнопками */
+.tournament-footer-double {
+  display: flex;
+  width: calc(100% - clamp(16px, 8vw, 32px));
+  margin: 0 clamp(8px, 4vw, 16px);
+  gap: clamp(4px, 2vw, 8px);
+  align-items: stretch;
+  height: 25%;
+  min-height: 30px;
+  max-height: 70px;
+  flex-shrink: 0;
+  padding-top: 4%;
+  box-sizing: border-box;
+}
+
+.footer-damage-button {
+  flex: 1;
+  width: 35%;
+  height: 100%;
+  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
+  border: none;
+  border-radius: 4px;
+  color: #000000;
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  padding: 0 clamp(4px, 1vw, 8px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.2s ease;
+}
+
+.footer-damage-button.active {
+  background: linear-gradient(180deg, #FFD966 0%, #E6B800 100%);
+  border: 2px solid #B29403;
+  box-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
+}
+
+.footer-damage-button.inactive {
+  opacity: 0.6;
+}
+
+.footer-close-icon {
+  width: 35%;
+  height: 100%;
+  background: #B20101;
+  border: 1px solid #FFFFFF;
+  border-radius: 4px;
+  color: #FFFFFF;
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.footer-close-icon:hover {
+  background: #8B0000;
+}
+
+/* Стиль для "Bet:" надписи на карточке бойца в грядущих турнирах */
+.fighter-bet-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: clamp(8px, 2vw, 10px);
+  font-weight: 600;
+  color: #FFFFFF;
+  background: transparent;
+}
+
+/* Стиль для "Base: / PvP:" надписи на карточке активного турнира (до выбора) */
+.tournament-stats-text {
+  color: #FFFFFF;
+  font-size: clamp(8px, 2vw, 10px);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: transparent;
+}
+
+.tournament-stats-text span {
+  color: #FFD966;
+}

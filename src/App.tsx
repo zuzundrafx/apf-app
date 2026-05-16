@@ -1,4 +1,4 @@
-﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ с добавлением StyleViewModal и исправлениями
+﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ с поддержкой PvP Damage для активных турниров
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
@@ -32,7 +32,6 @@ declare global {
 const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
 
-
 function App() {
   const [isLandscape, setIsLandscape] = useState(false);
 
@@ -55,6 +54,7 @@ function App() {
   const [telegramUser, setTelegramUser] = useState<{ id: string; username: string; photoUrl?: string } | null>(null);
   const { pastTournaments, upcomingTournaments, allCompletedTournaments, loading, error, loadFighters, userBets } = useBackendTournaments(authToken, telegramUser?.id || null);
   const { coefficients: globalCoefficients } = useCoefficients(authToken || undefined);
+  
   const [isSavingBet, setIsSavingBet] = useState(false);
   const [isClaimingRefund, setIsClaimingRefund] = useState(false);
   const [selectedFighters, setSelectedFighters] = useState<Map<string, Fighter>>(new Map());
@@ -87,6 +87,12 @@ function App() {
   const [currentBetAmount, setCurrentBetAmount] = useState<number | null>(null);
   const [showNotEnoughCoins, setShowNotEnoughCoins] = useState(false);
   
+  // Состояние для активной кнопки в активном турнире (BASE или PVP)
+  const [activeDamageType, setActiveDamageType] = useState<'base' | 'pvp'>('base');
+  
+  // Состояние для PvP Damage всех активных турниров
+  const [pvpDamageMap, setPvpDamageMap] = useState<Record<string, { total: number; perFighter: number[] }>>({});
+  
   const pvpRef = useRef<any>(null);
 
   const [selectedUpcomingTournament, setSelectedUpcomingTournament] = useState<Tournament | null>(null);
@@ -103,6 +109,62 @@ function App() {
     coins: 100, tickets: 0, ton: 0, expPoints: 1,
     myUserId: null as string | null,
   });
+
+  // Функция для получения суммы ставки за вычетом рейка
+  const getBetAmountAfterRake = (betAmount: number): number => {
+    const rakePercent = globalCoefficients?.RAKE_PERCENT || 10;
+    return betAmount - Math.ceil(betAmount * rakePercent / 100);
+  };
+
+  // Функция для получения PvP Damage для турнира
+  const getPvpDamageForTournament = (tournamentId: string): { total: number; perFighter: number[] } => {
+    return pvpDamageMap[tournamentId] || { total: 0, perFighter: [] };
+  };
+
+  // Функция загрузки PvP Damage для всех активных турниров
+  const loadPvpDamageForActiveTournaments = useCallback(async () => {
+    if (!authToken || userBets.size === 0) return;
+    
+    const activeTournamentsIds: string[] = [];
+    const selectionsMap: Record<string, any[]> = {};
+    
+    userBets.forEach((bet, tournamentId) => {
+      if (!bet.cancelled) {
+        activeTournamentsIds.push(tournamentId.toString());
+        selectionsMap[tournamentId] = bet.selections;
+      }
+    });
+    
+    if (activeTournamentsIds.length === 0) return;
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/user/pvp-damage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          tournamentIds: activeTournamentsIds,
+          selections: selectionsMap
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setPvpDamageMap(data);
+      }
+    } catch (err) {
+      console.error('Failed to load PvP damage:', err);
+    }
+  }, [authToken, userBets]);
+
+  // Загружаем PvP Damage при загрузке пользовательских ставок
+  useEffect(() => {
+    if (authToken && userBets.size > 0) {
+      loadPvpDamageForActiveTournaments();
+    }
+  }, [authToken, userBets, loadPvpDamageForActiveTournaments]);
 
   const calculateAvailableBetAmounts = (userCoins: number): number[] => {
     if (userCoins < 5) return [];
@@ -156,7 +218,6 @@ function App() {
         expPoints: data.user.exp_points
       }));
       
-      // Загружаем стиль пользователя
       try {
         const styleData = await apiRequest('/api/user/style');
         setUserStyle(styleData.style);
@@ -232,7 +293,6 @@ function App() {
         totalExp: notification.data.experience
       });
       setShowRewardsModal(true);
-      // НЕ удаляем уведомление сразу — только после claim
     }
   };
 
@@ -255,7 +315,6 @@ function App() {
         expPoints: result.expPoints
       }));
       
-      // Удаляем уведомление из списка после успешного claim
       setNotifications(prev => prev.filter(n => n.id !== selectedNotification.id));
       setShowRewardsModal(false);
       setPendingRewards(null);
@@ -432,6 +491,7 @@ function App() {
   };
 
   const handleActiveTournamentClick = (tournament: Tournament) => {
+    setActiveDamageType('base');
     setSelectedActiveTournament(tournament);
   };
 
@@ -464,6 +524,36 @@ function App() {
     setShowBetModal(false);
   };
 
+  // Получаем ставку за вычетом рейка для грядущего турнира
+  const getUpcomingBetValue = (bet: any): number => {
+    if (!bet) return 0;
+    const betAmount = bet.bet_amount || 0;
+    return getBetAmountAfterRake(betAmount);
+  };
+
+  // Получаем значение урона для карточки бойца (BASE или PVP)
+  const getFighterDamageValue = (sel: any, damageType: 'base' | 'pvp', tournamentId: string, idx: number): number => {
+    if (damageType === 'base') {
+      return sel.fighter['Total Damage'] || 0;
+    } else {
+      const pvpData = getPvpDamageForTournament(tournamentId);
+      return pvpData.perFighter[idx] || sel.fighter['Total Damage'] || 0;
+    }
+  };
+
+  // Получаем общий урон для активного турнира (BASE или PVP)
+  const getTotalDamageForActiveTournament = (damageType: 'base' | 'pvp', tournamentId: string): number => {
+    const bet = userBets.get(Number(tournamentId));
+    if (!bet) return 0;
+    
+    if (damageType === 'base') {
+      return bet.total_damage || 0;
+    } else {
+      const pvpData = getPvpDamageForTournament(tournamentId);
+      return pvpData.total || bet.total_damage || 0;
+    }
+  };
+
   if (loading || loadingProfile) return (
     <div className="app">
       <div className="loading-screen">
@@ -484,8 +574,7 @@ function App() {
     </div>
   );
 
-  // Показываем ВСЕ турниры из pastTournaments (без фильтрации по ставке)
-const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
+  const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
   const upcoming = upcomingTournaments.filter(t => t.status !== 'completed');
 
   return (
@@ -505,33 +594,33 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
 
       <header className="profile-header">
         <div className="profile-avatar" onClick={handleAvatarClick} style={{ cursor: 'pointer', ...getAvatarWrapperStyle(userStyle), position: 'relative', overflow: 'visible' }}>
-  {telegramUser?.photoUrl ? 
-    <img src={telegramUser.photoUrl} alt="avatar" style={getAvatarInnerStyle()} /> 
-    : 
-    <img src={`${BASE_URL}/Home_button.png`} alt="avatar" style={getAvatarInnerStyle()} />
-  }
-  {userData.expPoints > 0 && (
-  <span style={{
-    position: 'absolute',
-    top: '-4px',
-    right: '-4px',
-    width: '18px',
-    height: '18px',
-    background: '#B20101',
-    borderRadius: '50%',
-    color: '#FFFFFF',
-    fontSize: '12px',
-    fontWeight: '700',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    animation: 'pulse 1s infinite',
-    zIndex: 10
-  }}>
-    {userData.expPoints}
-  </span>
-)}
-</div>
+          {telegramUser?.photoUrl ? 
+            <img src={telegramUser.photoUrl} alt="avatar" style={getAvatarInnerStyle()} /> 
+            : 
+            <img src={`${BASE_URL}/Home_button.png`} alt="avatar" style={getAvatarInnerStyle()} />
+          }
+          {userData.expPoints > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: '-4px',
+              right: '-4px',
+              width: '18px',
+              height: '18px',
+              background: '#B20101',
+              borderRadius: '50%',
+              color: '#FFFFFF',
+              fontSize: '12px',
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              animation: 'pulse 1s infinite',
+              zIndex: 10
+            }}>
+              {userData.expPoints}
+            </span>
+          )}
+        </div>
         <div className="profile-info">
           <div className="profile-name">{userData.username}</div>
           <div className="level-bar">
@@ -557,22 +646,22 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
           <div className="tournaments-container">
             <section className="tournament-section past">
               <div className="tournament-header">
-  <h2>{selectedActiveTournament ? selectedActiveTournament.name : 'ACTIVE TOURNAMENTS'}</h2>
-  <div className="tournament-meta">
-    <span>{selectedActiveTournament ? new Date(selectedActiveTournament.date).toLocaleDateString() : `${activeTournaments.length} events`}</span>
-    {selectedActiveTournament ? (
-      <button 
-        className="fighters-check-button"
-        onClick={() => setShowFightersModal(true)}
-      >
-        CHECK FIGHTERS
-      </button>
-    ) : (
-      <span className="tournament-status active">COMPLETED</span>
-    )}
-  </div>
-</div>
-                            <div className="tournament-content">
+                <h2>{selectedActiveTournament ? selectedActiveTournament.name : 'ACTIVE TOURNAMENTS'}</h2>
+                <div className="tournament-meta">
+                  <span>{selectedActiveTournament ? new Date(selectedActiveTournament.date).toLocaleDateString() : `${activeTournaments.length} events`}</span>
+                  {selectedActiveTournament ? (
+                    <button 
+                      className="fighters-check-button"
+                      onClick={() => setShowFightersModal(true)}
+                    >
+                      CHECK FIGHTERS
+                    </button>
+                  ) : (
+                    <span className="tournament-status active">COMPLETED</span>
+                  )}
+                </div>
+              </div>
+              <div className="tournament-content">
                 {selectedActiveTournament ? (
                   <>
                     <div className="selected-fighters-grid">
@@ -580,9 +669,11 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
                         const isWinner = sel.fighter.W_L === 'win';
                         const style = getFighterStyleFromSelected(sel.fighter);
                         const styleIcon = getStyleIconFilename(style);
+                        const damageValue = getFighterDamageValue(sel, activeDamageType, selectedActiveTournament.id, idx);
+                        
                         return (
                           <div key={idx} className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-                            <div className="selected-fighter-damage-box">{sel.fighter['Total Damage']}</div>
+                            <div className="selected-fighter-damage-box">{damageValue}</div>
                             <div className="selected-fighter-inner">
                               <div className="selected-fighter-icon-container">
                                 <img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="selected-fighter-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const p = (e.target as HTMLImageElement).parentElement; if (p) { p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; p.style.fontSize = '20px'; } }} />
@@ -595,9 +686,20 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
                         );
                       })}
                     </div>
-                    <div className="tournament-footer">
-                      <div className="footer-total-damage">TOTAL DAMAGE: {userBets.get(Number(selectedActiveTournament.id))?.total_damage || 0}</div>
-                      <button className="footer-close-button" onClick={() => setSelectedActiveTournament(null)}>CLOSE</button>
+                    <div className="tournament-footer-double">
+                      <button 
+                        className={`footer-damage-button ${activeDamageType === 'base' ? 'active' : 'inactive'}`}
+                        onClick={() => setActiveDamageType('base')}
+                      >
+                        Base Damage: {getTotalDamageForActiveTournament('base', selectedActiveTournament.id)}
+                      </button>
+                      <button 
+                        className={`footer-damage-button ${activeDamageType === 'pvp' ? 'active' : 'inactive'}`}
+                        onClick={() => setActiveDamageType('pvp')}
+                      >
+                        PvP Damage: {getTotalDamageForActiveTournament('pvp', selectedActiveTournament.id)}
+                      </button>
+                      <button className="footer-close-icon" onClick={() => setSelectedActiveTournament(null)}>✕</button>
                     </div>
                   </>
                 ) : activeTournaments.length > 0 ? (
@@ -607,6 +709,8 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
                       const isCancelled = bet?.cancelled;
                       const hasActiveBet = bet && !isCancelled;
                       const totalDamage = bet ? bet.total_damage : 0;
+                      const pvpData = getPvpDamageForTournament(tournament.id);
+                      const pvpDamage = pvpData.total || totalDamage;
                       
                       return (
                         <div 
@@ -619,8 +723,8 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
                           }}
                         >
                           <div className="tournament-card">
-                            <div className="tournament-card-damage-box">
-                              {hasActiveBet ? `TOTAL: ${totalDamage}` : 'NO BET'}
+                            <div className="tournament-stats-text">
+                              <span>Base:</span> {totalDamage} / <span>PvP:</span> {pvpDamage}
                             </div>
                             <div className="tournament-card-image">
                               <img src={`${BASE_URL}/UFC_cardpack.png`} alt="pack" />
@@ -652,9 +756,15 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
                       {upcomingBetData?.selections.map((sel: any, idx: number) => {
                         const style = getFighterStyleFromSelected(sel.fighter);
                         const styleIcon = getStyleIconFilename(style);
+                        const betValue = getUpcomingBetValue(upcomingBetData);
+                        const perFighterValue = Math.floor(betValue / 5);
+                        
                         return (
                           <div key={idx} className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-                            <div className="selected-fighter-damage-box">{sel.fighter.TotalDamage}</div>
+                            <div className="fighter-bet-value">
+                              <span>Bet: {perFighterValue}</span>
+                              <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
+                            </div>
                             <div className="selected-fighter-inner">
                               <div className="selected-fighter-icon-container">
                                 <img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="selected-fighter-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const p = (e.target as HTMLImageElement).parentElement; if (p) { p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; p.style.fontSize = '20px'; } }} />
@@ -666,9 +776,11 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
                         );
                       })}
                     </div>
-                    <div className="tournament-footer">
-                      <div className="footer-total-damage">TOTAL DAMAGE: {upcomingBetData?.total_damage || 0}</div>
-                      <button className="footer-close-button" onClick={() => { setSelectedUpcomingTournament(null); setUpcomingBetData(null); }}>CLOSE</button>
+                    <div className="tournament-footer-double">
+                      <div className="footer-damage-button" style={{ background: 'linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%)', cursor: 'default', opacity: 0.8 }}>
+                        Bet: {getUpcomingBetValue(upcomingBetData)} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
+                      </div>
+                      <button className="footer-close-icon" onClick={() => { setSelectedUpcomingTournament(null); setUpcomingBetData(null); }}>✕</button>
                     </div>
                   </>
                 ) : (
@@ -677,11 +789,20 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
                       {upcoming.map(tournament => {
                         const hasBet = userBets.has(Number(tournament.id));
                         const bet = userBets.get(Number(tournament.id));
-                        const totalDamage = bet ? bet.total_damage : null;
+                        const betValue = bet ? getUpcomingBetValue(bet) : 0;
+                        
                         return (
                           <div key={tournament.id} className="tournament-card-wrapper" onClick={() => handleUpcomingTournamentClick(tournament)}>
                             <div className="tournament-card">
-                              <div className="tournament-card-damage-box">{hasBet ? `TOTAL: ${totalDamage}` : 'SELECT'}</div>
+                              <div className="tournament-stats-text">
+                                {hasBet ? (
+                                  <>
+                                    <span>Bet:</span> {betValue} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
+                                  </>
+                                ) : (
+                                  'SELECT'
+                                )}
+                              </div>
                               <div className="tournament-card-image"><img src={`${BASE_URL}/UFC_cardpack.png`} alt="pack" /></div>
                               <div className="tournament-card-name">{tournament.name}</div>
                             </div>
@@ -781,15 +902,12 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
             userAvatar={telegramUser?.photoUrl}
             userId={telegramUser?.id}
             userName={userData.username}
-            
             userLevel={userData.level}
             userCoins={userData.coins}
             userTickets={userData.tickets}
             userStyle={userStyle}
             allProfiles={allProfiles}
-            onOpenBetModal={(_tournament: Tournament) => {
-  // PvP теперь сам обрабатывает свои ставки
-}}
+            onOpenBetModal={(_tournament: Tournament) => {}}
             onUpdateBalance={async (coins, tickets) => {
               setUserData(prev => ({ ...prev, coins, tickets }));
             }}
@@ -805,56 +923,53 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
 
       {/* Модальные окна */}
       {showBetModal && selectedBetTournament && (
-  <div className="bet-modal-overlay">
-    <div className="bet-modal">
-      <div className="bet-modal-header">
-        <span className="bet-modal-title">{selectedBetTournament.name}</span>
-        <button className="bet-modal-close" onClick={() => setShowBetModal(false)}>CLOSE</button>
-      </div>
-      <div className="bet-modal-slider-container">
-        <div className="bet-slider-wrapper">
-          <div className="bet-slider">
-            <div className="bet-slider-fill" style={{ width: availableBetAmounts.length > 1 ? `${((selectedBetAmount - availableBetAmounts[0]) / (availableBetAmounts[availableBetAmounts.length - 1] - availableBetAmounts[0])) * 100}%` : '100%' }}></div>
-            {availableBetAmounts.map(amount => {
-              const minAmount = availableBetAmounts[0];
-              const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
-              const position = maxAmount > minAmount ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 : 50;
-              const isMin = amount === minAmount;
-              const isMax = amount === maxAmount;
-              return (
-                <div key={amount} className="bet-slider-marker-container" style={{ left: `${position}%` }}>
-                  <div 
-                    className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`} 
-                    onClick={() => { 
-                      setAnimatedBetAmount(amount); 
-                      setShowBetAmountIncrease(true); 
-                      setSelectedBetAmount(amount); 
-                      setTimeout(() => setShowBetAmountIncrease(false), 500); 
-                    }}
-                  ></div>
-                  <span className="bet-marker-value">{isMin ? 'MIN' : isMax ? 'MAX' : amount}</span>
+        <div className="bet-modal-overlay">
+          <div className="bet-modal">
+            <div className="bet-modal-header">
+              <span className="bet-modal-title">{selectedBetTournament.name}</span>
+              <button className="bet-modal-close" onClick={() => setShowBetModal(false)}>CLOSE</button>
+            </div>
+            <div className="bet-modal-slider-container">
+              <div className="bet-slider-wrapper">
+                <div className="bet-slider">
+                  <div className="bet-slider-fill" style={{ width: availableBetAmounts.length > 1 ? `${((selectedBetAmount - availableBetAmounts[0]) / (availableBetAmounts[availableBetAmounts.length - 1] - availableBetAmounts[0])) * 100}%` : '100%' }}></div>
+                  {availableBetAmounts.map(amount => {
+                    const minAmount = availableBetAmounts[0];
+                    const maxAmount = availableBetAmounts[availableBetAmounts.length - 1];
+                    const position = maxAmount > minAmount ? ((amount - minAmount) / (maxAmount - minAmount)) * 100 : 50;
+                    const isMin = amount === minAmount;
+                    const isMax = amount === maxAmount;
+                    return (
+                      <div key={amount} className="bet-slider-marker-container" style={{ left: `${position}%` }}>
+                        <div 
+                          className={`bet-slider-marker ${selectedBetAmount === amount ? 'active' : ''}`} 
+                          onClick={() => { 
+                            setAnimatedBetAmount(amount); 
+                            setShowBetAmountIncrease(true); 
+                            setSelectedBetAmount(amount); 
+                            setTimeout(() => setShowBetAmountIncrease(false), 500); 
+                          }}
+                        ></div>
+                        <span className="bet-marker-value">{isMin ? 'MIN' : isMax ? 'MAX' : amount}</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            </div>
+            <div className="bet-modal-footer">
+              <button className="bet-confirm-button" onClick={openSelectionWithBet}>
+                BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount - Math.ceil(animatedBetAmount * (globalCoefficients?.RAKE_PERCENT || 10) / 100)}</span> 
+                <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
+              </button>
+            </div>
+            <div className="bet-rake-info">
+              <span>Rake ({globalCoefficients?.RAKE_PERCENT || 10}%):</span>
+              <span>{Math.ceil(selectedBetAmount * (globalCoefficients?.RAKE_PERCENT || 10) / 100)} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /></span>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="bet-modal-footer">
-        <button className="bet-confirm-button" onClick={openSelectionWithBet}>
-          BET SIZE: <span className={`bet-amount-value ${showBetAmountIncrease ? 'bet-amount-increase' : ''}`}>{animatedBetAmount - Math.ceil(animatedBetAmount * 10 / 100)}</span> 
-          <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" />
-        </button>
-      </div>
-      {/* Рейк под кнопкой */}
-      <div className="bet-rake-info">
-        <span>Rake (10%):</span>
-        <span>{Math.ceil(selectedBetAmount * 10 / 100)} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" className="bet-coin-icon" /></span>
-      </div>
-    </div>
-  </div>
-)}
-
-      
+      )}
 
       {showNotificationsModal && (
         <div className="rewards-modal-overlay">
@@ -944,7 +1059,6 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
         <button className="nav-button disabled"><img src={`${BASE_URL}/Shop_button.png`} alt="Shop" /></button>
       </nav>
 
-      {/* Style Selection Modal */}
       <StyleModal
         isOpen={showStyleModal}
         onClose={() => setShowStyleModal(false)}
@@ -953,32 +1067,29 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
         onStyleSaved={() => setShowStyleViewModal(true)}
       />
 
-      {/* Style View Modal */}
-{userStyle && (
-  <StyleViewModal
-    isOpen={showStyleViewModal}
-    onClose={() => setShowStyleViewModal(false)}
-    style={userStyle}
-    userLevel={userData.level}
-    userExpPoints={userData.expPoints}
-    authToken={authToken ?? undefined}
-    onExpPointsUpdate={(newPoints) => {
-    setUserData(prev => ({ ...prev, expPoints: newPoints }));
-  }}
-  />
-)}
+      {userStyle && (
+        <StyleViewModal
+          isOpen={showStyleViewModal}
+          onClose={() => setShowStyleViewModal(false)}
+          style={userStyle}
+          userLevel={userData.level}
+          userExpPoints={userData.expPoints}
+          authToken={authToken ?? undefined}
+          onExpPointsUpdate={(newPoints) => {
+            setUserData(prev => ({ ...prev, expPoints: newPoints }));
+          }}
+        />
+      )}
 
-    {/* Fighters View Modal */}
-<FightersViewModal
-  isOpen={showFightersModal}
-  onClose={() => setShowFightersModal(false)}
-  tournamentId={selectedActiveTournament?.id || ''}
-  tournamentName={selectedActiveTournament?.name}
-  selections={userBets.get(Number(selectedActiveTournament?.id))?.selections || []}
-  authToken={authToken || undefined}
-  coefficients={globalCoefficients}
-  //userId={telegramUser?.id}
-/>
+      <FightersViewModal
+        isOpen={showFightersModal}
+        onClose={() => setShowFightersModal(false)}
+        tournamentId={selectedActiveTournament?.id || ''}
+        tournamentName={selectedActiveTournament?.name}
+        selections={userBets.get(Number(selectedActiveTournament?.id))?.selections || []}
+        authToken={authToken || undefined}
+        coefficients={globalCoefficients}
+      />
 
     </div>
   );
