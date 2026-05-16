@@ -676,13 +676,13 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     {/* Заголовок весовой категории */}
                     <div style={{
                       backgroundColor: weightColor,
-                      padding: '2% 4%',
+                      padding: '0.5% 4%',
                       borderRadius: '1vw',
                       marginBottom: '2%',
                       marginLeft: '2.5%',
                       width: '95%'
                     }}>
-                      <span style={{ color: '#FFFFFF', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>{weightClass}</span>
+                      <span style={{ color: '#FFFFFF', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)', textShadow: '0 0 2px #000000', letterSpacing: '0.5px' }}>{weightClass}</span>
                     </div>
                     
                     {fighters.map((fighter, idx) => {
