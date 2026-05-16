@@ -8,7 +8,7 @@ interface FightersViewModalProps {
   isOpen: boolean;
   onClose: () => void;
   tournamentId: string;
-  tournamentName?: string;  // ← ДОБАВЛЕНО
+  tournamentName?: string;
   selections: SelectedFighter[];
   authToken?: string;
   userId?: string;
@@ -62,6 +62,21 @@ interface FighterDetail {
   };
 }
 
+interface TournamentFighter {
+  fighter_name: string;
+  weight_class: string;
+  wl: string | null;
+  method: string;
+  kd: number;
+  td: number;
+  sub: number;
+  head: number;
+  body: number;
+  leg: number;
+  str: number;
+  total_damage: number;
+}
+
 const FightersViewModal: React.FC<FightersViewModalProps> = ({
   isOpen,
   onClose,
@@ -72,14 +87,18 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
   userId
 }) => {
   const [fightersDetails, setFightersDetails] = useState<FighterDetail[]>([]);
+  const [allFighters, setAllFighters] = useState<TournamentFighter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'yourCard' | 'allFighters'>('yourCard');
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
   const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
 
+  // Загрузка данных для YOUR CARD
   useEffect(() => {
     if (!isOpen || !tournamentId || !selections.length || !authToken) return;
+    if (activeTab !== 'yourCard') return;
 
     const loadFighterDetails = async () => {
       setLoading(true);
@@ -123,7 +142,40 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
     };
 
     loadFighterDetails();
-  }, [isOpen, tournamentId, selections, authToken]);
+  }, [isOpen, tournamentId, selections, authToken, activeTab]);
+
+  // Загрузка всех бойцов турнира для ALL FIGHTERS
+  useEffect(() => {
+    if (!isOpen || !tournamentId || !authToken) return;
+    if (activeTab !== 'allFighters') return;
+
+    const loadAllFighters = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch(`${API_BASE}/api/tournaments/${tournamentId}/fighters`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load tournament fighters');
+        }
+
+        const data = await response.json();
+        setAllFighters(data);
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAllFighters();
+  }, [isOpen, tournamentId, authToken, activeTab]);
 
   const getWLBadge = (wl: string): string => {
     if (wl === 'win') return 'WIN';
@@ -153,7 +205,103 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
     return '';
   };
 
+  // Группировка бойцов по весовым категориям (порядок как в окне выбора ставки)
+  const getWeightClassOrder = (weightClass: string): number => {
+    const order: Record<string, number> = {
+      'Flyweight': 1,
+      'Bantamweight': 2,
+      'Featherweight': 3,
+      'Lightweight': 4,
+      'Welterweight': 5,
+      'Middleweight': 6,
+      'Light Heavyweight': 7,
+      'Heavyweight': 8,
+      "Women's Strawweight": 9,
+      "Women's Flyweight": 10,
+      "Women's Bantamweight": 11,
+      "Catch Weight": 12
+    };
+    return order[weightClass] || 99;
+  };
+
+  const groupedFighters = allFighters.reduce((acc, fighter) => {
+    const weightClass = fighter.weight_class;
+    if (!acc[weightClass]) {
+      acc[weightClass] = [];
+    }
+    acc[weightClass].push(fighter);
+    return acc;
+  }, {} as Record<string, TournamentFighter[]>);
+
+  const sortedWeightClasses = Object.keys(groupedFighters).sort((a, b) => 
+    getWeightClassOrder(a) - getWeightClassOrder(b)
+  );
+
+  // Форматирование строк для ALL FIGHTERS
+  const formatStatsRow = (fighter: TournamentFighter) => {
+    const result = `${getWLBadge(fighter.wl || '')}`;
+    const method = fighter.method || '-';
+    return { result, method };
+  };
+
+  const formatKdTdSub = (fighter: TournamentFighter) => {
+    return `Kd:${fighter.kd}, Td:${fighter.td}, Sub:${fighter.sub}`;
+  };
+
+  const formatHeadBodyLeg = (fighter: TournamentFighter) => {
+    return `Head:${fighter.head}, Body:${fighter.body}, Leg:${fighter.leg}`;
+  };
+
+  const formatCoefBonus = (fighter: TournamentFighter) => {
+    // Для ALL FIGHTERS используем базовые коэффициенты (без скиллов)
+    const wl = (fighter.wl || 'lose').toLowerCase();
+    let wkCoef = 0.7;
+    if (wl === 'win') wkCoef = 1.0;
+    else if (wl === 'draw') wkCoef = 0.9;
+    
+    const method = (fighter.method || '').toUpperCase();
+    let bonus = 0;
+    if (wl === 'win') {
+      if (method.includes('KO') || method.includes('TKO')) bonus = 40;
+      else if (method.includes('SUB')) bonus = 35;
+    }
+    
+    const wkLabel = getWkCoefLabel(wl);
+    return `${wkLabel} ${wkCoef.toFixed(2)}, Bonus:${bonus}`;
+  };
+
+  const formatDamageStats = (fighter: TournamentFighter) => {
+    const weightCoef = 1.0; // Временно, нужно будет загружать реальные коэффициенты
+    const wkCoef = (fighter.wl === 'win') ? 1.0 : (fighter.wl === 'draw') ? 0.9 : 0.7;
+    const KD_COEF = 25;
+    const TD_COEF = 10;
+    const SUB_COEF = 15;
+    const HEAD_COEF = 1;
+    const BODY_COEF = 0.9;
+    const LEG_COEF = 0.8;
+    
+    const kdDamage = Math.round(fighter.kd * KD_COEF * weightCoef * wkCoef);
+    const tdDamage = Math.round(fighter.td * TD_COEF * weightCoef * wkCoef);
+    const subDamage = Math.round(fighter.sub * SUB_COEF * weightCoef * wkCoef);
+    const headDamage = Math.round(fighter.head * HEAD_COEF * weightCoef * wkCoef);
+    const bodyDamage = Math.round(fighter.body * BODY_COEF * weightCoef * wkCoef);
+    const legDamage = Math.round(fighter.leg * LEG_COEF * weightCoef * wkCoef);
+    
+    return {
+      kdtdsub: `KD:${kdDamage}, TD:${tdDamage}, SUB:${subDamage}`,
+      headbodyleg: `HEAD:${headDamage}, BODY:${bodyDamage}, LEG:${legDamage}`
+    };
+  };
+
   if (!isOpen) return null;
+
+  const isYourCardActive = activeTab === 'yourCard';
+  const isAllFightersActive = activeTab === 'allFighters';
+
+  // Ширина столбцов в зависимости от активной вкладки
+  const gridColumns = isYourCardActive 
+    ? '24% 32% 22% 22%'
+    : '20% 43% 35% 2%';
 
   return (
     <div className="rewards-modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -181,92 +329,79 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           </button>
         </div>
 
-        {/* Новая строка с названием турнира и кнопками */}
-<div style={{
-  display: 'grid',
-  gridTemplateColumns: '46% 22% 22% 10%',
-  width: '98%',
-  padding: '2% 0',
-  borderRadius: '8px',
-  marginLeft: '1%',
-  //marginBottom: '1%',
-  flexShrink: 0,
-  background: '#313130'
-}}>
-  {/* 1-й столбец: название турнира */}
-  <div style={{ 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'flex-start', 
-    paddingLeft: '4%',
-    color: '#FFFFFF', 
-    fontWeight: 500, 
-    fontSize: 'clamp(9px, 2.2vw, 11px)',
-    wordBreak: 'break-word'
-  }}>
-    {tournamentName || 'Tournament'}
-  </div>
-  
-  {/* 2-й столбец: кнопка ALL FIGHTERS */}
-  <div style={{ 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center'
-  }}>
-    <button 
-      style={{
-        background: 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)',
-        border: '0.15vh solid #666d75',
-        borderRadius: '2vh',
-        color: '#FFFFFF',
-        fontSize: 'clamp(8px, 2vw, 10px)',
-        fontWeight: 600,
-        padding: '6% 8%',
-        cursor: 'not-allowed',
-        opacity: 0.6,
-        textTransform: 'uppercase',
-        whiteSpace: 'nowrap'
-      }}
-      disabled
-    >
-      ALL FIGHTERS
-    </button>
-  </div>
-  
-  {/* 3-й столбец: кнопка YOUR CARD */}
-  <div style={{ 
-    display: 'flex', 
-    alignItems: 'center', 
-    justifyContent: 'center'
-  }}>
-    <button 
-      style={{
-        background: 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)',
-        border: '0.15vh solid #666d75',
-        borderRadius: '2vh',
-        color: '#FFFFFF',
-        fontSize: 'clamp(8px, 2vw, 10px)',
-        fontWeight: 600,
-        padding: '6% 8%',
-        cursor: 'not-allowed',
-        opacity: 0.6,
-        textTransform: 'uppercase',
-        whiteSpace: 'nowrap'
-      }}
-      disabled
-    >
-      YOUR CARD
-    </button>
-  </div>
-  
-  {/* 4-й столбец: пустой */}
-  <div></div>
-</div>
-
-        {/* Фиксированный заголовок */}
+        {/* Строка с названием турнира и кнопками (ширина НЕ МЕНЯЕТСЯ) */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '24% 32% 22% 22%',
+          gridTemplateColumns: '46% 22% 22% 10%',
+          width: '98%',
+          padding: '2% 0',
+          borderRadius: '8px',
+          marginLeft: '1%',
+          flexShrink: 0,
+          background: '#313130'
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'flex-start', 
+            paddingLeft: '4%',
+            color: '#FFFFFF', 
+            fontWeight: 500, 
+            fontSize: 'clamp(9px, 2.2vw, 11px)',
+            wordBreak: 'break-word'
+          }}>
+            {tournamentName || 'Tournament'}
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button 
+              style={{
+                background: 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)',
+                border: isAllFightersActive ? '2px solid #FFD966' : '0.15vh solid #666d75',
+                borderRadius: '2vh',
+                color: '#FFFFFF',
+                fontSize: 'clamp(8px, 2vw, 10px)',
+                fontWeight: 600,
+                padding: '6% 8%',
+                cursor: 'pointer',
+                opacity: isAllFightersActive ? 1 : 0.6,
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap'
+              }}
+              onClick={() => setActiveTab('allFighters')}
+            >
+              ALL FIGHTERS
+            </button>
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button 
+              style={{
+                background: 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)',
+                border: isYourCardActive ? '2px solid #FFD966' : '0.15vh solid #666d75',
+                borderRadius: '2vh',
+                color: '#FFFFFF',
+                fontSize: 'clamp(8px, 2vw, 10px)',
+                fontWeight: 600,
+                padding: '6% 8%',
+                cursor: 'pointer',
+                opacity: isYourCardActive ? 1 : 0.6,
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap'
+              }}
+              onClick={() => setActiveTab('yourCard')}
+            >
+              YOUR CARD
+            </button>
+          </div>
+          
+          <div></div>
+        </div>
+
+        {/* Заголовки столбцов (ширина меняется в зависимости от activeTab) */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: gridColumns,
           width: '95%',
           padding: '1% 0',
           borderRadius: '8px',
@@ -277,7 +412,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>FIGHTER</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>STATS</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>BASE</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>PVP</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>{isYourCardActive ? 'PVP' : ''}</div>
         </div>
 
         {/* Контейнер для списка бойцов с прокруткой */}
@@ -289,229 +424,442 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
             <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>LOADING FIGHTERS DATA...</div>
           ) : error ? (
             <div style={{ color: '#FF0000', textAlign: 'center', padding: '5%' }}>Error: {error}</div>
-          ) : fightersDetails.length === 0 ? (
-            <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>No fighters data available</div>
-          ) : (
-            fightersDetails.map((fighter, idx) => {
-              const fighterStyle = getFighterStyleFromDetail({ str: fighter.fighter.str, td: fighter.fighter.td, sub: fighter.fighter.sub });
-              const styleIcon = getStyleIconFilename(fighterStyle);
-              const weightColor = getWeightClassColor(fighter.fighter.weightClass);
-              const wkCoefLabel = getWkCoefLabel(fighter.fighter.wl);
-              
-              return (
-                <div key={idx} style={{
-                  display: 'grid',
-                  gridTemplateColumns: '24% 32% 22% 22%',
-                  width: '95%',
-                  marginLeft: '2.5%',
-                  background: '#2A2A2A',
-                  borderRadius: '2vw',
-                  border: `2px solid ${weightColor}`,
-                  marginBottom: '2%',
-                  overflow: 'hidden'
-                }}>
-                  {/* 1-й столбец: карточка бойца (без блока урона) */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4% 2%' }}>
-                    <div 
-                      style={{ 
-                        backgroundColor: weightColor,
-                        width: '98%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        aspectRatio: '1 / 1.4',
-                        borderRadius: '2vw',
-                        position: 'relative',
-                        overflow: 'visible',
-                        margin: '0 auto'
-                      }}
-                    >
-                      <div style={{
-                        width: '96%',
-                        height: '94%',
-                        background: '#191a1f',
-                        borderRadius: '1.5vw',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        overflow: 'hidden',
-                        margin: 'auto auto',
-                      }}>
-                        <div style={{
-                          height: '75%',
-                          aspectRatio: '1 / 1',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <img 
-                            src={`${BASE_URL}/icons/${styleIcon}`} 
-                            alt={fighterStyle} 
-                            style={{ width: '90%', height: 'auto', objectFit: 'contain' }}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                              const parent = (e.target as HTMLImageElement).parentElement;
-                              if (parent) {
-                                parent.innerHTML = fighterStyle === 'striker' ? '👊' : fighterStyle === 'grappler' ? '🤼' : fighterStyle === 'universal' ? '⚡' : '👤';
-                                parent.style.fontSize = 'clamp(16px, 5vw, 24px)';
-                              }
-                            }}
-                          />
-                        </div>
-                        <div style={{
-                          width: '100%',
-                          height: '2%',
-                          background: `linear-gradient(90deg, transparent 0%, ${weightColor} 20%, ${weightColor} 80%, transparent 100%)`
-                        }}></div>
-                        <div style={{
-                          width: '100%',
-                          height: '23%',
+          ) : isYourCardActive ? (
+            fightersDetails.length === 0 ? (
+              <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>No fighters data available</div>
+            ) : (
+              fightersDetails.map((fighter, idx) => {
+                const fighterStyle = getFighterStyleFromDetail({ str: fighter.fighter.str, td: fighter.fighter.td, sub: fighter.fighter.sub });
+                const styleIcon = getStyleIconFilename(fighterStyle);
+                const weightColor = getWeightClassColor(fighter.fighter.weightClass);
+                const wkCoefLabel = getWkCoefLabel(fighter.fighter.wl);
+                
+                return (
+                  <div key={idx} style={{
+                    display: 'grid',
+                    gridTemplateColumns: gridColumns,
+                    width: '95%',
+                    marginLeft: '2.5%',
+                    background: '#2A2A2A',
+                    borderRadius: '2vw',
+                    border: `2px solid ${weightColor}`,
+                    marginBottom: '2%',
+                    overflow: 'hidden'
+                  }}>
+                    {/* 1-й столбец: карточка бойца */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4% 2%' }}>
+                      <div 
+                        style={{ 
+                          backgroundColor: weightColor,
+                          width: '98%',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: 'clamp(6px, 1.8vw, 9px)',
-                          fontWeight: 500,
-                          color: '#FFFFFF',
-                          textAlign: 'center',
-                          padding: '2% 4%',
-                          wordBreak: 'break-word',
-                          lineHeight: 1.2
+                          aspectRatio: '1 / 1.4',
+                          borderRadius: '2vw',
+                          position: 'relative',
+                          overflow: 'visible',
+                          margin: '0 auto'
+                        }}
+                      >
+                        <div style={{
+                          width: '96%',
+                          height: '94%',
+                          background: '#191a1f',
+                          borderRadius: '1.5vw',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                          margin: 'auto auto',
                         }}>
-                          {fighter.fighter.name}
+                          <div style={{
+                            height: '75%',
+                            aspectRatio: '1 / 1',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <img 
+                              src={`${BASE_URL}/icons/${styleIcon}`} 
+                              alt={fighterStyle} 
+                              style={{ width: '90%', height: 'auto', objectFit: 'contain' }}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                const parent = (e.target as HTMLImageElement).parentElement;
+                                if (parent) {
+                                  parent.innerHTML = fighterStyle === 'striker' ? '👊' : fighterStyle === 'grappler' ? '🤼' : fighterStyle === 'universal' ? '⚡' : '👤';
+                                  parent.style.fontSize = 'clamp(16px, 5vw, 24px)';
+                                }
+                              }}
+                            />
+                          </div>
+                          <div style={{
+                            width: '100%',
+                            height: '2%',
+                            background: `linear-gradient(90deg, transparent 0%, ${weightColor} 20%, ${weightColor} 80%, transparent 100%)`
+                          }}></div>
+                          <div style={{
+                            width: '100%',
+                            height: '23%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 'clamp(6px, 1.8vw, 9px)',
+                            fontWeight: 500,
+                            color: '#FFFFFF',
+                            textAlign: 'center',
+                            padding: '2% 4%',
+                            wordBreak: 'break-word',
+                            lineHeight: 1.2
+                          }}>
+                            {fighter.fighter.name}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* 2-й столбец: STATS */}
-<div style={{ 
-  display: 'flex', 
-  flexDirection: 'column', 
-  justifyContent: 'center',
-  padding: '6% 2%', 
-  gap: '2%'
-}}>
-  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
-    Class: {fighter.fighter.weightClass}
-  </div>
-  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: '4px' }}>
-    <span style={{ color: '#FFFFFF' }}>RESULT:</span>
-    <span style={{ 
-      backgroundColor: (() => {
-        if (fighter.fighter.wl === 'win') return '#B29403';
-        if (fighter.fighter.wl === 'lose') return '#B20101';
-        if (fighter.fighter.wl === 'draw') return '#666D74';
-        return 'transparent';
-      })(),
-      color: (() => {
-        if (fighter.fighter.wl === 'draw') return '#000000';
-        return '#FFFFFF';
-      })(),
-      padding: '2px 6px',
-      borderRadius: '4px',
-      fontWeight: 600,
-      fontSize: 'clamp(7px, 1.8vw, 9px)',
-      display: 'inline-block'
-    }}>
-      {getWLBadge(fighter.fighter.wl)}
-    </span>
-  </div>
-  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
-    BY: {fighter.fighter.method || '-'}
-  </div>
-  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Kd: {fighter.fighter.kd}</div>
-  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Td: {fighter.fighter.td}</div>
-  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Sub: {fighter.fighter.sub}</div>
-  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Head: {fighter.fighter.head}</div>
-  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Body: {fighter.fighter.body}</div>
-  <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Leg: {fighter.fighter.leg}</div>
-</div>
+                    {/* 2-й столбец: STATS */}
+                    <div style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      justifyContent: 'center',
+                      padding: '6% 2%', 
+                      gap: '2%'
+                    }}>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
+                        Class: {fighter.fighter.weightClass}
+                      </div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', lineHeight: 1.3 }}>
+                        <span style={{ color: '#FFFFFF' }}>RESULT: </span>
+                        <span style={{ 
+                          backgroundColor: (() => {
+                            if (fighter.fighter.wl === 'win') return '#B29403';
+                            if (fighter.fighter.wl === 'lose') return '#B20101';
+                            if (fighter.fighter.wl === 'draw') return '#666D74';
+                            return 'transparent';
+                          })(),
+                          color: (() => {
+                            if (fighter.fighter.wl === 'draw') return '#000000';
+                            return '#FFFFFF';
+                          })(),
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontWeight: 600,
+                          fontSize: 'clamp(7px, 1.8vw, 9px)',
+                          display: 'inline-block'
+                        }}>
+                          {getWLBadge(fighter.fighter.wl)}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
+                        BY: {fighter.fighter.method || '-'}
+                      </div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Kd: {fighter.fighter.kd}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Td: {fighter.fighter.td}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Sub: {fighter.fighter.sub}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Head: {fighter.fighter.head}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Body: {fighter.fighter.body}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Leg: {fighter.fighter.leg}</div>
+                    </div>
 
-                  {/* 3-й столбец: BASE DAMAGE */}
-                  <div style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    justifyContent: 'center', 
-                    padding: '4% 2%', 
-                    gap: '2%'
-                  }}>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>W.Coef: {fighter.baseDamage.components.weightCoef.toFixed(2)}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>{wkCoefLabel} {fighter.baseDamage.components.wkCoef.toFixed(2)}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Bonus: {fighter.baseDamage.components.kdBonus || fighter.baseDamage.components.subBonus || 0}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>KD: {fighter.baseDamage.components.kdDamage}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>TD: {fighter.baseDamage.components.tdDamage}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>SUB: {fighter.baseDamage.components.subDamage}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>HEAD: {fighter.baseDamage.components.headDamage}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>BODY: {fighter.baseDamage.components.bodyDamage}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>LEG: {fighter.baseDamage.components.legDamage}</div>
-                  </div>
+                    {/* 3-й столбец: BASE DAMAGE */}
+                    <div style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      justifyContent: 'center', 
+                      padding: '4% 2%', 
+                      gap: '2%'
+                    }}>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>W.Coef: {fighter.baseDamage.components.weightCoef.toFixed(2)}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>{wkCoefLabel} {fighter.baseDamage.components.wkCoef.toFixed(2)}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Bonus: {fighter.baseDamage.components.kdBonus || fighter.baseDamage.components.subBonus || 0}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>KD: {fighter.baseDamage.components.kdDamage}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>TD: {fighter.baseDamage.components.tdDamage}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>SUB: {fighter.baseDamage.components.subDamage}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>HEAD: {fighter.baseDamage.components.headDamage}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>BODY: {fighter.baseDamage.components.bodyDamage}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>LEG: {fighter.baseDamage.components.legDamage}</div>
+                    </div>
 
-                  {/* 4-й столбец: PVP DAMAGE с разницей */}
-                  <div style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    justifyContent: 'center', 
-                    padding: '4% 2%', 
-                    gap: '2%'
-                  }}>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>W.Coef: {fighter.pvpDamage.components.weightCoef.toFixed(2)}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>{wkCoefLabel} {fighter.pvpDamage.components.wkCoef.toFixed(2)}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Bonus: {fighter.pvpDamage.components.kdBonus || fighter.pvpDamage.components.subBonus || 0}</div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
-                      KD: {fighter.pvpDamage.components.kdDamage}
-                      <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.kdDamage, fighter.baseDamage.components.kdDamage)}</span>
+                    {/* 4-й столбец: PVP DAMAGE */}
+                    <div style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      justifyContent: 'center', 
+                      padding: '4% 2%', 
+                      gap: '2%'
+                    }}>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>W.Coef: {fighter.pvpDamage.components.weightCoef.toFixed(2)}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>{wkCoefLabel} {fighter.pvpDamage.components.wkCoef.toFixed(2)}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>Bonus: {fighter.pvpDamage.components.kdBonus || fighter.pvpDamage.components.subBonus || 0}</div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                        KD: {fighter.pvpDamage.components.kdDamage}
+                        <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.kdDamage, fighter.baseDamage.components.kdDamage)}</span>
+                      </div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                        TD: {fighter.pvpDamage.components.tdDamage}
+                        <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.tdDamage, fighter.baseDamage.components.tdDamage)}</span>
+                      </div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                        SUB: {fighter.pvpDamage.components.subDamage}
+                        <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.subDamage, fighter.baseDamage.components.subDamage)}</span>
+                      </div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                        HEAD: {fighter.pvpDamage.components.headDamage}
+                        <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.headDamage, fighter.baseDamage.components.headDamage)}</span>
+                      </div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                        BODY: {fighter.pvpDamage.components.bodyDamage}
+                        <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.bodyDamage, fighter.baseDamage.components.bodyDamage)}</span>
+                      </div>
+                      <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                        LEG: {fighter.pvpDamage.components.legDamage}
+                        <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.legDamage, fighter.baseDamage.components.legDamage)}</span>
+                      </div>
                     </div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
-                      TD: {fighter.pvpDamage.components.tdDamage}
-                      <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.tdDamage, fighter.baseDamage.components.tdDamage)}</span>
-                    </div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
-                      SUB: {fighter.pvpDamage.components.subDamage}
-                      <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.subDamage, fighter.baseDamage.components.subDamage)}</span>
-                    </div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
-                      HEAD: {fighter.pvpDamage.components.headDamage}
-                      <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.headDamage, fighter.baseDamage.components.headDamage)}</span>
-                    </div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
-                      BODY: {fighter.pvpDamage.components.bodyDamage}
-                      <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.bodyDamage, fighter.baseDamage.components.bodyDamage)}</span>
-                    </div>
-                    <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
-                      LEG: {fighter.pvpDamage.components.legDamage}
-                      <span style={{ color: '#90EE90' }}>{getDiff(fighter.pvpDamage.components.legDamage, fighter.baseDamage.components.legDamage)}</span>
-                    </div>
-                  </div>
 
-                  {/* Строка со стилем и итоговым уроном (под всеми столбцами) */}
-                  <div style={{
-                    gridColumn: '1 / -1',
-                    display: 'grid',
-                    gridTemplateColumns: '24% 32% 22% 22%',
-                    width: '100%',
-                    background: '#1C1D1F',
-                    borderTop: '1px solid #3D3D3B',
-                    fontSize: 'clamp(9px, 2.2vw, 11px)',
-                    fontWeight: 500,
-                    padding: '2% 0'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966' }}>
-                      {getStyleDisplayName(fighter.style)}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3D3D3B' }}>
-                      -
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966' }}>
-                      Base Dmg: {fighter.baseDamage.total}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966' }}>
-                      PvP Dmg: {fighter.pvpDamage.total}
+                    {/* Строка со стилем и итоговым уроном */}
+                    <div style={{
+                      gridColumn: '1 / -1',
+                      display: 'grid',
+                      gridTemplateColumns: gridColumns,
+                      width: '100%',
+                      background: '#1C1D1F',
+                      borderTop: '1px solid #3D3D3B',
+                      fontSize: 'clamp(9px, 2.2vw, 11px)',
+                      fontWeight: 500,
+                      padding: '2% 0'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966' }}>
+                        {getStyleDisplayName(fighter.style)}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3D3D3B' }}>
+                        -
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966' }}>
+                        Base Dmg: {fighter.baseDamage.total}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966' }}>
+                        PvP Dmg: {fighter.pvpDamage.total}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })
+            )
+          ) : (
+            // ALL FIGHTERS режим
+            sortedWeightClasses.length === 0 ? (
+              <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>No fighters data available</div>
+            ) : (
+              sortedWeightClasses.map((weightClass) => {
+                const fighters = groupedFighters[weightClass];
+                const weightColor = getWeightClassColor(weightClass);
+                
+                return (
+                  <div key={weightClass} style={{ marginBottom: '4%' }}>
+                    {/* Заголовок весовой категории */}
+                    <div style={{
+                      backgroundColor: weightColor,
+                      padding: '2% 4%',
+                      borderRadius: '1vw',
+                      marginBottom: '2%',
+                      marginLeft: '2.5%',
+                      width: '95%'
+                    }}>
+                      <span style={{ color: '#FFFFFF', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>{weightClass}</span>
+                    </div>
+                    
+                    {fighters.map((fighter, idx) => {
+                      const fighterStyle = getFighterStyleFromDetail({ str: fighter.str, td: fighter.td, sub: fighter.sub });
+                      const styleIcon = getStyleIconFilename(fighterStyle);
+                      const stats = formatStatsRow(fighter);
+                      const damageStats = formatDamageStats(fighter);
+                      const wkCoefLabel = getWkCoefLabel(fighter.wl || '');
+                      
+                      return (
+                        <div key={idx} style={{
+                          display: 'grid',
+                          gridTemplateColumns: gridColumns,
+                          width: '95%',
+                          marginLeft: '2.5%',
+                          background: '#2A2A2A',
+                          borderRadius: '2vw',
+                          border: `2px solid ${weightColor}`,
+                          marginBottom: '2%',
+                          overflow: 'hidden'
+                        }}>
+                          {/* 1-й столбец: карточка бойца */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4% 2%' }}>
+                            <div 
+                              style={{ 
+                                backgroundColor: weightColor,
+                                width: '98%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                aspectRatio: '1 / 1.4',
+                                borderRadius: '2vw',
+                                position: 'relative',
+                                overflow: 'visible',
+                                margin: '0 auto'
+                              }}
+                            >
+                              <div style={{
+                                width: '96%',
+                                height: '94%',
+                                background: '#191a1f',
+                                borderRadius: '1.5vw',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                overflow: 'hidden',
+                                margin: 'auto auto',
+                              }}>
+                                <div style={{
+                                  height: '75%',
+                                  aspectRatio: '1 / 1',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}>
+                                  <img 
+                                    src={`${BASE_URL}/icons/${styleIcon}`} 
+                                    alt={fighterStyle} 
+                                    style={{ width: '90%', height: 'auto', objectFit: 'contain' }}
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                      const parent = (e.target as HTMLImageElement).parentElement;
+                                      if (parent) {
+                                        parent.innerHTML = fighterStyle === 'striker' ? '👊' : fighterStyle === 'grappler' ? '🤼' : fighterStyle === 'universal' ? '⚡' : '👤';
+                                        parent.style.fontSize = 'clamp(16px, 5vw, 24px)';
+                                      }
+                                    }}
+                                  />
+                                </div>
+                                <div style={{
+                                  width: '100%',
+                                  height: '2%',
+                                  background: `linear-gradient(90deg, transparent 0%, ${weightColor} 20%, ${weightColor} 80%, transparent 100%)`
+                                }}></div>
+                                <div style={{
+                                  width: '100%',
+                                  height: '23%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: 'clamp(6px, 1.8vw, 9px)',
+                                  fontWeight: 500,
+                                  color: '#FFFFFF',
+                                  textAlign: 'center',
+                                  padding: '2% 4%',
+                                  wordBreak: 'break-word',
+                                  lineHeight: 1.2
+                                }}>
+                                  {fighter.fighter_name}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 2-й столбец: STATS (в одну строку) */}
+                          <div style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            justifyContent: 'center',
+                            padding: '6% 2%', 
+                            gap: '2%'
+                          }}>
+                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
+                              Class: {weightClass}
+                            </div>
+                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                              <span style={{ color: '#FFFFFF' }}>RESULT:</span>
+                              <span style={{ 
+                                backgroundColor: (() => {
+                                  if (fighter.wl === 'win') return '#B29403';
+                                  if (fighter.wl === 'lose') return '#B20101';
+                                  if (fighter.wl === 'draw') return '#666D74';
+                                  return 'transparent';
+                                })(),
+                                color: (() => {
+                                  if (fighter.wl === 'draw') return '#000000';
+                                  return '#FFFFFF';
+                                })(),
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontWeight: 600,
+                                fontSize: 'clamp(7px, 1.8vw, 9px)',
+                                display: 'inline-block'
+                              }}>
+                                {getWLBadge(fighter.wl || '')}
+                              </span>
+                              <span style={{ color: '#FFFFFF' }}>BY: {fighter.method || '-'}</span>
+                            </div>
+                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                              {formatKdTdSub(fighter)}
+                            </div>
+                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                              {formatHeadBodyLeg(fighter)}
+                            </div>
+                          </div>
+
+                          {/* 3-й столбец: BASE DAMAGE (в одну строку) */}
+                          <div style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            justifyContent: 'center', 
+                            padding: '4% 2%', 
+                            gap: '2%'
+                          }}>
+                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>W.Coef: 1.00</div>
+                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>
+                              {formatCoefBonus(fighter)}
+                            </div>
+                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                              {damageStats.kdtdsub}
+                            </div>
+                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                              {damageStats.headbodyleg}
+                            </div>
+                          </div>
+
+                          {/* 4-й столбец: пустой */}
+                          <div></div>
+
+                          {/* Строка со стилем и итоговым уроном */}
+                          <div style={{
+                            gridColumn: '1 / -1',
+                            display: 'grid',
+                            gridTemplateColumns: gridColumns,
+                            width: '100%',
+                            background: '#1C1D1F',
+                            borderTop: '1px solid #3D3D3B',
+                            fontSize: 'clamp(9px, 2.2vw, 11px)',
+                            fontWeight: 500,
+                            padding: '2% 0'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966' }}>
+                              {getStyleDisplayName(fighterStyle)}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3D3D3B' }}>
+                              -
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#FFD966' }}>
+                              Base Dmg: {fighter.total_damage}
+                            </div>
+                            <div></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })
+            )
           )}
         </div>
       </div>
