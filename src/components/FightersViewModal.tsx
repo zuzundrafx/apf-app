@@ -11,6 +11,7 @@ interface FightersViewModalProps {
   tournamentName?: string;
   selections: SelectedFighter[];
   authToken?: string;
+  coefficients: Record<string, number>;
 }
 
 interface FighterDetail {
@@ -76,52 +77,23 @@ interface TournamentFighter {
   total_damage: number;
 }
 
-interface Coefficient {
-  coef_key: string;
-  coef_value: number;
-}
-
 const FightersViewModal: React.FC<FightersViewModalProps> = ({
   isOpen,
   onClose,
   tournamentId,
   tournamentName,
   selections,
-  authToken
+  authToken,
+  coefficients
 }) => {
   const [fightersDetails, setFightersDetails] = useState<FighterDetail[]>([]);
   const [allFighters, setAllFighters] = useState<TournamentFighter[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'yourCard' | 'allFighters'>('yourCard');
-  const [coefficients, setCoefficients] = useState<Record<string, number>>({});
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
   const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
-
-  // Загрузка коэффициентов при открытии модалки
-  useEffect(() => {
-    if (!isOpen || !authToken) return;
-
-    const loadCoefficients = async () => {
-      try {
-        const response = await fetch(`${API_BASE}/api/coefficients`, {
-          headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        if (!response.ok) throw new Error('Failed to load coefficients');
-        const data: Coefficient[] = await response.json();
-        const coefMap: Record<string, number> = {};
-        data.forEach(c => {
-          coefMap[c.coef_key] = c.coef_value;
-        });
-        setCoefficients(coefMap);
-      } catch (err) {
-        console.error('Failed to load coefficients:', err);
-      }
-    };
-
-    loadCoefficients();
-  }, [isOpen, authToken]);
 
   // Загрузка данных для YOUR CARD
   useEffect(() => {
@@ -449,7 +421,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           ) : error ? (
             <div style={{ color: '#FF0000', textAlign: 'center', padding: '5%' }}>Error: {error}</div>
           ) : isYourCardActive ? (
-            // YOUR CARD режим (без изменений)
+            // YOUR CARD режим
             fightersDetails.length === 0 ? (
               <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>No fighters data available</div>
             ) : (

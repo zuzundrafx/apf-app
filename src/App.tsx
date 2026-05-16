@@ -12,6 +12,7 @@ import { getAvatarWrapperStyle, getAvatarInnerStyle } from './utils/styleUtils';
 import FightersViewModal from './components/FightersViewModal';
 import { getWeightClassColor, getAvatarFilename } from './utils/weightUtils';
 import { getFighterStyleFromSelected, getStyleIconFilename } from './utils/fighterUtils';
+import { useCoefficients } from './hooks/useCoefficients';
 
 declare global {
   interface Window {
@@ -53,7 +54,7 @@ function App() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [telegramUser, setTelegramUser] = useState<{ id: string; username: string; photoUrl?: string } | null>(null);
   const { pastTournaments, upcomingTournaments, allCompletedTournaments, loading, error, loadFighters, userBets } = useBackendTournaments(authToken, telegramUser?.id || null);
-
+  const { coefficients: globalCoefficients } = useCoefficients(authToken || undefined);
   const [isSavingBet, setIsSavingBet] = useState(false);
   const [isClaimingRefund, setIsClaimingRefund] = useState(false);
   const [selectedFighters, setSelectedFighters] = useState<Map<string, Fighter>>(new Map());
@@ -975,6 +976,7 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
   tournamentName={selectedActiveTournament?.name}
   selections={userBets.get(Number(selectedActiveTournament?.id))?.selections || []}
   authToken={authToken || undefined}
+  coefficients={globalCoefficients}
   //userId={telegramUser?.id}
 />
 
