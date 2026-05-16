@@ -76,6 +76,11 @@ interface TournamentFighter {
   total_damage: number;
 }
 
+interface Coefficient {
+  coef_key: string;
+  coef_value: number;
+}
+
 const FightersViewModal: React.FC<FightersViewModalProps> = ({
   isOpen,
   onClose,
@@ -89,9 +94,34 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'yourCard' | 'allFighters'>('yourCard');
+  const [coefficients, setCoefficients] = useState<Record<string, number>>({});
 
   const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
   const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
+
+  // Загрузка коэффициентов при открытии модалки
+  useEffect(() => {
+    if (!isOpen || !authToken) return;
+
+    const loadCoefficients = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/coefficients`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!response.ok) throw new Error('Failed to load coefficients');
+        const data: Coefficient[] = await response.json();
+        const coefMap: Record<string, number> = {};
+        data.forEach(c => {
+          coefMap[c.coef_key] = c.coef_value;
+        });
+        setCoefficients(coefMap);
+      } catch (err) {
+        console.error('Failed to load coefficients:', err);
+      }
+    };
+
+    loadCoefficients();
+  }, [isOpen, authToken]);
 
   // Загрузка данных для YOUR CARD
   useEffect(() => {
@@ -196,7 +226,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
     return '';
   };
 
-  // Группировка бойцов по весовым категориям (порядок как в окне выбора ставки)
+  // Группировка бойцов по весовым категориям
   const getWeightClassOrder = (weightClass: string): number => {
     const order: Record<string, number> = {
       'Flyweight': 1,
@@ -228,41 +258,51 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
     getWeightClassOrder(a) - getWeightClassOrder(b)
   );
 
-  // Форматирование строк для ALL FIGHTERS
+  // Форматирование строк для ALL FIGHTERS с использованием коэффициентов
   const formatKdTdSub = (fighter: TournamentFighter) => {
-    return `Kd:${fighter.kd}, Td:${fighter.td}, Sub:${fighter.sub}`;
+    return `Kd: ${fighter.kd}, Td: ${fighter.td}, Sub: ${fighter.sub}`;
   };
 
   const formatHeadBodyLeg = (fighter: TournamentFighter) => {
-    return `Head:${fighter.head}, Body:${fighter.body}, Leg:${fighter.leg}`;
+    return `Head: ${fighter.head}, Body: ${fighter.body}, Leg: ${fighter.leg}`;
   };
 
   const formatCoefBonus = (fighter: TournamentFighter) => {
-    const wl = (fighter.wl || 'lose').toLowerCase();
-    let wkCoef = 0.7;
-    if (wl === 'win') wkCoef = 1.0;
-    else if (wl === 'draw') wkCoef = 0.9;
+    if (Object.keys(coefficients).length === 0) return 'Loading...';
     
+    const wl = (fighter.wl || 'lose').toLowerCase();
+    let wkCoef = coefficients.LOSE_COEF || 0.7;
+    if (wl === 'win') wkCoef = coefficients.WIN_COEF || 1.0;
+    else if (wl === 'draw') wkCoef = coefficients.DRAW_COEF || 0.9;
+    
+    const wkLabel = getWkCoefLabel(wl);
+    return `${wkLabel} ${wkCoef.toFixed(2)}`;
+  };
+
+  const formatBonus = (fighter: TournamentFighter) => {
+    const wl = (fighter.wl || 'lose').toLowerCase();
     const method = (fighter.method || '').toUpperCase();
     let bonus = 0;
     if (wl === 'win') {
-      if (method.includes('KO') || method.includes('TKO')) bonus = 40;
-      else if (method.includes('SUB')) bonus = 35;
+      if (method.includes('KO') || method.includes('TKO')) bonus = coefficients.KD_BONUS_WIN || 40;
+      else if (method.includes('SUB')) bonus = coefficients.SUB_BONUS_WIN || 35;
     }
-    
-    const wkLabel = getWkCoefLabel(wl);
-    return `${wkLabel} ${wkCoef.toFixed(2)}, Bonus:${bonus}`;
+    return `Bonus: ${bonus}`;
   };
 
   const formatDamageStats = (fighter: TournamentFighter) => {
-    const weightCoef = 1.0;
-    const wkCoef = (fighter.wl === 'win') ? 1.0 : (fighter.wl === 'draw') ? 0.9 : 0.7;
-    const KD_COEF = 25;
-    const TD_COEF = 10;
-    const SUB_COEF = 15;
-    const HEAD_COEF = 1;
-    const BODY_COEF = 0.9;
-    const LEG_COEF = 0.8;
+    if (Object.keys(coefficients).length === 0) {
+      return { kdtdsub: 'Loading...', headbodyleg: 'Loading...' };
+    }
+    
+    const weightCoef = coefficients[`weight_${fighter.weight_class}`] || 1.0;
+    const wkCoef = (fighter.wl === 'win') ? (coefficients.WIN_COEF || 1.0) : (fighter.wl === 'draw') ? (coefficients.DRAW_COEF || 0.9) : (coefficients.LOSE_COEF || 0.7);
+    const KD_COEF = coefficients.KD_COEF || 25;
+    const TD_COEF = coefficients.TD_COEF || 10;
+    const SUB_COEF = coefficients.SUB_COEF || 15;
+    const HEAD_COEF = coefficients.HEAD_COEF || 1;
+    const BODY_COEF = coefficients.BODY_COEF || 0.9;
+    const LEG_COEF = coefficients.LEG_COEF || 0.8;
     
     const kdDamage = Math.round(fighter.kd * KD_COEF * weightCoef * wkCoef);
     const tdDamage = Math.round(fighter.td * TD_COEF * weightCoef * wkCoef);
@@ -272,8 +312,8 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
     const legDamage = Math.round(fighter.leg * LEG_COEF * weightCoef * wkCoef);
     
     return {
-      kdtdsub: `KD:${kdDamage}, TD:${tdDamage}, SUB:${subDamage}`,
-      headbodyleg: `HEAD:${headDamage}, BODY:${bodyDamage}, LEG:${legDamage}`
+      kdtdsub: `KD: ${kdDamage}, TD: ${tdDamage}, SUB: ${subDamage}`,
+      headbodyleg: `HEAD: ${headDamage}, BODY: ${bodyDamage}, LEG: ${legDamage}`
     };
   };
 
@@ -313,7 +353,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           </button>
         </div>
 
-        {/* Строка с названием турнира и кнопками (ширина НЕ МЕНЯЕТСЯ) */}
+        {/* Строка с названием турнира и кнопками */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: '46% 22% 22% 10%',
@@ -382,7 +422,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           <div></div>
         </div>
 
-        {/* Заголовки столбцов (ширина меняется в зависимости от activeTab) */}
+        {/* Заголовки столбцов */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: gridColumns,
@@ -409,6 +449,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           ) : error ? (
             <div style={{ color: '#FF0000', textAlign: 'center', padding: '5%' }}>Error: {error}</div>
           ) : isYourCardActive ? (
+            // YOUR CARD режим (без изменений)
             fightersDetails.length === 0 ? (
               <div style={{ color: '#FFFFFF', textAlign: 'center', padding: '5%' }}>No fighters data available</div>
             ) : (
@@ -689,93 +730,60 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                           marginBottom: '2%',
                           overflow: 'hidden'
                         }}>
-                          {/* 1-й столбец: карточка бойца */}
+                          {/* 1-й столбец: упрощённая карточка бойца */}
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4% 2%' }}>
                             <div 
                               style={{ 
                                 backgroundColor: weightColor,
-                                width: '98%',
+                                width: '60%',
+                                aspectRatio: '1 / 1',
+                                borderRadius: '2vw',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                aspectRatio: '1 / 1.4',
-                                borderRadius: '2vw',
-                                position: 'relative',
-                                overflow: 'visible',
                                 margin: '0 auto'
                               }}
                             >
                               <div style={{
-                                width: '96%',
-                                height: '94%',
+                                width: '90%',
+                                height: '90%',
                                 background: '#191a1f',
                                 borderRadius: '1.5vw',
                                 display: 'flex',
-                                flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                overflow: 'hidden',
-                                margin: 'auto auto',
+                                overflow: 'hidden'
                               }}>
-                                <div style={{
-                                  height: '75%',
-                                  aspectRatio: '1 / 1',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}>
-                                  <img 
-                                    src={`${BASE_URL}/icons/${styleIcon}`} 
-                                    alt={fighterStyle} 
-                                    style={{ width: '90%', height: 'auto', objectFit: 'contain' }}
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).style.display = 'none';
-                                      const parent = (e.target as HTMLImageElement).parentElement;
-                                      if (parent) {
-                                        parent.innerHTML = fighterStyle === 'striker' ? '👊' : fighterStyle === 'grappler' ? '🤼' : fighterStyle === 'universal' ? '⚡' : '👤';
-                                        parent.style.fontSize = 'clamp(16px, 5vw, 24px)';
-                                      }
-                                    }}
-                                  />
-                                </div>
-                                <div style={{
-                                  width: '100%',
-                                  height: '2%',
-                                  background: `linear-gradient(90deg, transparent 0%, ${weightColor} 20%, ${weightColor} 80%, transparent 100%)`
-                                }}></div>
-                                <div style={{
-                                  width: '100%',
-                                  height: '23%',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontSize: 'clamp(6px, 1.8vw, 9px)',
-                                  fontWeight: 500,
-                                  color: '#FFFFFF',
-                                  textAlign: 'center',
-                                  padding: '2% 4%',
-                                  wordBreak: 'break-word',
-                                  lineHeight: 1.2
-                                }}>
-                                  {fighter.fighter_name}
-                                </div>
+                                <img 
+                                  src={`${BASE_URL}/icons/${styleIcon}`} 
+                                  alt={fighterStyle} 
+                                  style={{ width: '80%', height: 'auto', objectFit: 'contain' }}
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    const parent = (e.target as HTMLImageElement).parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = fighterStyle === 'striker' ? '👊' : fighterStyle === 'grappler' ? '🤼' : fighterStyle === 'universal' ? '⚡' : '👤';
+                                      parent.style.fontSize = 'clamp(16px, 5vw, 24px)';
+                                    }
+                                  }}
+                                />
                               </div>
                             </div>
                           </div>
 
-                          {/* 2-й столбец: STATS (в одну строку) */}
+                          {/* 2-й столбец: STATS (имя бойца + статистика) */}
                           <div style={{ 
                             display: 'flex', 
                             flexDirection: 'column', 
                             justifyContent: 'center',
-                            padding: '6% 2%', 
+                            padding: '4% 2%', 
                             gap: '2%'
                           }}>
-                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
-                              Class: {weightClass}
+                            <div style={{ fontSize: 'clamp(9px, 2.2vw, 12px)', color: '#FFD966', fontWeight: 600, lineHeight: 1.3, wordBreak: 'break-word' }}>
+                              {fighter.fighter_name}
                             </div>
-                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                              <span style={{ color: '#FFFFFF' }}>RESULT:</span>
+                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', lineHeight: 1.3, display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <span style={{ color: '#FFFFFF' }}>RESULT: </span>
                               <span style={{ 
                                 backgroundColor: getWLColorForFighter(fighter.wl),
                                 color: getTextColorForFighter(fighter.wl),
@@ -783,11 +791,14 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                                 borderRadius: '4px',
                                 fontWeight: 600,
                                 fontSize: 'clamp(7px, 1.8vw, 9px)',
-                                display: 'inline-block'
+                                display: 'inline-block',
+                                marginLeft: '4px'
                               }}>
                                 {getWLBadge(fighter.wl || '')}
                               </span>
-                              <span style={{ color: '#FFFFFF' }}>BY: {fighter.method || '-'}</span>
+                            </div>
+                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
+                              BY: {fighter.method || '-'}
                             </div>
                             <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
                               {formatKdTdSub(fighter)}
@@ -797,7 +808,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                             </div>
                           </div>
 
-                          {/* 3-й столбец: BASE DAMAGE (в одну строку) */}
+                          {/* 3-й столбец: BASE DAMAGE */}
                           <div style={{ 
                             display: 'flex', 
                             flexDirection: 'column', 
@@ -805,9 +816,12 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                             padding: '4% 2%', 
                             gap: '2%'
                           }}>
-                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>W.Coef: 1.00</div>
+                            <div></div>
                             <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFD966', lineHeight: 1.3 }}>
                               {formatCoefBonus(fighter)}
+                            </div>
+                            <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
+                              {formatBonus(fighter)}
                             </div>
                             <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3 }}>
                               {damageStats.kdtdsub}
