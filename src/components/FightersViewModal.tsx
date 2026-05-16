@@ -268,10 +268,10 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
           display: 'grid',
           gridTemplateColumns: '24% 32% 22% 22%',
           width: '95%',
-          padding: '2% 0',
+          padding: '1% 0',
           borderRadius: '8px',
           marginLeft: '2.5%',
-          marginBottom: '2%',
+          marginBottom: '0%',
           flexShrink: 0
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD966', fontWeight: 600, fontSize: 'clamp(10px, 2.5vw, 12px)' }}>FIGHTER</div>
