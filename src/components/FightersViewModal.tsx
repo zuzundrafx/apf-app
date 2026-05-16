@@ -188,7 +188,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
   width: '98%',
   padding: '2% 0',
   borderRadius: '8px',
-  //marginLeft: '2.5%',
+  marginLeft: '1%',
   //marginBottom: '1%',
   flexShrink: 0,
   background: '#313130'
