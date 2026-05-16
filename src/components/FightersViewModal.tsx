@@ -184,7 +184,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
         {/* Новая строка с названием турнира и кнопками */}
 <div style={{
   display: 'grid',
-  gridTemplateColumns: '40% 25% 25% 10%',
+  gridTemplateColumns: '46% 22% 22% 10%',
   width: '95%',
   padding: '2% 0',
   borderRadius: '8px',
