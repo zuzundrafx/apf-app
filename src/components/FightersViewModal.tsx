@@ -182,80 +182,86 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
         </div>
 
         {/* Новая строка с названием турнира и кнопками */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '24% 32% 22% 22%',
-          width: '95%',
-          padding: '2% 0',
-          borderRadius: '8px',
-          marginLeft: '2.5%',
-          marginBottom: '1%',
-          flexShrink: 0,
-          background: '#313130'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'flex-start', 
-            paddingLeft: '4%',
-            color: '#FFFFFF', 
-            fontWeight: 500, 
-            fontSize: 'clamp(9px, 2.2vw, 11px)',
-            wordBreak: 'break-word'
-          }}>
-            {tournamentName || 'Tournament'}
-          </div>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            gap: '8%'
-          }}>
-            <button 
-              style={{
-                background: 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)',
-                border: '0.15vh solid #666d75',
-                borderRadius: '2vh',
-                color: '#FFFFFF',
-                fontSize: 'clamp(8px, 2vw, 10px)',
-                fontWeight: 600,
-                padding: '4% 8%',
-                cursor: 'not-allowed',
-                opacity: 0.6,
-                textTransform: 'uppercase',
-                whiteSpace: 'nowrap'
-              }}
-              disabled
-            >
-              ALL FIGHTERS
-            </button>
-          </div>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            gridColumn: 'span 2'
-          }}>
-            <button 
-              style={{
-                background: 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)',
-                border: '0.15vh solid #666d75',
-                borderRadius: '2vh',
-                color: '#FFFFFF',
-                fontSize: 'clamp(8px, 2vw, 10px)',
-                fontWeight: 600,
-                padding: '4% 8%',
-                cursor: 'not-allowed',
-                opacity: 0.6,
-                textTransform: 'uppercase',
-                whiteSpace: 'nowrap'
-              }}
-              disabled
-            >
-              YOUR CARD
-            </button>
-          </div>
-        </div>
+<div style={{
+  display: 'grid',
+  gridTemplateColumns: '40% 25% 25% 10%',
+  width: '95%',
+  padding: '2% 0',
+  borderRadius: '8px',
+  marginLeft: '2.5%',
+  marginBottom: '1%',
+  flexShrink: 0,
+  background: '#313130'
+}}>
+  {/* 1-й столбец: название турнира */}
+  <div style={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'flex-start', 
+    paddingLeft: '4%',
+    color: '#FFFFFF', 
+    fontWeight: 500, 
+    fontSize: 'clamp(9px, 2.2vw, 11px)',
+    wordBreak: 'break-word'
+  }}>
+    {tournamentName || 'Tournament'}
+  </div>
+  
+  {/* 2-й столбец: кнопка ALL FIGHTERS */}
+  <div style={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center'
+  }}>
+    <button 
+      style={{
+        background: 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)',
+        border: '0.15vh solid #666d75',
+        borderRadius: '2vh',
+        color: '#FFFFFF',
+        fontSize: 'clamp(8px, 2vw, 10px)',
+        fontWeight: 600,
+        padding: '4% 8%',
+        cursor: 'not-allowed',
+        opacity: 0.6,
+        textTransform: 'uppercase',
+        whiteSpace: 'nowrap'
+      }}
+      disabled
+    >
+      ALL FIGHTERS
+    </button>
+  </div>
+  
+  {/* 3-й столбец: кнопка YOUR CARD */}
+  <div style={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center'
+  }}>
+    <button 
+      style={{
+        background: 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)',
+        border: '0.15vh solid #666d75',
+        borderRadius: '2vh',
+        color: '#FFFFFF',
+        fontSize: 'clamp(8px, 2vw, 10px)',
+        fontWeight: 600,
+        padding: '4% 8%',
+        cursor: 'not-allowed',
+        opacity: 0.6,
+        textTransform: 'uppercase',
+        whiteSpace: 'nowrap'
+      }}
+      disabled
+    >
+      YOUR CARD
+    </button>
+  </div>
+  
+  {/* 4-й столбец: пустой */}
+  <div></div>
+</div>
 
         {/* Фиксированный заголовок */}
         <div style={{
