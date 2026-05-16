@@ -975,7 +975,7 @@ const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
   tournamentName={selectedActiveTournament?.name}
   selections={userBets.get(Number(selectedActiveTournament?.id))?.selections || []}
   authToken={authToken || undefined}
-  userId={telegramUser?.id}
+  //userId={telegramUser?.id}
 />
 
     </div>

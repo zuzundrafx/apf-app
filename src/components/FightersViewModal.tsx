@@ -11,7 +11,6 @@ interface FightersViewModalProps {
   tournamentName?: string;
   selections: SelectedFighter[];
   authToken?: string;
-  userId?: string;
 }
 
 interface FighterDetail {
@@ -83,8 +82,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
   tournamentId,
   tournamentName,
   selections,
-  authToken,
-  userId
+  authToken
 }) => {
   const [fightersDetails, setFightersDetails] = useState<FighterDetail[]>([]);
   const [allFighters, setAllFighters] = useState<TournamentFighter[]>([]);
@@ -184,13 +182,6 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
     return '-';
   };
 
-  const getWLColor = (wl: string): string => {
-    if (wl === 'win') return '#4CAF50';
-    if (wl === 'lose') return '#B20101';
-    if (wl === 'draw') return '#FFD966';
-    return '#FFFFFF';
-  };
-
   const getWkCoefLabel = (wl: string): string => {
     if (wl === 'win') return 'WIN Coef:';
     if (wl === 'lose') return 'LOSE Coef:';
@@ -238,12 +229,6 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
   );
 
   // Форматирование строк для ALL FIGHTERS
-  const formatStatsRow = (fighter: TournamentFighter) => {
-    const result = `${getWLBadge(fighter.wl || '')}`;
-    const method = fighter.method || '-';
-    return { result, method };
-  };
-
   const formatKdTdSub = (fighter: TournamentFighter) => {
     return `Kd:${fighter.kd}, Td:${fighter.td}, Sub:${fighter.sub}`;
   };
@@ -253,7 +238,6 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
   };
 
   const formatCoefBonus = (fighter: TournamentFighter) => {
-    // Для ALL FIGHTERS используем базовые коэффициенты (без скиллов)
     const wl = (fighter.wl || 'lose').toLowerCase();
     let wkCoef = 0.7;
     if (wl === 'win') wkCoef = 1.0;
@@ -271,7 +255,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
   };
 
   const formatDamageStats = (fighter: TournamentFighter) => {
-    const weightCoef = 1.0; // Временно, нужно будет загружать реальные коэффициенты
+    const weightCoef = 1.0;
     const wkCoef = (fighter.wl === 'win') ? 1.0 : (fighter.wl === 'draw') ? 0.9 : 0.7;
     const KD_COEF = 25;
     const TD_COEF = 10;
@@ -434,6 +418,18 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                 const weightColor = getWeightClassColor(fighter.fighter.weightClass);
                 const wkCoefLabel = getWkCoefLabel(fighter.fighter.wl);
                 
+                const getWLColor = (wl: string): string => {
+                  if (wl === 'win') return '#B29403';
+                  if (wl === 'lose') return '#B20101';
+                  if (wl === 'draw') return '#666D74';
+                  return 'transparent';
+                };
+                
+                const getTextColor = (wl: string): string => {
+                  if (wl === 'draw') return '#000000';
+                  return '#FFFFFF';
+                };
+                
                 return (
                   <div key={idx} style={{
                     display: 'grid',
@@ -534,16 +530,8 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                       <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', lineHeight: 1.3 }}>
                         <span style={{ color: '#FFFFFF' }}>RESULT: </span>
                         <span style={{ 
-                          backgroundColor: (() => {
-                            if (fighter.fighter.wl === 'win') return '#B29403';
-                            if (fighter.fighter.wl === 'lose') return '#B20101';
-                            if (fighter.fighter.wl === 'draw') return '#666D74';
-                            return 'transparent';
-                          })(),
-                          color: (() => {
-                            if (fighter.fighter.wl === 'draw') return '#000000';
-                            return '#FFFFFF';
-                          })(),
+                          backgroundColor: getWLColor(fighter.fighter.wl),
+                          color: getTextColor(fighter.fighter.wl),
                           padding: '2px 6px',
                           borderRadius: '4px',
                           fontWeight: 600,
@@ -658,6 +646,18 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                 const fighters = groupedFighters[weightClass];
                 const weightColor = getWeightClassColor(weightClass);
                 
+                const getWLColorForFighter = (wl: string | null): string => {
+                  if (wl === 'win') return '#B29403';
+                  if (wl === 'lose') return '#B20101';
+                  if (wl === 'draw') return '#666D74';
+                  return 'transparent';
+                };
+                
+                const getTextColorForFighter = (wl: string | null): string => {
+                  if (wl === 'draw') return '#000000';
+                  return '#FFFFFF';
+                };
+                
                 return (
                   <div key={weightClass} style={{ marginBottom: '4%' }}>
                     {/* Заголовок весовой категории */}
@@ -675,9 +675,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     {fighters.map((fighter, idx) => {
                       const fighterStyle = getFighterStyleFromDetail({ str: fighter.str, td: fighter.td, sub: fighter.sub });
                       const styleIcon = getStyleIconFilename(fighterStyle);
-                      const stats = formatStatsRow(fighter);
                       const damageStats = formatDamageStats(fighter);
-                      const wkCoefLabel = getWkCoefLabel(fighter.wl || '');
                       
                       return (
                         <div key={idx} style={{
@@ -779,16 +777,8 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                             <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
                               <span style={{ color: '#FFFFFF' }}>RESULT:</span>
                               <span style={{ 
-                                backgroundColor: (() => {
-                                  if (fighter.wl === 'win') return '#B29403';
-                                  if (fighter.wl === 'lose') return '#B20101';
-                                  if (fighter.wl === 'draw') return '#666D74';
-                                  return 'transparent';
-                                })(),
-                                color: (() => {
-                                  if (fighter.wl === 'draw') return '#000000';
-                                  return '#FFFFFF';
-                                })(),
+                                backgroundColor: getWLColorForFighter(fighter.wl),
+                                color: getTextColorForFighter(fighter.wl),
                                 padding: '2px 6px',
                                 borderRadius: '4px',
                                 fontWeight: 600,
