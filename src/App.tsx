@@ -608,6 +608,7 @@ function App() {
         </div>
       )}
 
+      {currentView !== 'leaderboard' && (
       <header className="profile-header">
         <div className="profile-avatar" onClick={handleAvatarClick} style={{ cursor: 'pointer', ...getAvatarWrapperStyle(userStyle), position: 'relative', overflow: 'visible' }}>
           {telegramUser?.photoUrl ? 
@@ -656,6 +657,7 @@ function App() {
           </button>
         </div>
       </header>
+      )}
 
       <main className="main-content">
         {currentView === 'main' && (
