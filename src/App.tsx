@@ -725,7 +725,7 @@ function App() {
              
                           <div className="tournament-card">
                             <div className="tournament-stats-text">
-                              <span>Base:</span>{totalDamage}/<span>PvP:</span>{pvpDamage}
+                              Base:{totalDamage} / PvP:{pvpDamage}
                             </div>
                             <div className="tournament-card-image">
                               <img src={`${BASE_URL}/UFC_cardpack.png`} alt="pack" />
