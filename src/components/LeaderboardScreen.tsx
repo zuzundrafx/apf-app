@@ -57,8 +57,6 @@ const LeaderboardItem: React.FC<LeaderboardItemProps> = ({
 // Основной компонент
 interface LeaderboardScreenProps {
   tournaments: any[];
-  leaderboardData: any[];
-  leaderboardLoading: boolean;
   currentUserId?: string;
   currentUserPhoto?: string;
   userStyle?: 'striker' | 'grappler' | null;
@@ -68,8 +66,6 @@ interface LeaderboardScreenProps {
 
 const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
   tournaments,
-  leaderboardData,
-  leaderboardLoading,
   currentUserId,
   currentUserPhoto,
   userStyle,
@@ -79,8 +75,8 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
   const [leaderboardTier, setLeaderboardTier] = useState<'base' | 'pro' | 'elite' | 'legend'>('base');
   const [leaderboardLeague, setLeaderboardLeague] = useState<'ufc' | ''>('ufc');
   const [localData, setLocalData] = useState<any[]>([]);
-  const [localLoading, setLocalLoading] = useState(false);
-  const isLoadingRef = useRef(false);
+  const [localLoading, setLocalLoading] = useState(true);
+  const initialLoadDone = useRef(false);
 
   const formatTournamentName = (name: string): string => {
     if (!name) return '';
@@ -89,29 +85,29 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
     return result;
   };
 
+  // Загружаем данные
   const loadData = useCallback(async () => {
-  if (tournaments.length === 0) return;
-  if (isLoadingRef.current) return;
-  
-  const tournamentId = tournaments[0].id;
-  isLoadingRef.current = true;
-  setLocalLoading(true);
-  
-  try {
-    const result = await onLoadLeaderboard(tournamentId, leaderboardTier);
-    console.log('📊 Leaderboard result:', result);
-    console.log('📊 First entry:', result[0]);
-    setLocalData(result || []);
-  } catch (err) {
-    console.error('Failed to load leaderboard:', err);
-    setLocalData([]);
-  } finally {
-    setLocalLoading(false);
-    isLoadingRef.current = false;
-  }
-}, [tournaments, leaderboardTier, onLoadLeaderboard]);
+    if (tournaments.length === 0) {
+      setLocalData([]);
+      setLocalLoading(false);
+      return;
+    }
+    
+    const tournamentId = tournaments[0].id;
+    setLocalLoading(true);
+    
+    try {
+      const result = await onLoadLeaderboard(tournamentId, leaderboardTier);
+      setLocalData(result || []);
+    } catch (err) {
+      console.error('Failed to load leaderboard:', err);
+      setLocalData([]);
+    } finally {
+      setLocalLoading(false);
+    }
+  }, [tournaments, leaderboardTier, onLoadLeaderboard]);
 
-  // Загружаем данные только при изменении leaderboardTier или tournaments
+  // Загружаем при изменении лиги или турнира
   useEffect(() => {
     loadData();
   }, [leaderboardTier, tournaments, loadData]);

@@ -909,17 +909,15 @@ function App() {
         )}
 
         {currentView === 'leaderboard' && (
-          <LeaderboardScreen
-            tournaments={activeTournaments}
-            leaderboardData={leaderboardData}
-            leaderboardLoading={leaderboardLoading}
-            currentUserId={telegramUser?.id}
-            currentUserPhoto={telegramUser?.photoUrl}
-            userStyle={userStyle}
-            allProfiles={allProfiles}
-            onLoadLeaderboard={handleLoadLeaderboard}
-          />
-        )}
+  <LeaderboardScreen
+    tournaments={activeTournaments}
+    currentUserId={telegramUser?.id}
+    currentUserPhoto={telegramUser?.photoUrl}
+    userStyle={userStyle}
+    allProfiles={allProfiles}
+    onLoadLeaderboard={handleLoadLeaderboard}
+  />
+)}
 
         {currentView === 'pvp' && (
           <Pvp
