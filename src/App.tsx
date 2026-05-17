@@ -751,39 +751,37 @@ function App() {
               </div>
               <div className="tournament-content">
                 {selectedUpcomingTournament ? (
-                  <>
-                    <div className="selected-fighters-grid">
-                      {upcomingBetData?.selections.map((sel: any, idx: number) => {
-                        const style = getFighterStyleFromSelected(sel.fighter);
-                        const styleIcon = getStyleIconFilename(style);
-                        const betValue = getUpcomingBetValue(upcomingBetData);
-                        const perFighterValue = Math.floor(betValue / 5);
-                        
-                        return (
-                          <div key={idx} className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-                            <div className="fighter-bet-value">
-                              <span>Bet: {perFighterValue}</span>
-                              <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
-                            </div>
-                            <div className="selected-fighter-inner">
-                              <div className="selected-fighter-icon-container">
-                                <img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="selected-fighter-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const p = (e.target as HTMLImageElement).parentElement; if (p) { p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; p.style.fontSize = '20px'; } }} />
-                              </div>
-                              <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
-                              <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="tournament-footer-double">
-                      <div className="footer-damage-button" style={{ background: 'linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%)', cursor: 'default', opacity: 0.8 }}>
-                        Bet: {getUpcomingBetValue(upcomingBetData)} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
-                      </div>
-                      <button className="footer-close-icon" onClick={() => { setSelectedUpcomingTournament(null); setUpcomingBetData(null); }}>✕</button>
-                    </div>
-                  </>
-                ) : (
+  <>
+    <div className="selected-fighters-grid">
+      {upcomingBetData?.selections.map((sel: any, idx: number) => {
+        const style = getFighterStyleFromSelected(sel.fighter);
+        const styleIcon = getStyleIconFilename(style);
+        const betValue = getUpcomingBetValue(upcomingBetData);
+        const perFighterValue = Math.floor(betValue / 5);
+        
+        return (
+          <div key={idx} className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
+            <div className="selected-fighter-damage-box">
+              {perFighterValue} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
+            </div>
+            <div className="selected-fighter-inner">
+              <div className="selected-fighter-icon-container">
+                <img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="selected-fighter-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const p = (e.target as HTMLImageElement).parentElement; if (p) { p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; p.style.fontSize = '20px'; } }} />
+              </div>
+              <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
+              <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+    {/* Нижняя панель оставляем как была, без изменений */}
+    <div className="tournament-footer">
+      <div className="footer-total-damage">TOTAL DAMAGE: {upcomingBetData?.total_damage || 0}</div>
+      <button className="footer-close-button" onClick={() => { setSelectedUpcomingTournament(null); setUpcomingBetData(null); }}>CLOSE</button>
+    </div>
+  </>
+) : (
                   upcoming.length > 0 ? (
                     <div className="tournament-cards-grid">
                       {upcoming.map(tournament => {
