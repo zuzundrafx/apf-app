@@ -533,8 +533,8 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     <div style={{ 
                       display: 'flex', 
                       flexDirection: 'column', 
-                      justifyContent: 'flex-end',
-                      padding: '4% 2%', 
+                      justifyContent: 'flex-start',
+                      padding: '3% 1%', 
                       gap: '2%'
                     }}>
                       <div style={{ fontSize: 'clamp(7px, 1.8vw, 9px)', color: '#FFFFFF', lineHeight: 1.3, wordBreak: 'break-word' }}>
@@ -569,7 +569,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     <div style={{ 
                       display: 'flex', 
                       flexDirection: 'column', 
-                      justifyContent: 'flex-end', 
+                      justifyContent: 'flex-start', 
                       padding: '4% 2%', 
                       gap: '2%'
                     }}>
@@ -588,7 +588,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                     <div style={{ 
                       display: 'flex', 
                       flexDirection: 'column', 
-                      justifyContent: 'flex-end', 
+                      justifyContent: 'flex-start', 
                       padding: '4% 2%', 
                       gap: '2%'
                     }}>
