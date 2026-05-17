@@ -90,24 +90,26 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
   };
 
   const loadData = useCallback(async () => {
-    if (tournaments.length === 0) return;
-    if (isLoadingRef.current) return;
-    
-    const tournamentId = tournaments[0].id;
-    isLoadingRef.current = true;
-    setLocalLoading(true);
-    
-    try {
-      const result = await onLoadLeaderboard(tournamentId, leaderboardTier);
-      setLocalData(result || []);
-    } catch (err) {
-      console.error('Failed to load leaderboard:', err);
-      setLocalData([]);
-    } finally {
-      setLocalLoading(false);
-      isLoadingRef.current = false;
-    }
-  }, [tournaments, leaderboardTier, onLoadLeaderboard]);
+  if (tournaments.length === 0) return;
+  if (isLoadingRef.current) return;
+  
+  const tournamentId = tournaments[0].id;
+  isLoadingRef.current = true;
+  setLocalLoading(true);
+  
+  try {
+    const result = await onLoadLeaderboard(tournamentId, leaderboardTier);
+    console.log('📊 Leaderboard result:', result);
+    console.log('📊 First entry:', result[0]);
+    setLocalData(result || []);
+  } catch (err) {
+    console.error('Failed to load leaderboard:', err);
+    setLocalData([]);
+  } finally {
+    setLocalLoading(false);
+    isLoadingRef.current = false;
+  }
+}, [tournaments, leaderboardTier, onLoadLeaderboard]);
 
   // Загружаем данные только при изменении leaderboardTier или tournaments
   useEffect(() => {
