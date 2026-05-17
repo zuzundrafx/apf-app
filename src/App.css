@@ -3924,7 +3924,7 @@ body {
 /* Стиль для "Base: / PvP:" надписи на карточке активного турнира (до выбора) */
 .tournament-stats-text {
   color: #FFFFFF;
-  font-size: clamp(10px, 3.5vw, 14px);
+  font-size: clamp(9px, 3.3vw, 13px);
   font-weight: 600;
   display: flex;
   align-items: center;
