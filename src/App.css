@@ -3924,7 +3924,7 @@ body {
 /* Стиль для "Base: / PvP:" надписи на карточке активного турнира (до выбора) */
 .tournament-stats-text {
   color: #FFFFFF;
-  font-size: clamp(8px, 3.1vw, 11px);
+  font-size: clamp(8px, 3.0vw, 10px);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -3933,13 +3933,14 @@ body {
   background: transparent;
 }
 
-.tournament-stats-text {
-  font-size: 0;  /* убирает пробелы между элементами */
+.tournament-stats-text span {
+
+  color: #FFD966;
 }
 
-.tournament-stats-text span,
-.tournament-stats-text span + * {
-  font-size: clamp(8px, 3.1vw, 11px); /* возвращаем размер шрифта */
+.tournament-stats-text span::after {
+  content: "";
+  margin-right: 0;
 }
 
 .fighter-bet-above {
