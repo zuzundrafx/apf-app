@@ -3846,12 +3846,12 @@ body {
 .tournament-footer-double {
   display: flex;
   width: calc(100% - clamp(16px, 8vw, 32px));
-  margin: 0 clamp(8px, 4vw, 16px);
+  margin: 0 clamp(4px, 2vw, 10px);
   gap: clamp(4px, 2vw, 8px);
   align-items: stretch;
   height: 25%;
-  min-height: 30px;
-  max-height: 70px;
+  /*min-height: 30px;
+  max-height: 70px;*/
   flex-shrink: 0;
   padding-top: 4%;
   box-sizing: border-box;
@@ -3859,7 +3859,7 @@ body {
 
 .footer-damage-button {
   flex: 1;
-  width: 45%;
+  width: 42%;
   height: 100%;
   background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
   border: none;
@@ -3887,8 +3887,9 @@ body {
 }
 
 .footer-close-icon {
-  aspect-ratio: 1/1;
+  /*aspect-ratio: 1/1;*/
   height: 100%;
+  width: 86%;
   background: #B20101;
   border: 1px solid #FFFFFF;
   border-radius: 4px;
