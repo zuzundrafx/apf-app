@@ -3934,7 +3934,13 @@ body {
 }
 
 .tournament-stats-text span {
+
   color: #FFD966;
+}
+
+.tournament-stats-text span::after {
+  content: "";
+  margin-right: 0;
 }
 
 .fighter-bet-above {
