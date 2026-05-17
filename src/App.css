@@ -3933,14 +3933,13 @@ body {
   background: transparent;
 }
 
-.tournament-stats-text span {
-
-  color: #FFD966;
+.tournament-stats-text {
+  font-size: 0;  /* убирает пробелы между элементами */
 }
 
-.tournament-stats-text span::after {
-  content: "";
-  margin-right: 0;
+.tournament-stats-text span,
+.tournament-stats-text span + * {
+  font-size: clamp(8px, 3.1vw, 11px); /* возвращаем размер шрифта */
 }
 
 .fighter-bet-above {
