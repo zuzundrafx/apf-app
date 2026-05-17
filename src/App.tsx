@@ -775,10 +775,11 @@ function App() {
         );
       })}
     </div>
-    {/* Нижняя панель оставляем как была, без изменений */}
     <div className="tournament-footer">
-      <div className="footer-total-damage">TOTAL DAMAGE: {upcomingBetData?.total_damage || 0}</div>
-      <button className="footer-close-button" onClick={() => { setSelectedUpcomingTournament(null); setUpcomingBetData(null); }}>CLOSE</button>
+      <div className="footer-total-damage" style={{ background: 'linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%)', cursor: 'default' }}>
+        Bet: {getUpcomingBetValue(upcomingBetData)} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
+      </div>
+      <button className="footer-close-icon" onClick={() => { setSelectedUpcomingTournament(null); setUpcomingBetData(null); }}>✕</button>
     </div>
   </>
 ) : (
