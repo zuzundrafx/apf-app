@@ -1,8 +1,7 @@
-﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ с поддержкой PvP Damage для активных турниров
+﻿﻿﻿﻿// App.tsx – ПОЛНЫЙ ФАЙЛ с поддержкой PvP Damage для активных турниров
 import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import Pvp from './components/Pvp';
-import LeaderboardItem from './components/LeaderboardItem';
 import StyleModal from './components/StyleModal';
 import StyleViewModal from './components/StyleViewModal';
 import { Fighter, Tournament } from './types';
@@ -13,6 +12,7 @@ import FightersViewModal from './components/FightersViewModal';
 import { getWeightClassColor, getAvatarFilename } from './utils/weightUtils';
 import { getFighterStyleFromSelected, getStyleIconFilename } from './utils/fighterUtils';
 import { useCoefficients } from './hooks/useCoefficients';
+import LeaderboardScreen from './components/LeaderboardScreen';
 
 declare global {
   interface Window {
@@ -63,10 +63,6 @@ function App() {
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
-
-  // Состояния для рейтинга
-  const [leaderboardTier, setLeaderboardTier] = useState<'base' | 'pro' | 'elite' | 'legend'>('base');
-  const [leaderboardLeague, setLeaderboardLeague] = useState<'ufc' | ''>('ufc');
 
   const [animatedBetAmount, setAnimatedBetAmount] = useState(5);
   const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
@@ -200,6 +196,32 @@ function App() {
     }
     return response.json();
   }, [authToken]);
+
+  // Функция для загрузки лидерборда (передаётся в LeaderboardScreen)
+  const handleLoadLeaderboard = useCallback(async (tournamentId: string, tier: 'base' | 'pro' | 'elite' | 'legend') => {
+    setLeaderboardLoading(true);
+    try {
+      let data;
+      if (tier === 'base') {
+        data = await apiRequest(`/api/leaderboard/${tournamentId}`);
+      } else {
+        const tierMap: Record<string, string> = {
+          pro: 'ufc_pro',
+          elite: 'ufc_elite',
+          legend: 'ufc_legend'
+        };
+        data = await apiRequest(`/api/leaderboard/${tournamentId}/${tierMap[tier]}`);
+      }
+      setLeaderboardData(data);
+      return data;
+    } catch (err) {
+      console.error(err);
+      setLeaderboardData([]);
+      return [];
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  }, [apiRequest]);
 
   const authenticate = useCallback(async (tg: any, user: any) => {
     try {
@@ -548,52 +570,8 @@ function App() {
     }
   };
 
-  // Форматирование названия турнира
-const formatTournamentName = (name: string): string => {
-  if (!name) return '';
-  let result = name.replace(/^UFC\s*/i, '');
-  result = result.replace(/_/g, ' ');
-  return result;
-};
-
-const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
+  const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
   const upcoming = upcomingTournaments.filter(t => t.status !== 'completed');
-
-  // Функция загрузки лидерборда
-const loadLeaderboardData = useCallback(async () => {
-  if (currentView !== 'leaderboard') return;
-  if (activeTournaments.length === 0) return;
-  
-  const tournamentId = activeTournaments[0].id;
-  setLeaderboardLoading(true);
-  
-  try {
-    let data;
-    if (leaderboardTier === 'base') {
-      data = await apiRequest(`/api/leaderboard/${tournamentId}`);
-    } else {
-      const tierMap: Record<string, string> = {
-        pro: 'ufc_pro',
-        elite: 'ufc_elite',
-        legend: 'ufc_legend'
-      };
-      data = await apiRequest(`/api/leaderboard/${tournamentId}/${tierMap[leaderboardTier]}`);
-    }
-    setLeaderboardData(data);
-  } catch (err) {
-    console.error(err);
-    setLeaderboardData([]);
-  } finally {
-    setLeaderboardLoading(false);
-  }
-}, [currentView, activeTournaments, leaderboardTier, apiRequest]);
-
-useEffect(() => {
-  if (currentView === 'leaderboard' && activeTournaments.length > 0) {
-    loadLeaderboardData();
-  }
-}, [currentView, activeTournaments, leaderboardTier, loadLeaderboardData]);
-
 
   if (loading || loadingProfile) return (
     <div className="app">
@@ -614,8 +592,6 @@ useEffect(() => {
       </div>
     </div>
   );
-
-  
 
   return (
     <div className="app">
@@ -762,7 +738,6 @@ useEffect(() => {
                             opacity: hasActiveBet ? 1 : 0.6 
                           }}
                         >
-             
                           <div className="tournament-card">
                             <div className="tournament-stats-text">
                               <span>Base:</span>{totalDamage} / <span>PvP:</span>{pvpDamage}
@@ -792,52 +767,50 @@ useEffect(() => {
               </div>
               <div className="tournament-content">
                 {selectedUpcomingTournament ? (
-  <>
-    <div className="selected-fighters-grid">
-      {upcomingBetData?.selections.map((sel: any, idx: number) => {
-        const style = getFighterStyleFromSelected(sel.fighter);
-        const styleIcon = getStyleIconFilename(style);
-        const betValue = getUpcomingBetValue(upcomingBetData);
-        const perFighterValue = Math.floor(betValue / 5);
-        
-        return (
-          <div key={idx} className="selected-fighter-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-            {/* Значение ставки над карточкой */}
-            <div className="fighter-bet-above" style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              gap: '4px',
-              marginBottom: '4px',
-              fontSize: 'clamp(10px, 2.5vw, 12px)',
-              fontWeight: 600,
-              color: '#ffffff'
-            }}>
-              {perFighterValue} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
-            </div>
-            
-            {/* Карточка бойца без блока с суммой */}
-            <div className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass), width: '100%' }}>
-              <div className="selected-fighter-inner">
-                <div className="selected-fighter-icon-container">
-                  <img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="selected-fighter-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const p = (e.target as HTMLImageElement).parentElement; if (p) { p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; p.style.fontSize = '20px'; } }} />
-                </div>
-                <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
-                <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-    <div className="tournament-footer">
-      <div className="footer-bet-active" style={{ background: 'linear-gradient(180deg, #FFD966 0%, #E6B800 100%)', cursor: 'default' }}>
-        Bet: {getUpcomingBetValue(upcomingBetData)} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
-      </div>
-      <button className="footer-close-icon" onClick={() => { setSelectedUpcomingTournament(null); setUpcomingBetData(null); }}>✕</button>
-    </div>
-  </>
-) : (
+                  <>
+                    <div className="selected-fighters-grid">
+                      {upcomingBetData?.selections.map((sel: any, idx: number) => {
+                        const style = getFighterStyleFromSelected(sel.fighter);
+                        const styleIcon = getStyleIconFilename(style);
+                        const betValue = getUpcomingBetValue(upcomingBetData);
+                        const perFighterValue = Math.floor(betValue / 5);
+                        
+                        return (
+                          <div key={idx} className="selected-fighter-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                            <div className="fighter-bet-above" style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              gap: '4px',
+                              marginBottom: '4px',
+                              fontSize: 'clamp(10px, 2.5vw, 12px)',
+                              fontWeight: 600,
+                              color: '#ffffff'
+                            }}>
+                              {perFighterValue} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
+                            </div>
+                            
+                            <div className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass), width: '100%' }}>
+                              <div className="selected-fighter-inner">
+                                <div className="selected-fighter-icon-container">
+                                  <img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="selected-fighter-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const p = (e.target as HTMLImageElement).parentElement; if (p) { p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; p.style.fontSize = '20px'; } }} />
+                                </div>
+                                <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
+                                <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="tournament-footer">
+                      <div className="footer-bet-active" style={{ background: 'linear-gradient(180deg, #FFD966 0%, #E6B800 100%)', cursor: 'default' }}>
+                        Bet: {getUpcomingBetValue(upcomingBetData)} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
+                      </div>
+                      <button className="footer-close-icon" onClick={() => { setSelectedUpcomingTournament(null); setUpcomingBetData(null); }}>✕</button>
+                    </div>
+                  </>
+                ) : (
                   upcoming.length > 0 ? (
                     <div className="tournament-cards-grid">
                       {upcoming.map(tournament => {
@@ -934,74 +907,17 @@ useEffect(() => {
         )}
 
         {currentView === 'leaderboard' && (
-  <div className="leaderboard-screen">
-    {/* Первая строчка: кнопки лиг */}
-    <div className="leaderboard-league-buttons">
-      <button 
-        className={`leaderboard-league-btn ${leaderboardLeague === 'ufc' ? 'active' : 'inactive'}`}
-        onClick={() => setLeaderboardLeague('ufc')}
-        disabled={leaderboardLeague === 'ufc'}
-      >
-        UFC
-      </button>
-      <button className="leaderboard-league-btn inactive" disabled>PFL</button>
-      <button className="leaderboard-league-btn inactive" disabled>ONE</button>
-    </div>
-
-    {/* Вторая строчка: название турнира */}
-    <div className="leaderboard-tournament-name">
-      {activeTournaments.length > 0 ? formatTournamentName(activeTournaments[0].name) : 'NO TOURNAMENT'}
-    </div>
-
-    {/* Третья строчка: кнопки тиров */}
-    <div className="leaderboard-tier-buttons">
-      <button 
-        className={`leaderboard-tier-btn ${leaderboardTier === 'base' ? 'active' : 'inactive'}`}
-        onClick={() => setLeaderboardTier('base')}
-      >
-        BASE
-      </button>
-      <button 
-        className={`leaderboard-tier-btn ${leaderboardTier === 'pro' ? 'active' : 'inactive'}`}
-        onClick={() => setLeaderboardTier('pro')}
-      >
-        PRO
-      </button>
-      <button 
-        className={`leaderboard-tier-btn ${leaderboardTier === 'elite' ? 'active' : 'inactive'}`}
-        onClick={() => setLeaderboardTier('elite')}
-      >
-        ELITE
-      </button>
-      <button 
-        className={`leaderboard-tier-btn ${leaderboardTier === 'legend' ? 'active' : 'inactive'}`}
-        onClick={() => setLeaderboardTier('legend')}
-      >
-        LEGEND
-      </button>
-    </div>
-
-    {/* Список рейтинга */}
-    {leaderboardLoading ? (
-      <div className="leaderboard-loading">LOADING...</div>
-    ) : leaderboardData.length > 0 ? (
-      <div className="leaderboard-list">
-        {leaderboardData.map(entry => (
-          <LeaderboardItem 
-            key={entry.userId} 
-            entry={entry} 
-            currentUserId={telegramUser?.id} 
-            currentUserPhoto={telegramUser?.photoUrl} 
-            profile={allProfiles.get(entry.userId)} 
-            userStyle={userStyle} 
+          <LeaderboardScreen
+            tournaments={activeTournaments}
+            leaderboardData={leaderboardData}
+            leaderboardLoading={leaderboardLoading}
+            currentUserId={telegramUser?.id}
+            currentUserPhoto={telegramUser?.photoUrl}
+            userStyle={userStyle}
+            allProfiles={allProfiles}
+            onLoadLeaderboard={handleLoadLeaderboard}
           />
-        ))}
-      </div>
-    ) : (
-      <div className="leaderboard-empty">NO RESULTS YET</div>
-    )}
-  </div>
-)}
+        )}
 
         {currentView === 'pvp' && (
           <Pvp
