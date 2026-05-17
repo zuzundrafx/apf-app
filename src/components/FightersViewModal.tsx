@@ -464,7 +464,7 @@ const FightersViewModal: React.FC<FightersViewModalProps> = ({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          aspectRatio: '1 / 1.4',
+                          aspectRatio: '1 / 1.5',
                           borderRadius: '2vw',
                           position: 'relative',
                           overflow: 'visible',
