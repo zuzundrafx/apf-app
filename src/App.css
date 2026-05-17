@@ -3778,7 +3778,7 @@ body {
   display: none;
 }
 
-/* В конец App.css добавьте: */
+
 .rewards-modal.no-summary {
  /* grid-template-rows: auto 1fr !important; /* если используется grid */
   /* или */
@@ -3946,4 +3946,25 @@ body {
   font-size: clamp(10px, 2.5vw, 12px);
   font-weight: 600;
   color: #FFD966;
+}
+
+/* Стиль для блока BET как у активной кнопки */
+.footer-bet-active {
+  flex: 7;
+  height: 100%;
+  background: linear-gradient(180deg, #FFD966 0%, #E6B800 100%);
+  border: 2px solid #B29403;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0 clamp(4px, 1vw, 8px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
