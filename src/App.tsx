@@ -5,7 +5,7 @@ import Pvp from './components/Pvp';
 import LeaderboardItem from './components/LeaderboardItem';
 import StyleModal from './components/StyleModal';
 import StyleViewModal from './components/StyleViewModal';
-import { Fighter, Tournament, SelectedFighter } from './types';
+import { Fighter, Tournament } from './types';
 import { groupFightersByWeight } from './data/loadFighters';
 import { useBackendTournaments } from './hooks/useBackendTournaments';
 import { getAvatarWrapperStyle, getAvatarInnerStyle } from './utils/styleUtils';
@@ -63,6 +63,10 @@ function App() {
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
+
+  // Состояния для рейтинга
+  const [leaderboardTier, setLeaderboardTier] = useState<'base' | 'pro' | 'elite' | 'legend'>('base');
+  const [leaderboardLeague, setLeaderboardLeague] = useState<'ufc' | ''>('ufc');
 
   const [animatedBetAmount, setAnimatedBetAmount] = useState(5);
   const [showBetAmountIncrease, setShowBetAmountIncrease] = useState(false);
@@ -452,16 +456,6 @@ function App() {
     }
   }, [authToken, loadNotifications]);
 
-  useEffect(() => {
-    if (currentView === 'leaderboard' && pastTournaments.length > 0) {
-      setLeaderboardLoading(true);
-      apiRequest(`/api/leaderboard/${pastTournaments[0].id}`)
-        .then(data => setLeaderboardData(data))
-        .catch(console.error)
-        .finally(() => setLeaderboardLoading(false));
-    }
-  }, [currentView, pastTournaments, apiRequest]);
-
   const openSelectionWithBet = async () => {
     if (!selectedBetTournament || !telegramUser) return;
     setShowBetModal(false);
@@ -554,6 +548,15 @@ function App() {
     }
   };
 
+  // Форматирование названия турнира
+const formatTournamentName = (name: string): string => {
+  if (!name) return '';
+  let result = name.replace(/^UFC\s*/i, '');
+  result = result.replace(/_/g, ' ');
+  return result;
+};
+
+
   if (loading || loadingProfile) return (
     <div className="app">
       <div className="loading-screen">
@@ -576,6 +579,41 @@ function App() {
 
   const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
   const upcoming = upcomingTournaments.filter(t => t.status !== 'completed');
+
+  // Функция загрузки лидерборда
+const loadLeaderboardData = useCallback(async () => {
+  if (currentView !== 'leaderboard') return;
+  if (activeTournaments.length === 0) return;
+  
+  const tournamentId = activeTournaments[0].id;
+  setLeaderboardLoading(true);
+  
+  try {
+    let data;
+    if (leaderboardTier === 'base') {
+      data = await apiRequest(`/api/leaderboard/${tournamentId}`);
+    } else {
+      const tierMap: Record<string, string> = {
+        pro: 'ufc_pro',
+        elite: 'ufc_elite',
+        legend: 'ufc_legend'
+      };
+      data = await apiRequest(`/api/leaderboard/${tournamentId}/${tierMap[leaderboardTier]}`);
+    }
+    setLeaderboardData(data);
+  } catch (err) {
+    console.error(err);
+    setLeaderboardData([]);
+  } finally {
+    setLeaderboardLoading(false);
+  }
+}, [currentView, activeTournaments, leaderboardTier, apiRequest]);
+
+useEffect(() => {
+  if (currentView === 'leaderboard' && activeTournaments.length > 0) {
+    loadLeaderboardData();
+  }
+}, [currentView, activeTournaments, leaderboardTier, loadLeaderboardData]);
 
   return (
     <div className="app">
@@ -894,19 +932,74 @@ function App() {
         )}
 
         {currentView === 'leaderboard' && (
-          <div className="leaderboard-screen">
-            <h2 className="leaderboard-header">
-              {activeTournaments.length > 0 ? activeTournaments[0].name : 'LEADERBOARD'}
-            </h2>
-            {leaderboardLoading ? <div className="leaderboard-loading">LOADING...</div> : leaderboardData.length > 0 ? (
-              <div className="leaderboard-list">
-                {leaderboardData.map(entry => (
-                  <LeaderboardItem key={entry.userId} entry={entry} currentUserId={telegramUser?.id} currentUserPhoto={telegramUser?.photoUrl} profile={allProfiles.get(entry.userId)} userStyle={userStyle} />
-                ))}
-              </div>
-            ) : <div className="leaderboard-empty">NO RESULTS YET</div>}
-          </div>
-        )}
+  <div className="leaderboard-screen">
+    {/* Первая строчка: кнопки лиг */}
+    <div className="leaderboard-league-buttons">
+      <button 
+        className={`leaderboard-league-btn ${leaderboardLeague === 'ufc' ? 'active' : 'inactive'}`}
+        onClick={() => setLeaderboardLeague('ufc')}
+        disabled={leaderboardLeague === 'ufc'}
+      >
+        UFC
+      </button>
+      <button className="leaderboard-league-btn inactive" disabled>PFL</button>
+      <button className="leaderboard-league-btn inactive" disabled>ONE</button>
+    </div>
+
+    {/* Вторая строчка: название турнира */}
+    <div className="leaderboard-tournament-name">
+      {activeTournaments.length > 0 ? formatTournamentName(activeTournaments[0].name) : 'NO TOURNAMENT'}
+    </div>
+
+    {/* Третья строчка: кнопки тиров */}
+    <div className="leaderboard-tier-buttons">
+      <button 
+        className={`leaderboard-tier-btn ${leaderboardTier === 'base' ? 'active' : 'inactive'}`}
+        onClick={() => setLeaderboardTier('base')}
+      >
+        BASE
+      </button>
+      <button 
+        className={`leaderboard-tier-btn ${leaderboardTier === 'pro' ? 'active' : 'inactive'}`}
+        onClick={() => setLeaderboardTier('pro')}
+      >
+        PRO
+      </button>
+      <button 
+        className={`leaderboard-tier-btn ${leaderboardTier === 'elite' ? 'active' : 'inactive'}`}
+        onClick={() => setLeaderboardTier('elite')}
+      >
+        ELITE
+      </button>
+      <button 
+        className={`leaderboard-tier-btn ${leaderboardTier === 'legend' ? 'active' : 'inactive'}`}
+        onClick={() => setLeaderboardTier('legend')}
+      >
+        LEGEND
+      </button>
+    </div>
+
+    {/* Список рейтинга */}
+    {leaderboardLoading ? (
+      <div className="leaderboard-loading">LOADING...</div>
+    ) : leaderboardData.length > 0 ? (
+      <div className="leaderboard-list">
+        {leaderboardData.map(entry => (
+          <LeaderboardItem 
+            key={entry.userId} 
+            entry={entry} 
+            currentUserId={telegramUser?.id} 
+            currentUserPhoto={telegramUser?.photoUrl} 
+            profile={allProfiles.get(entry.userId)} 
+            userStyle={userStyle} 
+          />
+        ))}
+      </div>
+    ) : (
+      <div className="leaderboard-empty">NO RESULTS YET</div>
+    )}
+  </div>
+)}
 
         {currentView === 'pvp' && (
           <Pvp
