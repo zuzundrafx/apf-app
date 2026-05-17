@@ -371,6 +371,7 @@ body {
   margin-bottom: 0;
   flex-shrink: 1;
   min-height: 0;
+  align-items: center;
 }
 
 .selected-fighter-card {
