@@ -1,5 +1,5 @@
 // src/components/LeaderboardScreen.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getAvatarWrapperStyle, getAvatarInnerStyle } from '../utils/styleUtils';
 
 // Вложенный компонент строки рейтинга
@@ -78,8 +78,9 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
 }) => {
   const [leaderboardTier, setLeaderboardTier] = useState<'base' | 'pro' | 'elite' | 'legend'>('base');
   const [leaderboardLeague, setLeaderboardLeague] = useState<'ufc' | ''>('ufc');
-  const [localData, setLocalData] = useState<any[]>(leaderboardData);
-  const [localLoading, setLocalLoading] = useState(leaderboardLoading);
+  const [localData, setLocalData] = useState<any[]>([]);
+  const [localLoading, setLocalLoading] = useState(false);
+  const isLoadingRef = useRef(false);
 
   const formatTournamentName = (name: string): string => {
     if (!name) return '';
@@ -89,39 +90,29 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
   };
 
   const loadData = useCallback(async () => {
-    if (tournaments.length === 0) {
-      setLocalData([]);
-      setLocalLoading(false);
-      return;
-    }
+    if (tournaments.length === 0) return;
+    if (isLoadingRef.current) return;
     
     const tournamentId = tournaments[0].id;
+    isLoadingRef.current = true;
     setLocalLoading(true);
     
     try {
       const result = await onLoadLeaderboard(tournamentId, leaderboardTier);
-      console.log('Leaderboard data loaded:', result); // Для отладки
       setLocalData(result || []);
     } catch (err) {
       console.error('Failed to load leaderboard:', err);
       setLocalData([]);
     } finally {
       setLocalLoading(false);
+      isLoadingRef.current = false;
     }
   }, [tournaments, leaderboardTier, onLoadLeaderboard]);
 
+  // Загружаем данные только при изменении leaderboardTier или tournaments
   useEffect(() => {
     loadData();
-  }, [leaderboardTier, loadData]);
-
-  // Обновляем локальные данные когда меняются пропсы
-  useEffect(() => {
-    setLocalData(leaderboardData);
-  }, [leaderboardData]);
-
-  useEffect(() => {
-    setLocalLoading(leaderboardLoading);
-  }, [leaderboardLoading]);
+  }, [leaderboardTier, tournaments, loadData]);
 
   const currentTournament = tournaments.length > 0 ? tournaments[0] : null;
 
@@ -132,7 +123,6 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
         <button 
           className={`leaderboard-league-btn ${leaderboardLeague === 'ufc' ? 'active' : 'inactive'}`}
           onClick={() => setLeaderboardLeague('ufc')}
-          disabled={leaderboardLeague === 'ufc'}
         >
           UFC
         </button>
