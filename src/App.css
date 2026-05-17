@@ -383,8 +383,8 @@ body {
   background: #2A2A2A;
   min-width: 0;
   width: 100%;
-  height: auto;
- /* aspect-ratio: 1 / 1.2;*/
+  /*height: auto;*/
+ aspect-ratio: 1 / 1.4;
   border-radius: 2vw;
   filter: drop-shadow(0 0 1% rgba(0, 0, 0, 0.6));
   overflow: visible;
@@ -1345,7 +1345,7 @@ body {
   }
   
   .selected-fighter-card {
-    aspect-ratio: 1 / 1.1;
+    aspect-ratio: 1 / 1.4;
   }
   
   .footer-total-damage {
