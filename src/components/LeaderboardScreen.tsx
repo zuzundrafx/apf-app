@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getAvatarWrapperStyle, getAvatarInnerStyle } from '../utils/styleUtils';
 
-// ===== ВЛОЖЕННЫЙ КОМПОНЕНТ СТРОКИ РЕЙТИНГА =====
+// Вложенный компонент строки рейтинга
 interface LeaderboardItemProps {
   entry: any;
   currentUserId?: string;
@@ -54,7 +54,7 @@ const LeaderboardItem: React.FC<LeaderboardItemProps> = ({
   );
 };
 
-// ===== ОСНОВНОЙ КОМПОНЕНТ =====
+// Основной компонент
 interface LeaderboardScreenProps {
   tournaments: any[];
   leaderboardData: any[];
@@ -78,8 +78,8 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
 }) => {
   const [leaderboardTier, setLeaderboardTier] = useState<'base' | 'pro' | 'elite' | 'legend'>('base');
   const [leaderboardLeague, setLeaderboardLeague] = useState<'ufc' | ''>('ufc');
-  const [data, setData] = useState<any[]>(leaderboardData);
-  const [loading, setLoading] = useState(leaderboardLoading);
+  const [localData, setLocalData] = useState<any[]>(leaderboardData);
+  const [localLoading, setLocalLoading] = useState(leaderboardLoading);
 
   const formatTournamentName = (name: string): string => {
     if (!name) return '';
@@ -89,17 +89,39 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
   };
 
   const loadData = useCallback(async () => {
-    if (tournaments.length === 0) return;
+    if (tournaments.length === 0) {
+      setLocalData([]);
+      setLocalLoading(false);
+      return;
+    }
+    
     const tournamentId = tournaments[0].id;
-    setLoading(true);
-    const result = await onLoadLeaderboard(tournamentId, leaderboardTier);
-    setData(result);
-    setLoading(false);
+    setLocalLoading(true);
+    
+    try {
+      const result = await onLoadLeaderboard(tournamentId, leaderboardTier);
+      console.log('Leaderboard data loaded:', result); // Для отладки
+      setLocalData(result || []);
+    } catch (err) {
+      console.error('Failed to load leaderboard:', err);
+      setLocalData([]);
+    } finally {
+      setLocalLoading(false);
+    }
   }, [tournaments, leaderboardTier, onLoadLeaderboard]);
 
   useEffect(() => {
     loadData();
   }, [leaderboardTier, loadData]);
+
+  // Обновляем локальные данные когда меняются пропсы
+  useEffect(() => {
+    setLocalData(leaderboardData);
+  }, [leaderboardData]);
+
+  useEffect(() => {
+    setLocalLoading(leaderboardLoading);
+  }, [leaderboardLoading]);
 
   const currentTournament = tournaments.length > 0 ? tournaments[0] : null;
 
@@ -152,13 +174,13 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
       </div>
 
       {/* Список рейтинга */}
-      {loading ? (
+      {localLoading ? (
         <div className="leaderboard-loading">LOADING...</div>
-      ) : data.length > 0 ? (
+      ) : localData.length > 0 ? (
         <div className="leaderboard-list">
-          {data.map(entry => (
+          {localData.map((entry, index) => (
             <LeaderboardItem 
-              key={entry.userId} 
+              key={entry.userId || index} 
               entry={entry} 
               currentUserId={currentUserId} 
               currentUserPhoto={currentUserPhoto} 
