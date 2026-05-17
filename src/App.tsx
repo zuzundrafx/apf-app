@@ -556,28 +556,7 @@ const formatTournamentName = (name: string): string => {
   return result;
 };
 
-
-  if (loading || loadingProfile) return (
-    <div className="app">
-      <div className="loading-screen">
-        <img src={`${BASE_URL}/Logo.webp`} alt="AFTER PARTY FIGHTS" className="loading-logo" />
-        <div className="loading-progress-bar"><div className="loading-progress-fill" style={{ width: `50%` }}></div></div>
-        <div className="loading-stage">Loading...</div>
-        <div className="loading-text">Please wait</div>
-      </div>
-    </div>
-  );
-  if (error) return (
-    <div className="app">
-      <div className="error-screen">
-        <div className="error-icon">❌</div>
-        <div className="error-text">{error}</div>
-        <button className="retry-button" onClick={() => window.location.reload()}>TRY AGAIN</button>
-      </div>
-    </div>
-  );
-
-  const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
+const activeTournaments = pastTournaments.filter(t => t.status === 'completed');
   const upcoming = upcomingTournaments.filter(t => t.status !== 'completed');
 
   // Функция загрузки лидерборда
@@ -614,6 +593,29 @@ useEffect(() => {
     loadLeaderboardData();
   }
 }, [currentView, activeTournaments, leaderboardTier, loadLeaderboardData]);
+
+
+  if (loading || loadingProfile) return (
+    <div className="app">
+      <div className="loading-screen">
+        <img src={`${BASE_URL}/Logo.webp`} alt="AFTER PARTY FIGHTS" className="loading-logo" />
+        <div className="loading-progress-bar"><div className="loading-progress-fill" style={{ width: `50%` }}></div></div>
+        <div className="loading-stage">Loading...</div>
+        <div className="loading-text">Please wait</div>
+      </div>
+    </div>
+  );
+  if (error) return (
+    <div className="app">
+      <div className="error-screen">
+        <div className="error-icon">❌</div>
+        <div className="error-text">{error}</div>
+        <button className="retry-button" onClick={() => window.location.reload()}>TRY AGAIN</button>
+      </div>
+    </div>
+  );
+
+  
 
   return (
     <div className="app">
