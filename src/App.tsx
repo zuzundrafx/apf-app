@@ -771,7 +771,7 @@ function App() {
               marginBottom: '4px',
               fontSize: 'clamp(10px, 2.5vw, 12px)',
               fontWeight: 600,
-              color: '#FFD966'
+              color: '#ffffff'
             }}>
               {perFighterValue} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
             </div>
