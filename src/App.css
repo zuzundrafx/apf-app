@@ -3936,3 +3936,14 @@ body {
 .tournament-stats-text span {
   color: #FFD966;
 }
+
+.fighter-bet-above {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  font-size: clamp(10px, 2.5vw, 12px);
+  font-weight: 600;
+  color: #FFD966;
+}

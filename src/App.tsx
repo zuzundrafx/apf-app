@@ -760,16 +760,30 @@ function App() {
         const perFighterValue = Math.floor(betValue / 5);
         
         return (
-          <div key={idx} className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass) }}>
-            <div className="selected-fighter-damage-box">
+          <div key={idx} className="selected-fighter-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+            {/* Значение ставки над карточкой */}
+            <div className="fighter-bet-above" style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '4px',
+              marginBottom: '4px',
+              fontSize: 'clamp(10px, 2.5vw, 12px)',
+              fontWeight: 600,
+              color: '#FFD966'
+            }}>
               {perFighterValue} <img src={`${BASE_URL}/icons/Coin_icon.webp`} alt="coins" style={{ width: 'auto', height: '1em', objectFit: 'contain' }} />
             </div>
-            <div className="selected-fighter-inner">
-              <div className="selected-fighter-icon-container">
-                <img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="selected-fighter-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const p = (e.target as HTMLImageElement).parentElement; if (p) { p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; p.style.fontSize = '20px'; } }} />
+            
+            {/* Карточка бойца без блока с суммой */}
+            <div className="selected-fighter-card" data-weight={sel.weightClass} style={{ backgroundColor: getWeightClassColor(sel.weightClass), width: '100%' }}>
+              <div className="selected-fighter-inner">
+                <div className="selected-fighter-icon-container">
+                  <img src={`${BASE_URL}/icons/${styleIcon}`} alt={style} className="selected-fighter-icon" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; const p = (e.target as HTMLImageElement).parentElement; if (p) { p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; p.style.fontSize = '20px'; } }} />
+                </div>
+                <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
+                <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
               </div>
-              <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
-              <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
             </div>
           </div>
         );
