@@ -1456,7 +1456,6 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  /*justify-content: flex-start;*/
   justify-content: center; /* Центрируем аватарку */
   background: #313130;
   padding: 4px 0;
@@ -1551,8 +1550,6 @@ body {
   object-fit: cover;
 }
 
-
-
 /* НИЖНЯЯ ЧАСТЬ (25%) - НОВАЯ СТРУКТУРА */
 .pvp-card-bottom {
   display: flex;
@@ -1636,7 +1633,6 @@ body {
   border-radius: 5px;
   transition: opacity 0.2s ease;
   white-space: nowrap;
-  /*padding: 0 4px;*/
   padding-right: 4%;
 }
 
@@ -1711,8 +1707,6 @@ body {
   position: relative;
 }
 
-
-
 /* Верхняя шапка (8%) */
 .arena-header {
   display: flex;
@@ -1765,8 +1759,6 @@ body {
   flex-direction: column;
   height: 38%;
   min-height: 200px;
-  /*background: #1C1D1F;*/
- 
 }
 
 /* Контейнер для аватарки с тремя колонками */
@@ -1775,8 +1767,7 @@ body {
   width: 100%;
   height: 39%;
   min-height: 65px;
- /* background: #1C1D1F;*/
-}
+ }
 
 /* Левая колонка (38%) - здесь будет DAMAGE у всех */
 .arena-avatar-left {
@@ -1919,7 +1910,6 @@ body {
 .arena-rival-health {
   height: 7%;
   min-height: 15px;
- /* background: #1C1D1F;*/
   padding: 2px 8px;
   border-bottom: 1px solid #4A4A48;
  
@@ -1963,7 +1953,6 @@ body {
   gap: clamp(2px, 0.5vw, 4px);
   height: 54%;
   min-height: 90px;
-  /*background: #1C1D1F;*/
   padding: 0 clamp(1%, 1vw, 2%);
   flex-wrap: wrap;
 }
@@ -1998,8 +1987,7 @@ body {
   justify-content: center;
   overflow: hidden;
   position: relative;
- /* margin-top: 4%;*/
-}
+ }
 
 /* Верхний контейнер для иконки стиля (75% высоты) */
 .fighter-icon-container {
@@ -2015,10 +2003,7 @@ body {
 .fighter-style-icon {
   width: 95%;
   aspect-ratio: 1 / 1;
-  /*max-height: 90%;*/
   object-fit: contain;
-  /*filter: drop-shadow(0 0 0.5vw rgba(255, 215, 0, 0.5));*/
-  /*animation: iconPulse 2s ease-in-out infinite;*/
 }
 
 /* Средний контейнер - градиентная линия (2% высоты) */
@@ -2192,7 +2177,6 @@ body {
   grid-template-columns: repeat(5, 1fr);
   gap: 1%;
   height: 16%;
-  /*background: #1C1D1F;*/
   padding-left: 1%;
   padding-right: 1%;
 }
@@ -2213,8 +2197,7 @@ body {
   width: 100%;
   perspective: 1000px;
   border-radius: 2vw;
-  /*filter: drop-shadow(0 0 1% rgba(0, 0, 0, 0.6));*/
-}
+ }
 
 /* Внутренний контейнер карточки */
 .arena-round-card-inner {
@@ -2955,7 +2938,6 @@ body {
 }
 
 /* ===== ВАЛЮТЫ В ПРОФИЛЕ ===== */
-
 .profile-currencies {
   display: flex;
   gap: 5%;
@@ -2982,7 +2964,6 @@ body {
 }
 
 /* ===== МОДАЛЬНОЕ ОКНО СТАВКИ ===== */
-
 .bet-modal-overlay {
   position: fixed;
   top: 0;
@@ -3120,7 +3101,6 @@ body {
   background: #1c1d1f;
   border-top: 0.15vh solid rgba(255, 255, 255, 0.3);
   /*POINT*/
-
 }
 
 .bet-confirm-button {
@@ -3145,7 +3125,6 @@ body {
 }
 
 /* ===== ВСПЛЫВАЮЩАЯ НАДПИСЬ В КОНТЕЙНЕРЕ БУДУЩИХ ТУРНИРОВ ===== */
-
 .upcoming-overlay-text {
   position: absolute;
   top: 50%;
@@ -3197,7 +3176,6 @@ body {
 }
 
 /* ===== НОВОЕ МОДАЛЬНОЕ ОКНО РЕЗУЛЬТАТА БОЯ ===== */
-
 .battle-result-modal-overlay {
   position: fixed;
   top: 0;
@@ -3227,9 +3205,6 @@ body {
 .battle-result-header {
   width: 100%;
   height: 10%;
-  /*background: #1c1e1c;
-  border: 0.15vh solid #666d75;
-  border-radius: 5%;*/
   position: absolute;
   top: -12%;
   left: 50%;
@@ -3460,7 +3435,6 @@ body {
 }
 
 /* ===== ОБВОДКА АВАТАРОК ПОБЕДИТЕЛЯ/ПРОИГРАВШЕГО ===== */
-
 .battle-result-avatar-wrapper {
   position: relative;
   width: 80%;
@@ -3545,7 +3519,6 @@ body {
 }
 
 /* ===== ОВЕРЛЕЙ ПРИ ПОВОРОТЕ ЭКРАНА ==== */
-
 .orientation-overlay {
   position: fixed;
   top: 0;
@@ -3770,7 +3743,6 @@ body {
   display: none;
 }
 
-
 .rewards-modal.no-summary {
  /* grid-template-rows: auto 1fr !important; /* если используется grid */
   /* или */
@@ -3978,7 +3950,6 @@ body {
   gap: clamp(8px, 1.5vh, 12px);
 }
 
-
 .leaderboard-league-btn {
   flex: 1;
   background: linear-gradient(180deg, #5b5b5b 0%, #302f30 100%);
@@ -4023,7 +3994,6 @@ body {
   padding: 0 clamp(8px, 2vw, 16px);
   word-break: break-word;
 }
-
 
 /* ===== ВЫБОР ТУРНИРА (ДРОПДАУН) ===== */
 .leaderboard-tournament-selector {
@@ -4122,9 +4092,4 @@ body {
 
 .leaderboard-tier-btn.inactive {
   opacity: 0.6;
-}
-
-/* Удаляем старые стили для league-buttons */
-.leaderboard-league-buttons {
-  display: none;
 }
