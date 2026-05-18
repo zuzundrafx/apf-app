@@ -10,6 +10,7 @@ body {
   color: #FFFFFF;
 }
 
+
 .app {
   max-width: 375px;
   margin: 0 auto;
@@ -21,6 +22,7 @@ body {
 }
 
 /* ===== ПРОФИЛЬНАЯ ПАНЕЛЬ ===== */
+
 .profile-header {
   display: flex;
   align-items: center;
@@ -78,94 +80,24 @@ body {
 .level-text {
   position: absolute;
   left: 0;
-  bottom: 150%;
+  bottom: 150%;                     /* текст поднимается над шкалой */
   margin-bottom: 2px;
   transform: none;
   color: #FFFFFF;
   font-size: clamp(9px, 2.5vw, 11px);
   font-weight: 500;
+  
   white-space: nowrap;
 }
 
-.profile-currencies {
-  display: flex;
-  gap: 5%;
-  margin-top: 2%;
-  justify-content: flex-end;
-}
-
-.currency-item {
-  display: flex;
-  align-items: center;
-  gap: 2%;
-}
-
-.currency-icon {
-  width: auto;
-  height: 1em;
-  object-fit: contain;
-}
-
-.currency-value {
+.profile-coins {
   font-size: clamp(12px, 3.5vw, 14px);
-  color: #FFFFFF;
-  font-weight: 500;
-}
-
-.profile-notifications {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-}
-
-.notifications-button {
-  position: relative;
-  width: clamp(32px, 8vw, 40px);
-  height: clamp(32px, 8vw, 40px);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.notifications-button img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-}
-
-.notifications-button.has-notifications img {
-  opacity: 1;
-}
-
-.notification-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 18px;
-  height: 18px;
-  background: #B20101;
-  border-radius: 50%;
-  color: #FFFFFF;
-  font-size: 12px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.8; }
-  100% { transform: scale(1); opacity: 1; }
+  color: #FFD700;
+  text-align: right;
 }
 
 /* ===== ОСНОВНОЙ КОНТЕНТ ===== */
+
 .main-content {
   flex: 1;
   display: flex;
@@ -254,6 +186,19 @@ body {
   height: 100%;
 }
 
+.select-button {
+  width: calc(100% - clamp(16px, 8vw, 32px));
+  padding: clamp(8px, 2vh, 12px);
+  background: #C9FFCE;
+  border: none;
+  border-radius: 4px;
+  color: #000000;
+  font-size: clamp(12px, 3.5vw, 14px);
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0 clamp(8px, 4vw, 16px);
+}
+
 .tournament-message {
   text-align: center;
   color: #FFFFFF;
@@ -265,7 +210,7 @@ body {
   margin: 0 clamp(8px, 4vw, 16px);
 }
 
-/* ===== КАРТОЧКИ ТУРНИРОВ ===== */
+/* ===== БАЗОВЫЕ СТИЛИ КАРТОЧКИ ТУРНИРА ===== */
 .tournament-card {
   display: flex;
   flex-direction: column;
@@ -341,11 +286,33 @@ body {
   margin-top: auto;
 }
 
+/* ===== РЕЖИМ ОДНОЙ КАРТОЧКИ ===== */
+.tournament-card-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0 clamp(1px, 0.5vw, 2px);
+}
+
+.tournament-card-container .tournament-card {
+  width: 33%;
+  max-width: 120px;
+}
+
+/* ===== РЕЖИМ СЕТКИ ===== */
 .tournament-card-wrapper {
   display: flex;
   justify-content: center;
   flex-shrink: 0;
   width: 33%;
+}
+
+.tournament-card-wrapper .tournament-card {
+  width: 100%;
+  max-width: 120px;
 }
 
 .tournament-cards-grid {
@@ -364,6 +331,33 @@ body {
 
 .tournament-cards-grid::-webkit-scrollbar {
   display: none;
+}
+
+/* Адаптация для разных экранов */
+@media (max-width: 375px) {
+  .tournament-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    gap: 6px;
+  }
+  
+  .tournament-card,
+  .tournament-card-container .tournament-card,
+  .tournament-card-wrapper .tournament-card {
+    max-width: 100px;
+  }
+}
+
+@media (max-width: 320px) {
+  .tournament-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 4px;
+  }
+  
+  .tournament-card,
+  .tournament-card-container .tournament-card,
+  .tournament-card-wrapper .tournament-card {
+    max-width: 85px;
+  }
 }
 
 /* ===== СЕТКА КАРТОЧЕК БОЙЦОВ ===== */
@@ -390,12 +384,14 @@ body {
   background: #2A2A2A;
   min-width: 0;
   width: 100%;
-  aspect-ratio: 1 / 1.5;
+  /*height: auto;*/
+ aspect-ratio: 1 / 1.5;
   border-radius: 2vw;
   filter: drop-shadow(0 0 1% rgba(0, 0, 0, 0.6));
   overflow: visible;
 }
 
+/* Блок с уроном (правый верхний угол) */
 .selected-fighter-damage-box {
   position: absolute;
   top: 0;
@@ -416,6 +412,7 @@ body {
   margin: 0;
 }
 
+/* Внутренний контейнер карточки */
 .selected-fighter-inner {
   width: 97%;
   height: 90%;
@@ -429,6 +426,7 @@ body {
   margin-top: 4%;
 }
 
+/* Верхний контейнер для иконки стиля */
 .selected-fighter-icon-container {
   width: 95%;
   aspect-ratio: 1 / 1;
@@ -438,20 +436,31 @@ body {
   padding: 2% 0;
 }
 
+/* Иконка стиля бойца */
 .selected-fighter-icon {
   width: 95%;
   height: auto;
   max-height: 90%;
   object-fit: contain;
+  filter: drop-shadow(0 0 0.5vw rgba(255, 215, 0, 0.5));
+  /*animation: iconPulse 2s ease-in-out infinite;*/
 }
 
+/* Разделительная линия */
 .selected-fighter-divider {
   width: 100%;
   height: 2%;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, currentColor 20%, currentColor 80%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    currentColor 20%,
+    currentColor 80%,
+    rgba(255, 255, 255, 0) 100%
+  );
   opacity: 0.9;
 }
 
+/* Имя бойца */
 .selected-fighter-name {
   width: 100%;
   height: 23%;
@@ -475,19 +484,45 @@ body {
   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
 }
 
-/* Цветовые классы для обводки */
-.selected-fighter-card[data-weight="Flyweight"] .selected-fighter-damage-box { border-color: #00FFA3; }
-.selected-fighter-card[data-weight="Bantamweight"] .selected-fighter-damage-box { border-color: #00E0FF; }
-.selected-fighter-card[data-weight="Featherweight"] .selected-fighter-damage-box { border-color: #0075FF; }
-.selected-fighter-card[data-weight="Lightweight"] .selected-fighter-damage-box { border-color: #AD00FF; }
-.selected-fighter-card[data-weight="Welterweight"] .selected-fighter-damage-box { border-color: #FF00D6; }
-.selected-fighter-card[data-weight="Middleweight"] .selected-fighter-damage-box { border-color: #FFD700; }
-.selected-fighter-card[data-weight="Light Heavyweight"] .selected-fighter-damage-box { border-color: #FF5C00; }
-.selected-fighter-card[data-weight="Heavyweight"] .selected-fighter-damage-box { border-color: #FF0000; }
-.selected-fighter-card[data-weight="Women's Strawweight"] .selected-fighter-damage-box { border-color: #FF6B9D; }
-.selected-fighter-card[data-weight="Women's Flyweight"] .selected-fighter-damage-box { border-color: #5EEAD4; }
-.selected-fighter-card[data-weight="Women's Bantamweight"] .selected-fighter-damage-box { border-color: #818CF8; }
-.selected-fighter-card[data-weight="Catch Weight"] .selected-fighter-damage-box { border-color: #94A3B8; }
+/* Цветовые классы для обводки блока урона на главном экране */
+.selected-fighter-card[data-weight="Flyweight"] .selected-fighter-damage-box {
+  border-color: #00FFA3;
+}
+.selected-fighter-card[data-weight="Bantamweight"] .selected-fighter-damage-box {
+  border-color: #00E0FF;
+}
+.selected-fighter-card[data-weight="Featherweight"] .selected-fighter-damage-box {
+  border-color: #0075FF;
+}
+.selected-fighter-card[data-weight="Lightweight"] .selected-fighter-damage-box {
+  border-color: #AD00FF;
+}
+.selected-fighter-card[data-weight="Welterweight"] .selected-fighter-damage-box {
+  border-color: #FF00D6;
+}
+.selected-fighter-card[data-weight="Middleweight"] .selected-fighter-damage-box {
+  border-color: #FFD700;
+}
+.selected-fighter-card[data-weight="Light Heavyweight"] .selected-fighter-damage-box {
+  border-color: #FF5C00;
+}
+.selected-fighter-card[data-weight="Heavyweight"] .selected-fighter-damage-box {
+  border-color: #FF0000;
+}
+.selected-fighter-card[data-weight="Women's Strawweight"] .selected-fighter-damage-box {
+  border-color: #FF6B9D;
+}
+.selected-fighter-card[data-weight="Women's Flyweight"] .selected-fighter-damage-box {
+  border-color: #5EEAD4;
+}
+.selected-fighter-card[data-weight="Women's Bantamweight"] .selected-fighter-damage-box {
+  border-color: #818CF8;
+}
+.selected-fighter-card[data-weight="Catch Weight"] .selected-fighter-damage-box {
+  border-color: #94A3B8;
+}
+
+
 
 /* ===== ФУТЕР ДЛЯ ТУРНИРОВ ===== */
 .tournament-footer {
@@ -541,90 +576,22 @@ body {
   transition: background 0.2s ease;
 }
 
-/* Новая нижняя панель для активного турнира с двумя кнопками */
-.tournament-footer-double {
-  display: flex;
-  width: calc(100% - clamp(16px, 8vw, 32px));
-  margin: 0 clamp(4px, 2vw, 10px);
-  gap: clamp(4px, 2vw, 8px);
-  align-items: stretch;
-  height: 25%;
-  flex-shrink: 0;
-  padding-top: 3%;
-  box-sizing: border-box;
-}
-
-.footer-damage-button {
-  flex: 1;
-  width: 42%;
-  height: 100%;
-  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
-  border: none;
-  border-radius: 4px;
-  color: #ffffff;
-  font-size: clamp(11px, 3vw, 14px);
-  font-weight: 600;
-  cursor: pointer;
-  text-transform: uppercase;
-  padding: 0 clamp(4px, 1vw, 8px);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: all 0.2s ease;
-}
-
-.footer-damage-button.active {
-  background: linear-gradient(180deg, #FFD966 0%, #E6B800 100%);
-  border: 2px solid #B29403;
-  box-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
-}
-
-.footer-damage-button.inactive {
-  opacity: 0.6;
-}
-
-.footer-close-icon {
-  height: 100%;
-  width: 16%;
-  background: #B20101;
-  border: 1px solid #FFFFFF;
-  border-radius: 4px;
-  color: #FFFFFF;
-  font-size: clamp(16px, 4vw, 20px);
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease;
-}
-
-.footer-close-icon:hover {
+.footer-close-button:hover:not(:disabled) {
   background: #8B0000;
 }
 
-/* Стиль для блока BET как у активной кнопки */
-.footer-bet-active {
-  flex: 7;
-  height: 100%;
-  background: linear-gradient(180deg, #FFD966 0%, #E6B800 100%);
-  border: 2px solid #B29403;
-  border-radius: 8px;
-  box-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  font-size: clamp(11px, 3vw, 14px);
-  font-weight: 600;
-  text-transform: uppercase;
-  padding: 0 clamp(4px, 1vw, 8px);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.footer-close-button:active:not(:disabled) {
+  background: #6B0000;
 }
 
-/* ===== ВЫБОР БОЙЦОВ (МОДАЛЬНОЕ ОКНО) ===== */
+.footer-close-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #666D74;
+  border-color: #888;
+}
+
+/* ===== ОСТАЛЬНЫЕ СТИЛИ ===== */
 .selection-modal {
   position: fixed;
   top: 0;
@@ -715,6 +682,7 @@ body {
   width: 100%;
 }
 
+/* Цвета для весовых категорий в окне выбора */
 .weight-header[data-weight="Flyweight"] { background: #00FFA3; }
 .weight-header[data-weight="Bantamweight"] { background: #00E0FF; }
 .weight-header[data-weight="Featherweight"] { background: #0075FF; }
@@ -922,7 +890,13 @@ body {
   flex-direction: column;
   padding: clamp(8px, 2vh, 16px);
   width: 100%;
-  gap: 0;
+}
+
+.leaderboard-header {
+  margin-bottom: clamp(8px, 2vh, 16px);
+  font-size: clamp(14px, 4vw, 16px);
+  font-weight: 600;
+  color: #FFD700;
 }
 
 .leaderboard-list {
@@ -931,8 +905,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: clamp(4px, 1vh, 8px);
+  /*padding-right: 4px;*/
   width: 100%;
-  margin-top: clamp(8px, 2vh, 16px);
 }
 
 .leaderboard-item {
@@ -1014,921 +988,122 @@ body {
   font-size: clamp(12px, 3.5vw, 14px);
 }
 
-/* ===== ВЫБОР ТУРНИРА (ДРОПДАУН) ===== */
-.leaderboard-tournament-selector {
-  position: relative;
-  width: 100%;
-  margin-bottom: 0;
-}
-
-.leaderboard-tournament-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: clamp(8px, 1.5vh, 12px) clamp(12px, 2vw, 16px);
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-  min-height: 45px;
-  border-radius: 0;
-}
-
-.leaderboard-tournament-header:hover {
-  opacity: 0.9;
-}
-
-.leaderboard-tournament-header-text {
-  color: #FFFFFF;
-  font-size: clamp(12px, 3.5vw, 14px);
-  font-weight: 600;
-  word-break: break-word;
-  flex: 1;
-  text-align: left;
-}
-
-.leaderboard-dropdown-arrow {
-  flex-shrink: 0;
-  transition: transform 0.3s ease;
-  width: 32px;
-  height: 32px;
-}
-
-.leaderboard-dropdown-arrow.open {
-  transform: rotate(180deg);
-}
-
-.leaderboard-dropdown-list {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: #1C1D1F;
-  border: 1px solid #3D3D3B;
-  border-top: none;
-  z-index: 1000;
-  max-height: 60vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.leaderboard-dropdown-group {
-  margin-bottom: 4px;
-}
-
-.leaderboard-dropdown-group:last-child {
-  margin-bottom: 0;
-}
-
-.leaderboard-dropdown-group-header {
-  padding: clamp(6px, 1.2vh, 10px) clamp(12px, 2vw, 16px);
-  color: #FFFFFF;
-  font-size: clamp(11px, 2.8vw, 13px);
-  font-weight: 700;
-  text-transform: uppercase;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.leaderboard-dropdown-item {
-  padding: clamp(8px, 1.5vh, 12px) clamp(12px, 2vw, 16px);
-  color: #FFFFFF;
-  font-size: clamp(11px, 2.8vw, 13px);
-  cursor: pointer;
-  transition: background 0.2s ease;
-  border-bottom: 1px solid #3D3D3B;
-  margin: 0;
-}
-
-.leaderboard-dropdown-item:last-child {
-  border-bottom: none;
-}
-
-.leaderboard-dropdown-item:hover {
-  background: #2A2A2A;
-}
-
-.leaderboard-dropdown-item.active {
-  background: #313130;
-  color: #FFD966;
-}
-
-/* Кнопки тиров (вкладки) */
-.leaderboard-tier-buttons {
-  display: flex;
-  gap: 0;
-  height: auto;
-  min-height: 35px;
-  border-top: none;
-  margin-top: 0;
-}
-
-.leaderboard-tier-btn {
-  flex: 1;
-  background: linear-gradient(180deg, #5b5b5b 0%, #302f30 100%);
-  border: 0.15vh solid #666d75;
-  border-top: none;
-  color: #FFFFFF;
-  font-size: clamp(9px, 2vw, 12px);
-  font-weight: 600;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: all 0.2s ease;
-  padding: clamp(6px, 1.2vh, 10px) 0;
-  border-radius: 0 0 2vh 2vh;
-}
-
-.leaderboard-tier-btn:first-child {
-  border-radius: 0 0 2vh 2vh;
-}
-
-.leaderboard-tier-btn:last-child {
-  border-radius: 0 0 2vh 2vh;
-}
-
-.leaderboard-tier-btn.active {
-  background: linear-gradient(180deg, #FFD966 0%, #E6B800 100%);
-  border: 2px solid #B29403;
-  border-top: none;
-  color: #000000;
-  box-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
-}
-
-.leaderboard-tier-btn.inactive {
-  opacity: 0.6;
-}
-
-/* ===== PvP ЭКРАН ===== */
-.pvp-screen {
+/* ===== ЗАГРУЗОЧНЫЙ ЭКРАН ===== */
+.loading-screen {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
   background: #1C1D1F;
-  overflow: hidden;
-  min-height: 0;
 }
 
-.pvp-header {
-  background: #B20101;
-  padding: clamp(6px, 2vh, 10px) clamp(8px, 4vw, 16px);
-  margin: 0 0 clamp(4px, 1vh, 8px) 0;
-  flex-shrink: 0;
-}
-
-.pvp-header-title {
-  color: #FFFFFF;
-  font-size: clamp(12px, 3.5vw, 14px);
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.pvp-list {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(4px, 2vh, 6px);
-  padding-top: 2%;
-  min-height: 0;
-  height: 100%;
-}
-
-.pvp-tournament-card {
-  display: grid;
-  grid-template-rows: 15% 60% 25%;
-  width: 100%;
-  height: 48%;
-  min-height: 180px;
-  background: #313130;
-  overflow: hidden;
-  flex-shrink: 0;
-  border-radius: 3vw;
-}
-
-.pvp-card-top {
-  display: flex;
-  width: 100%;
-  background: #484d52;
-  min-height: 0;
-}
-
-.pvp-card-league {
-  width: auto;
-  aspect-ratio: 1 / 1;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  font-weight: 600;
-  font-size: calc(0.8 * 100%);
-  text-transform: uppercase;
-  flex-shrink: 0;
-}
-
-.pvp-card-name {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 0 clamp(8px, 2vw, 12px);
-  color: #FFFFFF;
-  font-size: clamp(10px, 2.5vw, 12px);
-  line-height: 1.3;
-  word-break: break-word;
-  overflow: hidden;
-  text-align: left;
-  height: 100%;
-}
-
-.pvp-card-middle {
-  display: flex;
-  width: 100%;
-  background: #2A2A2A;
-  min-height: 0;
-}
-
-.pvp-engage-button {
-  width: 80%;
-  height: 80%;
-  background: linear-gradient(180deg, #C9FFCE 0%, #3ad63d 100%);
-  border: none;
-  color: #000000;
-  font-size: clamp(10px, 2.2vw, 14px);
-  font-weight: 600;
-  cursor: pointer;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 5px;
-  transition: opacity 0.2s ease;
-  white-space: nowrap;
-  padding-right: 4%;
-}
-
-.pvp-engage-button.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background: #666D74;
-  pointer-events: none;
-}
-
-/* ===== АРЕНА ===== */
-.arena-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.95);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  backdrop-filter: blur(4px);
-}
-
-.arena-modal {
-  width: 100%;
-  height: 100vh;
-  background: #1C1D1F;
-  border: 2px solid #B20101;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  position: relative;
-}
-
-/* Октагон */
-.arena-octagon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 95%;
-  aspect-ratio: 1 / 1;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.octagon-image {
-  width: 100%;
-  height: 100%;
+.loading-logo {
+  width: min(30vw, 120px);
+  height: min(30vw, 120px);
+  margin-bottom: clamp(10px, 5vh, 20px);
   object-fit: contain;
+  border-radius: 10%;
 }
 
-.arena-modal.battle-loaded .arena-octagon {
-  width: auto;
-  height: 108%;
-  top: 53%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  aspect-ratio: 1 / 1;
-}
-
-.arena-modal.battle-loaded .octagon-image {
-  width: auto;
-  height: 100%;
-  object-fit: cover;
-}
-
-.arena-header {
-  display: flex;
-  height: 8%;
-  min-height: 40px;
-  background: #B20101;
-}
-
-.arena-header-left {
-  width: 70%;
-  height: 100%;
-  background: #666D74;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  padding: 0 8px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.arena-header-right {
-  width: 30%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.arena-surrender-button {
-  width: 90%;
-  height: 80%;
-  background: #B20101;
-  border: 1px solid #FFFFFF;
-  border-radius: 4px;
-  color: #FFFFFF;
-  font-size: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  text-transform: uppercase;
-}
-
-.arena-top {
-  display: flex;
-  flex-direction: column;
-  height: 38%;
-  min-height: 200px;
-}
-
-.arena-avatar-container {
-  display: flex;
-  width: 100%;
-  height: 39%;
-  min-height: 65px;
-}
-
-.arena-avatar-left {
-  width: 38%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding-left: 0%;
-  position: relative;
-}
-
-.arena-top .arena-avatar-left {
-  justify-content: flex-start;
-}
-
-.arena-bottom .arena-avatar-left {
-  justify-content: flex-end;
-}
-
-.arena-avatar-center {
-  width: 24%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.arena-avatar-right {
-  width: 38%;
-  height: 100%;
-}
-
-.arena-avatar {
-  aspect-ratio: 1 / 1;
-  height: 85%;
+.loading-progress-bar {
+  width: min(50vw, 200px);
+  height: 4px;
   background: #3D3D3B;
+  border: 1px solid #000000;
+  margin: clamp(10px, 5vh, 20px) 0 clamp(5px, 2vh, 10px);
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 1vw;
 }
 
-.arena-avatar img {
-  width: 100%;
+.loading-progress-fill {
   height: 100%;
-  object-fit: cover;
-}
-
-.arena-damage-display {
-  width: 90%;
-  height: 70%;
-  background: linear-gradient(90deg, rgba(28, 29, 31, 0.85) 0%, rgba(65, 65, 65, 0.85) 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0% 0 0% 0%;
-  position: relative;
-}
-
-.arena-damage-display .damage-username {
-  color: #FFFFFF;
-  font-size: clamp(10px, 2.5vw, 14px);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  align-self: flex-start;
-  padding-left: 8%;
-  width: 100%;
-}
-
-.arena-damage-display .damage-divider {
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, #959595 20%, #959595 80%, transparent 100%);
-  margin: 2px 0 4px 0;
-  opacity: 0.8;
-}
-
-.arena-damage-display .damage-label {
-  color: #FFFFFF;
-  font-size: clamp(8px, 2vw, 10px);
-  font-weight: 500;
-  opacity: 0.8;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 2px;
-  text-align: center;
-  width: 100%;
-}
-
-.arena-damage-display .damage-value {
-  color: #FFD966;
-  font-size: clamp(12px, 5vw, 30px);
-  font-weight: 700;
-  line-height: 1;
-  text-align: center;
-  width: 100%;
-}
-
-.arena-damage-display.rival-damage {
-  border-bottom: 1px solid #959595;
-  border-right: 1px solid #959595;
-  border-radius: 0 0 10px 0;
-  margin-top: 0;
-}
-
-.arena-damage-display.player-damage {
-  border-top: 1px solid #959595;
-  border-right: 1px solid #959595;
-  border-radius: 0 10px 0 0;
-  margin-bottom: 0;
-}
-
-.arena-rival-health {
-  height: 7%;
-  min-height: 15px;
-  padding: 2px 8px;
-  border-bottom: 1px solid #4A4A48;
-}
-
-.arena-health-bar {
-  height: 100%;
-  width: 100%;
-  background: #1C1D1F;
-  border: 1px solid #3D3D3B;
-  position: relative;
-  overflow: hidden;
-  border-radius: 1vw;
-}
-
-.arena-health-fill {
-  height: 100%;
-  background: linear-gradient(0deg, #800101 0%, #df0303 100%);
+  background: #B20101;
   transition: width 0.3s ease;
 }
 
-.arena-health-text {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+.loading-stage {
   color: #FFFFFF;
-  font-size: 10px;
-  font-weight: 600;
-  white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  z-index: 1;
+  font-size: clamp(10px, 3vw, 12px);
+  margin-bottom: 5px;
+  opacity: 0.8;
 }
 
-.arena-rival-fighters,
-.arena-player-fighters {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: clamp(2px, 0.5vw, 4px);
-  height: 54%;
-  min-height: 90px;
-  padding: 0 clamp(1%, 1vw, 2%);
-  flex-wrap: wrap;
+.loading-text {
+  color: #FFFFFF;
+  font-size: clamp(12px, 3.5vw, 14px);
 }
 
-.arena-fighter-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
+/* ===== СКЕЛЕТОНЫ ===== */
+.tournament-section.skeleton {
+  opacity: 0.7;
+}
+
+.skeleton-header {
+  padding: clamp(8px, 2vh, 12px) clamp(8px, 4vw, 16px);
   background: #313130;
-  overflow: visible;
-  width: 19%;
-  max-width: 19%;
-  height: 93%;
-  flex-shrink: 0;
-  border-radius: 1vw;
-  position: relative;
-  filter: drop-shadow(0 0 1% rgba(0, 0, 0, 0.6));
 }
 
-.fighter-card-inner {
-  width: 97%;
-  height: 90%;
-  background: #191a1f;
-  border-radius: 1vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  position: relative;
-}
-
-.fighter-icon-container {
-  width: 100%;
-  height: 75%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0% 0;
-}
-
-.fighter-style-icon {
-  width: 95%;
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-}
-
-.fighter-divider {
-  width: 100%;
-  height: 2%;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, currentColor 20%, currentColor 80%, rgba(255, 255, 255, 0) 100%);
-  opacity: 0.9;
-}
-
-.fighter-name-container {
-  width: 100%;
-  height: 23%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(6px, 1.8vw, 9px);
-  font-weight: 500;
-  color: #FFFFFF;
-  text-align: center;
-  padding: 2% 2%;
-  word-break: break-word;
-  line-height: 1.2;
-}
-
-.fighter-damage-block {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 50%;
-  height: 15%;
-  background: #3e3e3e;
-  border: 1px solid currentColor;
-  border-radius: 0 1vw 0 1vw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  font-size: clamp(10px, 2.5vw, 14px);
-  font-weight: 700;
-  color: #FFD966;
-  text-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
-}
-
-.arena-fighter-card[data-weight="Flyweight"] .fighter-damage-block { border-color: #00FFA3; }
-.arena-fighter-card[data-weight="Bantamweight"] .fighter-damage-block { border-color: #00E0FF; }
-.arena-fighter-card[data-weight="Featherweight"] .fighter-damage-block { border-color: #0075FF; }
-.arena-fighter-card[data-weight="Lightweight"] .fighter-damage-block { border-color: #AD00FF; }
-.arena-fighter-card[data-weight="Welterweight"] .fighter-damage-block { border-color: #FF00D6; }
-.arena-fighter-card[data-weight="Middleweight"] .fighter-damage-block { border-color: #FFD700; }
-.arena-fighter-card[data-weight="Light Heavyweight"] .fighter-damage-block { border-color: #FF5C00; }
-.arena-fighter-card[data-weight="Heavyweight"] .fighter-damage-block { border-color: #FF0000; }
-.arena-fighter-card[data-weight="Women's Strawweight"] .fighter-damage-block { border-color: #FF6B9D; }
-.arena-fighter-card[data-weight="Women's Flyweight"] .fighter-damage-block { border-color: #5EEAD4; }
-.arena-fighter-card[data-weight="Women's Bantamweight"] .fighter-damage-block { border-color: #818CF8; }
-.arena-fighter-card[data-weight="Catch Weight"] .fighter-damage-block { border-color: #94A3B8; }
-
-.arena-middle {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 1%;
-  height: 16%;
-  padding-left: 1%;
-  padding-right: 1%;
-}
-
-.arena-round-card {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  height: 100%;
-  min-width: 0;
-  width: 100%;
-  perspective: 1000px;
-  border-radius: 2vw;
-}
-
-.arena-round-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
-  border-radius: 2vw;
-}
-
-.arena-round-card.flipped .arena-round-card-inner {
-  transform: rotateY(180deg);
-}
-
-.arena-round-card-front {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #2A2A2A;
-  background-image: repeating-linear-gradient(45deg, #3D3D3B 0px, #3D3D3B 10px, #2A2A2A 10px, #2A2A2A 20px);
-  border-radius: 2vw;
-}
-
-.arena-round-card-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  backface-visibility: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: rotateY(180deg);
-  border-radius: 2vw;
-}
-
-.weight-card-inner {
-  width: 97%;
-  height: 90%;
-  background: #191a1f;
-  border-radius: 1.5vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  overflow: hidden;
-}
-
-.weight-card-icon-container {
-  width: 100%;
-  height: 75%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5% 0;
-}
-
-.weight-card-icon {
-  width: 80%;
-  height: auto;
-  max-height: 90%;
-  object-fit: contain;
-}
-
-.weight-card-divider {
-  width: 100%;
-  height: 2%;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, currentColor 20%, currentColor 80%, rgba(255, 255, 255, 0) 100%);
-  opacity: 0.9;
-}
-
-.weight-card-name {
-  width: 100%;
-  height: 23%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: clamp(5px, 1.5vw, 11px);
-  font-weight: 400;
-  color: #FFFFFF;
-  text-align: center;
-  padding: 2% 4%;
-  word-break: break-word;
-  line-height: 1.1;
-}
-
-.weight-card-flyweight { background-color: #00FFA3; }
-.weight-card-flyweight .weight-card-divider { color: #00FFA3; }
-.weight-card-bantamweight { background-color: #00E0FF; }
-.weight-card-bantamweight .weight-card-divider { color: #00E0FF; }
-.weight-card-featherweight { background-color: #0075FF; }
-.weight-card-featherweight .weight-card-divider { color: #0075FF; }
-.weight-card-lightweight { background-color: #AD00FF; }
-.weight-card-lightweight .weight-card-divider { color: #AD00FF; }
-.weight-card-welterweight { background-color: #FF00D6; }
-.weight-card-welterweight .weight-card-divider { color: #FF00D6; }
-.weight-card-middleweight { background-color: #FFD700; }
-.weight-card-middleweight .weight-card-divider { color: #FFD700; }
-.weight-card-light-heavyweight { background-color: #FF5C00; }
-.weight-card-light-heavyweight .weight-card-divider { color: #FF5C00; }
-.weight-card-heavyweight { background-color: #FF0000; }
-.weight-card-heavyweight .weight-card-divider { color: #FF0000; }
-.weight-card-womens-strawweight { background-color: #FF6B9D; }
-.weight-card-womens-strawweight .weight-card-divider { color: #FF6B9D; }
-.weight-card-womens-flyweight { background-color: #5EEAD4; }
-.weight-card-womens-flyweight .weight-card-divider { color: #5EEAD4; }
-.weight-card-womens-bantamweight { background-color: #818CF8; }
-.weight-card-womens-bantamweight .weight-card-divider { color: #818CF8; }
-.weight-card-catch-weight { background-color: #94A3B8; }
-.weight-card-catch-weight .weight-card-divider { color: #94A3B8; }
-
-.arena-bottom {
-  display: flex;
-  flex-direction: column;
-  height: 38%;
-  min-height: 200px;
-}
-
-.arena-player-fighters {
-  height: 54%;
-  min-height: 90px;
-}
-
-.arena-player-health {
-  height: 7%;
-  min-height: 15px;
-  padding: 2px 8px;
-  border-top: 1px solid #4A4A48;
-}
-
-/* Анимации */
-.battle-overlay-text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.skeleton-title {
+  height: 16px;
   width: 70%;
-  height: 16%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #3D3D3B;
+  margin-bottom: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+.skeleton-meta {
+  height: 12px;
+  width: 40%;
+  background: #3D3D3B;
+  animation: pulse 1.5s infinite;
+}
+
+.skeleton-message {
+  height: 40px;
+  width: 80%;
+  background: #2A2A2A;
+  margin: 16px auto;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* ===== ЭКРАН ОШИБКИ ===== */
+.error-screen {
+  text-align: center;
+  padding: clamp(20px, 10vh, 40px) clamp(10px, 5vw, 20px);
+  background: #2A2A2A;
+  border-radius: 8px;
+  margin: clamp(10px, 5vh, 20px);
+}
+
+.error-icon {
+  font-size: clamp(30px, 10vw, 40px);
+  margin-bottom: clamp(8px, 4vh, 16px);
+}
+
+.error-text {
+  color: #B20101;
+  margin-bottom: clamp(10px, 5vh, 20px);
+  font-size: clamp(12px, 3.5vw, 14px);
+}
+
+.retry-button {
+  background: #B20101;
+  border: none;
+  border-radius: 4px;
   color: #FFFFFF;
-  font-size: 32px;
-  font-weight: 700;
-  text-transform: uppercase;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-  z-index: 3000;
-  pointer-events: none;
-  animation: fadeInOut 1s ease-in-out;
+  padding: clamp(8px, 2vh, 10px) clamp(12px, 4vw, 20px);
+  font-size: clamp(12px, 3.5vw, 14px);
+  cursor: pointer;
 }
 
-@keyframes fadeInOut {
-  0% { opacity: 0; transform: translate(-50%, -30%); }
-  20% { opacity: 1; transform: translate(-50%, -50%); }
-  80% { opacity: 1; transform: translate(-50%, -50%); }
-  100% { opacity: 0; transform: translate(-50%, -70%); }
-}
+/* ===== МОДАЛЬНОЕ ОКНО НАГРАД (ОБНОВЛЕННОЕ) ===== */
 
-.damage-number {
-  position: absolute;
-  font-size: 24px;
-  font-weight: 800;
-  color: #FFD966;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 0, 0, 0.5);
-  z-index: 100;
-  pointer-events: none;
-  white-space: nowrap;
-  animation: floatDamage 1s ease-out forwards;
-}
-
-.damage-number.rival-damage { right: 10%; top: 30%; }
-.damage-number.player-damage { left: 10%; bottom: 30%; }
-
-@keyframes floatDamage {
-  0% { opacity: 0; transform: translateY(0) scale(0.5); }
-  20% { opacity: 1; transform: translateY(-20px) scale(1.5); }
-  50% { opacity: 0.8; transform: translateY(-40px) scale(1.2); }
-  80% { opacity: 0.4; transform: translateY(-60px) scale(0.8); }
-  100% { opacity: 0; transform: translateY(-80px) scale(0.5); }
-}
-
-.arena-health-bar.damage-flash {
-  animation: healthFlash 0.3s ease-out forwards;
-}
-
-@keyframes healthFlash {
-  0% { border-color: #3D3D3B; }
-  30% { border-color: #FF0000; box-shadow: 0 0 15px rgba(255, 0, 0, 0.8); }
-  70% { border-color: #FF5555; box-shadow: 0 0 5px rgba(255, 85, 85, 0.4); }
-  100% { border-color: #3D3D3B; }
-}
-
-.arena-modal.shake,
-.battle-result-modal-overlay.shake {
-  animation: screenShake 0.4s ease-out;
-}
-
-@keyframes screenShake {
-  0% { transform: translate(0, 0); }
-  10% { transform: translate(-5px, -5px); }
-  20% { transform: translate(5px, 5px); }
-  30% { transform: translate(-5px, 5px); }
-  40% { transform: translate(5px, -5px); }
-  50% { transform: translate(-3px, -3px); }
-  60% { transform: translate(3px, 3px); }
-  70% { transform: translate(-2px, -2px); }
-  80% { transform: translate(2px, 2px); }
-  90% { transform: translate(-1px, -1px); }
-  100% { transform: translate(0, 0); }
-}
-
-@keyframes avatarHit {
-  0% { transform: scale(1); }
-  30% { transform: scale(1.1); }
-  70% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.avatar-hit { animation: avatarHit 0.3s ease-out forwards; }
-
-@keyframes avatarGlow {
-  0% { filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0)); }
-  20% { filter: drop-shadow(0 0 20px var(--glow-color)); }
-  50% { filter: drop-shadow(0 0 15px var(--glow-color)); }
-  80% { filter: drop-shadow(0 0 8px var(--glow-color)); }
-  100% { filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0)); }
-}
-
-.avatar-glow { animation: avatarGlow 0.3s ease-out forwards; }
-
-.damage-value.damage-increase {
-  animation: damagePulse 0.5s ease-out forwards;
-  display: inline-block;
-  transform-origin: center;
-}
-
-@keyframes damagePulse {
-  0% { transform: scale(1); color: #FFD966; }
-  30% { transform: scale(1.4); color: #FFE55C; text-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
-  70% { transform: scale(1.2); color: #FFD966; }
-  100% { transform: scale(1); color: #FFD966; }
-}
-
-/* ===== МОДАЛЬНЫЕ ОКНА ===== */
 .rewards-modal-overlay {
   position: fixed;
   top: 0;
@@ -1955,6 +1130,7 @@ body {
   overflow: visible;
 }
 
+/* Заголовок RESULTS - выше верхней границы */
 .rewards-header {
   width: 100%;
   height: 10%;
@@ -1977,6 +1153,7 @@ body {
   text-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
 }
 
+/* Название турнира */
 .rewards-tournament-name {
   width: 100%;
   text-align: center;
@@ -1993,6 +1170,7 @@ body {
   text-overflow: ellipsis;
 }
 
+/* Список победителей */
 .rewards-winners-list {
   flex: 1;
   margin: 4% 6%;
@@ -2054,6 +1232,7 @@ body {
   letter-spacing: 1px;
 }
 
+/* Блок с наградами (монеты, билеты, EXP) */
 .rewards-summary {
   display: flex;
   justify-content: space-around;
@@ -2090,6 +1269,7 @@ body {
   color: #FFFFFF;
 }
 
+/* Кнопка CLAIM REWARDS (как в BattleResultModal) */
 .rewards-footer {
   width: 100%;
   height: 12%;
@@ -2116,50 +1296,1701 @@ body {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.cancelled-modal-close {
-  position: absolute;
-  top: 105%;
-  right: 3%;
-  background: #B20101;
-  border: 0.15vh solid #FFFFFF;
-  border-radius: 0.75vh;
+.rewards-claim-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.rewards-claim-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.rewards-claim-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Сообщение при отсутствии победителей */
+.rewards-no-winners {
+  color: #888 !important;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+  font-size: clamp(12px, 3.5vw, 14px);
+  margin: auto;
+}
+
+.rewards-winner-badge.win {
+  font-size: clamp(12px, 4vw, 16px);
+  font-weight: 700;
+  color: #FFD966;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.rewards-winner-badge.lose {
+  font-size: clamp(12px, 4vw, 16px);
+  font-weight: 700;
   color: #FFFFFF;
-  font-size: clamp(14px, 4vw, 18px);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+
+/* ===== МЕДИА-ЗАПРОСЫ ===== */
+@media (max-width: 280px) {
+  .tournament-card,
+  .tournament-card-container .tournament-card,
+  .tournament-card-wrapper .tournament-card {
+    max-width: 75px;
+  }
+  
+  .selected-fighter-card {
+    aspect-ratio: 1 / 1.4;
+  }
+  
+  .footer-total-damage {
+    font-size: 10px;
+  }
+  
+  .footer-close-button {
+    font-size: 9px;
+  }
+}
+
+@media (min-width: 376px) and (max-width: 480px) {
+  .app {
+    max-width: 100%;
+  }
+}
+
+/* ===== PvP ЭКРАН ===== */
+.pvp-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  flex: 1;
+  background: #1C1D1F;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.pvp-header {
+  background: #B20101;
+  padding: clamp(6px, 2vh, 10px) clamp(8px, 4vw, 16px);
+  margin: 0 0 clamp(4px, 1vh, 8px) 0;
+  flex-shrink: 0;
+}
+
+.pvp-header-title {
+  color: #FFFFFF;
+  font-size: clamp(12px, 3.5vw, 14px);
   font-weight: 600;
-  cursor: pointer;
-  width: 30px;
-  height: 30px;
+  text-transform: uppercase;
+}
+
+.pvp-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 2vh, 6px);
+  padding-top: 2%;
+  min-height: 0;
+  height: 100%;
+}
+
+/* КАРТОЧКА ТУРНИРА С GRID */
+.pvp-tournament-card {
+  display: grid;
+  grid-template-rows: 15% 60% 25%;
+  width: 100%;
+  height: 48%;
+  min-height: 180px;
+  background: #313130;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: 3vw;
+}
+
+/* ВЕРХНЯЯ ЧАСТЬ (15%) */
+.pvp-card-top {
+  display: flex;
+  width: 100%;
+  background: #484d52;
+  min-height: 0;
+}
+
+.pvp-card-league {
+  width: auto;
+  aspect-ratio: 1 / 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: calc(0.8 * 100%);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.pvp-card-name {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 clamp(8px, 2vw, 12px);
+  color: #FFFFFF;
+  font-size: clamp(10px, 2.5vw, 12px);
+  line-height: 1.3;
+  word-break: break-word;
+  overflow: hidden;
+  text-align: left;
+  height: 100%;
+}
+
+/* СРЕДНЯЯ ЧАСТЬ (60%) */
+.pvp-card-middle {
+  display: flex;
+  width: 100%;
+  background: #2A2A2A;
+  min-height: 0;
+}
+
+.pvp-middle-left {
+  width: 43%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /*justify-content: flex-start;*/
+  justify-content: center; /* Центрируем аватарку */
+  background: #313130;
+  padding: 4px 0;
+}
+
+.pvp-player-avatar,
+.pvp-rival-avatar {
+  width: 70%; /* Чуть больше, так как нет блока с уроном */
+  aspect-ratio: 1 / 1;
+  background: #3D3D3B;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10%;
+}
+
+.pvp-player-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pvp-middle-center {
+  width: 14%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #313130;
+  position: relative;
+  overflow: hidden;
+}
+
+.pvp-vs-logo {
+  width: 100%; /* Относительно родительского контейнера */
+  height: auto;
+  aspect-ratio: 1 / 1; /* Квадратные пропорции */
+  object-fit: contain;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+/* Создаём линию через псевдоэлемент */
+.pvp-middle-center::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top left, transparent 48%, #484d52 48%, #484d52 52%, transparent 52%);
+  pointer-events: none;
+   z-index: 0; /* Линия на заднем плане */
+}
+
+.pvp-vs-text {
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: clamp(14px, 4vw, 20px);
+  text-transform: uppercase;
+  transform: rotate(0deg);
+  white-space: nowrap;
+  line-height: 1;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.pvp-middle-right {
+  width: 43%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /*justify-content: flex-start;*/
+  justify-content: center; /* Центрируем аватарку */
+  background: #313130;
+  padding: 4px 0;
+}
+
+
+.pvp-rival-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+
+/* НИЖНЯЯ ЧАСТЬ (25%) - НОВАЯ СТРУКТУРА */
+.pvp-card-bottom {
+  display: flex;
+  width: 100%;
+  background: #484d52;
+  border-top: 1px solid #4A4A48;
+  min-height: 0;
+  /*padding: 0 2%;*/
+}
+
+/* Левая часть (43%) */
+.pvp-bottom-left {
+  width: 43%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.cancelled-message {
-  margin: 20px 16px;
-  padding: 16px;
+/* Блок с уроном */
+.pvp-damage-block {
+  width: 60%;
+  height: 80%;
+  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  font-size: calc(1.25 * 100%);
+  line-height: 1;
+  white-space: nowrap;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+.pvp-damage-block.disabled {
+  opacity: 0.5;
+  background: #666D74;
+}
+
+.pvp-damage-value {
+  margin-right: 4px;
+}
+
+.pvp-fist-icon {
+  font-size: 1.2em;
+  margin-left: 1px;
+}
+
+.pvp-damage-na {
+  font-size: clamp(10px, 2vw, 12px);
+  color: #000000;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 0 2px;
+}
+
+/* Правая часть (57%) */
+.pvp-bottom-right {
+  width: 57%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* Прижимаем к правому краю */
+}
+
+/* Новая кнопка ENTRY PASS */
+.pvp-engage-button {
+  width: 80%;
+  height: 80%;
+  background: linear-gradient(180deg, #C9FFCE 0%, #3ad63d 100%);
+  border: none;
+  color: #000000;
+  font-size: clamp(10px, 2.2vw, 14px);
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+  /*padding: 0 4px;*/
+  padding-right: 4%;
+}
+
+.pvp-engage-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #666D74;
+  pointer-events: none;
+}
+
+.pvp-cost-icon {
+  margin-left: 4px;
+  font-size: 1.1em;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.pvp-lock-icon {
+  margin-left: 4px;
+  font-size: 0.9em;
+  opacity: 0.7;
+}
+
+.pvp-engage-button.loading {
+  position: relative;
+  color: transparent;
+}
+
+.pvp-engage-button.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #000000;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* ===== АРЕНА МОДАЛЬНОЕ ОКНО ===== */
+.arena-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+/* Контейнер для арены с октагоном */
+/* ===== ОКТАГОН ДЛЯ АРЕНЫ ===== */
+
+.arena-modal {
+  width: 100%;
+  height: 100vh;
+  background: #1C1D1F;
+  border: 2px solid #B20101;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+
+
+/* Верхняя шапка (8%) */
+.arena-header {
+  display: flex;
+  height: 8%;
+  min-height: 40px;
+  background: #B20101;
+}
+
+.arena-header-left {
+  width: 70%;
+  height: 100%;
+  background: #666D74;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arena-header-right {
+  width: 30%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arena-surrender-button {
+  width: 90%;
+  height: 80%;
+  background: #B20101;
+  border: 1px solid #FFFFFF;
+  border-radius: 4px;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+/* Верхний контейнер (38%) - противник */
+.arena-top {
+  display: flex;
+  flex-direction: column;
+  height: 38%;
+  min-height: 200px;
+  /*background: #1C1D1F;*/
+ 
+}
+
+/* Контейнер для аватарки с тремя колонками */
+.arena-avatar-container {
+  display: flex;
+  width: 100%;
+  height: 39%;
+  min-height: 65px;
+ /* background: #1C1D1F;*/
+}
+
+/* Левая колонка (38%) - здесь будет DAMAGE у всех */
+.arena-avatar-left {
+  width: 38%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-left: 0%;
+  position: relative;
+}
+
+/* Противник (верх) - контейнер с прижатием к ВЕРХНЕМУ краю */
+.arena-top .arena-avatar-left {
+  justify-content: flex-start;
+}
+
+/* Игрок (низ) - контейнер с прижатием к НИЖНЕМУ краю */
+.arena-bottom .arena-avatar-left {
+  justify-content: flex-end;
+}
+
+/* Центральная колонка с аватаркой (24%) */
+.arena-avatar-center {
+  width: 24%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Правая колонка (38%) - пока пустая */
+.arena-avatar-right {
+  width: 38%;
+  height: 100%;
+}
+
+/* Контейнер для аватарки (квадратная) */
+.arena-avatar {
+  aspect-ratio: 1 / 1;
+  height: 85%;
+  background: #3D3D3B;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1vw;
+}
+
+.arena-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Блок DAMAGE - общие стили */
+.arena-damage-display {
+  width: 90%;
+  height: 70%;
+  background: linear-gradient(90deg, rgba(28, 29, 31, 0.85) 0%, rgba(65, 65, 65, 0.85) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0% 0 0% 0%;
+  position: relative;
+}
+
+/* Никнейм - выравнивание влево */
+.arena-damage-display .damage-username {
+  color: #FFFFFF;
+  font-size: clamp(10px, 2.5vw, 14px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  align-self: flex-start;
+  padding-left: 8%;
+  width: 100%;
+}
+
+/* Разделительная линия - на всю ширину */
+.arena-damage-display .damage-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #959595 20%,
+    #959595 80%,
+    transparent 100%
+  );
+  margin: 2px 0 4px 0;
+  opacity: 0.8;
+}
+
+/* DAMAGE label - центрирование */
+.arena-damage-display .damage-label {
+  color: #FFFFFF;
+  font-size: clamp(8px, 2vw, 10px);
+  font-weight: 500;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+  text-align: center;
+  width: 100%;
+}
+
+/* Значение урона - центрирование */
+.arena-damage-display .damage-value {
+  color: #FFD966;
+  font-size: clamp(12px, 5vw, 30px);
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  width: 100%;
+}
+
+/* Противник (верх) - прижат к верху, скруглен правый нижний */
+.arena-damage-display.rival-damage {
+  border-bottom: 1px solid #959595;
+  border-right: 1px solid #959595;
+  border-radius: 0 0 10px 0;
+  margin-top: 0;
+}
+
+/* Игрок (низ) - прижат к низу, скруглен правый верхний */
+.arena-damage-display.player-damage {
+  border-top: 1px solid #959595;
+  border-right: 1px solid #959595;
+  border-radius: 0 10px 0 0;
+  margin-bottom: 0;
+}
+
+/* Шкала здоровья противника (7% от верхнего контейнера) */
+.arena-rival-health {
+  height: 7%;
+  min-height: 15px;
+ /* background: #1C1D1F;*/
+  padding: 2px 8px;
+  border-bottom: 1px solid #4A4A48;
+ 
+}
+
+.arena-health-bar {
+  height: 100%;
+  width: 100%;
   background: #1C1D1F;
   border: 1px solid #3D3D3B;
-  border-radius: 8px;
-  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border-radius: 1vw;
 }
 
-.cancelled-message p {
+.arena-health-fill {
+  height: 100%;
+  background: linear-gradient(0deg, #800101 0%, #df0303 100%);
+  transition: width 0.3s ease;
+}
+
+.arena-health-text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+/* Карточки бойцов противника (54% от верхнего контейнера) */
+.arena-rival-fighters,
+.arena-player-fighters {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(2px, 0.5vw, 4px);
+  height: 54%;
+  min-height: 90px;
+  /*background: #1C1D1F;*/
+  padding: 0 clamp(1%, 1vw, 2%);
+  flex-wrap: wrap;
+}
+
+/* Основная карточка бойца */
+.arena-fighter-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: #313130;
+  overflow: visible;
+  width: 19%;
+  max-width: 19%;
+  height: 93%;
+  flex-shrink: 0;
+  border-radius: 1vw;
+  position: relative;
+  filter: drop-shadow(0 0 1% rgba(0, 0, 0, 0.6));
+}
+
+/* Внутренний контейнер карточки (фон #191a1f) */
+.fighter-card-inner {
+  width: 97%;
+  height: 90%;
+  background: #191a1f;
+  border-radius: 1vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+ /* margin-top: 4%;*/
+}
+
+/* Верхний контейнер для иконки стиля (75% высоты) */
+.fighter-icon-container {
+  width: 100%;
+  height: 75%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0% 0;
+}
+
+/* Иконка стиля бойца */
+.fighter-style-icon {
+  width: 95%;
+  aspect-ratio: 1 / 1;
+  /*max-height: 90%;*/
+  object-fit: contain;
+  /*filter: drop-shadow(0 0 0.5vw rgba(255, 215, 0, 0.5));*/
+  /*animation: iconPulse 2s ease-in-out infinite;*/
+}
+
+/* Средний контейнер - градиентная линия (2% высоты) */
+.fighter-divider {
+  width: 100%;
+  height: 2%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    currentColor 20%,
+    currentColor 80%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0.9;
+}
+
+/* Нижний контейнер для имени бойца (23% высоты) */
+.fighter-name-container {
+  width: 100%;
+  height: 23%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(6px, 1.8vw, 9px);
+  font-weight: 500;
+  color: #FFFFFF;
+  text-align: center;
+  padding: 2% 2%;
+  word-break: break-word;
+  line-height: 1.2;
+}
+
+/* Блок с уроном (правый верхний угол) */
+.fighter-damage-block {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50%;
+  height: 15%;
+  background: #3e3e3e;
+  border: 1px solid currentColor;
+  border-radius: 0 1vw 0 1vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  font-size: clamp(10px, 2.5vw, 14px);
+  font-weight: 700;
+  color: #FFD966;
+  text-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
+}
+
+/* Цветовые классы для обводки блока урона на арене */
+.arena-fighter-card[data-weight="Flyweight"] .fighter-damage-block {
+  border-color: #00FFA3;
+}
+.arena-fighter-card[data-weight="Bantamweight"] .fighter-damage-block {
+  border-color: #00E0FF;
+}
+.arena-fighter-card[data-weight="Featherweight"] .fighter-damage-block {
+  border-color: #0075FF;
+}
+.arena-fighter-card[data-weight="Lightweight"] .fighter-damage-block {
+  border-color: #AD00FF;
+}
+.arena-fighter-card[data-weight="Welterweight"] .fighter-damage-block {
+  border-color: #FF00D6;
+}
+.arena-fighter-card[data-weight="Middleweight"] .fighter-damage-block {
+  border-color: #FFD700;
+}
+.arena-fighter-card[data-weight="Light Heavyweight"] .fighter-damage-block {
+  border-color: #FF5C00;
+}
+.arena-fighter-card[data-weight="Heavyweight"] .fighter-damage-block {
+  border-color: #FF0000;
+}
+.arena-fighter-card[data-weight="Women's Strawweight"] .fighter-damage-block {
+  border-color: #FF6B9D;
+}
+.arena-fighter-card[data-weight="Women's Flyweight"] .fighter-damage-block {
+  border-color: #5EEAD4;
+}
+.arena-fighter-card[data-weight="Women's Bantamweight"] .fighter-damage-block {
+  border-color: #818CF8;
+}
+.arena-fighter-card[data-weight="Catch Weight"] .fighter-damage-block {
+  border-color: #94A3B8;
+}
+
+/* Цветовые классы для карточек бойцов (обводка блока урона) */
+.fighter-card[data-weight="Flyweight"] .fighter-damage-block {
+  border-color: #00FFA3;
+}
+.fighter-card[data-weight="Bantamweight"] .fighter-damage-block {
+  border-color: #00E0FF;
+}
+.fighter-card[data-weight="Featherweight"] .fighter-damage-block {
+  border-color: #0075FF;
+}
+.fighter-card[data-weight="Lightweight"] .fighter-damage-block {
+  border-color: #AD00FF;
+}
+.fighter-card[data-weight="Welterweight"] .fighter-damage-block {
+  border-color: #FF00D6;
+}
+.fighter-card[data-weight="Middleweight"] .fighter-damage-block {
+  border-color: #FFD700;
+}
+.fighter-card[data-weight="Light Heavyweight"] .fighter-damage-block {
+  border-color: #FF5C00;
+}
+.fighter-card[data-weight="Heavyweight"] .fighter-damage-block {
+  border-color: #FF0000;
+}
+.fighter-card[data-weight="Women's Strawweight"] .fighter-damage-block {
+  border-color: #FF6B9D;
+}
+.fighter-card[data-weight="Women's Flyweight"] .fighter-damage-block {
+  border-color: #5EEAD4;
+}
+.fighter-card[data-weight="Women's Bantamweight"] .fighter-damage-block {
+  border-color: #818CF8;
+}
+.fighter-card[data-weight="Catch Weight"] .fighter-damage-block {
+  border-color: #94A3B8;
+}
+
+.arena-fighter-avatar {
+  width: 95%;
+  aspect-ratio: 1 / 1;
+  background: #3D3D3B;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0;
+}
+
+.arena-fighter-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.arena-fighter-avatar span {
+  font-size: 16px;
+}
+
+.arena-fighter-name {
+  font-size: 8px;
+  color: #FFFFFF;
+  text-align: center;
+  padding: 2px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  width: 100%;
+  line-height: 1.3;
+  height: 2.6em;
+  word-break: break-word;
+}
+
+
+
+/* Средний контейнер (16%) - раунды */
+.arena-middle {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1%;
+  height: 16%;
+  /*background: #1C1D1F;*/
+  padding-left: 1%;
+  padding-right: 1%;
+}
+
+/* ===== НОВЫЕ СТИЛИ ДЛЯ КАРТОЧЕК ВЕСОВЫХ КАТЕГОРИЙ ===== */
+
+/* Основная карточка весовой категории для арены */
+.arena-round-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  min-width: 0;
+  width: 100%;
+  perspective: 1000px;
+  border-radius: 2vw;
+  /*filter: drop-shadow(0 0 1% rgba(0, 0, 0, 0.6));*/
+}
+
+/* Внутренний контейнер карточки */
+.arena-round-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+  border-radius: 2vw;
+}
+
+.arena-round-card.flipped .arena-round-card-inner {
+  transform: rotateY(180deg);
+}
+
+/* Лицевая сторона (рубашка) */
+.arena-round-card-front {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2A2A2A;
+  background-image: repeating-linear-gradient(45deg, #3D3D3B 0px, #3D3D3B 10px, #2A2A2A 10px, #2A2A2A 20px);
+  border-radius: 2vw;
+}
+
+.arena-round-card-front .arena-round-number {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+/* Задняя сторона (содержимое категории) */
+.arena-round-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotateY(180deg);
+  border-radius: 2vw;
+}
+
+/* Внутренний контейнер карточки (фон #191a1f) */
+.weight-card-inner {
+  width: 97%;
+  height: 90%;
+  background: #191a1f;
+  border-radius: 1.5vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+/* Верхний контейнер для иконки (75% высоты) */
+.weight-card-icon-container {
+  width: 100%;
+  height: 75%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5% 0;
+}
+
+/* Иконка весовой категории */
+.weight-card-icon {
+  width: 80%;
+  height: auto;
+  max-height: 90%;
+  object-fit: contain;
+  /*filter: drop-shadow(0 0 0.5vw rgba(255, 215, 0, 0.5));*/
+  /*animation: iconPulse 2s ease-in-out infinite;*/
+}
+
+@keyframes iconPulse {
+  0% {
+    filter: drop-shadow(0 0 0.3vw rgba(255, 215, 0, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 1vw rgba(255, 215, 0, 0.8));
+  }
+  100% {
+    filter: drop-shadow(0 0 0.3vw rgba(255, 215, 0, 0.3));
+  }
+}
+
+/* Средний контейнер - градиентная линия (2% высоты) */
+.weight-card-divider {
+  width: 100%;
+  height: 2%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    currentColor 20%,
+    currentColor 80%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0.9;
+}
+
+/* Нижний контейнер для названия категории (23% высоты) */
+.weight-card-name {
+  width: 100%;
+  height: 23%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(5px, 1.5vw, 11px);
+  font-weight: 400;
+  color: #FFFFFF;
+  /*text-transform: uppercase;*/
+  text-align: center;
+  padding: 2% 4%;
+  word-break: break-word;
+  line-height: 1.1;
+}
+
+/* Цветовые классы для карточек и линий */
+.weight-card-flyweight {
+  background-color: #00FFA3;
+}
+.weight-card-flyweight .weight-card-divider {
+  color: #00FFA3;
+}
+
+.weight-card-bantamweight {
+  background-color: #00E0FF;
+}
+.weight-card-bantamweight .weight-card-divider {
+  color: #00E0FF;
+}
+
+.weight-card-featherweight {
+  background-color: #0075FF;
+}
+.weight-card-featherweight .weight-card-divider {
+  color: #0075FF;
+}
+
+.weight-card-lightweight {
+  background-color: #AD00FF;
+}
+.weight-card-lightweight .weight-card-divider {
+  color: #AD00FF;
+}
+
+.weight-card-welterweight {
+  background-color: #FF00D6;
+}
+.weight-card-welterweight .weight-card-divider {
+  color: #FF00D6;
+}
+
+.weight-card-middleweight {
+  background-color: #FFD700;
+}
+.weight-card-middleweight .weight-card-divider {
+  color: #FFD700;
+}
+
+.weight-card-light-heavyweight {
+  background-color: #FF5C00;
+}
+.weight-card-light-heavyweight .weight-card-divider {
+  color: #FF5C00;
+}
+
+.weight-card-heavyweight {
+  background-color: #FF0000;
+}
+.weight-card-heavyweight .weight-card-divider {
+  color: #FF0000;
+}
+
+.weight-card-womens-strawweight {
+  background-color: #FF6B9D;
+}
+.weight-card-womens-strawweight .weight-card-divider {
+  color: #FF6B9D;
+}
+
+.weight-card-womens-flyweight {
+  background-color: #5EEAD4;
+}
+.weight-card-womens-flyweight .weight-card-divider {
+  color: #5EEAD4;
+}
+
+.weight-card-womens-bantamweight {
+  background-color: #818CF8;
+}
+.weight-card-womens-bantamweight .weight-card-divider {
+  color: #818CF8;
+}
+
+.weight-card-catch-weight {
+  background-color: #94A3B8;
+}
+.weight-card-catch-weight .weight-card-divider {
+  color: #94A3B8;
+}
+
+.arena-round-card:hover {
+  opacity: 0.9;
+}
+
+.arena-round-number {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+}
+
+.arena-round-digit {
+  color: #FFFFFF;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.arena-round-text {
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.arena-round-weight {
+  color: #FFFFFF;
+  font-size: 9px;
+  font-weight: 600;
+  text-align: center;
+  padding: 4px;
+  word-break: break-word;
+  white-space: normal;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Нижний контейнер (38%) - игрок */
+.arena-bottom {
+  display: flex;
+  flex-direction: column;
+  height: 38%;
+  min-height: 200px;
+  /*background: #1C1D1F;*/
+}
+
+/* Карточки бойцов игрока (53% от нижнего контейнера) */
+.arena-player-fighters {
+  height: 54%;
+  min-height: 90px;
+}
+
+/* Шкала здоровья игрока (7% от нижнего контейнера) */
+.arena-player-health {
+  height: 7%;
+  min-height: 15px;
+ /* background: #1C1D1F;*/
+  padding: 2px 8px;
+  border-top: 1px solid #4A4A48;
+}
+
+/* Адаптация для маленьких экранов */
+@media (max-width: 320px) {
+  .arena-damage-display .damage-username {
+    font-size: 8px;
+    margin-bottom: 1px;
+  }
+  
+  .arena-damage-display .damage-divider {
+    margin: 1px 0 2px 0;
+  }
+
+  .arena-fighter-damage {
+    font-size: 6px;
+  }
+  
+  .arena-fighter-name {
+    font-size: 5px;
+  }
+  
+  .arena-round-digit {
+    font-size: 16px;
+  }
+  
+  .arena-round-text {
+    font-size: 6px;
+  }
+  
+  .arena-round-weight {
+    font-size: 6px;
+  }
+
+  .arena-avatar-container {
+    min-height: 50px;
+  }
+  
+  .arena-damage-display .damage-label {
+    font-size: 6px;
+  }
+  
+  .arena-damage-display .damage-value {
+    font-size: 9px;
+  }
+}
+
+/* ===== БИТВА - ВСПЛЫВАЮЩИЕ НАДПИСИ ===== */
+.battle-overlay-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70%;
+  height: 16%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  z-index: 3000;
+  pointer-events: none;
+  animation: fadeInOut 1s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -30%); }
+  20% { opacity: 1; transform: translate(-50%, -50%); }
+  80% { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -70%); }
+}
+
+/* Пустая карта бойца */
+.arena-fighter-card.empty {
+  background: #2A2A2A;
+  /*border: 1px dashed #4A4A48;*/
+}
+
+.pvp-lock-icon {
+  margin-left: 4px;
+  font-size: 0.9em;
+  opacity: 0.7;
+}
+
+.pvp-card-engage.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #666D74;
+  pointer-events: none;
+}
+
+/* Анимация увеличения значения урона */
+@keyframes damagePulse {
+  0% {
+    transform: scale(1);
+    color: #FFD966;
+  }
+  30% {
+    transform: scale(1.4);
+    color: #FFE55C;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+  }
+  70% {
+    transform: scale(1.2);
+    color: #FFD966;
+  }
+  100% {
+    transform: scale(1);
+    color: #FFD966;
+  }
+}
+
+.damage-value.damage-increase {
+  animation: damagePulse 0.5s ease-out forwards;
+  display: inline-block;
+  transform-origin: center;
+}
+
+/* Добавим эффект для фона при увеличении */
+@keyframes backgroundFlash {
+  0% {
+    background: linear-gradient(90deg, #1C1D1F 0%, #414141 100%);
+  }
+  30% {
+    background: linear-gradient(90deg, #2A2A2A 0%, #5A5A5A 100%);
+  }
+  100% {
+    background: linear-gradient(90deg, #1C1D1F 0%, #414141 100%);
+  }
+}
+
+.arena-damage-display.flash {
+  animation: backgroundFlash 0.5s ease-out;
+}
+
+/* Адаптация для маленьких экранов */
+@media (max-width: 320px) {
+  @keyframes damagePulse {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.3); }
+    70% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+}
+
+/* ===== АНИМАЦИЯ УРОНА ===== */
+
+/* Контейнер для эффектов урона */
+.damage-effect-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Базовый класс для анимации урона */
+.damage-taken {
+  animation: damageFlash 0.3s ease-out forwards;
+}
+
+@keyframes damageFlash {
+  0% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 0, 0, 0));
+  }
+  20% {
+    filter: brightness(1.5) drop-shadow(0 0 15px rgba(255, 0, 0, 0.9));
+    background-color: rgba(255, 0, 0, 0.3);
+  }
+  50% {
+    filter: brightness(1.2) drop-shadow(0 0 8px rgba(255, 0, 0, 0.5));
+    background-color: rgba(255, 0, 0, 0.1);
+  }
+  100% {
+    filter: brightness(1) drop-shadow(0 0 0 rgba(255, 0, 0, 0));
+    background-color: transparent;
+  }
+}
+
+/* Красное свечение для аватарки при получении урона */
+.arena-avatar.damage-taken {
+  animation: avatarDamage 0.3s ease-out forwards;
+}
+
+@keyframes avatarDamage {
+  0% {
+    transform: scale(1);
+    border-color: #B20101;
+    box-shadow: 0 0 0 rgba(178, 1, 1, 0);
+  }
+  25% {
+    transform: scale(0.95);
+    border-color: #FF0000;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+  }
+  50% {
+    transform: scale(0.98);
+    border-color: #FF5555;
+    box-shadow: 0 0 10px rgba(255, 85, 85, 0.5);
+  }
+  100% {
+    transform: scale(1);
+    border-color: #B20101;
+    box-shadow: 0 0 0 rgba(178, 1, 1, 0);
+  }
+}
+
+/* "Всплывающее" число урона */
+.damage-number {
+  position: absolute;
+  font-size: 24px;
+  font-weight: 800;
+  color: #FFD966;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 0, 0, 0.5);
+  z-index: 100;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: floatDamage 1s ease-out forwards;
+}
+
+/* Для урона по противнику (появляется справа) */
+.damage-number.rival-damage {
+  right: 10%;
+  top: 30%;
+}
+
+/* Для урона по игроку (появляется слева) */
+.damage-number.player-damage {
+  left: 10%;
+  bottom: 30%;
+}
+
+@keyframes floatDamage {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1.5);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-40px) scale(1.2);
+  }
+  80% {
+    opacity: 0.4;
+    transform: translateY(-60px) scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-80px) scale(0.5);
+  }
+}
+
+/* Красная вспышка на шкале здоровья */
+.arena-health-bar.damage-flash {
+  animation: healthFlash 0.3s ease-out forwards;
+}
+
+@keyframes healthFlash {
+  0% {
+    border-color: #3D3D3B;
+  }
+  30% {
+    border-color: #FF0000;
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+  }
+  70% {
+    border-color: #FF5555;
+    box-shadow: 0 0 5px rgba(255, 85, 85, 0.4);
+  }
+  100% {
+    border-color: #3D3D3B;
+  }
+}
+
+/* Тряска экрана для крит-урона */
+@keyframes screenShake {
+  0% { transform: translate(0, 0); }
+  10% { transform: translate(-5px, -5px); }
+  20% { transform: translate(5px, 5px); }
+  30% { transform: translate(-5px, 5px); }
+  40% { transform: translate(5px, -5px); }
+  50% { transform: translate(-3px, -3px); }
+  60% { transform: translate(3px, 3px); }
+  70% { transform: translate(-2px, -2px); }
+  80% { transform: translate(2px, 2px); }
+  90% { transform: translate(-1px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+
+.arena-modal.shake,
+.battle-result-modal-overlay.shake {
+  animation: screenShake 0.4s ease-out;
+}
+
+/* Пульсация иконки кулака */
+.fist-impact {
+  position: absolute;
+  font-size: 40px;
+  animation: fistPunch 0.3s ease-out forwards;
+  z-index: 100;
+  pointer-events: none;
+}
+
+@keyframes fistPunch {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-20deg);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.5) rotate(10deg);
+  }
+  60% {
+    opacity: 0.8;
+    transform: scale(1.2) rotate(-5deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Анимация для атакующей карты */
+@keyframes cardAttack {
+  0% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+  30% {
+    transform: translateY(-10px) scale(1.1);
+    filter: brightness(1.3);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  }
+  70% {
+    transform: translateY(5px) scale(1.05);
+    filter: brightness(1.2);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+}
+
+.arena-fighter-card.card-attacking {
+  animation: cardAttack 0.3s ease-out forwards;
+  z-index: 10;
+  position: relative;
+}
+
+/* ===== ОКТАГОН КАК ИЗОБРАЖЕНИЕ ===== */
+
+/* Контейнер для октагона - режим загрузки */
+.arena-octagon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 95%;
+  aspect-ratio: 1 / 1;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Изображение октагона - режим загрузки */
+.octagon-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Режим боя - меняем размеры (когда загрузка закончена) */
+.arena-modal.battle-loaded .arena-octagon {
+  width: auto;
+  height: 108%;
+  top: 53%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  aspect-ratio: 1 / 1;
+}
+
+.arena-modal.battle-loaded .octagon-image {
+  width: auto;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Все содержимое арены поверх октагона */
+.arena-header,
+.arena-top,
+.arena-middle,
+.arena-bottom,
+.arena-loading {
+  position: relative;
+  z-index: 1;
+}
+
+/* Адаптация для маленьких экранов */
+@media (max-width: 320px) {
+  .arena-octagon {
+    width: 92%;
+  }
+  .arena-modal.battle-loaded .arena-octagon {
+    width: auto;
+    height: 108%;
+  }
+}
+
+@media (max-width: 280px) {
+  .arena-octagon {
+    width: 90%;
+  }
+  .arena-modal.battle-loaded .arena-octagon {
+    width: auto;
+    height: 108%;
+  }
+}
+
+/* ===== НОВЫЕ ЭФФЕКТЫ УДАРА ===== */
+
+/* Анимация увеличения/сжатия аватарки */
+@keyframes avatarHit {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.avatar-hit {
+  animation: avatarHit 0.3s ease-out forwards;
+}
+
+/* Эффект свечения аватарки (цвет задается через CSS переменную) */
+@keyframes avatarGlow {
+  0% {
+    filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+  }
+  20% {
+    filter: drop-shadow(0 0 20px var(--glow-color));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px var(--glow-color));
+  }
+  80% {
+    filter: drop-shadow(0 0 8px var(--glow-color));
+  }
+  100% {
+    filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0));
+  }
+}
+
+.avatar-glow {
+  animation: avatarGlow 0.3s ease-out forwards;
+}
+
+/* ===== ВАЛЮТЫ В ПРОФИЛЕ ===== */
+
+.profile-currencies {
+  display: flex;
+  gap: 5%;
+  margin-top: 2%;
+  justify-content: flex-end;
+}
+
+.currency-item {
+  display: flex;
+  align-items: center;
+  gap: 2%;
+}
+
+.currency-icon {
+  width: auto;
+  height: 1em;  /* Высота иконки равна высоте текста */
+  object-fit: contain;
+}
+
+.currency-value {
   font-size: clamp(12px, 3.5vw, 14px);
-  margin-bottom: 8px;
-  line-height: 1.4;
-}
-
-.rewards-modal.no-summary {
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.rewards-modal.no-summary .rewards-summary {
-  display: none !important;
+  color: #FFFFFF;
+  font-weight: 500;
 }
 
 /* ===== МОДАЛЬНОЕ ОКНО СТАВКИ ===== */
+
 .bet-modal-overlay {
   position: fixed;
   top: 0;
@@ -2223,6 +3054,8 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0 5%;
+  border-top: 0.15vh solid rgba(255, 255, 255, 0.3);
+  
   background: #1c1d1f;
 }
 
@@ -2294,6 +3127,8 @@ body {
   justify-content: center;
   background: #1c1d1f;
   border-top: 0.15vh solid rgba(255, 255, 255, 0.3);
+  /*POINT*/
+
 }
 
 .bet-confirm-button {
@@ -2317,25 +3152,47 @@ body {
   object-fit: contain;
 }
 
-.bet-rake-info {
+/* ===== ВСПЛЫВАЮЩАЯ НАДПИСЬ В КОНТЕЙНЕРЕ БУДУЩИХ ТУРНИРОВ ===== */
+
+.upcoming-overlay-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  height: 16%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  margin: 8px auto 0;
-  padding: 4px 8px;
-  background: rgba(0, 0, 0, 0.3);
-  font-size: clamp(10px, 2.5vw, 12px);
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 700;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  z-index: 100;
+  pointer-events: none;
+  animation: fadeInOut 1s ease-in-out;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 1vw;
+  white-space: nowrap;
 }
 
-.bet-rake-info span:first-child { color: #FFD966; }
-.bet-rake-info span:last-child {
-  color: #FFFFFF;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+/* Анимация увеличения значения суммы ставки */
+@keyframes betAmountPulse {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.3);
+    color: #FFD700;
+  }
+  70% {
+    transform: scale(1.1);
+    color: #FFD700;
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .bet-amount-value {
@@ -2347,126 +3204,356 @@ body {
   animation: betAmountPulse 0.4s ease-out forwards;
 }
 
-@keyframes betAmountPulse {
-  0% { transform: scale(1); }
-  30% { transform: scale(1.3); color: #FFD700; }
-  70% { transform: scale(1.1); color: #FFD700; }
-  100% { transform: scale(1); }
+/* ===== НОВОЕ МОДАЛЬНОЕ ОКНО РЕЗУЛЬТАТА БОЯ ===== */
+
+.battle-result-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4000;
+  backdrop-filter: blur(4px);
 }
 
-/* ===== КНОПКИ ===== */
-.fighters-check-button {
-  background: linear-gradient(180deg, #5b5b5b 0%, #302f30 100%);
+.battle-result-modal {
+  width: 85%;
+  height: 60%;
+  background: #1c1e1c;
+  border-radius: 5%;
   border: 0.15vh solid #666d75;
-  border-radius: 2vh;
-  color: #FFFFFF;
-  font-size: clamp(8px, 2.5vw, 10px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: visible;
+}
+
+.battle-result-header {
+  width: 100%;
+  height: 10%;
+  /*background: #1c1e1c;
+  border: 0.15vh solid #666d75;
+  border-radius: 5%;*/
+  position: absolute;
+  top: -12%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.battle-result-header h2 {
+  font-size: clamp(14px, 6vw, 27px);
   font-weight: 700;
-  text-shadow: 0 0 2px #000000;
-  cursor: pointer;
   text-transform: uppercase;
-  padding: 1.2vh 2vw;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: center;
+  letter-spacing: 1px;
 }
 
-.fighters-check-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-.fighter-bet-value {
+.battle-result-round {
+  width: 100%;
+  height: 5%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  font-size: clamp(8px, 2vw, 10px);
-  font-weight: 600;
+  margin-top: 6%;
+}
+
+.battle-result-round span {
   color: #FFFFFF;
-  background: transparent;
+  font-size: clamp(10px, 3vw, 12px);
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.tournament-stats-text {
-  color: #FFFFFF;
-  font-size: clamp(8px, 3.0vw, 10px);
-  font-weight: 600;
+.battle-result-avatars {
+  width: 100%;
+  height: 25%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  background: transparent;
+  margin-top: 6%;
 }
 
-.tournament-stats-text span { color: #FFD966; }
-
-.fighter-bet-above {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  margin-bottom: 4px;
-  font-size: clamp(10px, 2.5vw, 12px);
-  font-weight: 600;
-  color: #FFD966;
-}
-
-/* ===== ЗАГРУЗОЧНЫЙ ЭКРАН ===== */
-.loading-screen {
+.battle-result-avatar-left,
+.battle-result-avatar-right {
+  width: 40%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  background: #1C1D1F;
+  position: relative;
 }
 
-.loading-logo {
-  width: min(30vw, 120px);
-  height: min(30vw, 120px);
-  margin-bottom: clamp(10px, 5vh, 20px);
-  object-fit: contain;
+.battle-result-avatar-center {
+  width: 20%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.battle-result-avatar-img {
+  width: 80%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
   border-radius: 10%;
+  background: #3D3D3B;
+  border: 0.5vh solid #000000;
 }
 
-.loading-progress-bar {
-  width: min(50vw, 200px);
-  height: 4px;
-  background: #3D3D3B;
-  border: 1px solid #000000;
-  margin: clamp(10px, 5vh, 20px) 0 clamp(5px, 2vh, 10px);
+.battle-result-vs-logo {
+  width: 66%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+}
+
+.battle-result-avatar-name {
+  font-size: clamp(8px, 2.5vw, 10px);
+  color: #FFFFFF;
+  text-align: center;
+  margin-top: 4%;
+  text-shadow: 0 0 2px #000000;
+}
+
+.battle-result-coin-icon {
+  width: auto;
+  height: 1.5em;
+  object-fit: contain;
+}
+
+.battle-result-footer {
+  width: 100%;
+  height: 15%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  bottom: -7.5%;
+  left: 0;
+}
+
+.battle-result-button {
+  width: 60%;
+  height: 80%;
+  background: linear-gradient(180deg, #5b5b5b 0%, #302f30 100%);
+  border: 0.15vh solid #666d75;
+  border-radius: 2vh;
+  color: #FFFFFF;
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 700;
+  text-shadow: 0 0 2px #000000;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.battle-result-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* ===== ОБНОВЛЕННОЕ ОКНО РЕЗУЛЬТАТА БОЯ ===== */
+
+/* Контейнер с наградами (как в окне наград за турнир) */
+.battle-result-rewards-summary {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 4% 6%;
+  background: #313130;
+  border: 1px solid #4A4A48;
+  border-radius: 8px;
+}
+
+.battle-result-rewards-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.battle-result-rewards-icon {
+  width: auto;
+  height: 1.2em;
+  object-fit: contain;
+}
+
+.battle-result-rewards-label {
+  font-size: clamp(12px, 3.5vw, 14px);
+  font-weight: 600;
+  color: #FFD966;
+  text-transform: uppercase;
+}
+
+.battle-result-rewards-value {
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+/* Контейнер со ставкой и коэффициентом */
+.battle-result-bet-coef-container {
+  margin: 6% 6%;
+  background: #1C1D1F;
+  border: 1px solid #3D3D3B;
+  border-radius: 8px;
   overflow: hidden;
 }
 
-.loading-progress-fill {
-  height: 100%;
-  background: #B20101;
-  transition: width 0.3s ease;
+.battle-result-bet-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid #3D3D3B;
+  margin: 0 16px;
 }
 
-.error-screen {
-  text-align: center;
-  padding: clamp(20px, 10vh, 40px) clamp(10px, 5vw, 20px);
-  background: #2A2A2A;
-  border-radius: 8px;
-  margin: clamp(10px, 5vh, 20px);
+.battle-result-coef-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  margin: 0 16px;
 }
 
-.error-text {
-  color: #B20101;
-  margin-bottom: clamp(10px, 5vh, 20px);
+.battle-result-bet-label {
   font-size: clamp(12px, 3.5vw, 14px);
-}
-
-.retry-button {
-  background: #B20101;
-  border: none;
-  border-radius: 4px;
+  font-weight: 500;
   color: #FFFFFF;
-  padding: clamp(8px, 2vh, 10px) clamp(12px, 4vw, 20px);
-  font-size: clamp(12px, 3.5vw, 14px);
-  cursor: pointer;
+  opacity: 0.8;
+  text-transform: uppercase;
 }
 
-/* ===== ОРИЕНТАЦИЯ ===== */
+.battle-result-bet-value-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.battle-result-bet-value {
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.battle-result-bet-icon {
+  width: auto;
+  height: 1.2em;
+  object-fit: contain;
+}
+
+.battle-result-coef-label {
+  font-size: clamp(12px, 3.5vw, 14px);
+  font-weight: 500;
+  color: #FFFFFF;
+  opacity: 0.8;
+  text-transform: uppercase;
+}
+
+.battle-result-coef-value {
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: 700;
+  color: #d66ff0;
+  text-transform: uppercase;
+}
+
+/* ===== ОБВОДКА АВАТАРОК ПОБЕДИТЕЛЯ/ПРОИГРАВШЕГО ===== */
+
+.battle-result-avatar-wrapper {
+  position: relative;
+  width: 80%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Подложка-обводка победителя */
+.battle-result-avatar-wrapper.avatar-winner {
+  background: linear-gradient(180deg, #f0d929 0%, #c8b727 100%);
+  border-radius: 10%;
+  padding: 6%;
+}
+
+/* Подложка-обводка проигравшего */
+.battle-result-avatar-wrapper.avatar-loser {
+  background: linear-gradient(180deg, #abacad 0%, #616264 100%);
+  border-radius: 10%;
+  padding: 2%;
+}
+
+.battle-result-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10%;
+  background: #3D3D3B;
+  display: block;
+}
+
+/* ===== СПИННЕР ЗАГРУЗКИ АРЕНЫ ===== */
+
+.arena-loading {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1vh;
+  color: #FFFFFF;
+  z-index: 1;
+  position: relative;
+}
+
+.arena-loading-spinner {
+  width: 5vh;
+  height: 5vh;
+  border: 0.4vh solid #3D3D3B;
+  border-top-color: #B20101;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.arena-loading-text {
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-top: 75%;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Запрет поворота экрана */
+@media screen and (orientation: landscape) {
+  .app {
+    transform: rotate(0deg);
+    width: 100%;
+    height: 100%;
+  }
+  
+  body {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* ===== ОВЕРЛЕЙ ПРИ ПОВОРОТЕ ЭКРАНА ==== */
+
 .orientation-overlay {
   position: fixed;
   top: 0;
@@ -2498,21 +3585,590 @@ body {
 }
 
 @keyframes rotateHint {
-  0% { transform: rotate(0deg); }
-  50% { transform: rotate(90deg); }
-  100% { transform: rotate(0deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(90deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+/* ===== КОНТЕЙНЕР С СОВЕТОМ НА ЭКРАНЕ ЗАГРУЗКИ АРЕНЫ ===== */
+.arena-loading-tip-container {
+  width: 90%;
+  height: 25%;
+  border-radius: 4vh;
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  margin-bottom: 2%;
+  padding: 0 2%;
 }
 
-/* ===== МЕДИА-ЗАПРОСЫ ===== */
-@media (max-width: 280px) {
-  .tournament-card,
-  .tournament-card-wrapper .tournament-card { max-width: 75px; }
-  .selected-fighter-card { aspect-ratio: 1 / 1.4; }
+.arena-loading-tip {
+  color: #FFD966;
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.4;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  word-break: break-word;
+  max-width: 100%;
+  animation: tipFadeIn 0.5s ease-out;
 }
 
-@media (min-width: 376px) and (max-width: 480px) { .app { max-width: 100%; } }
+@keyframes tipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-@media screen and (orientation: landscape) {
-  .app { transform: rotate(0deg); width: 100%; height: 100%; }
-  body { position: fixed; width: 100%; height: 100%; }
+/* Спиннер обновления на карточке турнира */
+.tournament-card-wrapper {
+  position: relative;
+}
+
+.tournament-updating-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.tournament-updating-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #3D3D3B;
+  border-top-color: #B20101;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.tournament-card.updating {
+  cursor: not-allowed;
+}
+
+.rewards-winner-badge.draw {
+  font-size: clamp(12px, 4vw, 16px);
+  font-weight: 700;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+}
+.cancelled-modal-close {
+  position: absolute;
+  top: 105%;
+  right: 3%;
+  background: #B20101;
+  border: 0.15vh solid #FFFFFF;
+  border-radius: 0.75vh;
+  color: #FFFFFF;
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: 600;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cancelled-message {
+  margin: 20px 16px;
+  padding: 16px;
+  background: #1C1D1F;
+  border: 1px solid #3D3D3B;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.cancelled-message p {
+  color: #FFFFFF;
+  font-size: clamp(12px, 3.5vw, 14px);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.cancelled-message p:last-child {
+  margin-bottom: 0;
+}
+
+.profile-notifications {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.notifications-button {
+  position: relative;
+  width: clamp(32px, 8vw, 40px);
+  height: clamp(32px, 8vw, 40px);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notifications-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /*filter: brightness(0) invert(1);*/
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.notifications-button.has-notifications img {
+  opacity: 1;
+  /*filter: brightness(0) invert(1) drop-shadow(0 0 2px #FFD966);*/
+}
+
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  background: #B20101;
+  border-radius: 50%;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.notification-item {
+  transition: background 0.2s;
+}
+
+.notification-item:hover {
+  background: #3D3D3B;
+}
+
+.rewards-modal.no-summary .rewards-summary {
+  display: none;
+}
+
+
+.rewards-modal.no-summary {
+ /* grid-template-rows: auto 1fr !important; /* если используется grid */
+  /* или */
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.rewards-modal.no-summary .rewards-summary {
+  display: none !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+/* ===== РЕЙК В ОКНЕ СТАВКИ ===== */
+.bet-rake-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 8px auto 0;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.3);
+ /* border-radius: 4px;*/
+  font-size: clamp(10px, 2.5vw, 12px);
+}
+
+.bet-rake-info span:first-child {
+  color: #FFD966;
+}
+
+.bet-rake-info span:last-child {
+  color: #FFFFFF;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Кнопка CHECK FIGHTERS (как CLAIM REWARDS) */
+.fighters-check-button {
+  background: linear-gradient(180deg, #5b5b5b 0%, #302f30 100%);
+  border: 0.15vh solid #666d75;
+  border-radius: 2vh;
+  color: #FFFFFF;
+  font-size: clamp(8px, 2.5vw, 10px);
+  font-weight: 700;
+  text-shadow: 0 0 2px #000000;
+  cursor: pointer;
+  text-transform: uppercase;
+  padding: 1.2vh 2vw;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fighters-check-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.fighters-check-button:active {
+  transform: translateY(0);
+}
+
+/* Новая нижняя панель для активного турнира с двумя кнопками */
+.tournament-footer-double {
+  display: flex;
+  width: calc(100% - clamp(16px, 8vw, 32px));
+  margin: 0 clamp(4px, 2vw, 10px);
+  gap: clamp(4px, 2vw, 8px);
+  align-items: stretch;
+  height: 25%;
+  /*min-height: 30px;
+  max-height: 70px;*/
+  flex-shrink: 0;
+  padding-top: 3%;
+  box-sizing: border-box;
+}
+
+.footer-damage-button {
+  flex: 1;
+  width: 42%;
+  height: 100%;
+  background: linear-gradient(180deg, #FFF2CC 0%, #FFD966 100%);
+  border: none;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  padding: 0 clamp(4px, 1vw, 8px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.2s ease;
+}
+
+.footer-damage-button.active {
+  background: linear-gradient(180deg, #FFD966 0%, #E6B800 100%);
+  border: 2px solid #B29403;
+  box-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
+}
+
+.footer-damage-button.inactive {
+  opacity: 0.6;
+}
+
+.footer-close-icon {
+  /*aspect-ratio: 1/1;*/
+  height: 100%;
+  width: 16%;
+  background: #B20101;
+  border: 1px solid #FFFFFF;
+  border-radius: 4px;
+  color: #FFFFFF;
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.footer-close-icon:hover {
+  background: #8B0000;
+}
+
+/* Стиль для "Bet:" надписи на карточке бойца в грядущих турнирах */
+.fighter-bet-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: clamp(8px, 2vw, 10px);
+  font-weight: 600;
+  color: #FFFFFF;
+  background: transparent;
+}
+
+/* Стиль для "Base: / PvP:" надписи на карточке активного турнира (до выбора) */
+.tournament-stats-text {
+  color: #FFFFFF;
+  font-size: clamp(8px, 3.0vw, 10px);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: transparent;
+}
+
+.tournament-stats-text span {
+
+  color: #FFD966;
+}
+
+.tournament-stats-text span::after {
+  content: "";
+  margin-right: 0;
+}
+
+.fighter-bet-above {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  font-size: clamp(10px, 2.5vw, 12px);
+  font-weight: 600;
+  color: #FFD966;
+}
+
+/* Стиль для блока BET как у активной кнопки */
+.footer-bet-active {
+  flex: 7;
+  height: 100%;
+  background: linear-gradient(180deg, #FFD966 0%, #E6B800 100%);
+  border: 2px solid #B29403;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0 clamp(4px, 1vw, 8px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== ЛИДЕРБОРД НОВЫЕ СТИЛИ ===== */
+.leaderboard-screen {
+  background: #1C1D1F;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(8px, 2vh, 16px);
+  width: 100%;
+  gap: clamp(8px, 1.5vh, 12px);
+}
+
+.leaderboard-league-buttons {
+  display: flex;
+  gap: clamp(4px, 1vw, 8px);
+  height: 6%;
+  min-height: 35px;
+}
+
+.leaderboard-league-btn {
+  flex: 1;
+  background: linear-gradient(180deg, #5b5b5b 0%, #302f30 100%);
+  border: 0.15vh solid #666d75;
+  border-radius: 2vh;
+  color: #FFFFFF;
+  font-size: clamp(10px, 2.5vw, 14px);
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.leaderboard-league-btn.active {
+  background: linear-gradient(180deg, #FFD966 0%, #E6B800 100%);
+  border: 2px solid #B29403;
+  color: #000000;
+  box-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
+}
+
+.leaderboard-league-btn.inactive {
+  opacity: 0.6;
+}
+
+.leaderboard-league-btn:disabled {
+  cursor: not-allowed;
+}
+
+.leaderboard-tournament-name {
+  height: 6%;
+  min-height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #313130;
+  border-radius: 2vh;
+  color: #FFD966;
+  font-size: clamp(12px, 3.5vw, 16px);
+  font-weight: 600;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0 clamp(8px, 2vw, 16px);
+  word-break: break-word;
+}
+
+/*.leaderboard-tier-buttons {
+  display: flex;
+  gap: clamp(4px, 1vw, 8px);
+  height: 6%;
+  min-height: 35px;
+}*/
+
+.leaderboard-tier-btn {
+  flex: 1;
+  background: linear-gradient(180deg, #5b5b5b 0%, #302f30 100%);
+  border: 0.15vh solid #666d75;
+  border-radius: 2vh;
+  color: #FFFFFF;
+  font-size: clamp(9px, 2vw, 12px);
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.leaderboard-tier-btn.active {
+  background: linear-gradient(180deg, #FFD966 0%, #E6B800 100%);
+  border: 2px solid #B29403;
+  color: #000000;
+  box-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
+}
+
+.leaderboard-tier-btn.inactive {
+  opacity: 0.6;
+}
+
+/* ===== ВЫБОР ТУРНИРА (ДРОПДАУН) ===== */
+.leaderboard-tournament-selector {
+  position: relative;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.leaderboard-tournament-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(8px, 1.5vh, 12px) clamp(12px, 2vw, 16px);
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  min-height: 45px;
+  border-radius: 0;
+}
+
+.leaderboard-tournament-header:hover {
+  opacity: 0.9;
+}
+
+.leaderboard-tournament-header-text {
+  color: #FFFFFF;
+  font-size: clamp(12px, 3.5vw, 14px);
+  font-weight: 600;
+  word-break: break-word;
+  flex: 1;
+  text-align: left;
+}
+
+.leaderboard-dropdown-arrow {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.leaderboard-dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Выпадающий список */
+.leaderboard-dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #1C1D1F;
+  border: 1px solid #3D3D3B;
+  border-top: none;
+  z-index: 1000;
+  max-height: 60vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Кнопки тиров (вкладки) */
+.leaderboard-tier-buttons {
+  display: flex;
+  gap: 0;
+  height: auto;
+  min-height: 35px;
+  border-top: none;
+}
+
+.leaderboard-tier-btn {
+  flex: 1;
+  background: linear-gradient(180deg, #5b5b5b 0%, #302f30 100%);
+  border: 0.15vh solid #666d75;
+  border-top: none;
+  color: #FFFFFF;
+  font-size: clamp(9px, 2vw, 12px);
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  padding: clamp(6px, 1.2vh, 10px) 0;
+  border-radius: 0 0 2vh 2vh;
+}
+
+.leaderboard-tier-btn:first-child {
+  border-radius: 0 0 2vh 2vh;
+}
+
+.leaderboard-tier-btn:last-child {
+  border-radius: 0 0 2vh 2vh;
+}
+
+.leaderboard-tier-btn.active {
+  background: linear-gradient(180deg, #FFD966 0%, #E6B800 100%);
+  border: 2px solid #B29403;
+  border-top: none;
+  color: #000000;
+  box-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
+}
+
+.leaderboard-tier-btn.inactive {
+  opacity: 0.6;
+}
+
+/* Удаляем старые стили для league-buttons */
+.leaderboard-league-buttons {
+  display: none;
 }
