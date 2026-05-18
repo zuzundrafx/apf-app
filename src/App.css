@@ -4048,7 +4048,7 @@ body {
 }
 
 .leaderboard-dropdown-list div {
-  padding: clamp(12px, 2vh, 20px) clamp(12px, 3vw, 20px);  /* Увеличивает высоту */
+  padding: clamp(12px, 2vh, 20px) clamp(0px, 0vw, 0px);  /* Увеличивает высоту */
   border-bottom: 0.5vw solid #3D3D3B;  /* Разделители между пунктами */
 }
 
