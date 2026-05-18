@@ -1,5 +1,5 @@
 // src/components/LeaderboardScreen.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getAvatarWrapperStyle, getAvatarInnerStyle } from '../utils/styleUtils';
 
 const LeaderboardItem: React.FC<{ 
@@ -65,6 +65,9 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
   const [leaderboardTier, setLeaderboardTier] = useState<'base' | 'pro' | 'elite' | 'legend'>('base');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedTournament, setSelectedTournament] = useState<any>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const formatTournamentName = (name: string): string => {
     if (!name) return '';
@@ -73,18 +76,45 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
     return result;
   };
 
-  const currentTournament = tournaments.length > 0 ? tournaments[0] : null;
+  // Получаем цвет фона для лиги
+  const getLeagueColor = (league: string): string => {
+    const leagueUpper = (league || 'UFC').toUpperCase();
+    if (leagueUpper === 'UFC') return '#B20101';
+    if (leagueUpper === 'PFL') return '#0550B2';
+    return '#313130';
+  };
 
+  // Группируем турниры по лигам
+  const groupedTournaments = {
+    UFC: tournaments.filter(t => (t.league || 'UFC').toUpperCase() === 'UFC'),
+    PFL: tournaments.filter(t => (t.league || '').toUpperCase() === 'PFL'),
+    ONE: tournaments.filter(t => (t.league || '').toUpperCase() === 'ONE')
+  };
+
+  // Выбираем первый турнир по умолчанию (приоритет: UFC, PFL, ONE)
+  useEffect(() => {
+    if (tournaments.length > 0 && !selectedTournament) {
+      if (groupedTournaments.UFC.length > 0) {
+        setSelectedTournament(groupedTournaments.UFC[0]);
+      } else if (groupedTournaments.PFL.length > 0) {
+        setSelectedTournament(groupedTournaments.PFL[0]);
+      } else if (groupedTournaments.ONE.length > 0) {
+        setSelectedTournament(groupedTournaments.ONE[0]);
+      }
+    }
+  }, [tournaments]);
+
+  // Загрузка данных при выбранном турнире или смене лиги
   useEffect(() => {
     const fetchData = async () => {
-      if (!currentTournament) {
+      if (!selectedTournament) {
         setLoading(false);
         return;
       }
       
       setLoading(true);
       try {
-        const result = await onLoadLeaderboard(currentTournament.id, leaderboardTier);
+        const result = await onLoadLeaderboard(selectedTournament.id, leaderboardTier);
         setData(Array.isArray(result) ? result : []);
       } catch (err) {
         console.error('Failed to load leaderboard:', err);
@@ -95,23 +125,80 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
     };
     
     fetchData();
-  }, [currentTournament?.id, leaderboardTier, onLoadLeaderboard]);
+  }, [selectedTournament?.id, leaderboardTier, onLoadLeaderboard]);
+
+  // Закрытие dropdown при клике вне
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleTournamentSelect = (tournament: any) => {
+    setSelectedTournament(tournament);
+    setIsDropdownOpen(false);
+  };
+
+  const currentLeague = (selectedTournament?.league || 'UFC').toUpperCase();
+  const leagueColor = getLeagueColor(currentLeague);
+  const displayText = `${currentLeague}: ${selectedTournament ? formatTournamentName(selectedTournament.name) : 'NO TOURNAMENT'}`;
 
   return (
     <div className="leaderboard-screen">
-      {/* Первая строчка: кнопки лиг */}
-      <div className="leaderboard-league-buttons">
-        <button className="leaderboard-league-btn active">UFC</button>
-        <button className="leaderboard-league-btn inactive" disabled>PFL</button>
-        <button className="leaderboard-league-btn inactive" disabled>ONE</button>
+      {/* Блок с выбором турнира (кликабельный) */}
+      <div className="leaderboard-tournament-selector" ref={dropdownRef}>
+        <div 
+          className="leaderboard-tournament-header"
+          style={{ backgroundColor: leagueColor }}
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        >
+          <span className="leaderboard-tournament-header-text">{displayText}</span>
+          <svg 
+            className={`leaderboard-dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}
+            width="16" 
+            height="16" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="#E3C800" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <polyline points={isDropdownOpen ? "18 15 12 9 6 15" : "6 9 12 15 18 9"} />
+          </svg>
+        </div>
+        
+        {isDropdownOpen && (
+          <div className="leaderboard-dropdown-list">
+            {Object.entries(groupedTournaments).map(([league, leagueTournaments]) => {
+              if (leagueTournaments.length === 0) return null;
+              const leagueColorDropdown = getLeagueColor(league);
+              return (
+                <div key={league} className="leaderboard-dropdown-group">
+                  <div className="leaderboard-dropdown-group-header" style={{ backgroundColor: leagueColorDropdown }}>
+                    {league}
+                  </div>
+                  {leagueTournaments.map((tournament) => (
+                    <div 
+                      key={tournament.id}
+                      className={`leaderboard-dropdown-item ${selectedTournament?.id === tournament.id ? 'active' : ''}`}
+                      onClick={() => handleTournamentSelect(tournament)}
+                    >
+                      {formatTournamentName(tournament.name)}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Вторая строчка: название турнира */}
-      <div className="leaderboard-tournament-name">
-        {currentTournament ? formatTournamentName(currentTournament.name) : 'NO TOURNAMENT'}
-      </div>
-
-      {/* Третья строчка: кнопки тиров */}
+      {/* Кнопки тиров */}
       <div className="leaderboard-tier-buttons">
         <button 
           className={`leaderboard-tier-btn ${leaderboardTier === 'base' ? 'active' : 'inactive'}`}

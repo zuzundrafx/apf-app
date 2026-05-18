@@ -4068,3 +4068,105 @@ body {
 .leaderboard-tier-btn.inactive {
   opacity: 0.6;
 }
+
+/* ===== ВЫБОР ТУРНИРА (ДРОПДАУН) ===== */
+.leaderboard-tournament-selector {
+  position: relative;
+  width: 100%;
+  margin-bottom: clamp(8px, 1.5vh, 12px);
+}
+
+.leaderboard-tournament-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(8px, 1.5vh, 12px) clamp(12px, 2vw, 16px);
+  border-radius: 2vh;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  min-height: 45px;
+}
+
+.leaderboard-tournament-header:hover {
+  opacity: 0.9;
+}
+
+.leaderboard-tournament-header-text {
+  color: #FFFFFF;
+  font-size: clamp(12px, 3.5vw, 14px);
+  font-weight: 600;
+  word-break: break-word;
+  flex: 1;
+  text-align: left;
+}
+
+.leaderboard-dropdown-arrow {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.leaderboard-dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Выпадающий список */
+.leaderboard-dropdown-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #1C1D1F;
+  border: 1px solid #3D3D3B;
+  border-radius: 2vh;
+  z-index: 1000;
+  max-height: 60vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.leaderboard-dropdown-group {
+  margin-bottom: 4px;
+}
+
+.leaderboard-dropdown-group:last-child {
+  margin-bottom: 0;
+}
+
+.leaderboard-dropdown-group-header {
+  padding: clamp(6px, 1.2vh, 10px) clamp(12px, 2vw, 16px);
+  color: #FFFFFF;
+  font-size: clamp(11px, 2.8vw, 13px);
+  font-weight: 700;
+  text-transform: uppercase;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.leaderboard-dropdown-item {
+  padding: clamp(8px, 1.5vh, 12px) clamp(12px, 2vw, 16px);
+  color: #FFFFFF;
+  font-size: clamp(11px, 2.8vw, 13px);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-bottom: 1px solid #3D3D3B;
+  margin: 0;
+}
+
+.leaderboard-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-dropdown-item:hover {
+  background: #2A2A2A;
+}
+
+.leaderboard-dropdown-item.active {
+  background: #313130;
+  color: #FFD966;
+}
+
+/* Удаляем старые стили для league-buttons (они больше не нужны) */
+.leaderboard-league-buttons {
+  display: none;
+}
