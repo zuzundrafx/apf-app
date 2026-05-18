@@ -4004,7 +4004,8 @@ body {
   cursor: pointer;
   transition: opacity 0.2s ease;
   min-height: 45px;
-  border-radius: 0;
+  
+  border-radius: 2vh 2vh 0 0;
 }
 
 .leaderboard-tournament-header:hover {
@@ -4036,12 +4037,13 @@ body {
   left: 0;
   right: 0;
   background: #1C1D1F;
-  border: 1px solid #3D3D3B;
+  border: 0.5vw solid #3D3D3B;
   border-top: none;
   z-index: 1000;
-  max-height: 60vh;
+  max-height: 100vh;
   overflow-y: auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-radius: 0 0 2vh 2vh;
 }
 
 /* Кнопки тиров (вкладки) */
