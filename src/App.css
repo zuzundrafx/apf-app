@@ -4040,7 +4040,7 @@ body {
   border: 0.5vw solid #3D3D3B;
   border-top: none;
   z-index: 1000;
-  max-height: 100vh;
+  height: 100vh;
   overflow-y: auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   border-radius: 0 0 2vh 2vh;
