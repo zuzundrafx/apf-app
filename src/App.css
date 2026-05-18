@@ -4039,7 +4039,7 @@ body {
   right: 0;
   background: #1C1D1F;
   border: 0.5vw solid #3D3D3B;
-  border-top: none;
+  /*border-top: none;*/
   z-index: 1000;
   max-height: 60vh;
   overflow-y: auto;
