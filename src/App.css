@@ -924,8 +924,8 @@ body {
 
 .leaderboard-avatar {
   /*width: clamp(28px, 8vw, 40px);*/
-  /*height: clamp(28px, 8vw, 40px);*/
-  height: 90%;
+  height: 10vw;
+  /*height: 90%;*/
   aspect-ratio: 1 / 1;
   background: #3D3D3B;
   overflow: hidden;
@@ -938,7 +938,7 @@ body {
 .leaderboard-avatar img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: fill;
 }
 
 .leaderboard-avatar span {
