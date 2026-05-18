@@ -4047,10 +4047,34 @@ body {
   border-radius: 0 0 2vh 2vh;
 }
 
-.leaderboard-dropdown-list div {
-  padding: clamp(12px, 2vh, 20px) clamp(0px, 0vw, 0px);  /* Увеличивает высоту */
-  border-bottom: 0.5vw solid #3D3D3B;  /* Разделители между пунктами */
-  margin-left: 5%;
+.leaderboard-dropdown-group {
+  border-bottom: 0.5vw solid #3D3D3B;
+}
+
+.leaderboard-dropdown-group:last-child {
+  border-bottom: none;
+}
+
+.leaderboard-dropdown-group-header {
+  padding: clamp(12px, 2vh, 20px) clamp(12px, 3vw, 20px);
+  font-weight: 600;
+  color: #000000;
+}
+
+.leaderboard-dropdown-item {
+  padding: clamp(12px, 2vh, 20px) clamp(12px, 3vw, 20px);
+  cursor: pointer;
+  color: #FFFFFF;
+  transition: background 0.2s ease;
+}
+
+.leaderboard-dropdown-item:hover {
+  background: #3D3D3B;
+}
+
+.leaderboard-dropdown-item.active {
+  background: #4CAF50;
+  color: #000000;
 }
 
 /* Кнопки тиров (вкладки) */
