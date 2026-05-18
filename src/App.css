@@ -4024,10 +4024,9 @@ body {
 .leaderboard-dropdown-arrow {
   flex-shrink: 0;
   transition: transform 0.3s ease;
+  display: inline-block;
 }
 
-/* Когда список открыт - стрелка повернута */
-.leaderboard-tournament-selector.open .leaderboard-dropdown-arrow,
 .leaderboard-dropdown-arrow.open {
   transform: rotate(180deg);
 }

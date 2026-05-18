@@ -153,18 +153,18 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
         >
           <span className="leaderboard-tournament-header-text">{displayText}</span>
           <svg 
-            className={`leaderboard-dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}
-            width="32" 
-            height="32" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="#E3C800" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round"
-          >
-            <polyline points={isDropdownOpen ? "18 15 12 9 6 15" : "6 9 12 15 18 9"} />
-          </svg>
+  className={`leaderboard-dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}
+  width="32" 
+  height="32" 
+  viewBox="0 0 24 24" 
+  fill="none" 
+  stroke="#E3C800" 
+  strokeWidth="2" 
+  strokeLinecap="round" 
+  strokeLinejoin="round"
+>
+  <polyline points="6 9 12 15 18 9" /> {/* Всегда одна форма */}
+</svg>
         </div>
         
         {isDropdownOpen && (
