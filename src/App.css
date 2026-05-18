@@ -3939,7 +3939,7 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: clamp(4px, 1vh, 8px);
+ /* padding: clamp(4px, 1vh, 8px);*/
   width: 100%;
   /*gap: clamp(8px, 1.5vh, 12px);*/
 }
