@@ -4040,10 +4040,15 @@ body {
   border: 0.5vw solid #3D3D3B;
   border-top: none;
   z-index: 1000;
-  height: 100vh;
+  max-height: 60vh;
   overflow-y: auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   border-radius: 0 0 2vh 2vh;
+}
+
+.leaderboard-dropdown-list div {
+  padding: clamp(12px, 2vh, 20px) clamp(12px, 3vw, 20px);  /* Увеличивает высоту */
+  border-bottom: 0.5vw solid #3D3D3B;  /* Разделители между пунктами */
 }
 
 /* Кнопки тиров (вкладки) */
