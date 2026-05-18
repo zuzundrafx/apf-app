@@ -884,12 +884,6 @@ body {
 
 /* ===== ЭКРАН РЕЙТИНГА ===== */
 
-.leaderboard-header {
-  margin-bottom: clamp(8px, 2vh, 16px);
-  font-size: clamp(14px, 4vw, 16px);
-  font-weight: 600;
-  color: #FFD700;
-}
 
 .leaderboard-list {
   flex: 1;
@@ -897,7 +891,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: clamp(4px, 1vh, 8px);
-  margin-top: 2vh;
+  margin-top: 1vh;
   width: 100%;
 }
 
