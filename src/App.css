@@ -3947,7 +3947,7 @@ body {
   flex-direction: column;
   padding: clamp(8px, 2vh, 16px);
   width: 100%;
-  gap: clamp(8px, 1.5vh, 12px);
+  /*gap: clamp(8px, 1.5vh, 12px);*/
 }
 
 .leaderboard-league-btn {
