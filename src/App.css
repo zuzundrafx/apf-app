@@ -924,7 +924,7 @@ body {
 
 .leaderboard-avatar {
   /*width: clamp(28px, 8vw, 40px);*/
-  height: 10vw;
+  height: 10vh;
   /*height: 90%;*/
   aspect-ratio: 1 / 1;
   background: #3D3D3B;
