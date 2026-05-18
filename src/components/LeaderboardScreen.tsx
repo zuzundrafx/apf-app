@@ -65,7 +65,6 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
   const [leaderboardTier, setLeaderboardTier] = useState<'base' | 'pro' | 'elite' | 'legend'>('base');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const formatTournamentName = (name: string): string => {
     if (!name) return '';
@@ -76,7 +75,6 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
 
   const currentTournament = tournaments.length > 0 ? tournaments[0] : null;
 
-  // Простая загрузка без лишних зависимостей
   useEffect(() => {
     const fetchData = async () => {
       if (!currentTournament) {
@@ -84,17 +82,12 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
         return;
       }
       
-      console.log('🟢 Fetching leaderboard for:', currentTournament.id, leaderboardTier);
       setLoading(true);
-      setError(null);
-      
       try {
         const result = await onLoadLeaderboard(currentTournament.id, leaderboardTier);
-        console.log('🟢 Result:', result);
         setData(Array.isArray(result) ? result : []);
-      } catch (err: any) {
-        console.error('🟢 Error:', err);
-        setError(err.message);
+      } catch (err) {
+        console.error('Failed to load leaderboard:', err);
         setData([]);
       } finally {
         setLoading(false);
@@ -102,8 +95,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
     };
     
     fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTournament?.id, leaderboardTier]);
+  }, [currentTournament?.id, leaderboardTier, onLoadLeaderboard]);
 
   return (
     <div className="leaderboard-screen">
@@ -150,8 +142,6 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
       {/* Список рейтинга */}
       {loading ? (
         <div className="leaderboard-loading">LOADING...</div>
-      ) : error ? (
-        <div className="leaderboard-empty">Error: {error}</div>
       ) : data.length > 0 ? (
         <div className="leaderboard-list">
           {data.map((entry, index) => (
