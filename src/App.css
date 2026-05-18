@@ -4073,7 +4073,7 @@ body {
 .leaderboard-tournament-selector {
   position: relative;
   width: 100%;
-  margin-bottom: clamp(8px, 1.5vh, 12px);
+  margin-bottom: 0;
 }
 
 .leaderboard-tournament-header {
@@ -4081,10 +4081,10 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: clamp(8px, 1.5vh, 12px) clamp(12px, 2vw, 16px);
-  border-radius: 2vh;
   cursor: pointer;
   transition: opacity 0.2s ease;
   min-height: 45px;
+  border-radius: 0;
 }
 
 .leaderboard-tournament-header:hover {
@@ -4112,61 +4112,63 @@ body {
 /* Выпадающий список */
 .leaderboard-dropdown-list {
   position: absolute;
-  top: calc(100% + 4px);
+  top: 100%;
   left: 0;
   right: 0;
   background: #1C1D1F;
   border: 1px solid #3D3D3B;
-  border-radius: 2vh;
+  border-top: none;
   z-index: 1000;
   max-height: 60vh;
   overflow-y: auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.leaderboard-dropdown-group {
-  margin-bottom: 4px;
+/* Кнопки тиров (вкладки) */
+.leaderboard-tier-buttons {
+  display: flex;
+  gap: 0;
+  height: auto;
+  min-height: 35px;
+  border-top: none;
 }
 
-.leaderboard-dropdown-group:last-child {
-  margin-bottom: 0;
-}
-
-.leaderboard-dropdown-group-header {
-  padding: clamp(6px, 1.2vh, 10px) clamp(12px, 2vw, 16px);
+.leaderboard-tier-btn {
+  flex: 1;
+  background: linear-gradient(180deg, #5b5b5b 0%, #302f30 100%);
+  border: 0.15vh solid #666d75;
+  border-top: none;
   color: #FFFFFF;
-  font-size: clamp(11px, 2.8vw, 13px);
-  font-weight: 700;
-  text-transform: uppercase;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.leaderboard-dropdown-item {
-  padding: clamp(8px, 1.5vh, 12px) clamp(12px, 2vw, 16px);
-  color: #FFFFFF;
-  font-size: clamp(11px, 2.8vw, 13px);
+  font-size: clamp(9px, 2vw, 12px);
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
-  border-bottom: 1px solid #3D3D3B;
-  margin: 0;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  padding: clamp(6px, 1.2vh, 10px) 0;
+  border-radius: 0 0 2vh 2vh;
 }
 
-.leaderboard-dropdown-item:last-child {
-  border-bottom: none;
+.leaderboard-tier-btn:first-child {
+  border-radius: 0 0 2vh 2vh;
 }
 
-.leaderboard-dropdown-item:hover {
-  background: #2A2A2A;
+.leaderboard-tier-btn:last-child {
+  border-radius: 0 0 2vh 2vh;
 }
 
-.leaderboard-dropdown-item.active {
-  background: #313130;
-  color: #FFD966;
+.leaderboard-tier-btn.active {
+  background: linear-gradient(180deg, #FFD966 0%, #E6B800 100%);
+  border: 2px solid #B29403;
+  border-top: none;
+  color: #000000;
+  box-shadow: 0 0 5px rgba(255, 217, 102, 0.5);
 }
 
-/* Удаляем старые стили для league-buttons (они больше не нужны) */
+.leaderboard-tier-btn.inactive {
+  opacity: 0.6;
+}
+
+/* Удаляем старые стили для league-buttons */
 .leaderboard-league-buttons {
   display: none;
 }

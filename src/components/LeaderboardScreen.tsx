@@ -76,7 +76,6 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
     return result;
   };
 
-  // Получаем цвет фона для лиги
   const getLeagueColor = (league: string): string => {
     const leagueUpper = (league || 'UFC').toUpperCase();
     if (leagueUpper === 'UFC') return '#B20101';
@@ -84,14 +83,12 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
     return '#313130';
   };
 
-  // Группируем турниры по лигам
   const groupedTournaments = {
     UFC: tournaments.filter(t => (t.league || 'UFC').toUpperCase() === 'UFC'),
     PFL: tournaments.filter(t => (t.league || '').toUpperCase() === 'PFL'),
     ONE: tournaments.filter(t => (t.league || '').toUpperCase() === 'ONE')
   };
 
-  // Выбираем первый турнир по умолчанию (приоритет: UFC, PFL, ONE)
   useEffect(() => {
     if (tournaments.length > 0 && !selectedTournament) {
       if (groupedTournaments.UFC.length > 0) {
@@ -104,7 +101,6 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
     }
   }, [tournaments]);
 
-  // Загрузка данных при выбранном турнире или смене лиги
   useEffect(() => {
     const fetchData = async () => {
       if (!selectedTournament) {
@@ -127,7 +123,6 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
     fetchData();
   }, [selectedTournament?.id, leaderboardTier, onLoadLeaderboard]);
 
-  // Закрытие dropdown при клике вне
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -149,7 +144,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
 
   return (
     <div className="leaderboard-screen">
-      {/* Блок с выбором турнира (кликабельный) */}
+      {/* Блок с выбором турнира */}
       <div className="leaderboard-tournament-selector" ref={dropdownRef}>
         <div 
           className="leaderboard-tournament-header"
@@ -159,8 +154,8 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
           <span className="leaderboard-tournament-header-text">{displayText}</span>
           <svg 
             className={`leaderboard-dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}
-            width="16" 
-            height="16" 
+            width="32" 
+            height="32" 
             viewBox="0 0 24 24" 
             fill="none" 
             stroke="#E3C800" 
@@ -198,7 +193,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
         )}
       </div>
 
-      {/* Кнопки тиров */}
+      {/* Кнопки тиров (без скругления сверху) */}
       <div className="leaderboard-tier-buttons">
         <button 
           className={`leaderboard-tier-btn ${leaderboardTier === 'base' ? 'active' : 'inactive'}`}
