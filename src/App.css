@@ -901,7 +901,7 @@ body {
   padding: clamp(4px, 1vh, 8px) clamp(8px, 2vw, 12px);
   background: #2A2A2A;
   border-radius: 6px;
-  height: clamp(48px, 12vh, 56px);
+  height: 11vh;
   width: 100%;
 }
 
