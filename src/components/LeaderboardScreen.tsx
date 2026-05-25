@@ -38,7 +38,10 @@ const LeaderboardItem: React.FC<{
             <span>👤</span>
           )}
         </div>
-        <span className="leaderboard-username">{entry.username}</span>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <span className="leaderboard-username">{entry.username}</span>
+    <span style={{ fontSize: 'clamp(8px, 2vw, 10px)', color: '#FFD966' }}>Lvl {entry.level}</span>
+  </div>
       </div>
       <span className="leaderboard-score">{entry.totalDamage}</span>
     </div>
