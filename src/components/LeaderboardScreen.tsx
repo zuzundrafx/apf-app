@@ -46,13 +46,19 @@ const LeaderboardItem: React.FC<{
       const loadUserFighters = async () => {
         setLoadingSelections(true);
         try {
+          console.log(`🔍 Fetching bet for userId=${entry.userId}, tournamentId=${tournamentId}`);
           const response = await fetch(
             `${API_BASE}/api/bets/user/${entry.userId}/tournament/${tournamentId}`,
             { headers: { 'Authorization': `Bearer ${authToken}` } }
           );
+          console.log(`📡 Response status: ${response.status}`);
+
           if (response.ok) {
             const bet = await response.json();
+            console.log(`📦 Bet data:`, bet);
+
             if (bet && bet.selections) {
+              console.log(`✅ Loaded ${bet.selections.length} selections`);
               setSelections(bet.selections);
               // Определяем тип урона для карточек
               if (tier !== 'base' && entry.pvpDamage && bet.selections.length > 0) {
