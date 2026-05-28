@@ -79,10 +79,10 @@ const LeaderboardItem: React.FC<{
           minHeight: '100%',
           marginLeft: 'clamp(6px, 2vw, 12px)'
         }}>
-          <span style={{ color: '#FFD966', fontWeight: 700, fontSize: 'clamp(11px, 3vw, 14px)' }}>
+          <span style={{ color: '#FFFFFF', fontWeight: 700, fontSize: 'clamp(11px, 3vw, 14px)' }}>
             {entry.totalDamage}
           </span>
-          {rpIcon && <img src={rpIcon} alt="RP" style={{ width: 'auto', height: 'clamp(10px, 2.5vw, 14px)' }} />}
+          {rpIcon && <img src={rpIcon} alt="RP" style={{ width: 'auto', height: 'clamp(10px, 4.0vw, 16px)' }} />}
         </div>
       )}
     </div>
