@@ -2,13 +2,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getAvatarWrapperStyle, getAvatarInnerStyle } from '../utils/styleUtils';
 
+const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
+
+
 const LeaderboardItem: React.FC<{ 
   entry: any; 
   currentUserId?: string; 
   currentUserPhoto?: string; 
   profile?: any; 
   userStyle?: 'striker' | 'grappler' | null;
-}> = ({ entry, currentUserId, currentUserPhoto, profile, userStyle }) => {
+  tier: 'base' | 'pro' | 'elite' | 'legend';  // ← добавить пропс
+}> = ({ entry, currentUserId, currentUserPhoto, profile, userStyle, tier }) => {
   const getAvatarSource = (): string | null => {
     if (profile?.photoUrl) return profile.photoUrl;
     if (entry.userId === currentUserId && currentUserPhoto) return currentUserPhoto;
@@ -17,6 +21,32 @@ const LeaderboardItem: React.FC<{
 
   const avatarUrl = getAvatarSource();
   const entryStyle = entry.userId === currentUserId ? userStyle : entry.style;
+  
+  // Получаем иконку RP для рейтинговых лиг
+  const getRpIcon = () => {
+    if (tier === 'pro') return `${BASE_URL}/icons/ProRP_icon.webp`;
+    if (tier === 'elite') return `${BASE_URL}/icons/EliteRP_icon.webp`;
+    if (tier === 'legend') return `${BASE_URL}/icons/LegendRP_icon.webp`;
+    return null;
+  };
+  
+  const isRankingTier = tier !== 'base';
+  const rpIcon = getRpIcon();
+  
+  // Формируем отображение очков
+  const getScoreDisplay = () => {
+    if (tier === 'base') {
+      return `B.dmg: ${entry.totalDamage}`;
+    }
+    // Для рейтинговых лиг: P.dmg: X | RP: Y + иконка
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span>P.dmg: {entry.pvpDamage || entry.totalDamage}</span>
+        <span style={{ color: '#FFD966', fontWeight: 700 }}>{entry.totalDamage}</span>
+        {rpIcon && <img src={rpIcon} alt="RP" style={{ width: 'auto', height: '1.2em' }} />}
+      </div>
+    );
+  };
 
   return (
     <div className="leaderboard-item">
@@ -39,11 +69,13 @@ const LeaderboardItem: React.FC<{
           )}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-    <span className="leaderboard-username">{entry.username}</span>
-    <span style={{ fontSize: 'clamp(8px, 2vw, 10px)', color: '#FFFFFF' }}>Lvl {entry.level}</span>
-  </div>
+          <span className="leaderboard-username">{entry.username}</span>
+          <span style={{ fontSize: 'clamp(8px, 2vw, 10px)', color: '#FFFFFF' }}>Lvl {entry.level}</span>
+        </div>
       </div>
-      <span className="leaderboard-score">{entry.totalDamage}</span>
+      <div className="leaderboard-score">
+        {getScoreDisplay()}
+      </div>
     </div>
   );
 };
@@ -237,6 +269,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
               currentUserPhoto={currentUserPhoto} 
               profile={allProfiles.get(entry.userId)} 
               userStyle={userStyle} 
+              tier={leaderboardTier}
             />
           ))}
         </div>
