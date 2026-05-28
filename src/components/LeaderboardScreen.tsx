@@ -151,9 +151,9 @@ const LeaderboardItem: React.FC<{
       {/* Раскрывающаяся панель с карточками бойцов */}
       {isExpanded && (
         <div className="leaderboard-expanded-panel" style={{ 
-          marginLeft: 'clamp(30px, 10vw, 40px)',
-          marginRight: 'clamp(8px, 2vw, 16px)',
-          marginBottom: 'clamp(8px, 2vh, 12px)',
+          //marginLeft: 'clamp(30px, 10vw, 40px)',
+         // marginRight: 'clamp(8px, 2vw, 16px)',
+         // marginBottom: 'clamp(8px, 2vh, 12px)',
           padding: 'clamp(8px, 2vh, 12px)',
           background: '#2A2A2A',
           borderRadius: 'clamp(8px, 2vw, 12px)'
