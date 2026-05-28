@@ -13,6 +13,7 @@ import { getWeightClassColor, getAvatarFilename } from './utils/weightUtils';
 import { getFighterStyleFromSelected, getStyleIconFilename } from './utils/fighterUtils';
 import { useCoefficients } from './hooks/useCoefficients';
 import LeaderboardScreen from './components/LeaderboardScreen';
+import ShopScreen from './components/ShopScreen';
 
 declare global {
   interface Window {
@@ -58,7 +59,7 @@ function App() {
   const [isSavingBet, setIsSavingBet] = useState(false);
   const [isClaimingRefund, setIsClaimingRefund] = useState(false);
   const [selectedFighters, setSelectedFighters] = useState<Map<string, Fighter>>(new Map());
-  const [currentView, setCurrentView] = useState<'main' | 'leaderboard' | 'selection' | 'pvp'>('main');
+  const [currentView, setCurrentView] = useState<'main' | 'leaderboard' | 'selection' | 'pvp' | 'shop'>('main');
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
@@ -608,7 +609,7 @@ function App() {
         </div>
       )}
 
-      {currentView !== 'leaderboard' && (
+      {currentView !== 'leaderboard' && currentView !== 'shop' && (
       <header className="profile-header">
         <div className="profile-avatar" onClick={handleAvatarClick} style={{ cursor: 'pointer', ...getAvatarWrapperStyle(userStyle), position: 'relative', overflow: 'visible' }}>
           {telegramUser?.photoUrl ? 
@@ -945,6 +946,11 @@ function App() {
             onUpdateExperience={handleUpdateExperience}
           />
         )}
+
+       {currentView === 'shop' && (
+            <ShopScreen />
+        )} 
+
       </main>
 
       {/* Модальные окна */}
@@ -1082,7 +1088,7 @@ function App() {
         <button className={`nav-button ${currentView === 'main' ? 'active' : ''}`} onClick={() => setCurrentView('main')}><img src={`${BASE_URL}/Home_button.png`} alt="Home" /></button>
         <button className={`nav-button ${currentView === 'leaderboard' ? 'active' : ''}`} onClick={() => setCurrentView('leaderboard')}><img src={`${BASE_URL}/Leadeship_button.png`} alt="Leaderboard" /></button>
         <button className={`nav-button ${currentView === 'pvp' ? 'active' : ''}`} onClick={() => setCurrentView('pvp')}><img src={`${BASE_URL}/PvP_button.png`} alt="PvP" /></button>
-        <button className="nav-button disabled"><img src={`${BASE_URL}/Shop_button.png`} alt="Shop" /></button>
+        <button className={`nav-button ${currentView === 'shop' ? 'active' : ''}`} onClick={() => setCurrentView('shop')}><img src={`${BASE_URL}/Shop_button.png`} alt="Shop" /></button>
       </nav>
 
       <StyleModal
