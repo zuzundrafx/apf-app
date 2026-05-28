@@ -29,30 +29,6 @@ const LeaderboardItem: React.FC<{
   };
   
   const rpIcon = getRpIcon();
-  
-  const getScoreDisplay = () => {
-    if (tier === 'base') {
-      return <span>B.dmg: {entry.totalDamage}</span>;
-    }
-    // Для рейтинговых лиг: P.dmg (как был) и отдельный блок RP справа
-    return (
-      <>
-        <span>P.dmg: {entry.pvpDamage || entry.totalDamage}</span>
-        <div style={{ 
-          background: '#1C1D1F', 
-          padding: '0 clamp(4px, 1.2vw, 8px)', 
-          borderRadius: 'clamp(3px, 1vw, 6px)',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 'clamp(2px, 0.8vw, 4px)',
-          height: '100%'
-        }}>
-          <span style={{ color: '#FFD966', fontWeight: 700 }}>{entry.totalDamage}</span>
-          {rpIcon && <img src={rpIcon} alt="RP" style={{ width: 'auto', height: 'clamp(10px, 2.5vw, 14px)' }} />}
-        </div>
-      </>
-    );
-  };
 
   return (
     <div className="leaderboard-item">
@@ -80,7 +56,24 @@ const LeaderboardItem: React.FC<{
         </div>
       </div>
       <div className="leaderboard-score" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 2vw, 12px)' }}>
-        {getScoreDisplay()}
+        {tier === 'base' ? (
+          <span>B.dmg: {entry.totalDamage}</span>
+        ) : (
+          <>
+            <span>P.dmg: {entry.pvpDamage || entry.totalDamage}</span>
+            <div style={{ 
+              background: '#1C1D1F', 
+              padding: '0 clamp(4px, 1.2vw, 8px)', 
+              borderRadius: 'clamp(3px, 1vw, 6px)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 'clamp(2px, 0.8vw, 4px)'
+            }}>
+              <span style={{ color: '#FFD966', fontWeight: 700 }}>{entry.totalDamage}</span>
+              {rpIcon && <img src={rpIcon} alt="RP" style={{ width: 'auto', height: 'clamp(10px, 2.5vw, 14px)' }} />}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
