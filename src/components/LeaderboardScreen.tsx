@@ -32,28 +32,25 @@ const LeaderboardItem: React.FC<{
   
   const getScoreDisplay = () => {
     if (tier === 'base') {
-      return <span style={{ fontSize: 'clamp(10px, 2.5vw, 14px)' }}>B.dmg: {entry.totalDamage}</span>;
+      return <span>B.dmg: {entry.totalDamage}</span>;
     }
-    // Для рейтинговых лиг: P.dmg на градиентном фоне, RP на чёрном фоне
+    // Для рейтинговых лиг: P.dmg (как был) и отдельный блок RP справа
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 2vw, 12px)' }}>
-        <span style={{ fontSize: 'clamp(10px, 2.5vw, 14px)' }}>
-          P.dmg: {entry.pvpDamage || entry.totalDamage}
-        </span>
+      <>
+        <span>P.dmg: {entry.pvpDamage || entry.totalDamage}</span>
         <div style={{ 
           background: '#1C1D1F', 
-          padding: 'clamp(2px, 0.6vw, 4px) clamp(4px, 1.2vw, 8px)', 
+          padding: '0 clamp(4px, 1.2vw, 8px)', 
           borderRadius: 'clamp(3px, 1vw, 6px)',
-          display: 'flex',
+          display: 'inline-flex',
           alignItems: 'center',
-          gap: 'clamp(2px, 0.8vw, 4px)'
+          gap: 'clamp(2px, 0.8vw, 4px)',
+          height: '100%'
         }}>
-          <span style={{ color: '#FFD966', fontWeight: 700, fontSize: 'clamp(10px, 2.5vw, 14px)' }}>
-            {entry.totalDamage}
-          </span>
+          <span style={{ color: '#FFD966', fontWeight: 700 }}>{entry.totalDamage}</span>
           {rpIcon && <img src={rpIcon} alt="RP" style={{ width: 'auto', height: 'clamp(10px, 2.5vw, 14px)' }} />}
         </div>
-      </div>
+      </>
     );
   };
 
@@ -82,7 +79,7 @@ const LeaderboardItem: React.FC<{
           <span style={{ fontSize: 'clamp(8px, 2vw, 10px)', color: '#FFFFFF' }}>Lvl {entry.level}</span>
         </div>
       </div>
-      <div className="leaderboard-score">
+      <div className="leaderboard-score" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 2vw, 12px)' }}>
         {getScoreDisplay()}
       </div>
     </div>
