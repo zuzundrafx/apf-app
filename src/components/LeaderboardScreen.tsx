@@ -55,26 +55,34 @@ const LeaderboardItem: React.FC<{
           <span style={{ fontSize: 'clamp(8px, 2vw, 10px)', color: '#FFFFFF' }}>Lvl {entry.level}</span>
         </div>
       </div>
-      <div className="leaderboard-score" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 2vw, 12px)' }}>
+      
+      {/* P.dmg / B.dmg внутри leaderboard-score (градиентный фон) */}
+      <div className="leaderboard-score">
         {tier === 'base' ? (
           <span>B.dmg: {entry.totalDamage}</span>
         ) : (
-          <>
-            <span>P.dmg: {entry.pvpDamage || entry.totalDamage}</span>
-            <div style={{ 
-              background: '#1C1D1F', 
-              padding: '0 clamp(4px, 1.2vw, 8px)', 
-              borderRadius: 'clamp(3px, 1vw, 6px)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 'clamp(2px, 0.8vw, 4px)'
-            }}>
-              <span style={{ color: '#FFD966', fontWeight: 700 }}>{entry.totalDamage}</span>
-              {rpIcon && <img src={rpIcon} alt="RP" style={{ width: 'auto', height: 'clamp(10px, 2.5vw, 14px)' }} />}
-            </div>
-          </>
+          <span>P.dmg: {entry.pvpDamage || entry.totalDamage}</span>
         )}
       </div>
+      
+      {/* RP блок отдельно, на чёрном фоне (только для рейтинговых лиг) */}
+      {tier !== 'base' && (
+        <div style={{ 
+          background: '#1C1D1F', 
+          padding: '0 clamp(4px, 1.2vw, 8px)', 
+          borderRadius: 'clamp(3px, 1vw, 6px)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 'clamp(2px, 0.8vw, 4px)',
+          marginLeft: 'clamp(6px, 2vw, 12px)',
+          height: '100%'
+        }}>
+          <span style={{ color: '#FFD966', fontWeight: 700, fontSize: 'clamp(11px, 3vw, 14px)' }}>
+            {entry.totalDamage}
+          </span>
+          {rpIcon && <img src={rpIcon} alt="RP" style={{ width: 'auto', height: 'clamp(10px, 2.5vw, 14px)' }} />}
+        </div>
+      )}
     </div>
   );
 };
