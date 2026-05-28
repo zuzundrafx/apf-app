@@ -69,13 +69,15 @@ const LeaderboardItem: React.FC<{
       {tier !== 'base' && (
         <div style={{ 
           background: '#1C1D1F', 
-          padding: '0 clamp(4px, 1.2vw, 8px)', 
+          padding: '0 clamp(6px, 1.5vw, 10px)', 
           borderRadius: 'clamp(3px, 1vw, 6px)',
           display: 'inline-flex',
           alignItems: 'center',
+          justifyContent: 'center',
           gap: 'clamp(2px, 0.8vw, 4px)',
-          marginLeft: 'clamp(6px, 2vw, 12px)',
-          height: '100%'
+          height: '100%',
+          minHeight: '100%',
+          marginLeft: 'clamp(6px, 2vw, 12px)'
         }}>
           <span style={{ color: '#FFD966', fontWeight: 700, fontSize: 'clamp(11px, 3vw, 14px)' }}>
             {entry.totalDamage}
