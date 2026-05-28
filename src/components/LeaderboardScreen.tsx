@@ -4,14 +4,13 @@ import { getAvatarWrapperStyle, getAvatarInnerStyle } from '../utils/styleUtils'
 
 const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
-
 const LeaderboardItem: React.FC<{ 
   entry: any; 
   currentUserId?: string; 
   currentUserPhoto?: string; 
   profile?: any; 
   userStyle?: 'striker' | 'grappler' | null;
-  tier: 'base' | 'pro' | 'elite' | 'legend';  // ← добавить пропс
+  tier: 'base' | 'pro' | 'elite' | 'legend';
 }> = ({ entry, currentUserId, currentUserPhoto, profile, userStyle, tier }) => {
   const getAvatarSource = (): string | null => {
     if (profile?.photoUrl) return profile.photoUrl;
@@ -22,7 +21,6 @@ const LeaderboardItem: React.FC<{
   const avatarUrl = getAvatarSource();
   const entryStyle = entry.userId === currentUserId ? userStyle : entry.style;
   
-  // Получаем иконку RP для рейтинговых лиг
   const getRpIcon = () => {
     if (tier === 'pro') return `${BASE_URL}/icons/ProRP_icon.webp`;
     if (tier === 'elite') return `${BASE_URL}/icons/EliteRP_icon.webp`;
@@ -30,20 +28,31 @@ const LeaderboardItem: React.FC<{
     return null;
   };
   
-  const isRankingTier = tier !== 'base';
   const rpIcon = getRpIcon();
   
-  // Формируем отображение очков
   const getScoreDisplay = () => {
     if (tier === 'base') {
-      return `B.dmg: ${entry.totalDamage}`;
+      return <span style={{ fontSize: 'clamp(10px, 2.5vw, 14px)' }}>B.dmg: {entry.totalDamage}</span>;
     }
-    // Для рейтинговых лиг: P.dmg: X | RP: Y + иконка
+    // Для рейтинговых лиг: P.dmg на градиентном фоне, RP на чёрном фоне
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span>P.dmg: {entry.pvpDamage || entry.totalDamage}</span>
-        <span style={{ color: '#FFD966', fontWeight: 700 }}>{entry.totalDamage}</span>
-        {rpIcon && <img src={rpIcon} alt="RP" style={{ width: 'auto', height: '1.2em' }} />}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(6px, 2vw, 12px)' }}>
+        <span style={{ fontSize: 'clamp(10px, 2.5vw, 14px)' }}>
+          P.dmg: {entry.pvpDamage || entry.totalDamage}
+        </span>
+        <div style={{ 
+          background: '#1C1D1F', 
+          padding: 'clamp(2px, 0.6vw, 4px) clamp(4px, 1.2vw, 8px)', 
+          borderRadius: 'clamp(3px, 1vw, 6px)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'clamp(2px, 0.8vw, 4px)'
+        }}>
+          <span style={{ color: '#FFD966', fontWeight: 700, fontSize: 'clamp(10px, 2.5vw, 14px)' }}>
+            {entry.totalDamage}
+          </span>
+          {rpIcon && <img src={rpIcon} alt="RP" style={{ width: 'auto', height: 'clamp(10px, 2.5vw, 14px)' }} />}
+        </div>
       </div>
     );
   };
@@ -188,18 +197,18 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
         >
           <span className="leaderboard-tournament-header-text">{displayText}</span>
           <svg 
-  className={`leaderboard-dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}
-  width="32" 
-  height="32" 
-  viewBox="0 0 24 24" 
-  fill="none" 
-  stroke="#E3C800" 
-  strokeWidth="2" 
-  strokeLinecap="round" 
-  strokeLinejoin="round"
->
-  <polyline points="6 9 12 15 18 9" /> {/* Всегда одна форма */}
-</svg>
+            className={`leaderboard-dropdown-arrow ${isDropdownOpen ? 'open' : ''}`}
+            width="32" 
+            height="32" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="#E3C800" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </div>
         
         {isDropdownOpen && (
@@ -268,7 +277,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
               currentUserId={currentUserId} 
               currentUserPhoto={currentUserPhoto} 
               profile={allProfiles.get(entry.userId)} 
-              userStyle={userStyle} 
+              userStyle={userStyle}
               tier={leaderboardTier}
             />
           ))}
