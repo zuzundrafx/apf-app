@@ -916,6 +916,7 @@ function App() {
     userStyle={userStyle}
     allProfiles={allProfiles}
     onLoadLeaderboard={handleLoadLeaderboard}
+    authToken={authToken || undefined}
   />
 )}
 

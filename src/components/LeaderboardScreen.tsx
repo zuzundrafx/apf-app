@@ -1,8 +1,11 @@
 // src/components/LeaderboardScreen.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { getAvatarWrapperStyle, getAvatarInnerStyle } from '../utils/styleUtils';
+import { getWeightClassColor } from '../utils/weightUtils';
+import { getFighterStyleFromSelected, getStyleIconFilename } from '../utils/fighterUtils';
 
 const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
+const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
 
 const LeaderboardItem: React.FC<{ 
   entry: any; 
@@ -11,7 +14,14 @@ const LeaderboardItem: React.FC<{
   profile?: any; 
   userStyle?: 'striker' | 'grappler' | null;
   tier: 'base' | 'pro' | 'elite' | 'legend';
-}> = ({ entry, currentUserId, currentUserPhoto, profile, userStyle, tier }) => {
+  isExpanded: boolean;
+  onToggle: (userId: string) => void;
+  tournamentId: string;
+  authToken?: string;
+}> = ({ entry, currentUserId, currentUserPhoto, profile, userStyle, tier, isExpanded, onToggle, tournamentId, authToken }) => {
+  const [selections, setSelections] = useState<any[]>([]);
+  const [loadingSelections, setLoadingSelections] = useState(false);
+
   const getAvatarSource = (): string | null => {
     if (profile?.photoUrl) return profile.photoUrl;
     if (entry.userId === currentUserId && currentUserPhoto) return currentUserPhoto;
@@ -30,59 +40,182 @@ const LeaderboardItem: React.FC<{
   
   const rpIcon = getRpIcon();
 
+  // Загрузка бойцов при раскрытии панели
+  useEffect(() => {
+    if (isExpanded && selections.length === 0 && !loadingSelections && authToken) {
+      const loadUserFighters = async () => {
+        setLoadingSelections(true);
+        try {
+          const response = await fetch(
+            `${API_BASE}/api/bets/user/${entry.userId}/tournament/${tournamentId}`,
+            { headers: { 'Authorization': `Bearer ${authToken}` } }
+          );
+          if (response.ok) {
+            const bet = await response.json();
+            if (bet && bet.selections) {
+              setSelections(bet.selections);
+              // Определяем тип урона для карточек
+              if (tier !== 'base' && entry.pvpDamage && bet.selections.length > 0) {
+                // Рассчитываем PvP урон на каждого бойца пропорционально их Base урону
+                const totalBaseDamage = bet.selections.reduce((sum: number, sel: any) => sum + (sel.fighter['Total Damage'] || 0), 0);
+                if (totalBaseDamage > 0) {
+                  const updatedSelections = bet.selections.map((sel: any) => ({
+                    ...sel,
+                    fighter: {
+                      ...sel.fighter,
+                      'PvP Damage': Math.round((sel.fighter['Total Damage'] || 0) / totalBaseDamage * entry.pvpDamage)
+                    }
+                  }));
+                  setSelections(updatedSelections);
+                }
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Failed to load user fighters:', err);
+        } finally {
+          setLoadingSelections(false);
+        }
+      };
+      loadUserFighters();
+    }
+  }, [isExpanded, entry.userId, tournamentId, authToken, selections.length, loadingSelections, tier, entry.pvpDamage]);
+
+  const handleRowClick = () => {
+    onToggle(entry.userId);
+  };
+
+  const getDamageForFighter = (sel: any): number => {
+    if (tier === 'base') {
+      return sel.fighter['Total Damage'] || 0;
+    }
+    // Для рейтинговых лиг — используем PvP Damage
+    return sel.fighter['PvP Damage'] || sel.fighter['Total Damage'] || 0;
+  };
+
   return (
-    <div className="leaderboard-item">
-      <span className="leaderboard-rank">#{entry.rank}</span>
-      <div className="leaderboard-user-info">
-        <div className="leaderboard-avatar" style={getAvatarWrapperStyle(entryStyle)}>
-          {avatarUrl ? (
-            <img 
-              src={avatarUrl} 
-              alt={entry.username} 
-              style={getAvatarInnerStyle()} 
-              onError={(e) => { 
-                (e.target as HTMLImageElement).style.display = 'none'; 
-                const parent = (e.target as HTMLImageElement).parentElement; 
-                if (parent) parent.innerHTML = '👤'; 
-              }} 
-            />
+    <>
+      <div className="leaderboard-item" onClick={handleRowClick} style={{ cursor: 'pointer' }}>
+        <span className="leaderboard-rank">#{entry.rank}</span>
+        <div className="leaderboard-user-info">
+          <div className="leaderboard-avatar" style={getAvatarWrapperStyle(entryStyle)}>
+            {avatarUrl ? (
+              <img 
+                src={avatarUrl} 
+                alt={entry.username} 
+                style={getAvatarInnerStyle()} 
+                onError={(e) => { 
+                  (e.target as HTMLImageElement).style.display = 'none'; 
+                  const parent = (e.target as HTMLImageElement).parentElement; 
+                  if (parent) parent.innerHTML = '👤'; 
+                }} 
+              />
+            ) : (
+              <span>👤</span>
+            )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span className="leaderboard-username">{entry.username}</span>
+            <span style={{ fontSize: 'clamp(8px, 2vw, 10px)', color: '#FFFFFF' }}>Lvl {entry.level}</span>
+          </div>
+        </div>
+        
+        {/* P.dmg / B.dmg внутри leaderboard-score (градиентный фон) */}
+        <div className="leaderboard-score" style={{ display: 'flex', alignItems: 'center' }}>
+          {tier === 'base' ? (
+            <span>B.dmg: {entry.totalDamage}</span>
           ) : (
-            <span>👤</span>
+            <span>P.dmg: {entry.pvpDamage || entry.totalDamage}</span>
           )}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span className="leaderboard-username">{entry.username}</span>
-          <span style={{ fontSize: 'clamp(8px, 2vw, 10px)', color: '#FFFFFF' }}>Lvl {entry.level}</span>
-        </div>
+        
+        {/* RP блок отдельно, на чёрном фоне (только для рейтинговых лиг) */}
+        {tier !== 'base' && (
+          <div style={{ 
+            background: '#1C1D1F', 
+            padding: 'clamp(3px, 1vh, 6px) clamp(6px, 1.5vw, 10px)', 
+            borderRadius: 'clamp(3px, 1vw, 6px)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 'clamp(2px, 0.8vw, 4px)',
+            marginLeft: 'clamp(6px, 2vw, 12px)'
+          }}>
+            <span style={{ color: '#FFFFFF', fontWeight: 700, fontSize: 'clamp(11px, 3vw, 14px)' }}>
+              {entry.totalDamage}
+            </span>
+            {rpIcon && <img src={rpIcon} alt="RP" style={{ width: 'auto', height: 'clamp(10px, 4.0vw, 16px)' }} />}
+          </div>
+        )}
       </div>
-      
-      {/* P.dmg / B.dmg внутри leaderboard-score (градиентный фон) */}
-      <div className="leaderboard-score" style={{ display: 'flex', alignItems: 'center' }}>
-  {tier === 'base' ? (
-    <span>B.dmg: {entry.totalDamage}</span>
-  ) : (
-    <span>P.dmg: {entry.pvpDamage || entry.totalDamage}</span>
-  )}
-</div>
-      
-      {/* RP блок отдельно, на чёрном фоне (только для рейтинговых лиг) */}
-      {tier !== 'base' && (
-  <div style={{ 
-    background: '#1C1D1F', 
-    padding: 'clamp(3px, 1vh, 6px) clamp(6px, 1.5vw, 10px)', 
-    borderRadius: 'clamp(3px, 1vw, 6px)',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 'clamp(2px, 0.8vw, 4px)',
-    marginLeft: 'clamp(6px, 2vw, 12px)'
-  }}>
-          <span style={{ color: '#FFFFFF', fontWeight: 700, fontSize: 'clamp(11px, 3vw, 14px)' }}>
-            {entry.totalDamage}
-          </span>
-          {rpIcon && <img src={rpIcon} alt="RP" style={{ width: 'auto', height: 'clamp(10px, 4.0vw, 16px)' }} />}
+
+      {/* Раскрывающаяся панель с карточками бойцов */}
+      {isExpanded && (
+        <div className="leaderboard-expanded-panel" style={{ 
+          marginLeft: 'clamp(30px, 10vw, 40px)',
+          marginRight: 'clamp(8px, 2vw, 16px)',
+          marginBottom: 'clamp(8px, 2vh, 12px)',
+          padding: 'clamp(8px, 2vh, 12px)',
+          background: '#2A2A2A',
+          borderRadius: 'clamp(8px, 2vw, 12px)'
+        }}>
+          {loadingSelections ? (
+            <div style={{ color: '#FFFFFF', textAlign: 'center', padding: 'clamp(10px, 3vh, 20px)' }}>
+              LOADING FIGHTERS...
+            </div>
+          ) : selections.length > 0 ? (
+            <div className="selected-fighters-grid" style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(5, 1fr)', 
+              gap: 'clamp(4px, 1vw, 8px)',
+              width: '100%'
+            }}>
+              {selections.map((sel: any, idx: number) => {
+                const style = getFighterStyleFromSelected(sel.fighter);
+                const styleIcon = getStyleIconFilename(style);
+                const damageValue = getDamageForFighter(sel);
+                
+                return (
+                  <div 
+                    key={idx} 
+                    className="selected-fighter-card" 
+                    data-weight={sel.weightClass} 
+                    style={{ 
+                      backgroundColor: getWeightClassColor(sel.weightClass),
+                      aspectRatio: '1 / 1.4'
+                    }}
+                  >
+                    <div className="selected-fighter-damage-box">{damageValue}</div>
+                    <div className="selected-fighter-inner">
+                      <div className="selected-fighter-icon-container">
+                        <img 
+                          src={`${BASE_URL}/icons/${styleIcon}`} 
+                          alt={style} 
+                          className="selected-fighter-icon" 
+                          onError={(e) => { 
+                            (e.target as HTMLImageElement).style.display = 'none'; 
+                            const p = (e.target as HTMLImageElement).parentElement; 
+                            if (p) { 
+                              p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; 
+                              p.style.fontSize = 'clamp(16px, 4vw, 20px)'; 
+                            } 
+                          }} 
+                        />
+                      </div>
+                      <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
+                      <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ color: '#FFFFFF', textAlign: 'center', padding: 'clamp(10px, 3vh, 20px)' }}>
+              NO BETS FOUND
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 };
 
@@ -93,6 +226,7 @@ interface LeaderboardScreenProps {
   userStyle?: 'striker' | 'grappler' | null;
   allProfiles: Map<string, any>;
   onLoadLeaderboard: (tournamentId: string, tier: 'base' | 'pro' | 'elite' | 'legend') => Promise<any[]>;
+  authToken?: string;
 }
 
 const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
@@ -101,13 +235,15 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
   currentUserPhoto,
   userStyle,
   allProfiles,
-  onLoadLeaderboard
+  onLoadLeaderboard,
+  authToken
 }) => {
   const [leaderboardTier, setLeaderboardTier] = useState<'base' | 'pro' | 'elite' | 'legend'>('base');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedTournament, setSelectedTournament] = useState<any>(null);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const formatTournamentName = (name: string): string => {
@@ -150,6 +286,7 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
       }
       
       setLoading(true);
+      setExpandedUserId(null); // Сбрасываем раскрытого игрока при смене турнира
       try {
         const result = await onLoadLeaderboard(selectedTournament.id, leaderboardTier);
         setData(Array.isArray(result) ? result : []);
@@ -177,6 +314,15 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
   const handleTournamentSelect = (tournament: any) => {
     setSelectedTournament(tournament);
     setIsDropdownOpen(false);
+    setExpandedUserId(null);
+  };
+
+  const handleToggleUser = (userId: string) => {
+    if (expandedUserId === userId) {
+      setExpandedUserId(null);
+    } else {
+      setExpandedUserId(userId);
+    }
   };
 
   const currentLeague = (selectedTournament?.league || 'UFC').toUpperCase();
@@ -238,25 +384,37 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
       <div className="leaderboard-tier-buttons">
         <button 
           className={`leaderboard-tier-btn ${leaderboardTier === 'base' ? 'active' : 'inactive'}`}
-          onClick={() => setLeaderboardTier('base')}
+          onClick={() => {
+            setLeaderboardTier('base');
+            setExpandedUserId(null);
+          }}
         >
           BASE
         </button>
         <button 
           className={`leaderboard-tier-btn ${leaderboardTier === 'pro' ? 'active' : 'inactive'}`}
-          onClick={() => setLeaderboardTier('pro')}
+          onClick={() => {
+            setLeaderboardTier('pro');
+            setExpandedUserId(null);
+          }}
         >
           PRO
         </button>
         <button 
           className={`leaderboard-tier-btn ${leaderboardTier === 'elite' ? 'active' : 'inactive'}`}
-          onClick={() => setLeaderboardTier('elite')}
+          onClick={() => {
+            setLeaderboardTier('elite');
+            setExpandedUserId(null);
+          }}
         >
           ELITE
         </button>
         <button 
           className={`leaderboard-tier-btn ${leaderboardTier === 'legend' ? 'active' : 'inactive'}`}
-          onClick={() => setLeaderboardTier('legend')}
+          onClick={() => {
+            setLeaderboardTier('legend');
+            setExpandedUserId(null);
+          }}
         >
           LEGEND
         </button>
@@ -276,6 +434,10 @@ const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({
               profile={allProfiles.get(entry.userId)} 
               userStyle={userStyle}
               tier={leaderboardTier}
+              isExpanded={expandedUserId === entry.userId}
+              onToggle={handleToggleUser}
+              tournamentId={selectedTournament?.id || ''}
+              authToken={authToken}
             />
           ))}
         </div>
