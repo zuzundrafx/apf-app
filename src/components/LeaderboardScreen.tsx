@@ -57,28 +57,25 @@ const LeaderboardItem: React.FC<{
       </div>
       
       {/* P.dmg / B.dmg внутри leaderboard-score (градиентный фон) */}
-      <div className="leaderboard-score">
-        {tier === 'base' ? (
-          <span>B.dmg: {entry.totalDamage}</span>
-        ) : (
-          <span>P.dmg: {entry.pvpDamage || entry.totalDamage}</span>
-        )}
-      </div>
+      <div className="leaderboard-score" style={{ display: 'flex', alignItems: 'center' }}>
+  {tier === 'base' ? (
+    <span>B.dmg: {entry.totalDamage}</span>
+  ) : (
+    <span>P.dmg: {entry.pvpDamage || entry.totalDamage}</span>
+  )}
+</div>
       
       {/* RP блок отдельно, на чёрном фоне (только для рейтинговых лиг) */}
       {tier !== 'base' && (
-        <div style={{ 
-          background: '#1C1D1F', 
-          padding: '0 clamp(6px, 1.5vw, 10px)', 
-          borderRadius: 'clamp(3px, 1vw, 6px)',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 'clamp(2px, 0.8vw, 4px)',
-          height: '100%',
-          minHeight: '100%',
-          marginLeft: 'clamp(6px, 2vw, 12px)'
-        }}>
+  <div style={{ 
+    background: '#1C1D1F', 
+    padding: 'clamp(3px, 1vh, 6px) clamp(6px, 1.5vw, 10px)', 
+    borderRadius: 'clamp(3px, 1vw, 6px)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 'clamp(2px, 0.8vw, 4px)',
+    marginLeft: 'clamp(6px, 2vw, 12px)'
+  }}>
           <span style={{ color: '#FFFFFF', fontWeight: 700, fontSize: 'clamp(11px, 3vw, 14px)' }}>
             {entry.totalDamage}
           </span>
