@@ -154,7 +154,7 @@ const LeaderboardItem: React.FC<{
           //marginLeft: 'clamp(30px, 10vw, 40px)',
          // marginRight: 'clamp(8px, 2vw, 16px)',
          // marginBottom: 'clamp(8px, 2vh, 12px)',
-          padding: 'clamp(8px, 2vh, 12px)',
+          padding: 'clamp(4px, 1vh, 6px)',
           background: '#2A2A2A',
           borderRadius: 'clamp(8px, 2vw, 12px)'
         }}>
