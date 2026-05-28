@@ -46,7 +46,7 @@ const LeaderboardItem: React.FC<{
       const loadUserFighters = async () => {
         setLoadingSelections(true);
         try {
-          console.log(`🔍 Fetching bet for userId=${entry.userId}, tournamentId=${tournamentId}`);
+          console.log(`🔍 Fetching bet for userId=${entry.userId}, tournamentId=${tournamentId}, hasToken=${!!authToken}`);
           const response = await fetch(
             `${API_BASE}/api/bets/user/${entry.userId}/tournament/${tournamentId}`,
             { headers: { 'Authorization': `Bearer ${authToken}` } }
