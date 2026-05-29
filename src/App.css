@@ -4275,7 +4275,7 @@ body {
 /* 1-й столбец: иконка */
 .shop-cardpack-icon {
   width: auto;
-  height: 95%;
+  height: 11vh;
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
