@@ -4268,7 +4268,7 @@ body {
   border-radius: clamp(8px, 2vw, 12px);
   padding: clamp(4px, 1vh, 6px) clamp(10px, 2vw, 14px);
   width: 100%;
-  height: 12vh;  /* Ограничиваем максимальную высоту */
+  height: 13vh;  /* Ограничиваем максимальную высоту */
   /*height: auto;*/
 }
 
