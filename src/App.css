@@ -4266,14 +4266,14 @@ body {
   gap: clamp(8px, 3vw, 16px);
   background: #2A2A2A;
   border-radius: clamp(8px, 2vw, 12px);
-  padding: 0 clamp(12px, 3vw, 16px);
-  /*padding: clamp(8px, 2vh, 12px) clamp(12px, 3vw, 16px);*/
+  padding: clamp(8px, 2vh, 12px) clamp(12px, 3vw, 16px);
   width: 100%;
 }
 
 /* 1-й столбец: иконка */
 .shop-cardpack-icon {
-  width: clamp(50px, 12vw, 70px);
+  width: auto;
+  height: 95%;
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
