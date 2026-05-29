@@ -948,8 +948,8 @@ function App() {
         )}
 
        {currentView === 'shop' && (
-            <ShopScreen />
-        )} 
+  <ShopScreen activeTournaments={allCompletedTournaments} />
+)} 
 
       </main>
 

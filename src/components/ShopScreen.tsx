@@ -1,14 +1,16 @@
 // src/components/ShopScreen.tsx
 import React, { useState } from 'react';
+import { Tournament } from '../types';
+
+const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
 interface ShopScreenProps {
-  // В будущем добавим нужные пропсы
+  activeTournaments: Tournament[];
 }
 
-const ShopScreen: React.FC<ShopScreenProps> = () => {
+const ShopScreen: React.FC<ShopScreenProps> = ({ activeTournaments }) => {
   const [activeTab, setActiveTab] = useState<'free' | 'currency' | 'fightPass' | 'cardPacks'>('free');
 
-  // Рекламные сообщения (будут меняться)
   const promotions = [
     "🎁 FREE daily reward! Claim now!",
     "🔥 Limited offer: 50% bonus on Currency packs!",
@@ -18,13 +20,37 @@ const ShopScreen: React.FC<ShopScreenProps> = () => {
 
   const [currentPromotionIndex, setCurrentPromotionIndex] = useState(0);
 
-  // Для демонстрации можно добавить ротацию рекламы (опционально)
   React.useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPromotionIndex((prev) => (prev + 1) % promotions.length);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const formatTournamentName = (name: string): string => {
+    if (!name) return 'Active Tournament';
+    let result = name.replace(/^UFC\s*/i, '');
+    result = result.replace(/^PFL\s*/i, '');
+    result = result.replace(/^ONE\s*/i, '');
+    result = result.replace(/_/g, ' ');
+    return result;
+  };
+
+  const getLeagueIcon = (league: string): string => {
+    const leagueUpper = (league || 'UFC').toUpperCase();
+    if (leagueUpper === 'UFC') return `${BASE_URL}/UFC_cardpack.png`;
+    if (leagueUpper === 'PFL') return `${BASE_URL}/PFL_cardpack.png`;
+    if (leagueUpper === 'ONE') return `${BASE_URL}/ONE_cardpack.png`;
+    return `${BASE_URL}/UFC_cardpack.png`;
+  };
+
+  const getLeagueName = (league: string): string => {
+    const leagueUpper = (league || 'UFC').toUpperCase();
+    if (leagueUpper === 'UFC') return 'UFC';
+    if (leagueUpper === 'PFL') return 'PFL';
+    if (leagueUpper === 'ONE') return 'ONE';
+    return 'UFC';
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -53,11 +79,59 @@ const ShopScreen: React.FC<ShopScreenProps> = () => {
           </div>
         );
       case 'cardPacks':
+        if (activeTournaments.length === 0) {
+          return (
+            <div className="shop-empty-state">
+              <div className="shop-empty-icon">🃏</div>
+              <div className="shop-empty-text">No active tournaments</div>
+              <div className="shop-empty-subtext">Card packs will appear when tournaments are available</div>
+            </div>
+          );
+        }
+        
         return (
-          <div className="shop-empty-state">
-            <div className="shop-empty-icon">🃏</div>
-            <div className="shop-empty-text">Card Packs coming soon!</div>
-            <div className="shop-empty-subtext">Purchase fighter cards and boost your collection</div>
+          <div className="shop-cardpacks-list">
+            {activeTournaments.map((tournament) => {
+              const league = tournament.league || 'UFC';
+              const iconSrc = getLeagueIcon(league);
+              const leagueName = getLeagueName(league);
+              
+              return (
+                <div key={tournament.id} className="shop-cardpack-item">
+                  {/* 1-й столбец: иконка лиги */}
+                  <div className="shop-cardpack-icon">
+                    <img 
+                      src={iconSrc} 
+                      alt={`${leagueName} Card Pack`} 
+                      className="shop-cardpack-icon-img"
+                    />
+                  </div>
+                  
+                  {/* 2-й столбец: информация */}
+                  <div className="shop-cardpack-info">
+                    <div className="shop-cardpack-title">{leagueName} Card Pack</div>
+                    <div className="shop-cardpack-tournament">
+                      {formatTournamentName(tournament.name)}
+                    </div>
+                  </div>
+                  
+                  {/* 3-й столбец: цена и кнопка */}
+                  <div className="shop-cardpack-action">
+                    <div className="shop-cardpack-price">
+                      1000
+                      <img 
+                        src={`${BASE_URL}/icons/Coin_icon.webp`} 
+                        alt="Coins" 
+                        className="shop-cardpack-price-icon"
+                      />
+                    </div>
+                    <button className="shop-cardpack-purchase">
+                      PURCHASE
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         );
       default:
