@@ -4207,7 +4207,7 @@ body {
 .shop-content {
   flex: 1;
   overflow-y: auto;
-  padding: clamp(8px, 2vh, 16px) 0;
+  padding: clamp(4px, 1vh, 8px) 0;
 }
 
 /* Пустое состояние */
