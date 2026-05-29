@@ -4309,26 +4309,29 @@ body {
   line-height: 1.3;
 }
 
-/* 3-й столбец: цена и кнопка */
+/* 3-й столбец: цена и кнопка - ЦЕНТРИРУЕМ ПО ВЕРТИКАЛИ */
 .shop-cardpack-action {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: clamp(4px, 1vh, 8px);
+  align-items: center;      /* центрируем по горизонтали внутри ячейки */
+  justify-content: center;  /* центрируем по вертикали внутри ячейки */
+  gap: clamp(6px, 1.5vh, 10px);
+  height: 100%;
 }
 
 .shop-cardpack-price {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   color: #FFD966;
-  font-size: clamp(14px, 4vw, 18px);
+  font-size: clamp(16px, 4.5vw, 20px);
   font-weight: 700;
 }
 
 .shop-cardpack-price-icon {
   width: auto;
-  height: clamp(12px, 3vw, 16px);
+  height: clamp(14px, 3.5vw, 18px);
   object-fit: contain;
 }
 
@@ -4337,13 +4340,16 @@ body {
   border: 0.15vh solid #666d75;
   border-radius: 2vh;
   color: #FFFFFF;
-  font-size: clamp(9px, 2.5vw, 12px);
+  font-size: clamp(10px, 2.5vw, 12px);
   font-weight: 600;
   cursor: pointer;
   text-transform: uppercase;
-  padding: clamp(4px, 1vh, 6px) clamp(8px, 2vw, 12px);
+  padding: clamp(6px, 1.5vh, 8px) clamp(12px, 3vw, 16px);
   transition: all 0.2s ease;
   white-space: nowrap;
+  width: 100%;
+  min-width: 80px;
+  text-align: center;
 }
 
 .shop-cardpack-purchase:hover {
