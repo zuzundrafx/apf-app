@@ -4268,8 +4268,8 @@ body {
   border-radius: clamp(8px, 2vw, 12px);
   padding: clamp(8px, 2vh, 12px) clamp(12px, 3vw, 16px);
   width: 100%;
-  max-height: 10vh;  /* Ограничиваем максимальную высоту */
-  height: auto;
+  max-height: 12vh;  /* Ограничиваем максимальную высоту */
+  /*height: auto;*/
 }
 
 /* 1-й столбец: иконка */
