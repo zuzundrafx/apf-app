@@ -4266,7 +4266,8 @@ body {
   gap: clamp(8px, 3vw, 16px);
   background: #2A2A2A;
   border-radius: clamp(8px, 2vw, 12px);
-  padding: clamp(8px, 2vh, 12px) clamp(12px, 3vw, 16px);
+  padding: 0 clamp(12px, 3vw, 16px);
+  /*padding: clamp(8px, 2vh, 12px) clamp(12px, 3vw, 16px);*/
   width: 100%;
 }
 
