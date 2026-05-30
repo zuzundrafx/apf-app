@@ -89,7 +89,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
         className="rewards-modal no-summary" 
         style={{ 
           height: 'auto',
-          minHeight: '45%',
+          minHeight: '35%',
           maxHeight: '70%',
           display: 'flex', 
           flexDirection: 'column',
@@ -121,8 +121,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             margin: 'auto',
             marginTop: '4%',
             gap: '4%',
-            maxHeight: '77%',
-            minHeight: '77%',
+            maxHeight: '85%',
+            minHeight: '85%',
             overflow: 'hidden',
           }}
         >
@@ -141,7 +141,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               maxWidth: '80px',
               aspectRatio: '1/1',
               borderRadius: '10%',
-              padding: '2%',
+              /*padding: '2%',*/
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -214,7 +214,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   display: 'flex', 
   justifyContent: 'center', 
   marginTop: '2vh',
-  marginBottom: '4vh',
+  marginBottom: '2vh',
   width: '100%'
 }}>
   <button 
