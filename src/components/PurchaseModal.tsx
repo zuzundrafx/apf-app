@@ -231,7 +231,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
         <span style={{ 
           fontWeight: 700, 
           fontSize: 'clamp(16px, 4vw, 20px)',
-          marginLeft: '4px'
+          marginLeft: '4px',
+        color: '#FFD966'
         }}>
           {price}
         </span>
