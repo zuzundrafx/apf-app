@@ -85,11 +85,37 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           width: '85%'
         }}
       >
-        {/* Иконка в заголовке */}
-        <div className="rewards-header" style={{ top: '-12%', zIndex: 100 }}>
+        <div className="rewards-header" style={{ top: '-8%', zIndex: 100 }}>
+          <button 
+            className="cancelled-modal-close" 
+            style={{ top: '100%', zIndex: 101, cursor: 'pointer' }} 
+            onClick={onClose}
+          >
+            ✕
+          </button>
+        </div>
+
+        <div 
+          className="rewards-winners-list" 
+          style={{ 
+            flex: 'none',
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '85%',
+            margin: 'auto',
+            marginTop: '4%',
+            gap: '4%',
+            maxHeight: '77%',
+            minHeight: '77%',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Иконка предмета */}
           <div style={{
-            width: '25vw',
-            maxWidth: '80px',
+            width: '20vw',
+            maxWidth: '70px',
             aspectRatio: '1/1',
             background: leagueGradient,
             borderRadius: '10%',
@@ -98,10 +124,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             boxShadow: '0 0 0 0.3vw #000000',
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -100%)',
+            marginBottom: '2%'
           }}>
             <div style={{
               width: '100%',
@@ -120,32 +143,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               />
             </div>
           </div>
-          <button 
-            className="cancelled-modal-close" 
-            style={{ top: '130%', zIndex: 101, cursor: 'pointer' }} 
-            onClick={onClose}
-          >
-            ✕
-          </button>
-        </div>
 
-        <div 
-          className="rewards-winners-list" 
-          style={{ 
-            flex: 'none',
-            display: 'flex', 
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'top',
-            width: '85%',
-            margin: 'auto',
-            marginTop: '6%',
-            gap: '4%',
-            maxHeight: '77%',
-            minHeight: '77%',
-            overflow: 'hidden',
-          }}
-        >
           {/* Название предмета */}
           <div style={{
             width: '100%',
@@ -164,7 +162,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           <div style={{
             width: '100%',
             padding: '3% 4%',
-            background: '#313130',
+            /*background: '#313130',*/
             borderRadius: '8px',
             flexShrink: 0,
           }}>
