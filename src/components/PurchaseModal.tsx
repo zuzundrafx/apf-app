@@ -103,7 +103,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '90%',
+            width: '95%',
             margin: 'auto',
             marginTop: '4%',
             gap: '4%',
