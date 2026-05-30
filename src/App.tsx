@@ -948,8 +948,14 @@ function App() {
         )}
 
        {currentView === 'shop' && (
-  <ShopScreen activeTournaments={allCompletedTournaments} />
-)} 
+  <ShopScreen 
+    activeTournaments={allCompletedTournaments}
+    userCoins={userData.coins}
+    onUpdateBalance={async (newCoins) => {
+      setUserData(prev => ({ ...prev, coins: newCoins }));
+    }}
+  />
+)}
 
       </main>
 

@@ -1,15 +1,30 @@
 // src/components/ShopScreen.tsx
 import React, { useState } from 'react';
 import { Tournament } from '../types';
+import PurchaseModal from './PurchaseModal';
 
 const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 
 interface ShopScreenProps {
   activeTournaments: Tournament[];
+  userCoins?: number;
+  onUpdateBalance?: (coins: number) => Promise<void>;
 }
 
-const ShopScreen: React.FC<ShopScreenProps> = ({ activeTournaments }) => {
+const ShopScreen: React.FC<ShopScreenProps> = ({ 
+  activeTournaments, 
+  userCoins = 0,
+  onUpdateBalance 
+}) => {
   const [activeTab, setActiveTab] = useState<'free' | 'currency' | 'fightPass' | 'cardPacks'>('free');
+  const [selectedPack, setSelectedPack] = useState<{
+    tournament: Tournament;
+    league: string;
+    price: number;
+    name: string;
+    icon: string;
+  } | null>(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
   const promotions = [
     "🎁 FREE daily reward! Claim now!",
@@ -50,6 +65,29 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ activeTournaments }) => {
     if (leagueUpper === 'PFL') return 'PFL';
     if (leagueUpper === 'ONE') return 'ONE';
     return 'UFC';
+  };
+
+  const handlePurchaseClick = (tournament: Tournament) => {
+    const league = tournament.league || 'UFC';
+    const leagueName = getLeagueName(league);
+    const iconSrc = getLeagueIcon(league);
+    
+    setSelectedPack({
+      tournament,
+      league: leagueName,
+      price: 1000,
+      name: `${leagueName} Card Pack`,
+      icon: iconSrc
+    });
+    setShowPurchaseModal(true);
+  };
+
+  const handlePurchase = async () => {
+    // TODO: Реализовать логику покупки
+    console.log('Purchase completed for:', selectedPack);
+    if (onUpdateBalance && selectedPack) {
+      await onUpdateBalance(userCoins - selectedPack.price);
+    }
   };
 
   const renderTabContent = () => {
@@ -125,7 +163,10 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ activeTournaments }) => {
                         className="shop-cardpack-price-icon"
                       />
                     </div>
-                    <button className="shop-cardpack-purchase">
+                    <button 
+                      className="shop-cardpack-purchase"
+                      onClick={() => handlePurchaseClick(tournament)}
+                    >
                       PURCHASE
                     </button>
                   </div>
@@ -180,6 +221,24 @@ const ShopScreen: React.FC<ShopScreenProps> = ({ activeTournaments }) => {
       <div className="shop-content">
         {renderTabContent()}
       </div>
+
+      {/* Модальное окно покупки */}
+      {selectedPack && (
+        <PurchaseModal
+          isOpen={showPurchaseModal}
+          onClose={() => {
+            setShowPurchaseModal(false);
+            setSelectedPack(null);
+          }}
+          onPurchase={handlePurchase}
+          itemName={selectedPack.name}
+          itemIcon={selectedPack.icon}
+          tournamentName={selectedPack.tournament.name}
+          league={selectedPack.league}
+          price={selectedPack.price}
+          userCoins={userCoins}
+        />
+      )}
     </div>
   );
 };
