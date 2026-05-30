@@ -112,62 +112,73 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             overflow: 'hidden',
           }}
         >
-          {/* Иконка предмета */}
+          {/* Блок: иконка + название (горизонтально) */}
           <div style={{
-            width: '20vw',
-            maxWidth: '80px',
-            aspectRatio: '1/1',
-            /*background: leagueGradient,*/
-            borderRadius: '10%',
-            padding: '2%',
             display: 'flex',
+            flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'center',
-            /*boxShadow: '0 0 0 0.3vw #000000',*/
-            marginBottom: '2%'
+            gap: 'clamp(12px, 4vw, 20px)',
+            width: '100%',
+            flexShrink: 0,
           }}>
+            {/* Иконка предмета (слева) */}
             <div style={{
-              width: '100%',
-              height: '100%',
-             /* background: '#091422',*/
+              width: '20vw',
+              maxWidth: '70px',
+              aspectRatio: '1/1',
               borderRadius: '10%',
+              padding: '2%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              overflow: 'hidden',
+              flexShrink: 0,
             }}>
-              <img 
-                src={itemIcon} 
-                alt={itemName}
-                style={{ width: '95%', height: '95%', objectFit: 'contain' }}
-              />
+              <div style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: '10%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}>
+                <img 
+                  src={itemIcon} 
+                  alt={itemName}
+                  style={{ width: '95%', height: '95%', objectFit: 'contain' }}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Название предмета */}
-          <div style={{
-            width: '100%',
-            color: '#FFD966',
-            fontSize: 'clamp(14px, 4vw, 18px)',
-            fontWeight: 700,
-            textAlign: 'center',
-            textTransform: 'uppercase',
-            textShadow: '0 0 5px rgba(255, 217, 102, 0.5)',
-            flexShrink: 0,
-          }}>
-            {itemName}
-          </div>
+            {/* Блок с названием предмета и турнира (справа) */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'clamp(4px, 1vh, 8px)',
+              flex: 1,
+              minWidth: 0,
+            }}>
+              {/* Название предмета */}
+              <div style={{
+                color: '#FFD966',
+                fontSize: 'clamp(14px, 4vw, 18px)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                textShadow: '0 0 5px rgba(255, 217, 102, 0.5)',
+                lineHeight: 1.3,
+              }}>
+                {itemName}
+              </div>
 
-          {/* Название турнира */}
-          <div style={{
-            width: '100%',
-            padding: '3% 4%',
-            /*background: '#313130',*/
-            borderRadius: '8px',
-            flexShrink: 0,
-          }}>
-            <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 3vw, 12px)', textAlign: 'center', lineHeight: 1.4 }}>
-              {formattedTournamentName}
+              {/* Название турнира */}
+              <div style={{
+                color: '#888888',
+                fontSize: 'clamp(11px, 3vw, 14px)',
+                fontWeight: 400,
+                lineHeight: 1.3,
+              }}>
+                {formattedTournamentName}
+              </div>
             </div>
           </div>
 
