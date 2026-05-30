@@ -117,13 +117,13 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             width: '20vw',
             maxWidth: '70px',
             aspectRatio: '1/1',
-            background: leagueGradient,
+            /*background: leagueGradient,*/
             borderRadius: '10%',
             padding: '2%',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 0 0 0.3vw #000000',
+            /*boxShadow: '0 0 0 0.3vw #000000',*/
             marginBottom: '2%'
           }}>
             <div style={{
