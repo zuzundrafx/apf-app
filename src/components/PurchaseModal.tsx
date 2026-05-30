@@ -211,32 +211,39 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
         </div>
 
         <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          marginTop: '2vh',
-          marginBottom: '4vh',
-          width: '100%'
+  display: 'flex', 
+  justifyContent: 'center', 
+  marginTop: '2vh',
+  marginBottom: '4vh',
+  width: '100%'
+}}>
+  <button 
+    className="rewards-claim-button"
+    style={buttonStyle}
+    onClick={handlePurchaseClick}
+    disabled={isPurchasing}
+  >
+    {isPurchasing ? (
+      'PURCHASING...'
+    ) : (
+      <>
+        PURCHASE: 
+        <span style={{ 
+          fontWeight: 700, 
+          fontSize: 'clamp(16px, 4vw, 20px)',
+          marginLeft: '4px'
         }}>
-          <button 
-            className="rewards-claim-button"
-            style={buttonStyle}
-            onClick={handlePurchaseClick}
-            disabled={isPurchasing}
-          >
-            {isPurchasing ? (
-              'PURCHASING...'
-            ) : (
-              <>
-                PURCHASE: {price}
-                <img 
-                  src={`${BASE_URL}/icons/Coin_icon.webp`} 
-                  alt="Coins" 
-                  style={{ width: 'auto', height: 'clamp(14px, 3.5vw, 18px)', objectFit: 'contain' }}
-                />
-              </>
-            )}
-          </button>
-        </div>
+          {price}
+        </span>
+        <img 
+          src={`${BASE_URL}/icons/Coin_icon.webp`} 
+          alt="Coins" 
+          style={{ width: 'auto', height: 'clamp(14px, 3.5vw, 18px)', objectFit: 'contain', marginLeft: '2px' }}
+        />
+      </>
+    )}
+  </button>
+</div>
       </div>
     </div>
   );
