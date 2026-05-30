@@ -69,6 +69,20 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const leagueGradient = getLeagueGradient(league);
   const formattedTournamentName = formatTournamentName(tournamentName);
 
+  // Анимация пульсации для кнопки при нехватке монет
+  const buttonStyle = {
+    width: '60%',
+    height: '6vh',
+    opacity: userCoins >= price ? 1 : 0.7,
+    cursor: userCoins >= price ? 'pointer' : 'not-allowed',
+    transform: showPricePulse ? 'scale(1.05)' : 'scale(1)',
+    transition: 'transform 0.3s ease',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+  };
+
   return (
     <div className="rewards-modal-overlay">
       <div 
@@ -194,42 +208,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               Get 5 random fighter cards for the active {league.toUpperCase()} tournament with this pack!
             </div>
           </div>
-
-          {/* Цена */}
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '3% 4%',
-            flexShrink: 0,
-          }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px',
-              color: userCoins >= price ? '#FFFFFF' : '#FF6B6B'
-            }}>
-              <span 
-                id="purchase-price"
-                style={{
-                  display: 'inline-block',
-                  transition: 'transform 0.3s ease',
-                  transform: showPricePulse ? 'scale(1.3)' : 'scale(1)',
-                  fontSize: 'clamp(16px, 4vw, 20px)',
-                  fontWeight: 700,
-                  color: '#FFD966'
-                }}
-              >
-                {price}
-              </span>
-              <img 
-                src={`${BASE_URL}/icons/Coin_icon.webp`} 
-                alt="Coins" 
-                style={{ width: 'auto', height: 'clamp(16px, 4vw, 20px)', objectFit: 'contain' }}
-              />
-            </div>
-          </div>
         </div>
 
         <div style={{ 
@@ -241,16 +219,22 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
         }}>
           <button 
             className="rewards-claim-button"
-            style={{ 
-              width: '60%', 
-              height: '6vh',
-              opacity: userCoins >= price ? 1 : 0.7,
-              cursor: userCoins >= price ? 'pointer' : 'not-allowed'
-            }}
+            style={buttonStyle}
             onClick={handlePurchaseClick}
             disabled={isPurchasing}
           >
-            {isPurchasing ? 'PURCHASING...' : 'PURCHASE'}
+            {isPurchasing ? (
+              'PURCHASING...'
+            ) : (
+              <>
+                PURCHASE: {price}
+                <img 
+                  src={`${BASE_URL}/icons/Coin_icon.webp`} 
+                  alt="Coins" 
+                  style={{ width: 'auto', height: 'clamp(14px, 3.5vw, 18px)', objectFit: 'contain' }}
+                />
+              </>
+            )}
           </button>
         </div>
       </div>
