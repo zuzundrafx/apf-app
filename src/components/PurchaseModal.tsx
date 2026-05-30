@@ -115,7 +115,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           {/* Иконка предмета */}
           <div style={{
             width: '20vw',
-            maxWidth: '70px',
+            maxWidth: '80px',
             aspectRatio: '1/1',
             /*background: leagueGradient,*/
             borderRadius: '10%',
@@ -129,7 +129,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             <div style={{
               width: '100%',
               height: '100%',
-              background: '#091422',
+             /* background: '#091422',*/
               borderRadius: '10%',
               display: 'flex',
               alignItems: 'center',
