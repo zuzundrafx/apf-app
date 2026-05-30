@@ -82,7 +82,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           margin: 'auto auto',
           padding: '0',
           position: 'relative',
-          width: '85%'
+          width: '95%'
         }}
       >
         <div className="rewards-header" style={{ top: '-8%', zIndex: 100 }}>
@@ -103,7 +103,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '85%',
+            width: '90%',
             margin: 'auto',
             marginTop: '4%',
             gap: '4%',
@@ -124,7 +124,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             {/* Иконка предмета (слева) */}
             <div style={{
               width: '20vw',
-              maxWidth: '70px',
+              maxWidth: '80px',
               aspectRatio: '1/1',
               borderRadius: '10%',
               padding: '2%',
