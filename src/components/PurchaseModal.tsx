@@ -1,35 +1,66 @@
 // src/components/PurchaseModal.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getWeightClassColor } from '../utils/weightUtils';
+import { getFighterStyleFromSelected, getStyleIconFilename } from '../utils/fighterUtils';
 
 const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
+const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
 
 interface PurchaseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onPurchase: () => Promise<void>;
   itemName: string;
   itemIcon: string;
   tournamentName: string;
   league: string;
   price: number;
   userCoins: number;
+  authToken?: string;
+  onPurchaseComplete?: (newCoins: number) => void;
 }
 
 const PurchaseModal: React.FC<PurchaseModalProps> = ({
   isOpen,
   onClose,
-  onPurchase,
   itemName,
   itemIcon,
   tournamentName,
   league,
   price,
-  userCoins
+  userCoins,
+  authToken,
+  onPurchaseComplete
 }) => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showPricePulse, setShowPricePulse] = useState(false);
+  const [purchaseState, setPurchaseState] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [purchasedCards, setPurchasedCards] = useState<any[]>([]);
+  const [reloadSecondsLeft, setReloadSecondsLeft] = useState(0);
+  const [currentPrice, setCurrentPrice] = useState(price);
+  const [packInfo, setPackInfo] = useState<any>(null);
 
-  if (!isOpen) return null;
+  // Загружаем информацию о паке при открытии
+  useEffect(() => {
+    if (isOpen && authToken && league) {
+      loadPackInfo();
+    }
+  }, [isOpen, authToken, league]);
+
+  const loadPackInfo = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/shop/card-pack/${league}`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPackInfo(data);
+        setCurrentPrice(data.currentPrice);
+        setReloadSecondsLeft(data.reloadSecondsLeft);
+      }
+    } catch (err) {
+      console.error('Failed to load pack info:', err);
+    }
+  };
 
   const formatTournamentName = (name: string): string => {
     if (!name) return 'Active Tournament';
@@ -40,22 +71,66 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     return result;
   };
 
+  const formatReloadTime = (seconds: number): string => {
+    if (seconds <= 0) return '';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handlePurchaseClick = async () => {
-    if (userCoins < price) {
+    if (userCoins < currentPrice) {
       setShowPricePulse(true);
       setTimeout(() => setShowPricePulse(false), 500);
       return;
     }
     
     setIsPurchasing(true);
+    setPurchaseState('loading');
+    
     try {
-      await onPurchase();
-      onClose();
-    } catch (error) {
+      const response = await fetch(`${API_BASE}/api/shop/purchase-card-pack`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          league: league,
+          itemName: itemName,
+          price: currentPrice
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Purchase failed');
+      }
+      
+      const data = await response.json();
+      setPurchasedCards(data.selections);
+      setPurchaseState('success');
+      if (onPurchaseComplete) {
+        onPurchaseComplete(data.newCoins);
+      }
+    } catch (error: any) {
       console.error('Purchase failed:', error);
+      alert(error.message);
+      setPurchaseState('idle');
     } finally {
       setIsPurchasing(false);
     }
+  };
+
+  const handleGotIt = () => {
+    setPurchaseState('idle');
+    setPurchasedCards([]);
+    onClose();
   };
 
   const getLeagueGradient = (leagueName: string): string => {
@@ -68,13 +143,13 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
   const leagueGradient = getLeagueGradient(league);
   const formattedTournamentName = formatTournamentName(tournamentName);
+  const reloadTimeFormatted = formatReloadTime(reloadSecondsLeft);
 
-  // Анимация пульсации для кнопки при нехватке монет
   const buttonStyle = {
     width: '60%',
     height: '6vh',
-    opacity: userCoins >= price ? 1 : 0.7,
-    cursor: userCoins >= price ? 'pointer' : 'not-allowed',
+    opacity: userCoins >= currentPrice ? 1 : 0.7,
+    cursor: userCoins >= currentPrice ? 'pointer' : 'not-allowed',
     transform: showPricePulse ? 'scale(1.05)' : 'scale(1)',
     transition: 'transform 0.3s ease',
     display: 'flex',
@@ -83,13 +158,121 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     gap: '8px',
   };
 
+  if (!isOpen) return null;
+
+  // Состояние успешной покупки — показываем карты
+  if (purchaseState === 'success') {
+    return (
+      <div className="rewards-modal-overlay">
+        <div 
+          className="rewards-modal no-summary" 
+          style={{ 
+            height: 'auto',
+            minHeight: '45%',
+            maxHeight: '70%',
+            display: 'flex', 
+            flexDirection: 'column',
+            margin: 'auto auto',
+            padding: '0',
+            position: 'relative',
+            width: '95%'
+          }}
+        >
+          {/* Нет кнопки закрытия в состоянии success */}
+          
+          <div 
+            className="rewards-winners-list" 
+            style={{ 
+              flex: 'none',
+              display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '95%',
+              margin: 'auto',
+              marginTop: '6%',
+              gap: '4%',
+              maxHeight: '85%',
+              minHeight: '85%',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Grid из 5 карт */}
+            <div className="selected-fighters-grid" style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(5, 1fr)', 
+              gap: 'clamp(4px, 1vw, 8px)',
+              width: '100%'
+            }}>
+              {purchasedCards.map((sel: any, idx: number) => {
+                const style = getFighterStyleFromSelected(sel.fighter);
+                const styleIcon = getStyleIconFilename(style);
+                const damageValue = sel.fighter['Total Damage'] || 0;
+                
+                return (
+                  <div 
+                    key={idx} 
+                    className="selected-fighter-card" 
+                    data-weight={sel.weightClass} 
+                    style={{ 
+                      backgroundColor: getWeightClassColor(sel.weightClass),
+                      aspectRatio: '1 / 1.4'
+                    }}
+                  >
+                    <div className="selected-fighter-damage-box">{damageValue}</div>
+                    <div className="selected-fighter-inner">
+                      <div className="selected-fighter-icon-container">
+                        <img 
+                          src={`${BASE_URL}/icons/${styleIcon}`} 
+                          alt={style} 
+                          className="selected-fighter-icon" 
+                          onError={(e) => { 
+                            (e.target as HTMLImageElement).style.display = 'none'; 
+                            const p = (e.target as HTMLImageElement).parentElement; 
+                            if (p) { 
+                              p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; 
+                              p.style.fontSize = 'clamp(16px, 4vw, 20px)'; 
+                            } 
+                          }} 
+                        />
+                      </div>
+                      <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
+                      <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            marginTop: '2vh',
+            marginBottom: '4vh',
+            width: '100%'
+          }}>
+            <button 
+              className="rewards-claim-button"
+              style={{ width: '60%', height: '6vh' }}
+              onClick={handleGotIt}
+            >
+              Got It!
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Состояние ожидания — показываем форму покупки
   return (
     <div className="rewards-modal-overlay">
       <div 
         className="rewards-modal no-summary" 
         style={{ 
           height: 'auto',
-          minHeight: '35%',
+          minHeight: '45%',
           maxHeight: '70%',
           display: 'flex', 
           flexDirection: 'column',
@@ -141,7 +324,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               maxWidth: '80px',
               aspectRatio: '1/1',
               borderRadius: '10%',
-              /*padding: '2%',*/
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -193,6 +375,18 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               }}>
                 {formattedTournamentName}
               </div>
+
+              {/* Время перезарядки */}
+              {reloadSecondsLeft > 0 && (
+                <div style={{
+                  color: '#888888',
+                  fontSize: 'clamp(9px, 2.5vw, 11px)',
+                  fontWeight: 400,
+                  lineHeight: 1.3,
+                }}>
+                  Reload time left: {reloadTimeFormatted}
+                </div>
+              )}
             </div>
           </div>
 
@@ -212,40 +406,40 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
         </div>
 
         <div style={{ 
-  display: 'flex', 
-  justifyContent: 'center', 
-  marginTop: '2vh',
-  marginBottom: '2vh',
-  width: '100%'
-}}>
-  <button 
-    className="rewards-claim-button"
-    style={buttonStyle}
-    onClick={handlePurchaseClick}
-    disabled={isPurchasing}
-  >
-    {isPurchasing ? (
-      'PURCHASING...'
-    ) : (
-      <>
-        CONFIRM PAYMENT: 
-        <span style={{ 
-          fontWeight: 700, 
-          fontSize: 'clamp(16px, 4vw, 20px)',
-          marginLeft: '4px',
-        color: '#FFD966'
+          display: 'flex', 
+          justifyContent: 'center', 
+          marginTop: '2vh',
+          marginBottom: '2vh',
+          width: '100%'
         }}>
-          {price}
-        </span>
-        <img 
-          src={`${BASE_URL}/icons/Coin_icon.webp`} 
-          alt="Coins" 
-          style={{ width: 'auto', height: 'clamp(14px, 3.5vw, 18px)', objectFit: 'contain', marginLeft: '2px' }}
-        />
-      </>
-    )}
-  </button>
-</div>
+          <button 
+            className="rewards-claim-button"
+            style={buttonStyle}
+            onClick={handlePurchaseClick}
+            disabled={isPurchasing}
+          >
+            {isPurchasing ? (
+              'PURCHASING...'
+            ) : (
+              <>
+                CONFIRM PAYMENT: 
+                <span style={{ 
+                  fontWeight: 700, 
+                  fontSize: 'clamp(16px, 4vw, 20px)',
+                  marginLeft: '4px',
+                  color: '#FFD966'
+                }}>
+                  {currentPrice}
+                </span>
+                <img 
+                  src={`${BASE_URL}/icons/Coin_icon.webp`} 
+                  alt="Coins" 
+                  style={{ width: 'auto', height: 'clamp(14px, 3.5vw, 18px)', objectFit: 'contain', marginLeft: '2px' }}
+                />
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

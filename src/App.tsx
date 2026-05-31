@@ -951,9 +951,12 @@ function App() {
   <ShopScreen 
     activeTournaments={allCompletedTournaments}
     userCoins={userData.coins}
-    onUpdateBalance={async (newCoins) => {
-      setUserData(prev => ({ ...prev, coins: newCoins }));
+    userTickets={userData.tickets}
+    userStyle={userStyle}
+    onUpdateBalance={async (coins, tickets) => {
+      setUserData(prev => ({ ...prev, coins, tickets }));
     }}
+    authToken={authToken || undefined}
   />
 )}
 

@@ -8,13 +8,18 @@ const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
 interface ShopScreenProps {
   activeTournaments: Tournament[];
   userCoins?: number;
-  onUpdateBalance?: (coins: number) => Promise<void>;
+  userTickets?: number;
+  userStyle?: 'striker' | 'grappler' | null;
+  onUpdateBalance?: (coins: number, tickets: number) => Promise<void>;
+  authToken?: string;
 }
 
 const ShopScreen: React.FC<ShopScreenProps> = ({ 
   activeTournaments, 
   userCoins = 0,
-  onUpdateBalance 
+  userTickets = 0,
+  onUpdateBalance,
+  authToken
 }) => {
   const [activeTab, setActiveTab] = useState<'free' | 'currency' | 'fightPass' | 'cardPacks'>('free');
   const [selectedPack, setSelectedPack] = useState<{
@@ -80,14 +85,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       icon: iconSrc
     });
     setShowPurchaseModal(true);
-  };
-
-  const handlePurchase = async () => {
-    // TODO: Реализовать логику покупки
-    console.log('Purchase completed for:', selectedPack);
-    if (onUpdateBalance && selectedPack) {
-      await onUpdateBalance(userCoins - selectedPack.price);
-    }
   };
 
   const renderTabContent = () => {
@@ -230,13 +227,18 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
             setShowPurchaseModal(false);
             setSelectedPack(null);
           }}
-          onPurchase={handlePurchase}
           itemName={selectedPack.name}
           itemIcon={selectedPack.icon}
           tournamentName={selectedPack.tournament.name}
           league={selectedPack.league}
           price={selectedPack.price}
           userCoins={userCoins}
+          authToken={authToken}
+          onPurchaseComplete={(newCoins) => {
+            if (onUpdateBalance) {
+              onUpdateBalance(newCoins, userTickets);
+            }
+          }}
         />
       )}
     </div>
