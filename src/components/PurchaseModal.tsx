@@ -228,7 +228,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
       'PURCHASING...'
     ) : (
       <>
-        PURCHASE: 
+        CONFIRM PAYMENT: 
         <span style={{ 
           fontWeight: 700, 
           fontSize: 'clamp(16px, 4vw, 20px)',
