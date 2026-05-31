@@ -203,6 +203,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             background: '#313130',
             borderRadius: '8px',
             flexShrink: 0,
+            marginTop: 'clamp(8px, 2vh, 16px)',
           }}>
             <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 3vw, 12px)', textAlign: 'center', lineHeight: 1.4 }}>
               Get 5 random fighter cards for the active {league.toUpperCase()} tournament with this pack!
