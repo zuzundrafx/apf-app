@@ -155,6 +155,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               maxHeight: '85%',
               minHeight: '85%',
               overflow: 'hidden',
+              padding: 0,
             }}
           >
             {/* Grid из 5 карт */}
@@ -162,7 +163,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               display: 'grid', 
               gridTemplateColumns: 'repeat(5, 1fr)', 
               gap: 'clamp(4px, 1vw, 8px)',
-              width: '100%'
+              width: '100%',
+              padding: 0,
+            margin: 0
             }}>
               {purchasedCards.map((sel: any, idx: number) => {
                 const style = getFighterStyleFromSelected(sel.fighter);
