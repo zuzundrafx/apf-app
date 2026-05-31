@@ -1,4 +1,4 @@
-# ufc_parser.py – версия без расчёта Total Damage (расчёт на сервере)
+# ufc_parser.py – оптимизированная версия с переиспользованием драйвера
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -8,13 +8,84 @@ import tempfile
 from datetime import datetime
 import re
 import time
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 
 YA_TOKEN = "y0__xCOz-U8GI3sPSCOyp-2FnBLBQ7drGtOupKGVfu4CpN2qtUs"
 EVENTS_LIST_URL = "http://www.ufcstats.com/statistics/events/completed"
-FIGHTERS_LIST_URL = "http://www.ufcstats.com/statistics/fighters?char=a&page=all"
-RESULTS_FOLDER = "UFC_Bot_Results"
-BACKEND_URL = "https://apf-app-backend.onrender.com/api/tournaments/sync"
+BACKEND_URL = "https://apf-app-backend.onrender.com"
 RECALCULATE_URL = "https://apf-app-backend.onrender.com/api/tournaments"
+
+# Глобальный драйвер (переиспользуется)
+driver = None
+FIGHTERS_LIST = []  # Глобальный список бойцов
+
+def get_driver():
+    """Возвращает существующий экземпляр драйвера или создаёт новый"""
+    global driver
+    if driver is None:
+        print("🚀 Инициализация Chrome драйвера...")
+        chrome_options = Options()
+        chrome_options.add_argument("--headless=new")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        print("✅ Chrome драйвер готов")
+    return driver
+
+def close_driver():
+    """Закрывает драйвер"""
+    global driver
+    if driver:
+        print("🔚 Закрытие Chrome драйвера...")
+        driver.quit()
+        driver = None
+
+def get_page_html(url, wait_for_selector=None, timeout=30):
+    """Получает HTML страницы через переиспользуемый драйвер"""
+    try:
+        driver = get_driver()
+        driver.get(url)
+        time.sleep(3)
+        
+        if wait_for_selector:
+            WebDriverWait(driver, timeout).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, wait_for_selector))
+            )
+        
+        return driver.page_source
+    except Exception as e:
+        print(f"❌ Ошибка загрузки страницы {url}: {e}")
+        close_driver()
+        raise
+
+def load_fighters_from_backend():
+    """Загружает список бойцов из Supabase через бэкенд"""
+    global FIGHTERS_LIST
+    print("📥 Загружаю список бойцов из Supabase...")
+    try:
+        response = requests.get(f"{BACKEND_URL}/api/ufc-fighters/list", timeout=30)
+        if response.status_code == 200:
+            fighters_data = response.json()
+            FIGHTERS_LIST = sorted([f['full_name'] for f in fighters_data], key=len, reverse=True)
+            print(f"✅ Загружено {len(FIGHTERS_LIST)} бойцов из Supabase")
+            return True
+        else:
+            print(f"⚠️ Ошибка загрузки: {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"⚠️ Ошибка соединения: {e}")
+        return False
 
 def clean_stat(val):
     if val in ('View', 'Matchup', ''):
@@ -37,32 +108,40 @@ def parse_event_date(date_text):
 
 def get_upcoming_and_last_events():
     print("🔍 Анализирую список турниров...")
-    response = requests.get(EVENTS_LIST_URL)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    events_table = soup.find('table', class_='b-statistics__table-events')
-    if not events_table: return None, None
-    rows = events_table.find_all('tr')[1:]
-    events = []
-    for row in rows:
-        cols = row.find_all('td')
-        if len(cols) >= 1:
-            first_col = cols[0]
-            link_tag = first_col.find('a')
-            if not link_tag: continue
-            event_url = link_tag.get('href')
-            full_text = first_col.get_text().strip()
-            date_pattern = r'(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}'
-            date_match = re.search(date_pattern, full_text)
-            if date_match:
-                date_text = date_match.group(0)
-                event_name = full_text[:date_match.start()].strip()
-                event_date = parse_event_date(date_text)
-                if event_date:
-                    events.append({'name': event_name, 'url': event_url, 'date': event_date, 'date_text': date_text})
-    events.sort(key=lambda x: x['date'])
-    if len(events) >= 2: return events[-2], events[-1]
-    elif len(events) == 1: return None, events[-1]
-    return None, None
+    try:
+        html = get_page_html(EVENTS_LIST_URL, wait_for_selector="table.b-statistics__table-events")
+        soup = BeautifulSoup(html, 'html.parser')
+        events_table = soup.find('table', class_='b-statistics__table-events')
+        if not events_table: 
+            print("❌ Таблица турниров не найдена")
+            return None, None
+        rows = events_table.find_all('tr')[1:]
+        events = []
+        for row in rows:
+            cols = row.find_all('td')
+            if len(cols) >= 1:
+                first_col = cols[0]
+                link_tag = first_col.find('a')
+                if not link_tag: continue
+                event_url = link_tag.get('href')
+                full_text = first_col.get_text().strip()
+                date_pattern = r'(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}'
+                date_match = re.search(date_pattern, full_text)
+                if date_match:
+                    date_text = date_match.group(0)
+                    event_name = full_text[:date_match.start()].strip()
+                    event_date = parse_event_date(date_text)
+                    if event_date:
+                        events.append({'name': event_name, 'url': event_url, 'date': event_date, 'date_text': date_text})
+        events.sort(key=lambda x: x['date'])
+        if len(events) >= 2: 
+            return events[-2], events[-1]
+        elif len(events) == 1: 
+            return None, events[-1]
+        return None, None
+    except Exception as e:
+        print(f"❌ Ошибка при загрузке списка турниров: {e}")
+        return None, None
 
 def is_tournament_complete(df):
     if df is None or df.empty: return False
@@ -70,124 +149,201 @@ def is_tournament_complete(df):
         if row.get('W/L', '') not in ['win', 'lose', 'draw']: return False
     return True
 
-def parse_tournament(event_url, fighters_list):
+def extract_fighter_names(text, fighters_list):
+    text = clean_text(text)
+    
+    # Проверка на NC
+    if 'no contest' in text.lower() or 'nc' in text.lower():
+        text = re.sub(r'\s*nc\s*', ' ', text, flags=re.IGNORECASE)
+        text = re.sub(r'\s*no contest\s*', ' ', text, flags=re.IGNORECASE)
+        text = text.strip()
+        words = text.split()
+        if len(words) >= 2:
+            mid = len(words) // 2
+            return " ".join(words[:mid]), " ".join(words[mid:])
+        return "", ""
+    
+    # Пытаемся найти "vs"
+    vs_match = re.search(r'(.+?)\s+vs\.?\s+(.+)', text, re.IGNORECASE)
+    if vs_match:
+        return vs_match.group(1).strip(), vs_match.group(2).strip()
+    
+    # Поиск по списку бойцов (без "vs")
+    if fighters_list:
+        # Ищем САМЫЙ ДЛИННЫЙ совпадающий фрагмент в начале строки
+        best_match = ""
+        for fighter in fighters_list:
+            if text.startswith(fighter) and len(fighter) > len(best_match):
+                best_match = fighter
+        
+        if best_match:
+            remaining = text[len(best_match):].strip()
+            # Ищем второго бойца
+            for fighter2 in fighters_list:
+                if remaining.startswith(fighter2):
+                    return best_match, fighter2
+            # Если не нашли по startswith, ищем любое вхождение
+            for fighter2 in fighters_list:
+                if fighter2 in remaining and fighter2 != best_match:
+                    # Проверяем порядок (первый должен быть в начале)
+                    if text.find(best_match) < text.find(fighter2):
+                        return best_match, fighter2
+            # Если не нашли, возвращаем best_match и остаток
+            return best_match, remaining
+    
+    # Разделяем пополам (fallback)
+    words = text.split()
+    if len(words) >= 2:
+        mid = len(words) // 2
+        name1 = " ".join(words[:mid])
+        name2 = " ".join(words[mid:])
+        
+        # Проверяем по списку
+        if fighters_list:
+            for fighter in fighters_list:
+                if fighter in name1 and len(fighter) > len(name1) * 0.7:
+                    name1 = fighter
+                if fighter in name2 and len(fighter) > len(name2) * 0.7:
+                    name2 = fighter
+        return name1, name2
+    
+    print(f"⚠️ Не удалось извлечь имена из: {text}")
+    return "", ""
+
+def parse_tournament(event_url):
     print(f"\n📋 Парсинг турнира: {event_url}")
-    response = requests.get(event_url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    event_name = get_event_name(soup)
-    print(f"🏆 Название: {event_name}")
-    table = soup.find('table')
-    if not table: return None, event_name
-    rows = table.find_all('tr')[1:]
-    all_fighters = []
-    for row_index, row in enumerate(rows):
-        cols = row.find_all('td')
-        if len(cols) < 10: continue
-        wl_text = clean_text(cols[0].get_text())
-        fighter_text = clean_text(cols[1].get_text())
-        kd_text = clean_text(cols[2].get_text())
-        str_text = clean_text(cols[3].get_text())
-        td_text = clean_text(cols[4].get_text())
-        sub_text = clean_text(cols[5].get_text())
-        weight = clean_text(cols[6].get_text())
-        method = clean_text(cols[7].get_text())
-        round_num = clean_text(cols[8].get_text())
-        time_str = clean_text(cols[9].get_text())
+    try:
+        html = get_page_html(event_url, wait_for_selector="table")
+        soup = BeautifulSoup(html, 'html.parser')
+        event_name = get_event_name(soup)
+        print(f"🏆 Название: {event_name}")
+        table = soup.find('table')
+        if not table: 
+            return None, event_name
+        rows = table.find_all('tr')[1:]
+        all_fighters = []
+        for row_index, row in enumerate(rows):
+            cols = row.find_all('td')
+            if len(cols) < 10: continue
+            wl_text = clean_text(cols[0].get_text())
+            fighter_text = clean_text(cols[1].get_text())
+            kd_text = clean_text(cols[2].get_text())
+            str_text = clean_text(cols[3].get_text())
+            td_text = clean_text(cols[4].get_text())
+            sub_text = clean_text(cols[5].get_text())
+            weight = clean_text(cols[6].get_text())
+            method = clean_text(cols[7].get_text())
+            round_num = clean_text(cols[8].get_text())
+            time_str = clean_text(cols[9].get_text())
 
-        wl_parts = wl_text.split() if wl_text else []
-        kd_parts = kd_text.split() if kd_text else []
-        str_parts = str_text.split() if str_text else []
-        td_parts = td_text.split() if td_text else []
-        sub_parts = sub_text.split() if sub_text else []
+            wl_parts = wl_text.split() if wl_text else []
+            kd_parts = kd_text.split() if kd_text else []
+            str_parts = str_text.split() if str_text else []
+            td_parts = td_text.split() if td_text else []
+            sub_parts = sub_text.split() if sub_text else []
 
-        name1, name2 = extract_fighter_names(fighter_text, fighters_list)
-        if not name1 or not name2: continue
+            name1, name2 = extract_fighter_names(fighter_text, FIGHTERS_LIST)
+            if not name1 or not name2: 
+                print(f"⚠️ Пропущен бой: {fighter_text}")
+                continue
 
-        # Определение победителя
-        wl1, wl2 = '', ''
-        if 'draw' in wl_text.lower():
-            wl1, wl2 = 'draw', 'draw'
-        elif len(wl_parts) >= 2:
-            if 'win' in wl_parts[0].lower() or 'w' == wl_parts[0].lower():
-                wl1, wl2 = 'win', 'lose'
-            elif 'win' in wl_parts[1].lower() or 'w' == wl_parts[1].lower():
-                wl1, wl2 = 'lose', 'win'
-        if not wl1 and not wl2:
-            first_col = cols[0]
-            winner_icon = first_col.find('img', class_='b-flag__img') or first_col.find('i', class_='fa-trophy')
-            if winner_icon:
-                wl1, wl2 = 'win', 'lose'
-            else:
+            # Определение победителя
+            wl1, wl2 = '', ''
+            if 'draw' in wl_text.lower():
+                wl1, wl2 = 'draw', 'draw'
+            elif len(wl_parts) >= 2:
+                if 'win' in wl_parts[0].lower() or 'w' == wl_parts[0].lower():
+                    wl1, wl2 = 'win', 'lose'
+                elif 'win' in wl_parts[1].lower() or 'w' == wl_parts[1].lower():
+                    wl1, wl2 = 'lose', 'win'
+            
+            # Если не удалось определить победителя, проверяем на NC
+            if not wl1 and not wl2:
+                first_col = cols[0]
                 cell_text = first_col.get_text().strip().lower()
-                if 'win' in cell_text: wl1, wl2 = 'win', 'lose'
-                elif 'loss' in cell_text or 'lose' in cell_text: wl1, wl2 = 'lose', 'win'
+                if 'no contest' in cell_text or 'nc' in cell_text:
+                    wl1, wl2 = 'draw', 'draw'
+                    print(f"  ⚠️ NC (No Contest) в бою: {fighter_text}")
+                else:
+                    winner_icon = first_col.find('img', class_='b-flag__img') or first_col.find('i', class_='fa-trophy')
+                    if winner_icon:
+                        wl1, wl2 = 'win', 'lose'
+                    else:
+                        if 'win' in cell_text:
+                            wl1, wl2 = 'win', 'lose'
+                        elif 'loss' in cell_text or 'lose' in cell_text:
+                            wl1, wl2 = 'lose', 'win'
 
-        kd1 = clean_stat(kd_parts[0]) if len(kd_parts) > 0 else "0"
-        kd2 = clean_stat(kd_parts[1]) if len(kd_parts) > 1 else "0"
-        str1 = clean_stat(str_parts[0]) if len(str_parts) > 0 else "0"
-        str2 = clean_stat(str_parts[1]) if len(str_parts) > 1 else "0"
-        td1 = clean_stat(td_parts[0]) if len(td_parts) > 0 else "0"
-        td2 = clean_stat(td_parts[1]) if len(td_parts) > 1 else "0"
-        sub1 = clean_stat(sub_parts[0]) if len(sub_parts) > 0 else "0"
-        sub2 = clean_stat(sub_parts[1]) if len(sub_parts) > 1 else "0"
+            kd1 = clean_stat(kd_parts[0]) if len(kd_parts) > 0 else "0"
+            kd2 = clean_stat(kd_parts[1]) if len(kd_parts) > 1 else "0"
+            str1 = clean_stat(str_parts[0]) if len(str_parts) > 0 else "0"
+            str2 = clean_stat(str_parts[1]) if len(str_parts) > 1 else "0"
+            td1 = clean_stat(td_parts[0]) if len(td_parts) > 0 else "0"
+            td2 = clean_stat(td_parts[1]) if len(td_parts) > 1 else "0"
+            sub1 = clean_stat(sub_parts[0]) if len(sub_parts) > 0 else "0"
+            sub2 = clean_stat(sub_parts[1]) if len(sub_parts) > 1 else "0"
 
-        head_strikes = {"fighter1": "0", "fighter2": "0"}
-        body_strikes = {"fighter1": "0", "fighter2": "0"}
-        leg_strikes = {"fighter1": "0", "fighter2": "0"}
-        fight_detail_link = None
-        onclick_attr = row.get('onclick')
-        if onclick_attr and 'fight-details' in onclick_attr:
-            match = re.search(r"'(http://www.ufcstats.com/fight-details/[^']+)'", onclick_attr)
-            if match: fight_detail_link = match.group(1)
-        if fight_detail_link and str_parts and len(str_parts) > 1:
-            fight_stats = get_fight_details(fight_detail_link, name1, name2, str_parts[0], str_parts[1])
-            head_strikes = fight_stats["head"]
-            body_strikes = fight_stats["body"]
-            leg_strikes = fight_stats["leg"]
-            time.sleep(1)
+            head_strikes = {"fighter1": "0", "fighter2": "0"}
+            body_strikes = {"fighter1": "0", "fighter2": "0"}
+            leg_strikes = {"fighter1": "0", "fighter2": "0"}
+            fight_detail_link = None
+            onclick_attr = row.get('onclick')
+            if onclick_attr and 'fight-details' in onclick_attr:
+                match = re.search(r"'(http://www.ufcstats.com/fight-details/[^']+)'", onclick_attr)
+                if match: fight_detail_link = match.group(1)
+            if fight_detail_link and str_parts and len(str_parts) > 1:
+                fight_stats = get_fight_details(fight_detail_link, name1, name2, str_parts[0], str_parts[1])
+                head_strikes = fight_stats["head"]
+                body_strikes = fight_stats["body"]
+                leg_strikes = fight_stats["leg"]
+                time.sleep(0.5)
 
-        fighter1 = {
-            'Fight_ID': row_index + 1,
-            'Fighter': name1,
-            'W/L': wl1,
-            'Kd': kd1,
-            'Str': str1,
-            'Td': td1,
-            'Sub': sub1,
-            'Head': head_strikes["fighter1"],
-            'Body': body_strikes["fighter1"],
-            'Leg': leg_strikes["fighter1"],
-            'Weight class': weight,
-            'Method': method,
-            'Round': round_num,
-            'Time': time_str,
-            'Total Damage': 0  # Больше не считаем в парсере
-        }
-        fighter2 = {
-            'Fight_ID': row_index + 1,
-            'Fighter': name2,
-            'W/L': wl2,
-            'Kd': kd2,
-            'Str': str2,
-            'Td': td2,
-            'Sub': sub2,
-            'Head': head_strikes["fighter2"],
-            'Body': body_strikes["fighter2"],
-            'Leg': leg_strikes["fighter2"],
-            'Weight class': weight,
-            'Method': method,
-            'Round': round_num,
-            'Time': time_str,
-            'Total Damage': 0  # Больше не считаем в парсере
-        }
+            fighter1 = {
+                'Fight_ID': row_index + 1,
+                'Fighter': name1,
+                'W/L': wl1,
+                'Kd': kd1,
+                'Str': str1,
+                'Td': td1,
+                'Sub': sub1,
+                'Head': head_strikes["fighter1"],
+                'Body': body_strikes["fighter1"],
+                'Leg': leg_strikes["fighter1"],
+                'Weight class': weight,
+                'Method': method,
+                'Round': round_num,
+                'Time': time_str,
+                'Total Damage': 0
+            }
+            fighter2 = {
+                'Fight_ID': row_index + 1,
+                'Fighter': name2,
+                'W/L': wl2,
+                'Kd': kd2,
+                'Str': str2,
+                'Td': td2,
+                'Sub': sub2,
+                'Head': head_strikes["fighter2"],
+                'Body': body_strikes["fighter2"],
+                'Leg': leg_strikes["fighter2"],
+                'Weight class': weight,
+                'Method': method,
+                'Round': round_num,
+                'Time': time_str,
+                'Total Damage': 0
+            }
 
-        all_fighters.append(fighter1)
-        all_fighters.append(fighter2)
-        print(f"  {name1} vs {name2} ({weight}) | {wl1}/{wl2}")
+            all_fighters.append(fighter1)
+            all_fighters.append(fighter2)
+            print(f"  {name1} vs {name2} ({weight}) | {wl1}/{wl2}")
 
-    return pd.DataFrame(all_fighters), event_name
+        return pd.DataFrame(all_fighters), event_name
+    except Exception as e:
+        print(f"❌ Ошибка при парсинге турнира: {e}")
+        return None, None
 
-def clean_text(text): return re.sub(r'\s+', ' ', text).strip()
+def clean_text(text): 
+    return re.sub(r'\s+', ' ', text).strip()
 
 def get_event_name(soup):
     try:
@@ -202,58 +358,10 @@ def get_event_name(soup):
     except: pass
     return f"event_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-def get_all_fighters():
-    print("📥 Загружаю полный список всех бойцов...")
-    all_fighters = set()
-    base_url = "http://www.ufcstats.com/statistics/fighters?char={}&page=all"
-    for letter in [chr(i) for i in range(ord('a'), ord('z')+1)]:
-        try:
-            response = requests.get(base_url.format(letter))
-            soup = BeautifulSoup(response.text, 'html.parser')
-            table = soup.find('table')
-            if not table: continue
-            rows = table.find_all('tr')[1:]
-            for row in rows:
-                cols = row.find_all('td')
-                if len(cols) >= 2:
-                    first = clean_text(cols[0].get_text())
-                    last = clean_text(cols[1].get_text())
-                    if first and last and first not in ["--", ""] and last not in ["--", ""]:
-                        all_fighters.add(f"{first} {last}")
-        except: continue
-    fighters_list = sorted(list(all_fighters), key=len, reverse=True)
-    print(f"✅ Загружено {len(fighters_list)} уникальных полных имен бойцов")
-    return fighters_list
-
-def extract_fighter_names(text, fighters_list):
-    text = clean_text(text)
-    found_fighters = []
-    remaining_text = text
-    for fighter in sorted(fighters_list, key=len, reverse=True):
-        if fighter in remaining_text:
-            found_fighters.append(fighter)
-            remaining_text = remaining_text.replace(fighter, " ")
-    if len(found_fighters) >= 2:
-        pos1 = text.find(found_fighters[0]); pos2 = text.find(found_fighters[1])
-        return (found_fighters[0], found_fighters[1]) if pos1 < pos2 else (found_fighters[1], found_fighters[0])
-    elif len(found_fighters) == 1:
-        name1 = found_fighters[0]
-        rest = text.replace(name1, " ").strip()
-        for fighter in sorted(fighters_list, key=len, reverse=True):
-            if fighter in rest and fighter != name1:
-                pos1 = text.find(name1); pos2 = text.find(fighter)
-                return (name1, fighter) if pos1 < pos2 else (fighter, name1)
-        rest_parts = rest.split()
-        if rest_parts:
-            possible_name2 = " ".join(rest_parts)
-            pos1 = text.find(name1); pos2 = text.find(possible_name2)
-            return (name1, possible_name2) if pos1 < pos2 else (possible_name2, name1)
-    return "", ""
-
 def get_fight_details(fight_url, fighter1_name, fighter2_name, str_fighter1, str_fighter2):
     try:
-        response = requests.get(fight_url)
-        soup = BeautifulSoup(response.text, 'html.parser')
+        html = get_page_html(fight_url, wait_for_selector="section.b-fight-details__section")
+        soup = BeautifulSoup(html, 'html.parser')
         head = {"fighter1": "0", "fighter2": "0"}
         body = {"fighter1": "0", "fighter2": "0"}
         leg = {"fighter1": "0", "fighter2": "0"}
@@ -295,7 +403,9 @@ def get_fight_details(fight_url, fighter1_name, fighter2_name, str_fighter1, str
                                         leg = {"fighter1": leg2, "fighter2": leg1}
                                 break
         return {"head": head, "body": body, "leg": leg}
-    except: return {"head": {"fighter1":"0","fighter2":"0"}, "body": {"fighter1":"0","fighter2":"0"}, "leg": {"fighter1":"0","fighter2":"0"}}
+    except Exception as e:
+        print(f"⚠️ Ошибка при загрузке деталей боя: {e}")
+        return {"head": {"fighter1":"0","fighter2":"0"}, "body": {"fighter1":"0","fighter2":"0"}, "leg": {"fighter1":"0","fighter2":"0"}}
 
 def save_to_yadisk(df, filename):
     filepath = os.path.join(tempfile.gettempdir(), filename)
@@ -322,19 +432,14 @@ def sync_to_backend(tournament_name, tournament_date, league, fighters_df, is_co
         "is_completed": is_completed
     }
     try:
-        response = requests.post(BACKEND_URL, json=payload, timeout=30)
+        response = requests.post(f"{BACKEND_URL}/api/tournaments/sync", json=payload, timeout=30)
         if response.status_code == 200:
             print("✅ Данные успешно отправлены в бэкенд")
-            
-            # После успешной синхронизации — отправляем сигнал на пересчёт урона
-            data = response.json()
-            # Получаем ID турнира из ответа сервера (если есть) или ищем по имени
             recalc_response = requests.post(f"{RECALCULATE_URL}/recalculate", json={"tournament_name": tournament_name}, timeout=30)
             if recalc_response.status_code == 200:
                 print("✅ Сигнал на пересчёт урона отправлен")
             else:
                 print(f"⚠️ Ошибка при отправке сигнала на пересчёт: {recalc_response.status_code}")
-            
             return True
         else:
             print(f"❌ Ошибка отправки в бэкенд: {response.status_code} - {response.text}")
@@ -361,7 +466,8 @@ def delete_upcoming_file_if_exists(tournament_name, event_date):
         if y.exists(f"app:/{upcoming_filename}"):
             y.remove(f"app:/{upcoming_filename}", permanently=True)
             print(f"🗑️ Удалён UPCOMING файл: {upcoming_filename}")
-    except Exception as e: print(f"⚠️ Ошибка при удалении UPCOMING файла: {e}")
+    except Exception as e: 
+        print(f"⚠️ Ошибка при удалении UPCOMING файла: {e}")
 
 def cleanup_old_past_tournaments(current_name, current_date):
     try:
@@ -375,61 +481,57 @@ def cleanup_old_past_tournaments(current_name, current_date):
                 if clean_current in file['name'] and current_date_str not in file['name']:
                     y.remove(f"app:/{file['name']}", permanently=True)
                     print(f"🗑️ Удалён старый файл: {file['name']}")
-    except Exception as e: print(f"⚠️ Ошибка при очистке старых турниров: {e}")
-
-def recalculate_tournament_damage(tournament_id):
-    """Отправляет сигнал серверу на пересчёт урона для турнира"""
-    try:
-        response = requests.post(f"{RECALCULATE_URL}/{tournament_id}/recalculate", timeout=30)
-        if response.status_code == 200:
-            print(f"🔄 Пересчёт урона для турнира {tournament_id} выполнен")
-            return True
-        else:
-            print(f"⚠️ Ошибка пересчёта: {response.status_code} - {response.text}")
-            return False
-    except Exception as e:
-        print(f"❌ Ошибка соединения при пересчёте: {e}")
-        return False
+    except Exception as e: 
+        print(f"⚠️ Ошибка при очистке старых турниров: {e}")
 
 # ========== ОСНОВНАЯ ПРОГРАММА ==========
-print("🚀 Запуск парсера версии 2.0 (расчёт урона на сервере)...")
-fighters_master_list = get_all_fighters()
-if not fighters_master_list: exit()
+print("🚀 Запуск основного парсера версии 3.0 (оптимизированный)")
+print("=" * 50)
 
-prev_event, last_event = get_upcoming_and_last_events()
-if not prev_event and not last_event:
-    print("❌ Не найдено турниров для обработки")
-    exit()
+# Загружаем список бойцов из Supabase
+if not load_fighters_from_backend():
+    print("⚠️ Не удалось загрузить список бойцов, работаем в режиме извлечения из текста")
+    FIGHTERS_LIST = []
 
-processed_urls = set()
+try:
+    prev_event, last_event = get_upcoming_and_last_events()
+    if not prev_event and not last_event:
+        print("❌ Не найдено турниров для обработки")
+        exit()
 
-def process_event(event):
-    if event['url'] in processed_urls: return
-    processed_urls.add(event['url'])
-    print("\n" + "=" * 60)
-    print(f"ОБРАБОТКА ТУРНИРА: {event['name']}")
-    print("=" * 60)
-    try:
-        df, name = parse_tournament(event['url'], fighters_master_list)
-        if df is not None and not df.empty:
-            league = 'UFC'
-            completed = is_tournament_complete(df)
-            if completed:
-                print("✅ ТУРНИР ЗАВЕРШЕН! Синхронизация с бэкендом.")
-                sync_to_backend(name, event['date'], league, df, True)
-                filename = get_filename(name, event['date'], is_upcoming=False)
-                save_to_yadisk(df, filename)
-                delete_upcoming_file_if_exists(name, event['date'])
-                cleanup_old_past_tournaments(name, event['date'])
-            else:
-                print("⚠️ НЕ ВСЕ БОИ ЗАВЕРШЕНЫ. Синхронизация как upcoming.")
-                sync_to_backend(name, event['date'], league, df, False)
-                filename = get_filename(name, event['date'], is_upcoming=True)
-                save_to_yadisk(df, filename)
-    except Exception as e:
-        print(f"❌ Ошибка: {e}")
+    processed_urls = set()
 
-if prev_event: process_event(prev_event)
-if last_event: process_event(last_event)
+    def process_event(event):
+        if event['url'] in processed_urls: return
+        processed_urls.add(event['url'])
+        print("\n" + "=" * 60)
+        print(f"ОБРАБОТКА ТУРНИРА: {event['name']}")
+        print("=" * 60)
+        try:
+            df, name = parse_tournament(event['url'])
+            if df is not None and not df.empty:
+                league = 'UFC'
+                completed = is_tournament_complete(df)
+                if completed:
+                    print("✅ ТУРНИР ЗАВЕРШЕН! Синхронизация с бэкендом.")
+                    sync_to_backend(name, event['date'], league, df, True)
+                    filename = get_filename(name, event['date'], is_upcoming=False)
+                    save_to_yadisk(df, filename)
+                    delete_upcoming_file_if_exists(name, event['date'])
+                    cleanup_old_past_tournaments(name, event['date'])
+                else:
+                    print("⚠️ НЕ ВСЕ БОИ ЗАВЕРШЕНЫ. Синхронизация как upcoming.")
+                    sync_to_backend(name, event['date'], league, df, False)
+                    filename = get_filename(name, event['date'], is_upcoming=True)
+                    save_to_yadisk(df, filename)
+        except Exception as e:
+            print(f"❌ Ошибка: {e}")
 
-print("\n✅ Парсинг завершен!")
+    if prev_event: process_event(prev_event)
+    if last_event: process_event(last_event)
+
+    print("\n✅ Парсинг завершен!")
+
+finally:
+    # Всегда закрываем драйвер
+    close_driver()

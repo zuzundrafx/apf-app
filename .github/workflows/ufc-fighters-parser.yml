@@ -1,0 +1,32 @@
+name: Run UFC Fighters Parser
+
+on:
+  schedule:
+    - cron: '0 6 * * 3'   # среда, 09:00 MSK (6:00 UTC)
+  workflow_dispatch:
+
+jobs:
+  run-fighters-parser:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+      
+      - name: Install dependencies
+        run: |
+          pip install selenium webdriver-manager requests beautifulsoup4 pandas yadisk openpyxl
+      
+      - name: Run fighters parser
+        env:
+          YA_TOKEN: ${{ secrets.YA_TOKEN }}
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+        run: python ufc_fighters_parser.py

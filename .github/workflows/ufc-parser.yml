@@ -1,8 +1,9 @@
-name: Run UFC Parser Every Hour
+name: Run UFC Tournament Parser
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 7 * * 4'   # четверг, 10:00 MSK (7:00 UTC)
+    - cron: '0 7 * * 0'   # воскресенье, 10:00 MSK (7:00 UTC)
   workflow_dispatch:
 
 jobs:
@@ -11,16 +12,16 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5   # ← обновлено с v4 на v5
+        uses: actions/checkout@v5
       
       - name: Setup Python
-        uses: actions/setup-python@v6   # ← обновлено с v5 на v6
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
       
       - name: Install dependencies
         run: |
-          pip install requests beautifulsoup4 pandas yadisk openpyxl
+          pip install selenium webdriver-manager requests beautifulsoup4 pandas yadisk openpyxl
       
       - name: Run parser
         env:
