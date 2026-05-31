@@ -33,7 +33,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     icon: string;
   } | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [reloadTimes, setReloadTimes] = useState<Record<string, number>>({});
+  const [packInfo, setPackInfo] = useState<Record<string, { currentPrice: number; reloadSecondsLeft: number }>>({});
 
   const promotions = [
     "🎁 FREE daily reward! Claim now!",
@@ -51,17 +51,17 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Загружаем информацию о перезарядке для каждого турнира
+  // Загружаем информацию для каждого турнира
   useEffect(() => {
     if (authToken && activeTournaments.length > 0) {
       activeTournaments.forEach(tournament => {
         const league = (tournament.league || 'UFC').toUpperCase();
-        loadReloadTime(league);
+        loadPackInfo(league);
       });
     }
   }, [authToken, activeTournaments]);
 
-  const loadReloadTime = async (league: string) => {
+  const loadPackInfo = async (league: string) => {
     if (!authToken) return;
     try {
       const response = await fetch(`${API_BASE}/api/shop/card-pack/${league}`, {
@@ -69,10 +69,16 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       });
       if (response.ok) {
         const data = await response.json();
-        setReloadTimes(prev => ({ ...prev, [league]: data.reloadSecondsLeft }));
+        setPackInfo(prev => ({
+          ...prev,
+          [league]: {
+            currentPrice: data.currentPrice,
+            reloadSecondsLeft: data.reloadSecondsLeft
+          }
+        }));
       }
     } catch (err) {
-      console.error('Failed to load reload time:', err);
+      console.error('Failed to load pack info:', err);
     }
   };
 
@@ -117,11 +123,12 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     const league = tournament.league || 'UFC';
     const leagueName = getLeagueName(league);
     const iconSrc = getLeagueIcon(league);
+    const info = packInfo[league.toUpperCase()];
     
     setSelectedPack({
       tournament,
       league: leagueName,
-      price: 1000,
+      price: info?.currentPrice || 1000,
       name: `${leagueName} Card Pack`,
       icon: iconSrc
     });
@@ -129,17 +136,15 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   };
 
   const handlePurchaseComplete = async (newCoins: number) => {
-    // Обновляем баланс
     if (onUpdateBalance) {
       await onUpdateBalance(newCoins, userTickets);
     }
-    // Обновляем ставки
     if (onRefreshBets) {
       await onRefreshBets();
     }
-    // Обновляем таймер для этой лиги
+    // Обновляем информацию для этой лиги после покупки
     if (selectedPack) {
-      await loadReloadTime(selectedPack.league);
+      await loadPackInfo(selectedPack.league.toUpperCase());
     }
   };
 
@@ -187,7 +192,9 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
               const leagueUpper = league.toUpperCase();
               const iconSrc = getLeagueIcon(league);
               const leagueName = getLeagueName(league);
-              const reloadSeconds = reloadTimes[leagueUpper] || 0;
+              const info = packInfo[leagueUpper];
+              const currentPrice = info?.currentPrice || 1000;
+              const reloadSeconds = info?.reloadSecondsLeft || 0;
               
               return (
                 <div key={tournament.id} className="shop-cardpack-item">
@@ -216,7 +223,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                   {/* 3-й столбец: цена и кнопка */}
                   <div className="shop-cardpack-action">
                     <div className="shop-cardpack-price">
-                      1000
+                      {currentPrice}
                       <img 
                         src={`${BASE_URL}/icons/Coin_icon.webp`} 
                         alt="Coins" 
