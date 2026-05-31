@@ -164,7 +164,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               gridTemplateColumns: 'repeat(5, 1fr)', 
               gap: 'clamp(4px, 1vw, 8px)',
               width: '100%',
-              padding: 0,
+              padding: '0 clamp(2px, 1vh, 4px)',
             margin: 'clamp(8px, 2vh, 16px) 0'
             }}>
               {purchasedCards.map((sel: any, idx: number) => {
