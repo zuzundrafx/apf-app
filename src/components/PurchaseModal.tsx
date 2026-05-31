@@ -35,32 +35,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [showPricePulse, setShowPricePulse] = useState(false);
   const [purchaseState, setPurchaseState] = useState<'idle' | 'loading' | 'success'>('idle');
   const [purchasedCards, setPurchasedCards] = useState<any[]>([]);
-  const [reloadSecondsLeft, setReloadSecondsLeft] = useState(0);
   const [currentPrice, setCurrentPrice] = useState(price);
-  const [packInfo, setPackInfo] = useState<any>(null);
 
-  // Загружаем информацию о паке при открытии
-  useEffect(() => {
-    if (isOpen && authToken && league) {
-      loadPackInfo();
-    }
-  }, [isOpen, authToken, league]);
-
-  const loadPackInfo = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/api/shop/card-pack/${league}`, {
-        headers: { 'Authorization': `Bearer ${authToken}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setPackInfo(data);
-        setCurrentPrice(data.currentPrice);
-        setReloadSecondsLeft(data.reloadSecondsLeft);
-      }
-    } catch (err) {
-      console.error('Failed to load pack info:', err);
-    }
-  };
+  if (!isOpen) return null;
 
   const formatTournamentName = (name: string): string => {
     if (!name) return 'Active Tournament';
@@ -69,18 +46,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     result = result.replace(/^ONE\s*/i, '');
     result = result.replace(/_/g, ' ');
     return result;
-  };
-
-  const formatReloadTime = (seconds: number): string => {
-    if (seconds <= 0) return '';
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    if (hours > 0) {
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handlePurchaseClick = async () => {
@@ -143,7 +108,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
   const leagueGradient = getLeagueGradient(league);
   const formattedTournamentName = formatTournamentName(tournamentName);
-  const reloadTimeFormatted = formatReloadTime(reloadSecondsLeft);
 
   const buttonStyle = {
     width: '60%',
@@ -158,8 +122,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     gap: '8px',
   };
 
-  if (!isOpen) return null;
-
   // Состояние успешной покупки — показываем карты
   if (purchaseState === 'success') {
     return (
@@ -168,7 +130,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           className="rewards-modal no-summary" 
           style={{ 
             height: 'auto',
-            minHeight: '45%',
+            minHeight: '35%',
             maxHeight: '70%',
             display: 'flex', 
             flexDirection: 'column',
@@ -178,8 +140,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             width: '95%'
           }}
         >
-          {/* Нет кнопки закрытия в состоянии success */}
-          
           <div 
             className="rewards-winners-list" 
             style={{ 
@@ -272,7 +232,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
         className="rewards-modal no-summary" 
         style={{ 
           height: 'auto',
-          minHeight: '45%',
+          minHeight: '35%',
           maxHeight: '70%',
           display: 'flex', 
           flexDirection: 'column',
@@ -375,18 +335,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               }}>
                 {formattedTournamentName}
               </div>
-
-              {/* Время перезарядки */}
-              {reloadSecondsLeft > 0 && (
-                <div style={{
-                  color: '#888888',
-                  fontSize: 'clamp(9px, 2.5vw, 11px)',
-                  fontWeight: 400,
-                  lineHeight: 1.3,
-                }}>
-                  Reload time left: {reloadTimeFormatted}
-                </div>
-              )}
             </div>
           </div>
 

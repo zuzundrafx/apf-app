@@ -1,9 +1,10 @@
 // src/components/ShopScreen.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tournament } from '../types';
 import PurchaseModal from './PurchaseModal';
 
 const BASE_URL = import.meta.env.PROD ? '' : '/reactjs-template';
+const API_BASE = import.meta.env.PROD ? 'https://apf-app-backend.onrender.com' : 'http://localhost:3001';
 
 interface ShopScreenProps {
   activeTournaments: Tournament[];
@@ -11,6 +12,7 @@ interface ShopScreenProps {
   userTickets?: number;
   userStyle?: 'striker' | 'grappler' | null;
   onUpdateBalance?: (coins: number, tickets: number) => Promise<void>;
+  onRefreshBets?: () => Promise<void>;
   authToken?: string;
 }
 
@@ -19,6 +21,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   userCoins = 0,
   userTickets = 0,
   onUpdateBalance,
+  onRefreshBets,
   authToken
 }) => {
   const [activeTab, setActiveTab] = useState<'free' | 'currency' | 'fightPass' | 'cardPacks'>('free');
@@ -30,6 +33,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     icon: string;
   } | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [reloadTimes, setReloadTimes] = useState<Record<string, number>>({});
 
   const promotions = [
     "🎁 FREE daily reward! Claim now!",
@@ -40,12 +44,49 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
 
   const [currentPromotionIndex, setCurrentPromotionIndex] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setCurrentPromotionIndex((prev) => (prev + 1) % promotions.length);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // Загружаем информацию о перезарядке для каждого турнира
+  useEffect(() => {
+    if (authToken && activeTournaments.length > 0) {
+      activeTournaments.forEach(tournament => {
+        const league = (tournament.league || 'UFC').toUpperCase();
+        loadReloadTime(league);
+      });
+    }
+  }, [authToken, activeTournaments]);
+
+  const loadReloadTime = async (league: string) => {
+    if (!authToken) return;
+    try {
+      const response = await fetch(`${API_BASE}/api/shop/card-pack/${league}`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setReloadTimes(prev => ({ ...prev, [league]: data.reloadSecondsLeft }));
+      }
+    } catch (err) {
+      console.error('Failed to load reload time:', err);
+    }
+  };
+
+  const formatReloadTime = (seconds: number): string => {
+    if (seconds <= 0) return '';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const formatTournamentName = (name: string): string => {
     if (!name) return 'Active Tournament';
@@ -85,6 +126,21 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       icon: iconSrc
     });
     setShowPurchaseModal(true);
+  };
+
+  const handlePurchaseComplete = async (newCoins: number) => {
+    // Обновляем баланс
+    if (onUpdateBalance) {
+      await onUpdateBalance(newCoins, userTickets);
+    }
+    // Обновляем ставки
+    if (onRefreshBets) {
+      await onRefreshBets();
+    }
+    // Обновляем таймер для этой лиги
+    if (selectedPack) {
+      await loadReloadTime(selectedPack.league);
+    }
   };
 
   const renderTabContent = () => {
@@ -128,8 +184,10 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           <div className="shop-cardpacks-list">
             {activeTournaments.map((tournament) => {
               const league = tournament.league || 'UFC';
+              const leagueUpper = league.toUpperCase();
               const iconSrc = getLeagueIcon(league);
               const leagueName = getLeagueName(league);
+              const reloadSeconds = reloadTimes[leagueUpper] || 0;
               
               return (
                 <div key={tournament.id} className="shop-cardpack-item">
@@ -148,6 +206,11 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                     <div className="shop-cardpack-tournament">
                       {formatTournamentName(tournament.name)}
                     </div>
+                    {reloadSeconds > 0 && (
+                      <div className="shop-cardpack-timer" style={{ color: '#888888', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                        Reload time: {formatReloadTime(reloadSeconds)}
+                      </div>
+                    )}
                   </div>
                   
                   {/* 3-й столбец: цена и кнопка */}
@@ -234,11 +297,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           price={selectedPack.price}
           userCoins={userCoins}
           authToken={authToken}
-          onPurchaseComplete={(newCoins) => {
-            if (onUpdateBalance) {
-              onUpdateBalance(newCoins, userTickets);
-            }
-          }}
+          onPurchaseComplete={handlePurchaseComplete}
         />
       )}
     </div>

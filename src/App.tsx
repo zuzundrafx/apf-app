@@ -53,7 +53,7 @@ function App() {
 
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [telegramUser, setTelegramUser] = useState<{ id: string; username: string; photoUrl?: string } | null>(null);
-  const { pastTournaments, upcomingTournaments, allCompletedTournaments, loading, error, loadFighters, userBets } = useBackendTournaments(authToken, telegramUser?.id || null);
+  const { pastTournaments, upcomingTournaments, allCompletedTournaments, loading, error, loadFighters, userBets, refreshBets } = useBackendTournaments(authToken, telegramUser?.id || null);
   const { coefficients: globalCoefficients } = useCoefficients(authToken || undefined);
   
   const [isSavingBet, setIsSavingBet] = useState(false);
@@ -956,6 +956,7 @@ function App() {
     onUpdateBalance={async (coins, tickets) => {
       setUserData(prev => ({ ...prev, coins, tickets }));
     }}
+    onRefreshBets={refreshBets}
     authToken={authToken || undefined}
   />
 )}

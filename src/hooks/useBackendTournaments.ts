@@ -1,5 +1,5 @@
-// hooks/useBackendTournaments.ts – ИСПРАВЛЕННАЯ ВЕРСИЯ
-import { useState, useEffect } from 'react';
+// hooks/useBackendTournaments.ts
+import { useState, useEffect, useCallback } from 'react';
 import { Tournament, Fighter } from '../types';
 
 interface BackendTournament {
@@ -45,6 +45,23 @@ export function useBackendTournaments(authToken: string | null, userId: string |
     return res.json();
   };
 
+  // Функция для обновления ставок
+  const refreshBets = useCallback(async () => {
+    if (!authToken || !userId) return;
+    try {
+      const betsData = await apiRequest(`/api/bets/user/${userId}`);
+      const betsMap = new Map();
+      betsData.forEach((bet: any) => {
+        if (!bet.cancelled) {
+          betsMap.set(bet.tournament_id, bet);
+        }
+      });
+      setUserBets(betsMap);
+    } catch (err) {
+      console.error('Failed to refresh bets:', err);
+    }
+  }, [authToken, userId, apiRequest]);
+
   useEffect(() => {
     const loadData = async () => {
       if (!authToken || !userId) return;
@@ -55,10 +72,10 @@ export function useBackendTournaments(authToken: string | null, userId: string |
         
         const betsMap = new Map();
         betsData.forEach((bet: any) => {
-  if (!bet.cancelled) {
-    betsMap.set(bet.tournament_id, bet);
-  }
-});
+          if (!bet.cancelled) {
+            betsMap.set(bet.tournament_id, bet);
+          }
+        });
         setUserBets(betsMap);
 
         const allTournaments: Tournament[] = tournamentsData.map(t => ({
@@ -72,16 +89,13 @@ export function useBackendTournaments(authToken: string | null, userId: string |
           url: '',
         }));
 
-        // Разделяем по статусу
         const upcoming = allTournaments.filter(t => t.status !== 'completed');
         const completedAll = allTournaments.filter(t => t.status === 'completed');
 
-        // Сортируем завершённые по дате (новые сначала)
         const sortedCompleted = [...completedAll].sort((a, b) => 
           new Date(b.date).getTime() - new Date(a.date).getTime()
         );
 
-        // Для ACTIVE: последний завершённый для каждой лиги (ВСЕГДА, независимо от ставки)
         const latestPerLeague: Tournament[] = [];
         const leaguesSeen = new Set<string>();
         for (const t of sortedCompleted) {
@@ -132,5 +146,14 @@ export function useBackendTournaments(authToken: string | null, userId: string |
     }
   };
 
-  return { pastTournaments, upcomingTournaments, allCompletedTournaments, loading, error, userBets, loadFighters };
+  return { 
+    pastTournaments, 
+    upcomingTournaments, 
+    allCompletedTournaments, 
+    loading, 
+    error, 
+    userBets, 
+    loadFighters,
+    refreshBets
+  };
 }
