@@ -165,7 +165,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               gap: 'clamp(4px, 1vw, 8px)',
               width: '100%',
               padding: 0,
-            margin: 0
+            margin: 'clamp(8px, 2vh, 16px) 0'
             }}>
               {purchasedCards.map((sel: any, idx: number) => {
                 const style = getFighterStyleFromSelected(sel.fighter);
