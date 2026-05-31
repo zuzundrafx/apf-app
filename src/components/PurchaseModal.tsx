@@ -179,7 +179,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
                     data-weight={sel.weightClass} 
                     style={{ 
                       backgroundColor: getWeightClassColor(sel.weightClass),
-                      aspectRatio: '1 / 1.4'
+                      
                     }}
                   >
                     <div className="selected-fighter-damage-box">{damageValue}</div>
