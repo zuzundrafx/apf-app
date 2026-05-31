@@ -34,6 +34,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   } | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [packInfo, setPackInfo] = useState<Record<string, { currentPrice: number; reloadSecondsLeft: number }>>({});
+  const [localReloadSeconds, setLocalReloadSeconds] = useState<Record<string, number>>({});
 
   const promotions = [
     "🎁 FREE daily reward! Claim now!",
@@ -60,6 +61,34 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       });
     }
   }, [authToken, activeTournaments]);
+
+  // Обновляем локальный таймер при загрузке новых данных
+  useEffect(() => {
+    Object.keys(packInfo).forEach(league => {
+      setLocalReloadSeconds(prev => ({
+        ...prev,
+        [league]: packInfo[league].reloadSecondsLeft
+      }));
+    });
+  }, [packInfo]);
+
+  // Интервал для уменьшения локального таймера
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLocalReloadSeconds(prev => {
+        const updated = { ...prev };
+        let hasChanges = false;
+        Object.keys(updated).forEach(league => {
+          if (updated[league] > 0) {
+            updated[league] = updated[league] - 1;
+            hasChanges = true;
+          }
+        });
+        return hasChanges ? updated : prev;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const loadPackInfo = async (league: string) => {
     if (!authToken) return;
@@ -194,7 +223,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
               const leagueName = getLeagueName(league);
               const info = packInfo[leagueUpper];
               const currentPrice = info?.currentPrice || 1000;
-              const reloadSeconds = info?.reloadSecondsLeft || 0;
+              const reloadSecondsLeft = localReloadSeconds[leagueUpper] || 0;
               
               return (
                 <div key={tournament.id} className="shop-cardpack-item">
@@ -213,9 +242,9 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                     <div className="shop-cardpack-tournament">
                       {formatTournamentName(tournament.name)}
                     </div>
-                    {reloadSeconds > 0 && (
+                    {reloadSecondsLeft > 0 && (
                       <div className="shop-cardpack-timer" style={{ color: '#888888', fontSize: 'clamp(8px, 2vw, 10px)' }}>
-                        Reload time: {formatReloadTime(reloadSeconds)}
+                        Reload time: {formatReloadTime(reloadSecondsLeft)}
                       </div>
                     )}
                   </div>
