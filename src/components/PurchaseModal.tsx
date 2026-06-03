@@ -36,6 +36,41 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [purchaseState, setPurchaseState] = useState<'idle' | 'loading' | 'success'>('idle');
   const [purchasedCards, setPurchasedCards] = useState<any[]>([]);
   const [currentPrice, setCurrentPrice] = useState(price);
+  const [showCompleteMessage, setShowCompleteMessage] = useState(false);
+
+  // Стили для анимации
+  const fadeInOutStyle = {
+    animation: 'fadeInOut 2s ease-in-out forwards',
+  };
+
+  // Добавляем keyframes в head если их нет
+  useEffect(() => {
+    if (!document.querySelector('#purchase-modal-animations')) {
+      const style = document.createElement('style');
+      style.id = 'purchase-modal-animations';
+      style.textContent = `
+        @keyframes fadeInOut {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.8);
+          }
+          15% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+          }
+          85% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(1.2);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
 
   if (!isOpen) return null;
 
@@ -80,6 +115,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
       const data = await response.json();
       setPurchasedCards(data.selections);
       setPurchaseState('success');
+      setShowCompleteMessage(true);
+      setTimeout(() => setShowCompleteMessage(false), 2000);
       if (onPurchaseComplete) {
         onPurchaseComplete(data.newCoins);
       }
@@ -108,6 +145,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
   const leagueGradient = getLeagueGradient(league);
   const formattedTournamentName = formatTournamentName(tournamentName);
+  const leagueUpper = league.toUpperCase();
 
   const buttonStyle = {
     width: '60%',
@@ -140,6 +178,30 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             width: '95%'
           }}
         >
+          {/* Всплывающая надпись PURCHASE COMPLETE */}
+          {showCompleteMessage && (
+            <div style={{
+              position: 'absolute',
+              top: '20%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: 'rgba(0, 0, 0, 0.85)',
+              color: '#FFD966',
+              fontSize: 'clamp(14px, 4vw, 20px)',
+              fontWeight: 700,
+              padding: 'clamp(8px, 2vh, 12px) clamp(16px, 4vw, 24px)',
+              borderRadius: 'clamp(8px, 2vw, 16px)',
+              whiteSpace: 'nowrap',
+              zIndex: 200,
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              pointerEvents: 'none',
+              ...fadeInOutStyle
+            }}>
+              PURCHASE COMPLETE!
+            </div>
+          )}
+
           <div 
             className="rewards-winners-list" 
             style={{ 
@@ -158,6 +220,18 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               padding: 0,
             }}
           >
+            {/* Название лиги + турнира */}
+            <div style={{
+              textAlign: 'center',
+              color: '#FFD966',
+              fontSize: 'clamp(12px, 3.5vw, 16px)',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              marginBottom: 'clamp(4px, 1vh, 8px)',
+            }}>
+              {leagueUpper}: {formattedTournamentName}
+            </div>
+
             {/* Grid из 5 карт */}
             <div className="selected-fighters-grid" style={{ 
               display: 'grid', 
@@ -165,7 +239,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               gap: 'clamp(4px, 1vw, 8px)',
               width: '100%',
               padding: '0 clamp(2px, 1vh, 4px)',
-            margin: 'clamp(8px, 5vh, 20px) 0'
+              margin: 'clamp(8px, 5vh, 20px) 0'
             }}>
               {purchasedCards.map((sel: any, idx: number) => {
                 const style = getFighterStyleFromSelected(sel.fighter);
@@ -179,7 +253,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
                     data-weight={sel.weightClass} 
                     style={{ 
                       backgroundColor: getWeightClassColor(sel.weightClass),
-                      
                     }}
                   >
                     <div className="selected-fighter-damage-box">{damageValue}</div>
@@ -351,7 +424,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             marginTop: 'clamp(8px, 2vh, 16px)',
           }}>
             <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 3vw, 12px)', textAlign: 'center', lineHeight: 1.4 }}>
-              Get 5 random fighter cards for the active {league.toUpperCase()} tournament with this pack!
+              Get 5 random fighter cards for the active {leagueUpper} tournament with this pack!
             </div>
           </div>
         </div>
