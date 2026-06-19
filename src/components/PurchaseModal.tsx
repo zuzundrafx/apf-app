@@ -160,6 +160,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     gap: '8px',
   };
 
+  // Обновление
   // Состояние успешной покупки — показываем карты
   if (purchaseState === 'success') {
     return (
