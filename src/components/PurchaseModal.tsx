@@ -261,12 +261,12 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'flex-start',
-              width: '95%',
+              width: '97%',
               margin: 'auto',
-              marginTop: '6%',
+              marginTop: '3%',
               gap: '2%',
-              maxHeight: '85%',
-              minHeight: '85%',
+              maxHeight: '82%',
+              minHeight: '82%',
               overflow: 'hidden',
               padding: 0,
             }}
@@ -279,11 +279,11 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               fontWeight: 600,
               textTransform: 'uppercase',
               padding: 'clamp(4px, 1vh, 8px) 0',
-              marginBottom: 'clamp(4px, 1vh, 8px)',
+              /*marginBottom: 'clamp(2px, 1vh, 4px)',*/
               flexShrink: 0,
               width: '100%',
               borderBottom: '1px solid rgba(255, 217, 102, 0.2)',
-              paddingBottom: 'clamp(8px, 2vh, 12px)',
+              /*paddingBottom: 'clamp(8px, 2vh, 12px)',*/
             }}>
               {leagueUpper}: {formattedTournamentName}
             </div>
