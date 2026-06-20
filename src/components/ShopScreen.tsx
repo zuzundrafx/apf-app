@@ -299,9 +299,9 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     
     if (loadingPacks) {
       return (
-        <div className="shop-empty-state">
-          <div className="shop-empty-icon">⏳</div>
-          <div className="shop-empty-text">Loading free rewards...</div>
+        <div className="shop-empty-state" style={{ gap: '16px' }}>
+          <div className="arena-loading-spinner" style={{ width: '40px', height: '40px', border: '3px solid #3D3D3B', borderTopColor: '#B20101', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+          <div className="shop-empty-text" style={{ color: '#FFFFFF', fontSize: 'clamp(14px, 4vw, 18px)' }}>Loading ...</div>
         </div>
       );
     }
@@ -350,7 +350,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                 <div className="shop-cardpack-tournament">
                   {formatTournamentName(tournament.name)}
                 </div>
-                
                 {isOnCooldown && (
                   <div className="shop-cardpack-timer" style={{ color: '#FF6B6B', fontSize: 'clamp(8px, 2vw, 10px)' }}>
                     ⏳ Recharge: {formatReloadTime(reloadSecondsLeft)}
@@ -397,6 +396,15 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     // Показываем только платные паки (price > 0)
     const paidPacks = allPackConfigs.filter(p => p.item_price > 0);
     
+    if (loadingPacks) {
+      return (
+        <div className="shop-empty-state" style={{ gap: '16px' }}>
+          <div className="arena-loading-spinner" style={{ width: '40px', height: '40px', border: '3px solid #3D3D3B', borderTopColor: '#B20101', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+          <div className="shop-empty-text" style={{ color: '#FFFFFF', fontSize: 'clamp(14px, 4vw, 18px)' }}>Loading ...</div>
+        </div>
+      );
+    }
+    
     return (
       <div className="shop-cardpacks-list">
         {activeTournaments.map((tournament) => {
@@ -429,8 +437,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                   {formatTournamentName(tournament.name)}
                 </div>
                 {reloadSecondsLeft > 0 && (
-                  <div className="shop-cardpack-timer" style={{ color: '#888888', fontSize: 'clamp(8px, 2vw, 10px)' }}>
-                    Reload time: {formatReloadTime(reloadSecondsLeft)}
+                  <div className="shop-cardpack-timer" style={{ color: '#FF6B6B', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                    ⏳ Recharge: {formatReloadTime(reloadSecondsLeft)}
                   </div>
                 )}
               </div>
