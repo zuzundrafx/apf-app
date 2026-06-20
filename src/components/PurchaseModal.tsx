@@ -265,8 +265,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               margin: 'auto',
               marginTop: '3%',
               gap: '2%',
-              maxHeight: '82%',
-              minHeight: '82%',
+              maxHeight: '87%',
+              minHeight: '87%',
               overflow: 'hidden',
               padding: 0,
             }}
@@ -344,7 +344,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             display: 'flex', 
             justifyContent: 'center', 
             marginTop: '2vh',
-            marginBottom: '4vh',
+            marginBottom: '2vh',
             width: '100%',
             flexShrink: 0,
           }}>
