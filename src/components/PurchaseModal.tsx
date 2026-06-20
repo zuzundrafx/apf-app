@@ -16,6 +16,7 @@ interface PurchaseModalProps {
   price: number;
   userCoins: number;
   authToken?: string;
+  isFree?: boolean;
   onPurchaseComplete?: (newCoins: number) => void;
 }
 
@@ -29,6 +30,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   price,
   userCoins,
   authToken,
+  isFree = false,
   onPurchaseComplete
 }) => {
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -116,7 +118,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   };
 
   const handlePurchaseClick = async () => {
-    if (userCoins < currentPrice) {
+    // Если бесплатно — не проверяем монеты
+    if (!isFree && userCoins < currentPrice) {
       setShowPricePulse(true);
       setTimeout(() => setShowPricePulse(false), 500);
       return;
@@ -126,18 +129,36 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     setPurchaseState('loading');
     
     try {
-      const response = await fetch(`${API_BASE}/api/shop/purchase-card-pack`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
-        body: JSON.stringify({
-          league: league,
-          itemName: itemName,
-          price: currentPrice
-        })
-      });
+      let response;
+      
+      if (isFree) {
+        // Бесплатный пак
+        response = await fetch(`${API_BASE}/api/shop/claim-free-card-pack`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            league: league,
+            itemName: itemName
+          })
+        });
+      } else {
+        // Платный пак
+        response = await fetch(`${API_BASE}/api/shop/purchase-card-pack`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            league: league,
+            itemName: itemName,
+            price: currentPrice
+          })
+        });
+      }
       
       if (!response.ok) {
         const error = await response.json();
@@ -153,7 +174,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
       setTimeout(() => setIsAnimating(false), 1000);
       
       if (onPurchaseComplete) {
-        onPurchaseComplete(data.newCoins);
+        onPurchaseComplete(data.newCoins || 0);
       }
     } catch (error: any) {
       console.error('Purchase failed:', error);
@@ -187,8 +208,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const buttonStyle = {
     width: '60%',
     height: '6vh',
-    opacity: userCoins >= currentPrice ? 1 : 0.7,
-    cursor: userCoins >= currentPrice ? 'pointer' : 'not-allowed',
+    opacity: isFree ? 1 : (userCoins >= currentPrice ? 1 : 0.7),
+    cursor: isFree ? 'pointer' : (userCoins >= currentPrice ? 'pointer' : 'not-allowed'),
     transform: showPricePulse ? 'scale(1.05)' : 'scale(1)',
     transition: 'transform 0.3s ease',
     display: 'flex',
@@ -230,7 +251,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             pointerEvents: 'none',
             transition: 'box-shadow 0.3s ease',
           }}>
-            PURCHASE COMPLETE!
+            {isFree ? 'PACK CLAIMED!' : 'PURCHASE COMPLETE!'}
           </div>
         )}
 
@@ -279,11 +300,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               fontWeight: 600,
               textTransform: 'uppercase',
               padding: 'clamp(4px, 1vh, 8px) 0',
-              /*marginBottom: 'clamp(2px, 1vh, 4px)',*/
               flexShrink: 0,
               width: '100%',
               borderBottom: '1px solid rgba(255, 217, 102, 0.2)',
-              /*paddingBottom: 'clamp(8px, 2vh, 12px)',*/
             }}>
               {leagueUpper}: {formattedTournamentName}
             </div>
@@ -454,14 +473,14 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             }}>
               {/* Название предмета */}
               <div style={{
-                color: '#FFD966',
+                color: isFree ? '#4CAF50' : '#FFD966',
                 fontSize: 'clamp(14px, 4vw, 18px)',
                 fontWeight: 700,
                 textTransform: 'uppercase',
-                textShadow: '0 0 5px rgba(255, 217, 102, 0.5)',
+                textShadow: isFree ? '0 0 5px rgba(76, 175, 80, 0.5)' : '0 0 5px rgba(255, 217, 102, 0.5)',
                 lineHeight: 1.3,
               }}>
-                {itemName}
+                {isFree ? '🎁 ' : ''}{itemName}
               </div>
 
               {/* Название турнира */}
@@ -486,7 +505,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             marginTop: 'clamp(8px, 2vh, 16px)',
           }}>
             <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 3vw, 12px)', textAlign: 'center', lineHeight: 1.4 }}>
-              Get 5 random fighter cards for the active {leagueUpper} tournament with this pack!
+              {isFree 
+                ? `Get 5 random fighter cards for the active ${leagueUpper} tournament with this FREE pack! (24h cooldown)`
+                : `Get 5 random fighter cards for the active ${leagueUpper} tournament with this pack!`
+              }
             </div>
           </div>
         </div>
@@ -505,7 +527,11 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             disabled={isPurchasing}
           >
             {isPurchasing ? (
-              'PURCHASING...'
+              'PROCESSING...'
+            ) : isFree ? (
+              <>
+                GET FREE PACK
+              </>
             ) : (
               <>
                 CONFIRM PAYMENT: 

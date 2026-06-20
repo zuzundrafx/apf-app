@@ -16,6 +16,22 @@ interface ShopScreenProps {
   authToken?: string;
 }
 
+// Тип для конфигурации пака из БД
+interface PackConfig {
+  id: number;
+  item_name: string;
+  item_info: string;
+  item_price: number;
+  item_reload_time: number;
+}
+
+// Тип для информации о паке пользователя
+interface PackInfo {
+  currentPrice: number;
+  reloadSecondsLeft: number;
+  isFree?: boolean;
+}
+
 const ShopScreen: React.FC<ShopScreenProps> = ({ 
   activeTournaments, 
   userCoins = 0,
@@ -31,10 +47,13 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     price: number;
     name: string;
     icon: string;
+    isFree: boolean;
   } | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [packInfo, setPackInfo] = useState<Record<string, { currentPrice: number; reloadSecondsLeft: number }>>({});
+  const [packInfo, setPackInfo] = useState<Record<string, PackInfo>>({});
   const [localReloadSeconds, setLocalReloadSeconds] = useState<Record<string, number>>({});
+  const [allPackConfigs, setAllPackConfigs] = useState<PackConfig[]>([]);
+  const [loadingPacks, setLoadingPacks] = useState(true);
 
   const promotions = [
     "🎁 FREE daily reward! Claim now!",
@@ -52,22 +71,32 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  // Загружаем все конфигурации паков
+  useEffect(() => {
+    if (authToken) {
+      loadAllPackConfigs();
+    }
+  }, [authToken]);
+
   // Загружаем информацию для каждого турнира
   useEffect(() => {
     if (authToken && activeTournaments.length > 0) {
       activeTournaments.forEach(tournament => {
         const league = (tournament.league || 'UFC').toUpperCase();
-        loadPackInfo(league);
+        // Загружаем инфо для платных паков
+        loadPackInfo(league, `${league} Card Pack`);
+        // Загружаем инфо для бесплатных паков
+        loadPackInfo(league, `${league} Card Pack Free`, true);
       });
     }
   }, [authToken, activeTournaments]);
 
   // Обновляем локальный таймер при загрузке новых данных
   useEffect(() => {
-    Object.keys(packInfo).forEach(league => {
+    Object.keys(packInfo).forEach(key => {
       setLocalReloadSeconds(prev => ({
         ...prev,
-        [league]: packInfo[league].reloadSecondsLeft
+        [key]: packInfo[key].reloadSecondsLeft
       }));
     });
   }, [packInfo]);
@@ -78,9 +107,9 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       setLocalReloadSeconds(prev => {
         const updated = { ...prev };
         let hasChanges = false;
-        Object.keys(updated).forEach(league => {
-          if (updated[league] > 0) {
-            updated[league] = updated[league] - 1;
+        Object.keys(updated).forEach(key => {
+          if (updated[key] > 0) {
+            updated[key] = updated[key] - 1;
             hasChanges = true;
           }
         });
@@ -90,24 +119,60 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  const loadPackInfo = async (league: string) => {
+  const loadAllPackConfigs = async () => {
     if (!authToken) return;
     try {
-      const response = await fetch(`${API_BASE}/api/shop/card-pack/${league}`, {
+      const response = await fetch(`${API_BASE}/api/shop/packs`, {
         headers: { 'Authorization': `Bearer ${authToken}` }
       });
+      
       if (response.ok) {
         const data = await response.json();
+        setAllPackConfigs(data);
+        setLoadingPacks(false);
+      } else {
+        // Если эндпоинта нет, используем fallback
+        setAllPackConfigs([
+          { id: 1, item_name: 'UFC Card Pack', item_info: 'Get 5 random fighter cards for the active UFC tournament with this pack!', item_price: 1000, item_reload_time: 60 },
+          { id: 4, item_name: 'UFC Card Pack Free', item_info: 'Get Free 5 random fighter cards for the active UFC tournament with this pack!', item_price: 0, item_reload_time: 1440 }
+        ]);
+        setLoadingPacks(false);
+      }
+    } catch (err) {
+      console.error('Failed to load pack configs:', err);
+      setLoadingPacks(false);
+    }
+  };
+
+  const loadPackInfo = async (league: string, itemName: string, isFree: boolean = false) => {
+    if (!authToken) return;
+    try {
+      const endpoint = isFree ? '/api/shop/free-pack-info' : `/api/shop/card-pack/${league}`;
+      const body = isFree ? JSON.stringify({ league, itemName }) : undefined;
+      
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        method: isFree ? 'POST' : 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: body
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const key = isFree ? `${league}_free` : league;
         setPackInfo(prev => ({
           ...prev,
-          [league]: {
-            currentPrice: data.currentPrice,
-            reloadSecondsLeft: data.reloadSecondsLeft
+          [key]: {
+            currentPrice: data.currentPrice || 0,
+            reloadSecondsLeft: data.reloadSecondsLeft || 0,
+            isFree: isFree
           }
         }));
       }
     } catch (err) {
-      console.error('Failed to load pack info:', err);
+      console.error(`Failed to load ${isFree ? 'free' : 'pack'} info:`, err);
     }
   };
 
@@ -148,6 +213,24 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     return 'UFC';
   };
 
+  const handleFreePackClick = async (tournament: Tournament) => {
+    const league = tournament.league || 'UFC';
+    const leagueName = getLeagueName(league);
+    const iconSrc = getLeagueIcon(league);
+    const key = `${league.toUpperCase()}_free`;
+    const info = packInfo[key];
+    
+    setSelectedPack({
+      tournament,
+      league: leagueName,
+      price: 0,
+      name: `${leagueName} Card Pack Free`,
+      icon: iconSrc,
+      isFree: true
+    });
+    setShowPurchaseModal(true);
+  };
+
   const handlePurchaseClick = (tournament: Tournament) => {
     const league = tournament.league || 'UFC';
     const leagueName = getLeagueName(league);
@@ -159,7 +242,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       league: leagueName,
       price: info?.currentPrice || 1000,
       name: `${leagueName} Card Pack`,
-      icon: iconSrc
+      icon: iconSrc,
+      isFree: false
     });
     setShowPurchaseModal(true);
   };
@@ -173,20 +257,19 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     }
     // Обновляем информацию для этой лиги после покупки
     if (selectedPack) {
-      await loadPackInfo(selectedPack.league.toUpperCase());
+      const league = selectedPack.league.toUpperCase();
+      if (selectedPack.isFree) {
+        await loadPackInfo(league, `${league} Card Pack Free`, true);
+      } else {
+        await loadPackInfo(league, `${league} Card Pack`);
+      }
     }
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'free':
-        return (
-          <div className="shop-empty-state">
-            <div className="shop-empty-icon">🎁</div>
-            <div className="shop-empty-text">FREE rewards will appear here soon!</div>
-            <div className="shop-empty-subtext">Check back daily for bonuses</div>
-          </div>
-        );
+        return renderFreeTab();
       case 'currency':
         return (
           <div className="shop-empty-state">
@@ -204,76 +287,177 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           </div>
         );
       case 'cardPacks':
-        if (activeTournaments.length === 0) {
-          return (
-            <div className="shop-empty-state">
-              <div className="shop-empty-icon">🃏</div>
-              <div className="shop-empty-text">No active tournaments</div>
-              <div className="shop-empty-subtext">Card packs will appear when tournaments are available</div>
-            </div>
-          );
-        }
-        
-        return (
-          <div className="shop-cardpacks-list">
-            {activeTournaments.map((tournament) => {
-              const league = tournament.league || 'UFC';
-              const leagueUpper = league.toUpperCase();
-              const iconSrc = getLeagueIcon(league);
-              const leagueName = getLeagueName(league);
-              const info = packInfo[leagueUpper];
-              const currentPrice = info?.currentPrice || 1000;
-              const reloadSecondsLeft = localReloadSeconds[leagueUpper] || 0;
-              
-              return (
-                <div key={tournament.id} className="shop-cardpack-item">
-                  {/* 1-й столбец: иконка лиги */}
-                  <div className="shop-cardpack-icon">
-                    <img 
-                      src={iconSrc} 
-                      alt={`${leagueName} Card Pack`} 
-                      className="shop-cardpack-icon-img"
-                    />
-                  </div>
-                  
-                  {/* 2-й столбец: информация */}
-                  <div className="shop-cardpack-info">
-                    <div className="shop-cardpack-title">{leagueName} Card Pack</div>
-                    <div className="shop-cardpack-tournament">
-                      {formatTournamentName(tournament.name)}
-                    </div>
-                    {reloadSecondsLeft > 0 && (
-                      <div className="shop-cardpack-timer" style={{ color: '#888888', fontSize: 'clamp(8px, 2vw, 10px)' }}>
-                        Reload time: {formatReloadTime(reloadSecondsLeft)}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* 3-й столбец: цена и кнопка */}
-                  <div className="shop-cardpack-action">
-                    <div className="shop-cardpack-price">
-                      {currentPrice}
-                      <img 
-                        src={`${BASE_URL}/icons/Coin_icon.webp`} 
-                        alt="Coins" 
-                        className="shop-cardpack-price-icon"
-                      />
-                    </div>
-                    <button 
-                      className="shop-cardpack-purchase"
-                      onClick={() => handlePurchaseClick(tournament)}
-                    >
-                      PURCHASE
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        );
+        return renderCardPacksTab();
       default:
         return null;
     }
+  };
+
+  const renderFreeTab = () => {
+    // Находим бесплатные паки из конфигурации
+    const freePacks = allPackConfigs.filter(p => p.item_price === 0);
+    
+    if (loadingPacks) {
+      return (
+        <div className="shop-empty-state">
+          <div className="shop-empty-icon">⏳</div>
+          <div className="shop-empty-text">Loading free rewards...</div>
+        </div>
+      );
+    }
+    
+    if (freePacks.length === 0) {
+      return (
+        <div className="shop-empty-state">
+          <div className="shop-empty-icon">🎁</div>
+          <div className="shop-empty-text">FREE rewards will appear here soon!</div>
+          <div className="shop-empty-subtext">Check back daily for bonuses</div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="shop-cardpacks-list">
+        {freePacks.map((packConfig) => {
+          // Извлекаем лигу из названия
+          const leagueName = packConfig.item_name.replace(' Card Pack Free', '').toUpperCase();
+          const tournament = activeTournaments.find(t => (t.league || 'UFC').toUpperCase() === leagueName);
+          
+          if (!tournament) return null;
+          
+          const iconSrc = getLeagueIcon(leagueName);
+          const key = `${leagueName}_free`;
+          const info = packInfo[key];
+          const reloadSecondsLeft = localReloadSeconds[key] || 0;
+          const isOnCooldown = reloadSecondsLeft > 0;
+          
+          return (
+            <div key={packConfig.id} className="shop-cardpack-item">
+              {/* 1-й столбец: иконка лиги */}
+              <div className="shop-cardpack-icon">
+                <img 
+                  src={iconSrc} 
+                  alt={`${leagueName} Free Pack`} 
+                  className="shop-cardpack-icon-img"
+                />
+              </div>
+              
+              {/* 2-й столбец: информация */}
+              <div className="shop-cardpack-info">
+                <div className="shop-cardpack-title" style={{ color: '#4CAF50' }}>
+                  🎁 {leagueName} Free Pack
+                </div>
+                <div className="shop-cardpack-tournament">
+                  {formatTournamentName(tournament.name)}
+                </div>
+                <div style={{ color: '#888888', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                  {packConfig.item_info}
+                </div>
+                {isOnCooldown && (
+                  <div className="shop-cardpack-timer" style={{ color: '#FF6B6B', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                    ⏳ Recharge: {formatReloadTime(reloadSecondsLeft)}
+                  </div>
+                )}
+              </div>
+              
+              {/* 3-й столбец: цена и кнопка */}
+              <div className="shop-cardpack-action">
+                <div className="shop-cardpack-price" style={{ color: '#4CAF50' }}>
+                  FREE
+                </div>
+                <button 
+                  className={`shop-cardpack-purchase ${isOnCooldown ? 'disabled' : ''}`}
+                  style={{
+                    opacity: isOnCooldown ? 0.5 : 1,
+                    cursor: isOnCooldown ? 'not-allowed' : 'pointer',
+                    background: isOnCooldown ? '#666D74' : 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)'
+                  }}
+                  onClick={() => !isOnCooldown && handleFreePackClick(tournament)}
+                  disabled={isOnCooldown}
+                >
+                  {isOnCooldown ? 'RECHARGING' : 'GET'}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderCardPacksTab = () => {
+    if (activeTournaments.length === 0) {
+      return (
+        <div className="shop-empty-state">
+          <div className="shop-empty-icon">🃏</div>
+          <div className="shop-empty-text">No active tournaments</div>
+          <div className="shop-empty-subtext">Card packs will appear when tournaments are available</div>
+        </div>
+      );
+    }
+    
+    // Показываем только платные паки (price > 0)
+    const paidPacks = allPackConfigs.filter(p => p.item_price > 0);
+    
+    return (
+      <div className="shop-cardpacks-list">
+        {activeTournaments.map((tournament) => {
+          const league = tournament.league || 'UFC';
+          const leagueUpper = league.toUpperCase();
+          
+          // Проверяем, есть ли платный пак для этой лиги
+          const hasPaidPack = paidPacks.some(p => p.item_name === `${leagueUpper} Card Pack`);
+          if (!hasPaidPack) return null;
+          
+          const iconSrc = getLeagueIcon(league);
+          const leagueName = getLeagueName(league);
+          const info = packInfo[leagueUpper];
+          const currentPrice = info?.currentPrice || 1000;
+          const reloadSecondsLeft = localReloadSeconds[leagueUpper] || 0;
+          
+          return (
+            <div key={tournament.id} className="shop-cardpack-item">
+              <div className="shop-cardpack-icon">
+                <img 
+                  src={iconSrc} 
+                  alt={`${leagueName} Card Pack`} 
+                  className="shop-cardpack-icon-img"
+                />
+              </div>
+              
+              <div className="shop-cardpack-info">
+                <div className="shop-cardpack-title">{leagueName} Card Pack</div>
+                <div className="shop-cardpack-tournament">
+                  {formatTournamentName(tournament.name)}
+                </div>
+                {reloadSecondsLeft > 0 && (
+                  <div className="shop-cardpack-timer" style={{ color: '#888888', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                    Reload time: {formatReloadTime(reloadSecondsLeft)}
+                  </div>
+                )}
+              </div>
+              
+              <div className="shop-cardpack-action">
+                <div className="shop-cardpack-price">
+                  {currentPrice}
+                  <img 
+                    src={`${BASE_URL}/icons/Coin_icon.webp`} 
+                    alt="Coins" 
+                    className="shop-cardpack-price-icon"
+                  />
+                </div>
+                <button 
+                  className="shop-cardpack-purchase"
+                  onClick={() => handlePurchaseClick(tournament)}
+                >
+                  PURCHASE
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
@@ -333,6 +517,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           price={selectedPack.price}
           userCoins={userCoins}
           authToken={authToken}
+          isFree={selectedPack.isFree}
           onPurchaseComplete={handlePurchaseComplete}
         />
       )}
