@@ -32,6 +32,17 @@ interface PackInfo {
   isFree?: boolean;
 }
 
+// Тип для currency предмета
+interface CurrencyItem {
+  id: number;
+  item_name: string;
+  item_info: string;
+  item_coins_price: number;
+  item_fiat_price: number;
+  item_reload_time: number;
+  item_icon: string;
+}
+
 const ShopScreen: React.FC<ShopScreenProps> = ({ 
   activeTournaments, 
   userCoins = 0,
@@ -55,6 +66,11 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   const [allPackConfigs, setAllPackConfigs] = useState<PackConfig[]>([]);
   const [loadingPacks, setLoadingPacks] = useState(true);
 
+  // Currency состояния
+  const [currencyItems, setCurrencyItems] = useState<CurrencyItem[]>([]);
+  const [loadingCurrency, setLoadingCurrency] = useState(true);
+  const [localCurrencyReload, setLocalCurrencyReload] = useState<Record<string, number>>({});
+
   const promotions = [
     "🎁 FREE daily reward! Claim now!",
     "🔥 Limited offer: 50% bonus on Currency packs!",
@@ -75,6 +91,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   useEffect(() => {
     if (authToken) {
       loadAllPackConfigs();
+      loadCurrencyItems();
     }
   }, [authToken]);
 
@@ -101,10 +118,28 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     });
   }, [packInfo]);
 
-  // Интервал для уменьшения локального таймера
+  // Интервал для уменьшения локального таймера (паки)
   useEffect(() => {
     const interval = setInterval(() => {
       setLocalReloadSeconds(prev => {
+        const updated = { ...prev };
+        let hasChanges = false;
+        Object.keys(updated).forEach(key => {
+          if (updated[key] > 0) {
+            updated[key] = updated[key] - 1;
+            hasChanges = true;
+          }
+        });
+        return hasChanges ? updated : prev;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Интервал для уменьшения локального таймера (currency)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLocalCurrencyReload(prev => {
         const updated = { ...prev };
         let hasChanges = false;
         Object.keys(updated).forEach(key => {
@@ -175,6 +210,117 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       console.error(`Failed to load ${isFree ? 'free' : 'pack'} info:`, err);
     }
   };
+
+  // ========== CURRENCY ==========
+
+  const loadCurrencyItems = async () => {
+    if (!authToken) return;
+    setLoadingCurrency(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/shop/currency`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCurrencyItems(data);
+        // Загружаем информацию о каждом предмете
+        data.forEach((item: CurrencyItem) => {
+          loadCurrencyItemInfo(item.item_name);
+        });
+        setLoadingCurrency(false);
+      } else {
+        // Fallback
+        setCurrencyItems([
+          { 
+            id: 1, 
+            item_name: '5 Tickets', 
+            item_info: 'Get 5 Tickets', 
+            item_coins_price: 100, 
+            item_fiat_price: 0, 
+            item_reload_time: 120, 
+            item_icon: 'small_tickets_icon.webp' 
+          }
+        ]);
+        setLoadingCurrency(false);
+      }
+    } catch (err) {
+      console.error('Failed to load currency items:', err);
+      setLoadingCurrency(false);
+    }
+  };
+
+  const loadCurrencyItemInfo = async (itemName: string) => {
+    if (!authToken) return;
+    try {
+      const response = await fetch(`${API_BASE}/api/shop/currency-info`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ itemName })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setLocalCurrencyReload(prev => ({
+          ...prev,
+          [itemName]: data.reloadSecondsLeft || 0
+        }));
+      }
+    } catch (err) {
+      console.error(`Failed to load currency info for ${itemName}:`, err);
+    }
+  };
+
+  const handleCurrencyPurchase = async (item: CurrencyItem) => {
+    const price = item.item_coins_price;
+    
+    if (userCoins < price) {
+      alert('Not enough coins!');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/shop/purchase-currency`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          itemName: item.item_name,
+          price: price
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Purchase failed');
+      }
+      
+      const data = await response.json();
+      
+      if (onUpdateBalance) {
+        await onUpdateBalance(data.newCoins, data.newTickets);
+      }
+      
+      // Обновляем таймер
+      setLocalCurrencyReload(prev => ({
+        ...prev,
+        [item.item_name]: data.reloadSecondsLeft || 0
+      }));
+      
+      alert(`✅ Purchased ${item.item_name}!`);
+      
+    } catch (error: any) {
+      console.error('Purchase failed:', error);
+      alert(error.message);
+    }
+  };
+
+  // ========== ОБЩИЕ ФУНКЦИИ ==========
 
   const formatReloadTime = (seconds: number): string => {
     if (seconds <= 0) return '';
@@ -266,18 +412,14 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     }
   };
 
+  // ========== РЕНДЕР ВКЛАДОК ==========
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'free':
         return renderFreeTab();
       case 'currency':
-        return (
-          <div className="shop-empty-state">
-            <div className="shop-empty-icon">🪙</div>
-            <div className="shop-empty-text">Currency packs coming soon!</div>
-            <div className="shop-empty-subtext">Buy Coins, Tickets and TON</div>
-          </div>
-        );
+        return renderCurrencyTab();
       case 'fightPass':
         return (
           <div className="shop-empty-state">
@@ -327,7 +469,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           
           const iconSrc = getLeagueIcon(leagueName);
           const key = `${leagueName}_free`;
-          const info = packInfo[key];
           const reloadSecondsLeft = localReloadSeconds[key] || 0;
           const isOnCooldown = reloadSecondsLeft > 0;
           
@@ -373,6 +514,90 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                   disabled={isOnCooldown}
                 >
                   {isOnCooldown ? 'RECHARGING' : 'GET'}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderCurrencyTab = () => {
+    if (loadingCurrency) {
+      return (
+        <div className="shop-empty-state" style={{ gap: '16px' }}>
+          <div className="arena-loading-spinner" style={{ width: '40px', height: '40px', border: '3px solid #3D3D3B', borderTopColor: '#B20101', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+          <div className="shop-empty-text" style={{ color: '#FFFFFF', fontSize: 'clamp(14px, 4vw, 18px)' }}>Loading ...</div>
+        </div>
+      );
+    }
+    
+    if (currencyItems.length === 0) {
+      return (
+        <div className="shop-empty-state">
+          <div className="shop-empty-icon">🪙</div>
+          <div className="shop-empty-text">Currency packs coming soon!</div>
+          <div className="shop-empty-subtext">Buy Coins, Tickets and TON</div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="shop-cardpacks-list">
+        {currencyItems.map((item) => {
+          const reloadSecondsLeft = localCurrencyReload[item.item_name] || 0;
+          const isOnCooldown = reloadSecondsLeft > 0;
+          const iconSrc = `${BASE_URL}/icons/${item.item_icon || 'small_tickets_icon.webp'}`;
+          
+          return (
+            <div key={item.id} className="shop-cardpack-item">
+              {/* 1-й столбец: иконка */}
+              <div className="shop-cardpack-icon">
+                <img 
+                  src={iconSrc} 
+                  alt={item.item_name} 
+                  className="shop-cardpack-icon-img"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
+                  }}
+                />
+              </div>
+              
+              {/* 2-й столбец: информация */}
+              <div className="shop-cardpack-info">
+                <div className="shop-cardpack-title">{item.item_name}</div>
+                <div className="shop-cardpack-tournament">
+                  {item.item_info}
+                </div>
+                {isOnCooldown && (
+                  <div className="shop-cardpack-timer" style={{ color: '#FF6B6B', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                    ⏳ Recharge: {formatReloadTime(reloadSecondsLeft)}
+                  </div>
+                )}
+              </div>
+              
+              {/* 3-й столбец: цена и кнопка */}
+              <div className="shop-cardpack-action">
+                <div className="shop-cardpack-price">
+                  {item.item_coins_price}
+                  <img 
+                    src={`${BASE_URL}/icons/Coin_icon.webp`} 
+                    alt="Coins" 
+                    className="shop-cardpack-price-icon"
+                  />
+                </div>
+                <button 
+                  className={`shop-cardpack-purchase ${isOnCooldown ? 'disabled' : ''}`}
+                  style={{
+                    opacity: isOnCooldown ? 0.5 : 1,
+                    cursor: isOnCooldown ? 'not-allowed' : 'pointer',
+                    background: isOnCooldown ? '#666D74' : 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)'
+                  }}
+                  onClick={() => !isOnCooldown && handleCurrencyPurchase(item)}
+                  disabled={isOnCooldown}
+                >
+                  {isOnCooldown ? 'RECHARGING' : 'BUY'}
                 </button>
               </div>
             </div>
