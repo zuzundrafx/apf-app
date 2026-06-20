@@ -38,40 +38,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [currentPrice, setCurrentPrice] = useState(price);
   const [showCompleteMessage, setShowCompleteMessage] = useState(false);
 
-  // Стили для анимации
-  const fadeInOutStyle = {
-    animation: 'fadeInOut 2s ease-in-out forwards',
-  };
-
-  // Добавляем keyframes в head если их нет
-  useEffect(() => {
-    if (!document.querySelector('#purchase-modal-animations')) {
-      const style = document.createElement('style');
-      style.id = 'purchase-modal-animations';
-      style.textContent = `
-        @keyframes fadeInOut {
-          0% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(0.8);
-          }
-          15% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-          }
-          85% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-          }
-          100% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(1.2);
-          }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-  }, []);
-
   if (!isOpen) return null;
 
   const formatTournamentName = (name: string): string => {
@@ -116,7 +82,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
       setPurchasedCards(data.selections);
       setPurchaseState('success');
       setShowCompleteMessage(true);
-      setTimeout(() => setShowCompleteMessage(false), 2000);
       if (onPurchaseComplete) {
         onPurchaseComplete(data.newCoins);
       }
@@ -132,6 +97,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const handleGotIt = () => {
     setPurchaseState('idle');
     setPurchasedCards([]);
+    setShowCompleteMessage(false);
     onClose();
   };
 
@@ -160,11 +126,35 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     gap: '8px',
   };
 
-  // Обновление
   // Состояние успешной покупки — показываем карты
   if (purchaseState === 'success') {
     return (
       <div className="rewards-modal-overlay">
+        {/* НАДПИСЬ PURCHASE COMPLETE! — ВЫШЕ КОНТЕЙНЕРА, ОСТАЁТСЯ ВИДИМОЙ */}
+        {showCompleteMessage && (
+          <div style={{
+            position: 'absolute',
+            top: '10%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            color: '#FFD966',
+            fontSize: 'clamp(18px, 5vw, 28px)',
+            fontWeight: 700,
+            padding: 'clamp(10px, 2vh, 16px) clamp(20px, 5vw, 32px)',
+            borderRadius: 'clamp(10px, 2vw, 16px)',
+            whiteSpace: 'nowrap',
+            zIndex: 200,
+            textTransform: 'uppercase',
+            letterSpacing: '2px',
+            border: '2px solid #FFD966',
+            boxShadow: '0 0 30px rgba(255, 217, 102, 0.3)',
+            pointerEvents: 'none',
+          }}>
+            PURCHASE COMPLETE!
+          </div>
+        )}
+
         <div 
           className="rewards-modal no-summary" 
           style={{ 
@@ -176,32 +166,18 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             margin: 'auto auto',
             padding: '0',
             position: 'relative',
-            width: '95%'
+            width: '95%',
           }}
         >
-          {/* Всплывающая надпись PURCHASE COMPLETE */}
-          {showCompleteMessage && (
-            <div style={{
-              position: 'absolute',
-              top: '20%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              backgroundColor: 'rgba(0, 0, 0, 0.85)',
-              color: '#FFD966',
-              fontSize: 'clamp(14px, 4vw, 20px)',
-              fontWeight: 700,
-              padding: 'clamp(8px, 2vh, 12px) clamp(16px, 4vw, 24px)',
-              borderRadius: 'clamp(8px, 2vw, 16px)',
-              whiteSpace: 'nowrap',
-              zIndex: 200,
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-              pointerEvents: 'none',
-              ...fadeInOutStyle
-            }}>
-              PURCHASE COMPLETE!
-            </div>
-          )}
+          <div className="rewards-header" style={{ top: '-8%', zIndex: 100 }}>
+            <button 
+              className="cancelled-modal-close" 
+              style={{ top: '100%', zIndex: 101, cursor: 'pointer' }} 
+              onClick={handleGotIt}
+            >
+              ✕
+            </button>
+          </div>
 
           <div 
             className="rewards-winners-list" 
@@ -210,25 +186,30 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               display: 'flex', 
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'flex-start',
               width: '95%',
               margin: 'auto',
               marginTop: '6%',
-              gap: '4%',
+              gap: '2%',
               maxHeight: '85%',
               minHeight: '85%',
               overflow: 'hidden',
               padding: 0,
             }}
           >
-            {/* Название лиги + турнира */}
+            {/* НАЗВАНИЕ ТУРНИРА — РОВНО ПО ЦЕНТРУ МЕЖДУ ВЕРХНЕЙ ГРАНИЦЕЙ И GRID */}
             <div style={{
               textAlign: 'center',
               color: '#FFD966',
-              fontSize: 'clamp(12px, 3.5vw, 16px)',
+              fontSize: 'clamp(14px, 4vw, 18px)',
               fontWeight: 600,
               textTransform: 'uppercase',
+              padding: 'clamp(4px, 1vh, 8px) 0',
               marginBottom: 'clamp(4px, 1vh, 8px)',
+              flexShrink: 0,
+              width: '100%',
+              borderBottom: '1px solid rgba(255, 217, 102, 0.2)',
+              paddingBottom: 'clamp(8px, 2vh, 12px)',
             }}>
               {leagueUpper}: {formattedTournamentName}
             </div>
@@ -240,7 +221,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               gap: 'clamp(4px, 1vw, 8px)',
               width: '100%',
               padding: '0 clamp(2px, 1vh, 4px)',
-              margin: 'clamp(8px, 5vh, 20px) 0'
+              margin: 'clamp(4px, 2vh, 12px) 0',
+              flex: 1,
+              minHeight: 0,
             }}>
               {purchasedCards.map((sel: any, idx: number) => {
                 const style = getFighterStyleFromSelected(sel.fighter);
@@ -287,7 +270,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             justifyContent: 'center', 
             marginTop: '2vh',
             marginBottom: '4vh',
-            width: '100%'
+            width: '100%',
+            flexShrink: 0,
           }}>
             <button 
               className="rewards-claim-button"
