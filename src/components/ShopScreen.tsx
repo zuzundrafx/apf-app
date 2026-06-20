@@ -350,9 +350,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                 <div className="shop-cardpack-tournament">
                   {formatTournamentName(tournament.name)}
                 </div>
-                <div style={{ color: '#888888', fontSize: 'clamp(8px, 2vw, 10px)' }}>
-                  {packConfig.item_info}
-                </div>
+                
                 {isOnCooldown && (
                   <div className="shop-cardpack-timer" style={{ color: '#FF6B6B', fontSize: 'clamp(8px, 2vw, 10px)' }}>
                     ⏳ Recharge: {formatReloadTime(reloadSecondsLeft)}
