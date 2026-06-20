@@ -207,7 +207,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
         {showCompleteMessage && (
           <div style={{
             position: 'absolute',
-            top: '17%',
+            top: '20%',
             left: '50%',
             transform: 'translateX(-50%)',
             backgroundColor: 'rgba(0, 0, 0, 0.85)',
