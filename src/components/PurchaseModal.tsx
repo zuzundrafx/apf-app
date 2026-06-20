@@ -37,6 +37,72 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [purchasedCards, setPurchasedCards] = useState<any[]>([]);
   const [currentPrice, setCurrentPrice] = useState(price);
   const [showCompleteMessage, setShowCompleteMessage] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Добавляем keyframes для анимации в head, если их нет
+  useEffect(() => {
+    if (!document.querySelector('#purchase-modal-animations')) {
+      const style = document.createElement('style');
+      style.id = 'purchase-modal-animations';
+      style.textContent = `
+        @keyframes purchaseCompletePop {
+          0% {
+            transform: translateX(-50%) scale(0.3);
+            opacity: 0;
+          }
+          40% {
+            transform: translateX(-50%) scale(1.15);
+            opacity: 1;
+          }
+          70% {
+            transform: translateX(-50%) scale(0.95);
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(-50%) scale(1);
+            opacity: 1;
+          }
+        }
+
+        @keyframes purchaseCompleteFlash {
+          0% {
+            box-shadow: 0 0 0 0 rgba(255, 217, 102, 0);
+          }
+          20% {
+            box-shadow: 0 0 80px 40px rgba(255, 217, 102, 0.6), 0 0 200px 80px rgba(255, 217, 102, 0.3);
+          }
+          50% {
+            box-shadow: 0 0 60px 30px rgba(255, 217, 102, 0.4), 0 0 150px 60px rgba(255, 217, 102, 0.2);
+          }
+          80% {
+            box-shadow: 0 0 30px 15px rgba(255, 217, 102, 0.2), 0 0 80px 30px rgba(255, 217, 102, 0.1);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(255, 217, 102, 0);
+          }
+        }
+
+        @keyframes purchaseCompleteGlow {
+          0% {
+            text-shadow: 0 0 0 rgba(255, 217, 102, 0);
+          }
+          20% {
+            text-shadow: 0 0 40px rgba(255, 217, 102, 0.8), 0 0 80px rgba(255, 217, 102, 0.4);
+          }
+          50% {
+            text-shadow: 0 0 30px rgba(255, 217, 102, 0.6), 0 0 60px rgba(255, 217, 102, 0.3);
+          }
+          80% {
+            text-shadow: 0 0 20px rgba(255, 217, 102, 0.4), 0 0 40px rgba(255, 217, 102, 0.2);
+          }
+          100% {
+            text-shadow: 0 0 10px rgba(255, 217, 102, 0.2);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
 
   if (!isOpen) return null;
 
@@ -82,6 +148,11 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
       setPurchasedCards(data.selections);
       setPurchaseState('success');
       setShowCompleteMessage(true);
+      setIsAnimating(true);
+      
+      // Сбрасываем флаг анимации через 1 секунду
+      setTimeout(() => setIsAnimating(false), 1000);
+      
       if (onPurchaseComplete) {
         onPurchaseComplete(data.newCoins);
       }
@@ -98,6 +169,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     setPurchaseState('idle');
     setPurchasedCards([]);
     setShowCompleteMessage(false);
+    setIsAnimating(false);
     onClose();
   };
 
@@ -130,7 +202,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   if (purchaseState === 'success') {
     return (
       <div className="rewards-modal-overlay">
-        {/* НАДПИСЬ PURCHASE COMPLETE! — ВЫШЕ КОНТЕЙНЕРА, ОСТАЁТСЯ ВИДИМОЙ */}
+        {/* НАДПИСЬ PURCHASE COMPLETE! — С АНИМАЦИЕЙ */}
         {showCompleteMessage && (
           <div style={{
             position: 'absolute',
@@ -148,8 +220,14 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             textTransform: 'uppercase',
             letterSpacing: '2px',
             border: '2px solid #FFD966',
-            boxShadow: '0 0 30px rgba(255, 217, 102, 0.3)',
+            animation: isAnimating 
+              ? 'purchaseCompletePop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, purchaseCompleteFlash 0.8s ease-out forwards, purchaseCompleteGlow 1s ease-out forwards'
+              : 'purchaseCompleteGlow 2s ease-in-out infinite',
+            boxShadow: isAnimating 
+              ? '0 0 80px 40px rgba(255, 217, 102, 0.6), 0 0 200px 80px rgba(255, 217, 102, 0.3)'
+              : '0 0 20px rgba(255, 217, 102, 0.15)',
             pointerEvents: 'none',
+            transition: 'box-shadow 0.3s ease',
           }}>
             PURCHASE COMPLETE!
           </div>
