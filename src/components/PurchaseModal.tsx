@@ -150,7 +150,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
       setShowCompleteMessage(true);
       setIsAnimating(true);
       
-      // Сбрасываем флаг анимации через 1 секунду
       setTimeout(() => setIsAnimating(false), 1000);
       
       if (onPurchaseComplete) {
@@ -198,7 +197,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     gap: '8px',
   };
 
-  // Состояние успешной покупки — показываем карты
+  // ============================================================
+  // СОСТОЯНИЕ УСПЕШНОЙ ПОКУПКИ — БЕЗ КРЕСТИКА
+  // ============================================================
   if (purchaseState === 'success') {
     return (
       <div className="rewards-modal-overlay">
@@ -206,7 +207,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
         {showCompleteMessage && (
           <div style={{
             position: 'absolute',
-            top: '15%',
+            top: '17%',
             left: '50%',
             transform: 'translateX(-50%)',
             backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -247,14 +248,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             width: '95%',
           }}
         >
-          <div className="rewards-header" style={{ top: '-8%', zIndex: 100 }}>
-            <button 
-              className="cancelled-modal-close" 
-              style={{ top: '100%', zIndex: 101, cursor: 'pointer' }} 
-              onClick={handleGotIt}
-            >
-              ✕
-            </button>
+          {/* КРЕСТИК УБРАН — ТОЛЬКО ЗАГОЛОВОК (пустой) */}
+          <div className="rewards-header" style={{ top: '-8%', zIndex: 100, height: '0', minHeight: '0' }}>
+            {/* Пустой заголовок — крестика нет */}
           </div>
 
           <div 
@@ -343,6 +339,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             </div>
           </div>
 
+          {/* КНОПКА GOT IT! — ОСТАЁТСЯ */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'center', 
@@ -364,7 +361,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     );
   }
 
-  // Состояние ожидания — показываем форму покупки
+  // ============================================================
+  // СОСТОЯНИЕ ОЖИДАНИЯ — С КРЕСТИКОМ (закрыть можно)
+  // ============================================================
   return (
     <div className="rewards-modal-overlay">
       <div 
