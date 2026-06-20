@@ -239,7 +239,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           style={{ 
             height: 'auto',
             minHeight: '35%',
-            maxHeight: '70%',
+            maxHeight: '65%',
             display: 'flex', 
             flexDirection: 'column',
             margin: 'auto auto',
