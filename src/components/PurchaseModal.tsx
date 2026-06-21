@@ -17,7 +17,10 @@ interface PurchaseModalProps {
   userCoins: number;
   authToken?: string;
   isFree?: boolean;
+  isCurrency?: boolean; // ← НОВЫЙ ПРОП
+  ticketsAmount?: number; // ← НОВЫЙ ПРОП
   onPurchaseComplete?: (newCoins: number) => void;
+  onCurrencyPurchaseComplete?: (newCoins: number, newTickets: number) => void; // ← НОВЫЙ ПРОП
 }
 
 const PurchaseModal: React.FC<PurchaseModalProps> = ({
@@ -31,7 +34,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   userCoins,
   authToken,
   isFree = false,
-  onPurchaseComplete
+  isCurrency = false,
+  ticketsAmount = 0,
+  onPurchaseComplete,
+  onCurrencyPurchaseComplete
 }) => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showPricePulse, setShowPricePulse] = useState(false);
@@ -101,6 +107,21 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             text-shadow: 0 0 10px rgba(255, 217, 102, 0.2);
           }
         }
+
+        @keyframes ticketsReveal {
+          0% {
+            transform: scale(0.5) rotate(-10deg);
+            opacity: 0;
+          }
+          60% {
+            transform: scale(1.1) rotate(2deg);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 1;
+          }
+        }
       `;
       document.head.appendChild(style);
     }
@@ -118,8 +139,14 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   };
 
   const handlePurchaseClick = async () => {
-    // Если бесплатно — не проверяем монеты
-    if (!isFree && userCoins < currentPrice) {
+    // Если бесплатно или currency — проверяем монеты для currency
+    if (isCurrency && userCoins < currentPrice) {
+      setShowPricePulse(true);
+      setTimeout(() => setShowPricePulse(false), 500);
+      return;
+    }
+    
+    if (!isFree && !isCurrency && userCoins < currentPrice) {
       setShowPricePulse(true);
       setTimeout(() => setShowPricePulse(false), 500);
       return;
@@ -144,6 +171,19 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             itemName: itemName
           })
         });
+      } else if (isCurrency) {
+        // Currency предмет
+        response = await fetch(`${API_BASE}/api/shop/purchase-currency`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            itemName: itemName,
+            price: currentPrice
+          })
+        });
       } else {
         // Платный пак
         response = await fetch(`${API_BASE}/api/shop/purchase-card-pack`, {
@@ -166,15 +206,29 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
       }
       
       const data = await response.json();
-      setPurchasedCards(data.selections);
-      setPurchaseState('success');
-      setShowCompleteMessage(true);
-      setIsAnimating(true);
       
-      setTimeout(() => setIsAnimating(false), 1000);
-      
-      if (onPurchaseComplete) {
-        onPurchaseComplete(data.newCoins || 0);
+      if (isCurrency) {
+        setPurchasedCards([]);
+        setPurchaseState('success');
+        setShowCompleteMessage(true);
+        setIsAnimating(true);
+        
+        setTimeout(() => setIsAnimating(false), 1000);
+        
+        if (onCurrencyPurchaseComplete) {
+          onCurrencyPurchaseComplete(data.newCoins, data.newTickets);
+        }
+      } else {
+        setPurchasedCards(data.selections || []);
+        setPurchaseState('success');
+        setShowCompleteMessage(true);
+        setIsAnimating(true);
+        
+        setTimeout(() => setIsAnimating(false), 1000);
+        
+        if (onPurchaseComplete) {
+          onPurchaseComplete(data.newCoins || 0);
+        }
       }
     } catch (error: any) {
       console.error('Purchase failed:', error);
@@ -251,7 +305,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             pointerEvents: 'none',
             transition: 'box-shadow 0.3s ease',
           }}>
-            {isFree ? 'PACK CLAIMED!' : 'PURCHASE COMPLETE!'}
+            {isFree ? 'PACK CLAIMED!' : isCurrency ? `${ticketsAmount} TICKETS ADDED!` : 'PURCHASE COMPLETE!'}
           </div>
         )}
 
@@ -269,9 +323,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             width: '95%',
           }}
         >
-          {/* КРЕСТИК УБРАН — ТОЛЬКО ЗАГОЛОВОК (пустой) */}
+          {/* КРЕСТИК УБРАН */}
           <div className="rewards-header" style={{ top: '-8%', zIndex: 100, height: '0', minHeight: '0' }}>
-            {/* Пустой заголовок — крестика нет */}
           </div>
 
           <div 
@@ -281,7 +334,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               display: 'flex', 
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'flex-start',
+              justifyContent: isCurrency ? 'center' : 'flex-start',
               width: '97%',
               margin: 'auto',
               marginTop: '3%',
@@ -292,7 +345,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               padding: 0,
             }}
           >
-            {/* НАЗВАНИЕ ТУРНИРА — РОВНО ПО ЦЕНТРУ МЕЖДУ ВЕРХНЕЙ ГРАНИЦЕЙ И GRID */}
+            {/* НАЗВАНИЕ ТУРНИРА / ПРЕДМЕТА */}
             <div style={{
               textAlign: 'center',
               color: '#FFD966',
@@ -304,61 +357,121 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               width: '100%',
               borderBottom: '1px solid rgba(255, 217, 102, 0.2)',
             }}>
-              {leagueUpper}: {formattedTournamentName}
+              {isCurrency ? itemName : `${leagueUpper}: ${formattedTournamentName}`}
             </div>
 
-            {/* Grid из 5 карт */}
-            <div className="selected-fighters-grid" style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(5, 1fr)', 
-              gap: 'clamp(4px, 1vw, 8px)',
-              width: '100%',
-              padding: '0 clamp(2px, 1vh, 4px)',
-              margin: 'clamp(4px, 2vh, 12px) 0',
-              flex: 1,
-              minHeight: 0,
-            }}>
-              {purchasedCards.map((sel: any, idx: number) => {
-                const style = getFighterStyleFromSelected(sel.fighter);
-                const styleIcon = getStyleIconFilename(style);
-                const damageValue = sel.fighter['Total Damage'] || 0;
-                
-                return (
-                  <div 
-                    key={idx} 
-                    className="selected-fighter-card" 
-                    data-weight={sel.weightClass} 
-                    style={{ 
-                      backgroundColor: getWeightClassColor(sel.weightClass),
+            {/* КОНТЕНТ: либо карты, либо билеты */}
+            {isCurrency ? (
+              // ===== CURRENCY: показываем иконку билета с количеством =====
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 1,
+                width: '100%',
+                animation: 'ticketsReveal 0.6s ease-out forwards',
+              }}>
+                <div style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 'clamp(100px, 35vw, 180px)',
+                  aspectRatio: '1 / 1',
+                }}>
+                  <img 
+                    src={`${BASE_URL}/icons/Ticket_icon.webp`}
+                    alt="Tickets"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0 0 20px rgba(255, 217, 102, 0.3))',
                     }}
-                  >
-                    <div className="selected-fighter-damage-box">{damageValue}</div>
-                    <div className="selected-fighter-inner">
-                      <div className="selected-fighter-icon-container">
-                        <img 
-                          src={`${BASE_URL}/icons/${styleIcon}`} 
-                          alt={style} 
-                          className="selected-fighter-icon" 
-                          onError={(e) => { 
-                            (e.target as HTMLImageElement).style.display = 'none'; 
-                            const p = (e.target as HTMLImageElement).parentElement; 
-                            if (p) { 
-                              p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; 
-                              p.style.fontSize = 'clamp(16px, 4vw, 20px)'; 
-                            } 
-                          }} 
-                        />
-                      </div>
-                      <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
-                      <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
-                    </div>
+                  />
+                  {/* Количество билетов поверх иконки */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '5%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    color: '#FFFFFF',
+                    fontSize: 'clamp(20px, 6vw, 36px)',
+                    fontWeight: 700,
+                    textShadow: '0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    padding: '2% 12%',
+                    borderRadius: '1vw',
+                    border: '1px solid rgba(255, 217, 102, 0.3)',
+                  }}>
+                    +{ticketsAmount}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+                
+                <div style={{
+                  color: '#888888',
+                  fontSize: 'clamp(10px, 3vw, 14px)',
+                  textAlign: 'center',
+                  marginTop: 'clamp(8px, 2vh, 16px)',
+                }}>
+                  {ticketsAmount} Tickets added to your account!
+                </div>
+              </div>
+            ) : (
+              // ===== CARD PACKS: grid из 5 карт =====
+              <div className="selected-fighters-grid" style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(5, 1fr)', 
+                gap: 'clamp(4px, 1vw, 8px)',
+                width: '100%',
+                padding: '0 clamp(2px, 1vh, 4px)',
+                margin: 'clamp(4px, 2vh, 12px) 0',
+                flex: 1,
+                minHeight: 0,
+              }}>
+                {purchasedCards.map((sel: any, idx: number) => {
+                  const style = getFighterStyleFromSelected(sel.fighter);
+                  const styleIcon = getStyleIconFilename(style);
+                  const damageValue = sel.fighter['Total Damage'] || 0;
+                  
+                  return (
+                    <div 
+                      key={idx} 
+                      className="selected-fighter-card" 
+                      data-weight={sel.weightClass} 
+                      style={{ 
+                        backgroundColor: getWeightClassColor(sel.weightClass),
+                      }}
+                    >
+                      <div className="selected-fighter-damage-box">{damageValue}</div>
+                      <div className="selected-fighter-inner">
+                        <div className="selected-fighter-icon-container">
+                          <img 
+                            src={`${BASE_URL}/icons/${styleIcon}`} 
+                            alt={style} 
+                            className="selected-fighter-icon" 
+                            onError={(e) => { 
+                              (e.target as HTMLImageElement).style.display = 'none'; 
+                              const p = (e.target as HTMLImageElement).parentElement; 
+                              if (p) { 
+                                p.innerHTML = style === 'Striker' ? '👊' : style === 'Grappler' ? '🤼' : style === 'Universal' ? '⚡' : '👤'; 
+                                p.style.fontSize = 'clamp(16px, 4vw, 20px)'; 
+                              } 
+                            }} 
+                          />
+                        </div>
+                        <div className="selected-fighter-divider" style={{ color: getWeightClassColor(sel.weightClass) }}></div>
+                        <div className="selected-fighter-name">{sel.fighter.Fighter}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* КНОПКА GOT IT! — ОСТАЁТСЯ */}
+          {/* КНОПКА GOT IT! */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'center', 
@@ -381,7 +494,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   }
 
   // ============================================================
-  // СОСТОЯНИЕ ОЖИДАНИЯ — С КРЕСТИКОМ (закрыть можно)
+  // СОСТОЯНИЕ ОЖИДАНИЯ — С КРЕСТИКОМ
   // ============================================================
   return (
     <div className="rewards-modal-overlay">
@@ -426,7 +539,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             overflow: 'hidden',
           }}
         >
-          {/* Блок: иконка + название (горизонтально) */}
+          {/* Блок: иконка + название */}
           <div style={{
             display: 'flex',
             flexDirection: 'row',
@@ -435,7 +548,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             width: '100%',
             flexShrink: 0,
           }}>
-            {/* Иконка предмета (слева) */}
+            {/* Иконка предмета */}
             <div style={{
               width: '20vw',
               maxWidth: '80px',
@@ -463,7 +576,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               </div>
             </div>
 
-            {/* Блок с названием предмета и турнира (справа) */}
+            {/* Блок с названием */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -471,9 +584,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               flex: 1,
               minWidth: 0,
             }}>
-              {/* Название предмета */}
               <div style={{
-                color: isFree ? '#4CAF50' : '#FFD966',
+                color: isFree ? '#4CAF50' : isCurrency ? '#FFD966' : '#FFD966',
                 fontSize: 'clamp(14px, 4vw, 18px)',
                 fontWeight: 700,
                 textTransform: 'uppercase',
@@ -483,14 +595,13 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
                 {isFree ? '🎁 ' : ''}{itemName}
               </div>
 
-              {/* Название турнира */}
               <div style={{
                 color: '#888888',
                 fontSize: 'clamp(11px, 3vw, 14px)',
                 fontWeight: 400,
                 lineHeight: 1.3,
               }}>
-                {formattedTournamentName}
+                {isCurrency ? `${ticketsAmount} Tickets` : formattedTournamentName}
               </div>
             </div>
           </div>
@@ -507,6 +618,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 3vw, 12px)', textAlign: 'center', lineHeight: 1.4 }}>
               {isFree 
                 ? `Get 5 random fighter cards for the active ${leagueUpper} tournament with this FREE pack! (24h cooldown)`
+                : isCurrency
+                ? `Get ${ticketsAmount} Tickets for ${currentPrice} coins! (2h cooldown)`
                 : `Get 5 random fighter cards for the active ${leagueUpper} tournament with this pack!`
               }
             </div>
@@ -531,6 +644,23 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             ) : isFree ? (
               <>
                 GET FREE PACK
+              </>
+            ) : isCurrency ? (
+              <>
+                BUY {ticketsAmount} TICKETS: 
+                <span style={{ 
+                  fontWeight: 700, 
+                  fontSize: 'clamp(16px, 4vw, 20px)',
+                  marginLeft: '4px',
+                  color: '#FFD966'
+                }}>
+                  {currentPrice}
+                </span>
+                <img 
+                  src={`${BASE_URL}/icons/Coin_icon.webp`} 
+                  alt="Coins" 
+                  style={{ width: 'auto', height: 'clamp(14px, 3.5vw, 18px)', objectFit: 'contain', marginLeft: '2px' }}
+                />
               </>
             ) : (
               <>
