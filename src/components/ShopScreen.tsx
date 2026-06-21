@@ -42,6 +42,7 @@ interface CurrencyItem {
   item_fiat_price: number;
   item_reload_time: number;
   item_icon: string;
+  tickets_amount: number;
 }
 
 const ShopScreen: React.FC<ShopScreenProps> = ({ 
@@ -73,6 +74,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   const [currencyItems, setCurrencyItems] = useState<CurrencyItem[]>([]);
   const [loadingCurrency, setLoadingCurrency] = useState(true);
   const [localCurrencyReload, setLocalCurrencyReload] = useState<Record<string, number>>({});
+  const [currencyCurrentPrices, setCurrencyCurrentPrices] = useState<Record<string, number>>({});
 
   const promotions = [
     "🎁 FREE daily reward! Claim now!",
@@ -256,7 +258,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
             item_coins_price: 100, 
             item_fiat_price: 0, 
             item_reload_time: 120, 
-            item_icon: 'icons/small_tickets_icon.webp' 
+            item_icon: 'icons/small_tickets_icon.webp',
+            tickets_amount: 5
           }
         ]);
         setLoadingCurrency(false);
@@ -285,6 +288,11 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           ...prev,
           [itemName]: data.reloadSecondsLeft || 0
         }));
+        // Сохраняем актуальную цену
+        setCurrencyCurrentPrices(prev => ({
+          ...prev,
+          [itemName]: data.currentPrice || data.itemCoinsPrice
+        }));
       }
     } catch (err) {
       console.error(`Failed to load currency info for ${itemName}:`, err);
@@ -301,19 +309,18 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       ? `${BASE_URL}/${item.item_icon}` 
       : `${BASE_URL}/icons/Ticket_icon.webp`;
     
-    // Извлекаем количество билетов из названия
-    const match = item.item_name.match(/(\d+)/);
-    const ticketsAmount = match ? parseInt(match[1]) : 5;
+    // Берём актуальную цену (с возможным удвоением)
+    const currentPrice = currencyCurrentPrices[item.item_name] || item.item_coins_price;
     
     setSelectedPack({
       tournament: activeTournaments[0] || { id: '0', name: 'Currency', league: 'Currency', date: '', status: 'completed', filename: '', data: null, url: '' },
       league: 'Currency',
-      price: item.item_coins_price,
+      price: currentPrice,
       name: item.item_name,
       icon: iconSrc,
       isFree: false,
       isCurrency: true,
-      ticketsAmount: ticketsAmount
+      ticketsAmount: item.tickets_amount
     });
     setShowPurchaseModal(true);
   };
@@ -350,12 +357,10 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   };
 
   const getLeagueIcon = (league: string, packConfig?: PackConfig): string => {
-    // Если есть конфиг с иконкой — используем её
     if (packConfig?.item_icon) {
       return `${BASE_URL}/${packConfig.item_icon}`;
     }
     
-    // Fallback по лиге
     const leagueUpper = (league || 'UFC').toUpperCase();
     if (leagueUpper === 'UFC') return `${BASE_URL}/icons/UFC_cardpack.webp`;
     if (leagueUpper === 'PFL') return `${BASE_URL}/icons/PFL_cardpack.webp`;
@@ -413,7 +418,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     if (onRefreshBets) {
       await onRefreshBets();
     }
-    // Обновляем информацию для этой лиги после покупки
     if (selectedPack) {
       const league = selectedPack.league.toUpperCase();
       if (selectedPack.isFree) {
@@ -448,7 +452,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   };
 
   const renderFreeTab = () => {
-    // Находим бесплатные паки из конфигурации
     const freePacks = allPackConfigs.filter(p => p.item_price === 0);
     
     if (loadingPacks) {
@@ -473,7 +476,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     return (
       <div className="shop-cardpacks-list">
         {freePacks.map((packConfig) => {
-          // Извлекаем лигу из названия
           const leagueName = packConfig.item_name.replace(' Card Pack Free', '').toUpperCase();
           const tournament = activeTournaments.find(t => (t.league || 'UFC').toUpperCase() === leagueName);
           
@@ -486,7 +488,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           
           return (
             <div key={packConfig.id} className="shop-cardpack-item">
-              {/* 1-й столбец: иконка лиги */}
               <div className="shop-cardpack-icon">
                 <img 
                   src={iconSrc} 
@@ -498,7 +499,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                 />
               </div>
               
-              {/* 2-й столбец: информация */}
               <div className="shop-cardpack-info">
                 <div className="shop-cardpack-title" style={{ color: '#4CAF50' }}>
                   🎁 {leagueName} Free Pack
@@ -513,7 +513,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                 )}
               </div>
               
-              {/* 3-й столбец: цена и кнопка */}
               <div className="shop-cardpack-action">
                 <div className="shop-cardpack-price" style={{ color: '#4CAF50' }}>
                   FREE
@@ -567,9 +566,11 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
             ? `${BASE_URL}/${item.item_icon}` 
             : `${BASE_URL}/icons/Ticket_icon.webp`;
           
+          // Показываем актуальную цену (с возможным удвоением)
+          const currentPrice = currencyCurrentPrices[item.item_name] || item.item_coins_price;
+          
           return (
             <div key={item.id} className="shop-cardpack-item">
-              {/* 1-й столбец: иконка */}
               <div className="shop-cardpack-icon">
                 <img 
                   src={iconSrc} 
@@ -581,7 +582,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                 />
               </div>
               
-              {/* 2-й столбец: информация */}
               <div className="shop-cardpack-info">
                 <div className="shop-cardpack-title">{item.item_name}</div>
                 <div className="shop-cardpack-tournament">
@@ -594,10 +594,9 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                 )}
               </div>
               
-              {/* 3-й столбец: цена и кнопка */}
               <div className="shop-cardpack-action">
                 <div className="shop-cardpack-price">
-                  {item.item_coins_price}
+                  {currentPrice}
                   <img 
                     src={`${BASE_URL}/icons/Coin_icon.webp`} 
                     alt="Coins" 
@@ -614,7 +613,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                   onClick={() => !isOnCooldown && handleCurrencyPurchase(item)}
                   disabled={isOnCooldown}
                 >
-                  {isOnCooldown ? 'RECHARGING' : 'BUY'}
+                  {isOnCooldown ? 'RECHARGING' : 'PURCHASE'}
                 </button>
               </div>
             </div>
@@ -635,7 +634,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       );
     }
     
-    // Показываем только платные паки (price > 0)
     const paidPacks = allPackConfigs.filter(p => p.item_price > 0);
     
     if (loadingPacks) {
@@ -653,7 +651,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           const league = tournament.league || 'UFC';
           const leagueUpper = league.toUpperCase();
           
-          // Находим конфиг пака для этой лиги
           const packConfig = allPackConfigs.find(p => p.item_name === `${leagueUpper} Card Pack`);
           if (!packConfig) return null;
           
@@ -713,14 +710,12 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
 
   return (
     <div className="shop-screen">
-      {/* Верхняя шапка с рекламой */}
       <div className="shop-header">
         <div className="shop-promotion">
           <span className="shop-promotion-text">{promotions[currentPromotionIndex]}</span>
         </div>
       </div>
 
-      {/* Кнопки закладок */}
       <div className="shop-tabs">
         <button 
           className={`shop-tab-btn ${activeTab === 'free' ? 'active' : 'inactive'}`}
@@ -748,12 +743,10 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
         </button>
       </div>
 
-      {/* Контент закладки */}
       <div className="shop-content">
         {renderTabContent()}
       </div>
 
-      {/* Модальное окно покупки */}
       {selectedPack && (
         <PurchaseModal
           isOpen={showPurchaseModal}

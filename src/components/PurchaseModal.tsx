@@ -17,10 +17,10 @@ interface PurchaseModalProps {
   userCoins: number;
   authToken?: string;
   isFree?: boolean;
-  isCurrency?: boolean; // ← НОВЫЙ ПРОП
-  ticketsAmount?: number; // ← НОВЫЙ ПРОП
+  isCurrency?: boolean;
+  ticketsAmount?: number;
   onPurchaseComplete?: (newCoins: number) => void;
-  onCurrencyPurchaseComplete?: (newCoins: number, newTickets: number) => void; // ← НОВЫЙ ПРОП
+  onCurrencyPurchaseComplete?: (newCoins: number, newTickets: number) => void;
 }
 
 const PurchaseModal: React.FC<PurchaseModalProps> = ({
@@ -43,84 +43,39 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [showPricePulse, setShowPricePulse] = useState(false);
   const [purchaseState, setPurchaseState] = useState<'idle' | 'loading' | 'success'>('idle');
   const [purchasedCards, setPurchasedCards] = useState<any[]>([]);
-  const [currentPrice, setCurrentPrice] = useState(price);
+  const [currentPrice, _setCurrentPrice] = useState(price);
   const [showCompleteMessage, setShowCompleteMessage] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Добавляем keyframes для анимации в head, если их нет
   useEffect(() => {
     if (!document.querySelector('#purchase-modal-animations')) {
       const style = document.createElement('style');
       style.id = 'purchase-modal-animations';
       style.textContent = `
         @keyframes purchaseCompletePop {
-          0% {
-            transform: translateX(-50%) scale(0.3);
-            opacity: 0;
-          }
-          40% {
-            transform: translateX(-50%) scale(1.15);
-            opacity: 1;
-          }
-          70% {
-            transform: translateX(-50%) scale(0.95);
-            opacity: 1;
-          }
-          100% {
-            transform: translateX(-50%) scale(1);
-            opacity: 1;
-          }
+          0% { transform: translateX(-50%) scale(0.3); opacity: 0; }
+          40% { transform: translateX(-50%) scale(1.15); opacity: 1; }
+          70% { transform: translateX(-50%) scale(0.95); opacity: 1; }
+          100% { transform: translateX(-50%) scale(1); opacity: 1; }
         }
-
         @keyframes purchaseCompleteFlash {
-          0% {
-            box-shadow: 0 0 0 0 rgba(255, 217, 102, 0);
-          }
-          20% {
-            box-shadow: 0 0 80px 40px rgba(255, 217, 102, 0.6), 0 0 200px 80px rgba(255, 217, 102, 0.3);
-          }
-          50% {
-            box-shadow: 0 0 60px 30px rgba(255, 217, 102, 0.4), 0 0 150px 60px rgba(255, 217, 102, 0.2);
-          }
-          80% {
-            box-shadow: 0 0 30px 15px rgba(255, 217, 102, 0.2), 0 0 80px 30px rgba(255, 217, 102, 0.1);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(255, 217, 102, 0);
-          }
+          0% { box-shadow: 0 0 0 0 rgba(255, 217, 102, 0); }
+          20% { box-shadow: 0 0 80px 40px rgba(255, 217, 102, 0.6), 0 0 200px 80px rgba(255, 217, 102, 0.3); }
+          50% { box-shadow: 0 0 60px 30px rgba(255, 217, 102, 0.4), 0 0 150px 60px rgba(255, 217, 102, 0.2); }
+          80% { box-shadow: 0 0 30px 15px rgba(255, 217, 102, 0.2), 0 0 80px 30px rgba(255, 217, 102, 0.1); }
+          100% { box-shadow: 0 0 0 0 rgba(255, 217, 102, 0); }
         }
-
         @keyframes purchaseCompleteGlow {
-          0% {
-            text-shadow: 0 0 0 rgba(255, 217, 102, 0);
-          }
-          20% {
-            text-shadow: 0 0 40px rgba(255, 217, 102, 0.8), 0 0 80px rgba(255, 217, 102, 0.4);
-          }
-          50% {
-            text-shadow: 0 0 30px rgba(255, 217, 102, 0.6), 0 0 60px rgba(255, 217, 102, 0.3);
-          }
-          80% {
-            text-shadow: 0 0 20px rgba(255, 217, 102, 0.4), 0 0 40px rgba(255, 217, 102, 0.2);
-          }
-          100% {
-            text-shadow: 0 0 10px rgba(255, 217, 102, 0.2);
-          }
+          0% { text-shadow: 0 0 0 rgba(255, 217, 102, 0); }
+          20% { text-shadow: 0 0 40px rgba(255, 217, 102, 0.8), 0 0 80px rgba(255, 217, 102, 0.4); }
+          50% { text-shadow: 0 0 30px rgba(255, 217, 102, 0.6), 0 0 60px rgba(255, 217, 102, 0.3); }
+          80% { text-shadow: 0 0 20px rgba(255, 217, 102, 0.4), 0 0 40px rgba(255, 217, 102, 0.2); }
+          100% { text-shadow: 0 0 10px rgba(255, 217, 102, 0.2); }
         }
-
         @keyframes ticketsReveal {
-          0% {
-            transform: scale(0.5) rotate(-10deg);
-            opacity: 0;
-          }
-          60% {
-            transform: scale(1.1) rotate(2deg);
-            opacity: 1;
-          }
-          100% {
-            transform: scale(1) rotate(0deg);
-            opacity: 1;
-          }
+          0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+          60% { transform: scale(1.1) rotate(2deg); opacity: 1; }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
       `;
       document.head.appendChild(style);
@@ -139,7 +94,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   };
 
   const handlePurchaseClick = async () => {
-    // Если бесплатно или currency — проверяем монеты для currency
     if (isCurrency && userCoins < currentPrice) {
       setShowPricePulse(true);
       setTimeout(() => setShowPricePulse(false), 500);
@@ -159,7 +113,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
       let response;
       
       if (isFree) {
-        // Бесплатный пак
         response = await fetch(`${API_BASE}/api/shop/claim-free-card-pack`, {
           method: 'POST',
           headers: {
@@ -172,7 +125,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           })
         });
       } else if (isCurrency) {
-        // Currency предмет
         response = await fetch(`${API_BASE}/api/shop/purchase-currency`, {
           method: 'POST',
           headers: {
@@ -185,7 +137,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           })
         });
       } else {
-        // Платный пак
         response = await fetch(`${API_BASE}/api/shop/purchase-card-pack`, {
           method: 'POST',
           headers: {
@@ -247,18 +198,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     onClose();
   };
 
-  const getLeagueGradient = (leagueName: string): string => {
-    const leagueUpper = leagueName.toUpperCase();
-    if (leagueUpper === 'UFC') return 'linear-gradient(180deg, #B20101 0%, #8C1519 100%)';
-    if (leagueUpper === 'PFL') return 'linear-gradient(180deg, #0550B2 0%, #0A3A7A 100%)';
-    if (leagueUpper === 'ONE') return 'linear-gradient(180deg, #D4AF37 0%, #8B7300 100%)';
-    return 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)';
-  };
-
-  const leagueGradient = getLeagueGradient(league);
-  const formattedTournamentName = formatTournamentName(tournamentName);
-  const leagueUpper = league.toUpperCase();
-
   const buttonStyle = {
     width: '60%',
     height: '6vh',
@@ -272,13 +211,12 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     gap: '8px',
   };
 
-  // ============================================================
-  // СОСТОЯНИЕ УСПЕШНОЙ ПОКУПКИ — БЕЗ КРЕСТИКА
-  // ============================================================
+  const formattedTournamentName = formatTournamentName(tournamentName);
+  const leagueUpper = league.toUpperCase();
+
   if (purchaseState === 'success') {
     return (
       <div className="rewards-modal-overlay">
-        {/* НАДПИСЬ PURCHASE COMPLETE! — С АНИМАЦИЕЙ */}
         {showCompleteMessage && (
           <div style={{
             position: 'absolute',
@@ -323,7 +261,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             width: '95%',
           }}
         >
-          {/* КРЕСТИК УБРАН */}
           <div className="rewards-header" style={{ top: '-8%', zIndex: 100, height: '0', minHeight: '0' }}>
           </div>
 
@@ -345,7 +282,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               padding: 0,
             }}
           >
-            {/* НАЗВАНИЕ ТУРНИРА / ПРЕДМЕТА */}
             <div style={{
               textAlign: 'center',
               color: '#FFD966',
@@ -360,9 +296,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               {isCurrency ? itemName : `${leagueUpper}: ${formattedTournamentName}`}
             </div>
 
-            {/* КОНТЕНТ: либо карты, либо билеты */}
             {isCurrency ? (
-              // ===== CURRENCY: показываем иконку билета с количеством =====
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -390,7 +324,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
                       filter: 'drop-shadow(0 0 20px rgba(255, 217, 102, 0.3))',
                     }}
                   />
-                  {/* Количество билетов поверх иконки */}
                   <div style={{
                     position: 'absolute',
                     bottom: '5%',
@@ -408,7 +341,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
                     +{ticketsAmount}
                   </div>
                 </div>
-                
                 <div style={{
                   color: '#888888',
                   fontSize: 'clamp(10px, 3vw, 14px)',
@@ -419,7 +351,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
                 </div>
               </div>
             ) : (
-              // ===== CARD PACKS: grid из 5 карт =====
               <div className="selected-fighters-grid" style={{ 
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(5, 1fr)', 
@@ -471,7 +402,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             )}
           </div>
 
-          {/* КНОПКА GOT IT! */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'center', 
@@ -493,9 +423,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     );
   }
 
-  // ============================================================
-  // СОСТОЯНИЕ ОЖИДАНИЯ — С КРЕСТИКОМ
-  // ============================================================
   return (
     <div className="rewards-modal-overlay">
       <div 
@@ -539,7 +466,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             overflow: 'hidden',
           }}
         >
-          {/* Блок: иконка + название */}
           <div style={{
             display: 'flex',
             flexDirection: 'row',
@@ -548,7 +474,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             width: '100%',
             flexShrink: 0,
           }}>
-            {/* Иконка предмета */}
             <div style={{
               width: '20vw',
               maxWidth: '80px',
@@ -576,7 +501,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               </div>
             </div>
 
-            {/* Блок с названием */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -585,7 +509,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               minWidth: 0,
             }}>
               <div style={{
-                color: isFree ? '#4CAF50' : isCurrency ? '#FFD966' : '#FFD966',
+                color: isFree ? '#4CAF50' : '#FFD966',
                 fontSize: 'clamp(14px, 4vw, 18px)',
                 fontWeight: 700,
                 textTransform: 'uppercase',
@@ -606,7 +530,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             </div>
           </div>
 
-          {/* Описание */}
           <div style={{
             width: '100%',
             padding: '3% 4%',
@@ -642,12 +565,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             {isPurchasing ? (
               'PROCESSING...'
             ) : isFree ? (
-              <>
-                GET FREE PACK
-              </>
+              'GET FREE PACK'
             ) : isCurrency ? (
               <>
-                BUY {ticketsAmount} TICKETS: 
+                CONFIRM PAYMENT: 
                 <span style={{ 
                   fontWeight: 700, 
                   fontSize: 'clamp(16px, 4vw, 20px)',
