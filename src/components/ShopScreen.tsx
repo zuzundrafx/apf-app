@@ -601,16 +601,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                 </div>
                 <button 
                   className="shop-cardpack-purchase"
-                  style={{
-                    opacity: 1,
-                    cursor: 'pointer',
-                    background: isOnCooldown 
-                      ? 'linear-gradient(180deg, #FFD966 0%, #E6B800 100%)'
-                      : 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)',
-                    border: isOnCooldown ? '2px solid #B29403' : '0.15vh solid #666d75',
-                    boxShadow: isOnCooldown ? '0 0 5px rgba(255, 217, 102, 0.5)' : 'none',
-                    color: isOnCooldown ? '#000000' : '#FFFFFF'
-                  }}
                   onClick={() => handleCurrencyPurchase(item)}
                   disabled={false}
                 >
