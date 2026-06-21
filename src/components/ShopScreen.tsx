@@ -300,11 +300,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   };
 
   const handleCurrencyPurchase = (item: CurrencyItem) => {
-    const reloadSecondsLeft = localCurrencyReload[item.item_name] || 0;
-    const isOnCooldown = reloadSecondsLeft > 0;
-    
-    if (isOnCooldown) return;
-    
+    // ⚠️ НЕТ БЛОКИРОВКИ — всегда можно купить (как в CARD PACKS)
     const iconSrc = item.item_icon 
       ? `${BASE_URL}/${item.item_icon}` 
       : `${BASE_URL}/icons/Ticket_icon.webp`;
@@ -604,16 +600,21 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                   />
                 </div>
                 <button 
-                  className={`shop-cardpack-purchase ${isOnCooldown ? 'disabled' : ''}`}
+                  className="shop-cardpack-purchase"
                   style={{
-                    opacity: isOnCooldown ? 0.5 : 1,
-                    cursor: isOnCooldown ? 'not-allowed' : 'pointer',
-                    background: isOnCooldown ? '#666D74' : 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)'
+                    opacity: 1,
+                    cursor: 'pointer',
+                    background: isOnCooldown 
+                      ? 'linear-gradient(180deg, #FFD966 0%, #E6B800 100%)'
+                      : 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)',
+                    border: isOnCooldown ? '2px solid #B29403' : '0.15vh solid #666d75',
+                    boxShadow: isOnCooldown ? '0 0 5px rgba(255, 217, 102, 0.5)' : 'none',
+                    color: isOnCooldown ? '#000000' : '#FFFFFF'
                   }}
-                  onClick={() => !isOnCooldown && handleCurrencyPurchase(item)}
-                  disabled={isOnCooldown}
+                  onClick={() => handleCurrencyPurchase(item)}
+                  disabled={false}
                 >
-                  {isOnCooldown ? 'RECHARGING' : 'PURCHASE'}
+                  PURCHASE
                 </button>
               </div>
             </div>
