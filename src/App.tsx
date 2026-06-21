@@ -746,7 +746,7 @@ function App() {
                               <span>Base:</span>{totalDamage} / <span>PvP:</span>{pvpDamage}
                             </div>
                             <div className="tournament-card-image">
-                              <img src={`${BASE_URL}/UFC_cardpack.png`} alt="pack" />
+                              <img src={`${BASE_URL}/icons/UFC_cardpack.webp`} alt="pack" />
                             </div>
                             <div className="tournament-card-name">{tournament.name}</div>
                           </div>
@@ -833,7 +833,7 @@ function App() {
                                   'SELECT'
                                 )}
                               </div>
-                              <div className="tournament-card-image"><img src={`${BASE_URL}/UFC_cardpack.png`} alt="pack" /></div>
+                              <div className="tournament-card-image"><img src={`${BASE_URL}/icons/UFC_cardpack.webp`} alt="pack" /></div>
                               <div className="tournament-card-name">{tournament.name}</div>
                             </div>
                           </div>
