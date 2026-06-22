@@ -312,8 +312,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     if (onUpdateBalance) {
       await onUpdateBalance(newCoins, newTickets);
     }
-    setShowPurchaseModal(false);
-    setSelectedPack(null);
+    /*setShowPurchaseModal(false);
+    setSelectedPack(null);*/
   };
 
   // ========== ОБЩИЕ ФУНКЦИИ ==========
