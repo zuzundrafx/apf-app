@@ -272,7 +272,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             pointerEvents: 'none',
             transition: 'box-shadow 0.3s ease',
           }}>
-            {isFree && isCurrency ? 'CLAIMED!' : isFree ? 'PACK CLAIMED!' : isCurrency ? `${ticketsAmount} TICKETS ADDED!` : 'PURCHASE COMPLETE!'}
+            {isFree && isCurrency ? 'CLAIMED!' : isFree ? 'PACK CLAIMED!' : 'PURCHASE COMPLETE!'}
           </div>
         )}
 
