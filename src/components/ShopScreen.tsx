@@ -299,7 +299,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       price: currentPrice,
       name: item.item_name,
       icon: iconSrc,
-      isFree: false,
+      isFree: item.item_coins_price === 0,
       isCurrency: true,
       ticketsAmount: item.tickets_amount,
       itemInfo: item.item_info,
@@ -378,7 +378,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       price: 0,
       name: `${leagueName} Card Pack Free`,
       icon: iconSrc,
-      isFree: true
+      isFree: true,
+      isCurrency: false
     });
     setShowPurchaseModal(true);
   };
@@ -396,7 +397,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       price: info?.currentPrice || 1000,
       name: `${leagueName} Card Pack`,
       icon: iconSrc,
-      isFree: false
+      isFree: false,
+      isCurrency: false
     });
     setShowPurchaseModal(true);
   };
@@ -442,9 +444,12 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   };
 
   const renderFreeTab = () => {
+    // Бесплатные картпаки
     const freePacks = allPackConfigs.filter(p => p.item_price === 0);
+    // Бесплатные currency предметы (цена 0)
+    const freeCurrencyItems = currencyItems.filter(item => item.item_coins_price === 0);
     
-    if (loadingPacks) {
+    if (loadingPacks || loadingCurrency) {
       return (
         <div className="shop-empty-state" style={{ gap: '16px' }}>
           <div className="arena-loading-spinner" style={{ width: '40px', height: '40px', border: '3px solid #3D3D3B', borderTopColor: '#B20101', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
@@ -453,7 +458,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       );
     }
     
-    if (freePacks.length === 0) {
+    if (freePacks.length === 0 && freeCurrencyItems.length === 0) {
       return (
         <div className="shop-empty-state">
           <div className="shop-empty-icon">🎁</div>
@@ -465,6 +470,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     
     return (
       <div className="shop-cardpacks-list">
+        {/* ===== БЕСПЛАТНЫЕ КАРТПАКИ (без изменений) ===== */}
         {freePacks.map((packConfig) => {
           const leagueName = packConfig.item_name.replace(' Card Pack Free', '').toUpperCase();
           const tournament = activeTournaments.find(t => (t.league || 'UFC').toUpperCase() === leagueName);
@@ -517,44 +523,15 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                   onClick={() => !isOnCooldown && handleFreePackClick(tournament)}
                   disabled={isOnCooldown}
                 >
-                  {isOnCooldown ? 'RECHARGING' : 'GET'}
+                  {isOnCooldown ? 'RECHARGING' : 'CLAIM'}
                 </button>
               </div>
             </div>
           );
         })}
-      </div>
-    );
-  };
-
-  const renderCurrencyTab = () => {
-    if (loadingCurrency) {
-      return (
-        <div className="shop-empty-state" style={{ gap: '16px' }}>
-          <div className="arena-loading-spinner" style={{ width: '40px', height: '40px', border: '3px solid #3D3D3B', borderTopColor: '#B20101', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-          <div className="shop-empty-text" style={{ color: '#FFFFFF', fontSize: 'clamp(14px, 4vw, 18px)' }}>Loading ...</div>
-        </div>
-      );
-    }
-    
-    if (currencyItems.length === 0) {
-      return (
-        <div className="shop-empty-state">
-          <div className="shop-empty-icon">🪙</div>
-          <div className="shop-empty-text">Currency packs coming soon!</div>
-          <div className="shop-empty-subtext">Buy Coins, Tickets and TON</div>
-        </div>
-      );
-    }
-    
-    // Разделяем платные и бесплатные
-    const paidItems = currencyItems.filter(item => item.item_coins_price > 0);
-    const freeItems = currencyItems.filter(item => item.item_coins_price === 0);
-    
-    return (
-      <div className="shop-cardpacks-list">
-        {/* Бесплатные предметы */}
-        {freeItems.map((item) => {
+        
+        {/* ===== БЕСПЛАТНЫЕ CURRENCY ПРЕДМЕТЫ (Free Tickets) ===== */}
+        {freeCurrencyItems.map((item) => {
           const reloadSecondsLeft = localCurrencyReload[item.item_name] || 0;
           const isOnCooldown = reloadSecondsLeft > 0;
           const iconSrc = item.item_icon 
@@ -562,7 +539,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
             : `${BASE_URL}/icons/Ticket_icon.webp`;
           
           return (
-            <div key={item.id} className="shop-cardpack-item">
+            <div key={`currency-${item.id}`} className="shop-cardpack-item">
               <div className="shop-cardpack-icon">
                 <img 
                   src={iconSrc} 
@@ -602,14 +579,41 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                   onClick={() => !isOnCooldown && handleCurrencyPurchase(item)}
                   disabled={isOnCooldown}
                 >
-                  {isOnCooldown ? 'RECHARGING' : 'GET'}
+                  {isOnCooldown ? 'RECHARGING' : 'CLAIM'}
                 </button>
               </div>
             </div>
           );
         })}
-        
-        {/* Платные предметы */}
+      </div>
+    );
+  };
+
+  const renderCurrencyTab = () => {
+    if (loadingCurrency) {
+      return (
+        <div className="shop-empty-state" style={{ gap: '16px' }}>
+          <div className="arena-loading-spinner" style={{ width: '40px', height: '40px', border: '3px solid #3D3D3B', borderTopColor: '#B20101', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+          <div className="shop-empty-text" style={{ color: '#FFFFFF', fontSize: 'clamp(14px, 4vw, 18px)' }}>Loading ...</div>
+        </div>
+      );
+    }
+    
+    // Показываем только платные предметы (price > 0)
+    const paidItems = currencyItems.filter(item => item.item_coins_price > 0);
+    
+    if (paidItems.length === 0) {
+      return (
+        <div className="shop-empty-state">
+          <div className="shop-empty-icon">🪙</div>
+          <div className="shop-empty-text">Currency packs coming soon!</div>
+          <div className="shop-empty-subtext">Buy Coins, Tickets and TON</div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="shop-cardpacks-list">
         {paidItems.map((item) => {
           const reloadSecondsLeft = localCurrencyReload[item.item_name] || 0;
           const isOnCooldown = reloadSecondsLeft > 0;
@@ -678,6 +682,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       );
     }
     
+    // Показываем только платные паки (price > 0)
     const paidPacks = allPackConfigs.filter(p => p.item_price > 0);
     
     if (loadingPacks) {

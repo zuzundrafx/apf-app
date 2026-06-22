@@ -11,8 +11,8 @@ interface PurchaseModalProps {
   onClose: () => void;
   itemName: string;
   itemIcon: string;
-  itemInfo?: string;        // ← НОВОЕ
-  itemDescription?: string; // ← НОВОЕ
+  itemInfo?: string;
+  itemDescription?: string;
   tournamentName: string;
   league: string;
   price: number;
@@ -30,8 +30,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   onClose,
   itemName,
   itemIcon,
-  itemInfo,        // ← ДОБАВИТЬ
-  itemDescription, // ← ДОБАВИТЬ
+  itemInfo,
+  itemDescription,
   tournamentName,
   league,
   price,
@@ -99,7 +99,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   };
 
   const handlePurchaseClick = async () => {
-    if (isCurrency && userCoins < currentPrice) {
+    // Проверка монет только для платных currency
+    if (isCurrency && !isFree && userCoins < currentPrice) {
       setShowPricePulse(true);
       setTimeout(() => setShowPricePulse(false), 500);
       return;
@@ -117,7 +118,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     try {
       let response;
       
-      if (isFree) {
+      // Бесплатный картпак
+      if (isFree && !isCurrency) {
         response = await fetch(`${API_BASE}/api/shop/claim-free-card-pack`, {
           method: 'POST',
           headers: {
@@ -129,7 +131,23 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             itemName: itemName
           })
         });
-      } else if (isCurrency) {
+      } 
+      // Бесплатный currency (Free Tickets)
+      else if (isFree && isCurrency) {
+        response = await fetch(`${API_BASE}/api/shop/purchase-currency`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            itemName: itemName,
+            price: 0
+          })
+        });
+      } 
+      // Платный currency
+      else if (isCurrency) {
         response = await fetch(`${API_BASE}/api/shop/purchase-currency`, {
           method: 'POST',
           headers: {
@@ -141,7 +159,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             price: currentPrice
           })
         });
-      } else {
+      } 
+      // Платный картпак
+      else {
         response = await fetch(`${API_BASE}/api/shop/purchase-card-pack`, {
           method: 'POST',
           headers: {
@@ -225,7 +245,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   if (purchaseState === 'success') {
     return (
       <div className="rewards-modal-overlay">
-        {/* НАДПИСЬ PURCHASE COMPLETE! */}
+        {/* НАДПИСЬ */}
         {showCompleteMessage && (
           <div style={{
             position: 'absolute',
@@ -252,7 +272,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             pointerEvents: 'none',
             transition: 'box-shadow 0.3s ease',
           }}>
-            PURCHASE COMPLETE!
+            {isFree && isCurrency ? 'CLAIMED!' : isFree ? 'PACK CLAIMED!' : isCurrency ? `${ticketsAmount} TICKETS ADDED!` : 'PURCHASE COMPLETE!'}
           </div>
         )}
 
@@ -308,65 +328,61 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
             {/* КОНТЕНТ */}
             {isCurrency ? (
-  // ===== CURRENCY: иконка с количеством билетов =====
-  <div style={{
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    padding: '0 clamp(2px, 1vh, 4px)',
-    margin: 'clamp(4px, 2vh, 12px) 0',
-    flexShrink: 1,
-    /*height: '55%',*/
-    minHeight: 0,
-  }}>
-    <div 
-      style={{ 
-        position: 'relative',
-        width: '32%',
-        aspectRatio: '1 / 1',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        animation: 'ticketsReveal 0.6s ease-out forwards',
-      }}
-    >
-      <img 
-        src={itemIcon} 
-        alt={itemName}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-          filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.4))',
-        }}
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
-        }}
-      />
-      {/* Количество билетов в прямоугольнике - на одном уровне с иконкой */}
-      <div style={{
-        position: 'absolute',
-        bottom: '1%',
-        right: '0%',
-        background: 'rgba(0, 0, 0, 0.5)', // ← ПОЛУПРОЗРАЧНЫЙ
-        color: '#ffffff',
-        padding: 'clamp(2px, 0.8vh, 6px) clamp(10px, 2.5vw, 18px)',
-        borderRadius: '4px',
-        fontSize: 'clamp(12px, 3vw, 18px)',
-        fontWeight: 700,
-        border: '2px solid rgba(255, 255, 255, 0.4)', // ← ПОЛУПРОЗРАЧНАЯ ОБВОДКА
-        lineHeight: 1,
-        minWidth: 'clamp(30px, 8vw, 50px)',
-        textAlign: 'center',
-        boxShadow: '0 0 20px rgba(255, 217, 102, 0.15)',
-      }}>
-        +{ticketsAmount}
-      </div>
-    </div>
-  </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '100%',
+                padding: '0 clamp(2px, 1vh, 4px)',
+                margin: 'clamp(4px, 2vh, 12px) 0',
+                flexShrink: 1,
+                minHeight: 0,
+              }}>
+                <div 
+                  style={{ 
+                    position: 'relative',
+                    width: '32%',
+                    aspectRatio: '1 / 1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    animation: 'ticketsReveal 0.6s ease-out forwards',
+                  }}
+                >
+                  <img 
+                    src={itemIcon} 
+                    alt={itemName}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.4))',
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
+                    }}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '1%',
+                    right: '0%',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#ffffff',
+                    padding: 'clamp(2px, 0.8vh, 6px) clamp(10px, 2.5vw, 18px)',
+                    borderRadius: '4px',
+                    fontSize: 'clamp(12px, 3vw, 18px)',
+                    fontWeight: 700,
+                    border: '2px solid rgba(255, 255, 255, 0.4)',
+                    lineHeight: 1,
+                    minWidth: 'clamp(30px, 8vw, 50px)',
+                    textAlign: 'center',
+                    boxShadow: '0 0 20px rgba(255, 217, 102, 0.15)',
+                  }}>
+                    +{ticketsAmount}
+                  </div>
+                </div>
+              </div>
             ) : (
-              // ===== CARD PACKS: grid из 5 карт =====
               <div className="selected-fighters-grid" style={{ 
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(5, 1fr)', 
@@ -559,13 +575,15 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             marginTop: 'clamp(8px, 2vh, 16px)',
           }}>
             <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 3vw, 12px)', textAlign: 'center', lineHeight: 1.4 }}>
-  {isFree 
-    ? `Get 5 random fighter cards for the active ${leagueUpper} tournament with this FREE pack! (24h cooldown)`
-    : isCurrency
-    ? itemDescription || `Get ${ticketsAmount} Tickets for ${currentPrice} coins! (2h cooldown)`
-    : `Get 5 random fighter cards for the active ${leagueUpper} tournament with this pack!`
-  }
-</div>
+              {isFree && isCurrency 
+                ? itemDescription || `Get ${ticketsAmount} Free Tickets! (24h cooldown)`
+                : isFree 
+                ? `Get 5 random fighter cards for the active ${leagueUpper} tournament with this FREE pack! (24h cooldown)`
+                : isCurrency
+                ? itemDescription || `Get ${ticketsAmount} Tickets for ${currentPrice} coins! (2h cooldown)`
+                : `Get 5 random fighter cards for the active ${leagueUpper} tournament with this pack!`
+              }
+            </div>
           </div>
         </div>
 
@@ -584,6 +602,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           >
             {isPurchasing ? (
               'PROCESSING...'
+            ) : (isFree && isCurrency) ? (
+              'CLAIM'
             ) : isFree ? (
               'GET FREE PACK'
             ) : isCurrency ? (
