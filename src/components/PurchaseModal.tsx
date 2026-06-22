@@ -343,7 +343,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
       {/* Количество билетов в прямоугольнике - на одном уровне с иконкой */}
       <div style={{
         position: 'absolute',
-        bottom: '3%',
+        bottom: '1%',
         right: '0%',
         background: 'rgba(0, 0, 0, 0.5)', // ← ПОЛУПРОЗРАЧНЫЙ
         color: '#ffffff',
