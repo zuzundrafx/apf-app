@@ -304,61 +304,61 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
             {/* КОНТЕНТ */}
             {isCurrency ? (
-              // ===== CURRENCY: одна карточка с иконкой и количеством =====
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                width: '100%',
-                padding: 'clamp(4px, 2vh, 12px) 0', // ← ОТСТУПЫ КАК У GRID
-                flex: 1,
-                minHeight: 0,
-              }}>
-                <div 
-                  style={{ 
-                    position: 'relative',
-                    width: 'clamp(100px, 35vw, 180px)',
-                    aspectRatio: '1 / 1',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    animation: 'ticketsReveal 0.6s ease-out forwards',
-                  }}
-                >
-                  <img 
-                    src={itemIcon} 
-                    alt={itemName}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                      filter: 'drop-shadow(0 0 20px rgba(255, 217, 102, 0.3))',
-                    }}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
-                    }}
-                  />
-                  {/* Количество билетов в прямоугольнике */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '-5%',
-                    right: '-5%',
-                    background: 'rgba(0, 0, 0, 0.85)',
-                    color: '#FFD966',
-                    padding: 'clamp(4px, 1vh, 8px) clamp(12px, 3vw, 20px)',
-                    borderRadius: '4px',
-                    fontSize: 'clamp(16px, 4vw, 24px)',
-                    fontWeight: 700,
-                    border: '2px solid #FFD966',
-                    boxShadow: '0 0 20px rgba(255, 217, 102, 0.3)',
-                    lineHeight: 1,
-                    minWidth: 'clamp(30px, 8vw, 50px)',
-                    textAlign: 'center',
-                  }}>
-                    +{ticketsAmount}
-                  </div>
-                </div>
-              </div>
+  // ===== CURRENCY: иконка с количеством билетов =====
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    padding: 'clamp(4px, 2vh, 12px) 0',
+    flex: 1,
+    minHeight: 0,
+  }}>
+    <div 
+      style={{ 
+        position: 'relative',
+        width: 'clamp(100px, 35vw, 180px)',
+        aspectRatio: '1 / 1',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        animation: 'ticketsReveal 0.6s ease-out forwards',
+      }}
+    >
+      <img 
+        src={itemIcon} 
+        alt={itemName}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          filter: 'drop-shadow(0 0 20px rgba(255, 217, 102, 0.3))',
+        }}
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
+        }}
+      />
+      {/* Количество билетов в прямоугольнике - на одном уровне с иконкой */}
+      <div style={{
+        position: 'absolute',
+        bottom: '0%',
+        right: '0%',
+        background: 'rgba(0, 0, 0, 0.6)', // ← ПОЛУПРОЗРАЧНЫЙ
+        color: '#FFD966',
+        padding: 'clamp(2px, 0.8vh, 6px) clamp(10px, 2.5vw, 18px)',
+        borderRadius: '4px',
+        fontSize: 'clamp(16px, 4vw, 24px)',
+        fontWeight: 700,
+        border: '2px solid rgba(255, 217, 102, 0.4)', // ← ПОЛУПРОЗРАЧНАЯ ОБВОДКА
+        lineHeight: 1,
+        minWidth: 'clamp(30px, 8vw, 50px)',
+        textAlign: 'center',
+        boxShadow: '0 0 20px rgba(255, 217, 102, 0.15)',
+      }}>
+        +{ticketsAmount}
+      </div>
+    </div>
+  </div>
             ) : (
               // ===== CARD PACKS: grid из 5 карт =====
               <div className="selected-fighters-grid" style={{ 
