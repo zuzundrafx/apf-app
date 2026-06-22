@@ -310,8 +310,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    padding: 'clamp(4px, 2vh, 12px) 0',
-    flex: 1,
+    padding: '0 clamp(2px, 1vh, 4px)',
+    flexShrink: 1,
     height: '75%',
     minHeight: 0,
   }}>
