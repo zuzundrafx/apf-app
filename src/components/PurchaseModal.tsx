@@ -318,7 +318,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     <div 
       style={{ 
         position: 'relative',
-        width: '25%',
+        width: '32%',
         aspectRatio: '1 / 1',
         display: 'flex',
         alignItems: 'center',
