@@ -325,6 +325,14 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     if (onUpdateBalance) {
       await onUpdateBalance(newCoins, newTickets);
     }
+
+    // ⬇️ ОБНОВЛЯЕМ ДАННЫЕ ПОСЛЕ ПОКУПКИ (КАК В CARD PACKS)
+  if (selectedPack) {
+    const itemName = selectedPack.name;
+    // Обновляем информацию о предмете (цену и таймер)
+    await loadCurrencyItemInfo(itemName);
+  }
+
     setShowPurchaseModal(false);
     setSelectedPack(null);
   };
