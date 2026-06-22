@@ -38,6 +38,7 @@ interface CurrencyItem {
   id: number;
   item_name: string;
   item_info: string;
+  item_description: string;
   item_coins_price: number;
   item_fiat_price: number;
   item_reload_time: number;
@@ -63,6 +64,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     isFree: boolean;
     isCurrency?: boolean;
     ticketsAmount?: number;
+    itemInfo?: string;
+    itemDescription?: string;
   } | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [packInfo, setPackInfo] = useState<Record<string, PackInfo>>({});
@@ -171,7 +174,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
         setAllPackConfigs(data);
         setLoadingPacks(false);
       } else {
-        // Если эндпоинта нет, используем fallback
         setAllPackConfigs([
           { 
             id: 1, 
@@ -243,29 +245,15 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       if (response.ok) {
         const data = await response.json();
         setCurrencyItems(data);
-        // Загружаем информацию о каждом предмете
         data.forEach((item: CurrencyItem) => {
           loadCurrencyItemInfo(item.item_name);
         });
-        setLoadingCurrency(false);
       } else {
-        // Fallback
-        setCurrencyItems([
-          { 
-            id: 1, 
-            item_name: '5 Tickets', 
-            item_info: 'Get 5 Tickets', 
-            item_coins_price: 100, 
-            item_fiat_price: 0, 
-            item_reload_time: 120, 
-            item_icon: 'icons/small_tickets_icon.webp',
-            tickets_amount: 5
-          }
-        ]);
-        setLoadingCurrency(false);
+        console.error('Failed to load currency items:', response.status);
       }
     } catch (err) {
       console.error('Failed to load currency items:', err);
+    } finally {
       setLoadingCurrency(false);
     }
   };
@@ -288,7 +276,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           ...prev,
           [itemName]: data.reloadSecondsLeft || 0
         }));
-        // Сохраняем актуальную цену
         setCurrencyCurrentPrices(prev => ({
           ...prev,
           [itemName]: data.currentPrice || data.itemCoinsPrice
@@ -300,12 +287,10 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   };
 
   const handleCurrencyPurchase = (item: CurrencyItem) => {
-    // ⚠️ НЕТ БЛОКИРОВКИ — всегда можно купить (как в CARD PACKS)
     const iconSrc = item.item_icon 
       ? `${BASE_URL}/${item.item_icon}` 
       : `${BASE_URL}/icons/Ticket_icon.webp`;
     
-    // Берём актуальную цену (с возможным удвоением)
     const currentPrice = currencyCurrentPrices[item.item_name] || item.item_coins_price;
     
     setSelectedPack({
@@ -316,7 +301,9 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       icon: iconSrc,
       isFree: false,
       isCurrency: true,
-      ticketsAmount: item.tickets_amount
+      ticketsAmount: item.tickets_amount,
+      itemInfo: item.item_info,
+      itemDescription: item.item_description
     });
     setShowPurchaseModal(true);
   };
@@ -325,16 +312,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     if (onUpdateBalance) {
       await onUpdateBalance(newCoins, newTickets);
     }
-
-    // ⬇️ ОБНОВЛЯЕМ ДАННЫЕ ПОСЛЕ ПОКУПКИ (КАК В CARD PACKS)
-  if (selectedPack) {
-    const itemName = selectedPack.name;
-    // Обновляем информацию о предмете (цену и таймер)
-    await loadCurrencyItemInfo(itemName);
-  }
-
-    /*setShowPurchaseModal(false);
-    setSelectedPack(null);*/
+    setShowPurchaseModal(false);
+    setSelectedPack(null);
   };
 
   // ========== ОБЩИЕ ФУНКЦИИ ==========
@@ -570,7 +549,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
             ? `${BASE_URL}/${item.item_icon}` 
             : `${BASE_URL}/icons/Ticket_icon.webp`;
           
-          // Показываем актуальную цену (с возможным удвоением)
           const currentPrice = currencyCurrentPrices[item.item_name] || item.item_coins_price;
           
           return (
@@ -610,7 +588,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
                 <button 
                   className="shop-cardpack-purchase"
                   onClick={() => handleCurrencyPurchase(item)}
-                  disabled={false}
                 >
                   PURCHASE
                 </button>
@@ -755,6 +732,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           }}
           itemName={selectedPack.name}
           itemIcon={selectedPack.icon}
+          itemInfo={selectedPack.itemInfo}
+          itemDescription={selectedPack.itemDescription}
           tournamentName={selectedPack.tournament.name}
           league={selectedPack.league}
           price={selectedPack.price}

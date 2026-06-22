@@ -11,6 +11,8 @@ interface PurchaseModalProps {
   onClose: () => void;
   itemName: string;
   itemIcon: string;
+  itemInfo?: string;
+  itemDescription?: string;
   tournamentName: string;
   league: string;
   price: number;
@@ -28,6 +30,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   onClose,
   itemName,
   itemIcon,
+  itemInfo,
+  itemDescription,
   tournamentName,
   league,
   price,
@@ -304,65 +308,61 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
             {/* КОНТЕНТ */}
             {isCurrency ? (
-  // ===== CURRENCY: иконка с количеством билетов =====
-  <div style={{
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    padding: '0 clamp(2px, 1vh, 4px)',
-    margin: 'clamp(4px, 2vh, 12px) 0',
-    flexShrink: 1,
-    /*height: '55%',*/
-    minHeight: 0,
-  }}>
-    <div 
-      style={{ 
-        position: 'relative',
-        width: '32%',
-        aspectRatio: '1 / 1',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        animation: 'ticketsReveal 0.6s ease-out forwards',
-      }}
-    >
-      <img 
-        src={itemIcon} 
-        alt={itemName}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-          filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.4))',
-        }}
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
-        }}
-      />
-      {/* Количество билетов в прямоугольнике - на одном уровне с иконкой */}
-      <div style={{
-        position: 'absolute',
-        bottom: '1%',
-        right: '0%',
-        background: 'rgba(0, 0, 0, 0.5)', // ← ПОЛУПРОЗРАЧНЫЙ
-        color: '#ffffff',
-        padding: 'clamp(2px, 0.8vh, 6px) clamp(10px, 2.5vw, 18px)',
-        borderRadius: '4px',
-        fontSize: 'clamp(12px, 3vw, 18px)',
-        fontWeight: 700,
-        border: '2px solid rgba(255, 255, 255, 0.4)', // ← ПОЛУПРОЗРАЧНАЯ ОБВОДКА
-        lineHeight: 1,
-        minWidth: 'clamp(30px, 8vw, 50px)',
-        textAlign: 'center',
-        boxShadow: '0 0 20px rgba(255, 217, 102, 0.15)',
-      }}>
-        +{ticketsAmount}
-      </div>
-    </div>
-  </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '100%',
+                padding: '0 clamp(2px, 1vh, 4px)',
+                margin: 'clamp(4px, 2vh, 12px) 0',
+                flexShrink: 1,
+                minHeight: 0,
+              }}>
+                <div 
+                  style={{ 
+                    position: 'relative',
+                    width: '32%',
+                    aspectRatio: '1 / 1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    animation: 'ticketsReveal 0.6s ease-out forwards',
+                  }}
+                >
+                  <img 
+                    src={itemIcon} 
+                    alt={itemName}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0 0 12px rgba(255, 255, 255, 0.4))',
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
+                    }}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '1%',
+                    right: '0%',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    color: '#ffffff',
+                    padding: 'clamp(2px, 0.8vh, 6px) clamp(10px, 2.5vw, 18px)',
+                    borderRadius: '4px',
+                    fontSize: 'clamp(12px, 3vw, 18px)',
+                    fontWeight: 700,
+                    border: '2px solid rgba(255, 255, 255, 0.4)',
+                    lineHeight: 1,
+                    minWidth: 'clamp(30px, 8vw, 50px)',
+                    textAlign: 'center',
+                    boxShadow: '0 0 20px rgba(255, 217, 102, 0.15)',
+                  }}>
+                    +{ticketsAmount}
+                  </div>
+                </div>
+              </div>
             ) : (
-              // ===== CARD PACKS: grid из 5 карт =====
               <div className="selected-fighters-grid" style={{ 
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(5, 1fr)', 
@@ -541,7 +541,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
                 fontWeight: 400,
                 lineHeight: 1.3,
               }}>
-                {isCurrency ? `${ticketsAmount} Tickets` : formattedTournamentName}
+                {isCurrency ? (itemInfo || itemName) : formattedTournamentName}
               </div>
             </div>
           </div>
@@ -558,7 +558,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               {isFree 
                 ? `Get 5 random fighter cards for the active ${leagueUpper} tournament with this FREE pack! (24h cooldown)`
                 : isCurrency
-                ? `Get ${ticketsAmount} Tickets for ${currentPrice} coins! (2h cooldown)`
+                ? (itemDescription || `Get ${ticketsAmount} Tickets for ${currentPrice} coins! (2h cooldown)`)
                 : `Get 5 random fighter cards for the active ${leagueUpper} tournament with this pack!`
               }
             </div>
