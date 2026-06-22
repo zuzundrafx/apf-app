@@ -47,6 +47,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [showCompleteMessage, setShowCompleteMessage] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // Добавляем keyframes для анимации
   useEffect(() => {
     if (!document.querySelector('#purchase-modal-animations')) {
       const style = document.createElement('style');
@@ -276,7 +277,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               display: 'flex', 
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: isCurrency ? 'center' : 'flex-start',
               width: '97%',
               margin: 'auto',
               marginTop: '3%',
@@ -304,56 +304,114 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
             {/* КОНТЕНТ */}
             {isCurrency ? (
-              // ===== CURRENCY: большая иконка из Supabase, занимает всё пространство =====
+              // ===== CURRENCY: flex с центрированием (как на арене) =====
               <div style={{
                 display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
                 justifyContent: 'center',
-                flex: 1,
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 'clamp(4px, 1vw, 8px)',
                 width: '100%',
-                animation: 'ticketsReveal 0.6s ease-out forwards',
+                padding: '0 clamp(2px, 1vh, 4px)',
+                flex: 1,
                 minHeight: 0,
+                alignContent: 'center',
               }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 'clamp(100px, 35vw, 180px)',
-                  aspectRatio: '1 / 1',
-                }}>
-                  <img 
-                    src={itemIcon}  // ← ИКОНКА ИЗ SUPABASE
-                    alt={itemName}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                      filter: 'drop-shadow(0 0 20px rgba(255, 217, 102, 0.3))',
+                {Array.from({ length: Math.min(ticketsAmount, 5) }).map((_, idx) => (
+                  <div 
+                    key={idx} 
+                    className="selected-fighter-card" 
+                    style={{ 
+                      backgroundColor: '#313130',
+                      aspectRatio: '1 / 1.4',
+                      width: 'calc((100% - 4 * clamp(4px, 1vw, 8px)) / 5)',
+                      maxWidth: '120px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      borderRadius: '2vw',
+                      overflow: 'hidden',
+                      flexShrink: 0,
+                      flexGrow: 0,
                     }}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
-                    }}
-                  />
-                  {/* Количество билетов поверх иконки */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '5%',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    color: '#FFFFFF',
-                    fontSize: 'clamp(20px, 6vw, 36px)',
-                    fontWeight: 700,
-                    textShadow: '0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                    padding: '2% 12%',
-                    borderRadius: '1vw',
-                    border: '1px solid rgba(255, 217, 102, 0.3)',
-                  }}>
-                    +{ticketsAmount}
+                  >
+                    <div className="selected-fighter-inner" style={{
+                      width: '97%',
+                      height: '90%',
+                      background: '#191a1f',
+                      borderRadius: '1vw',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      marginTop: '4%',
+                    }}>
+                      <div className="selected-fighter-icon-container" style={{
+                        width: '95%',
+                        aspectRatio: '1 / 1',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '2% 0',
+                      }}>
+                        <img 
+                          src={itemIcon} 
+                          alt={itemName}
+                          style={{ width: '95%', height: 'auto', maxHeight: '90%', objectFit: 'contain' }}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
+                          }}
+                        />
+                      </div>
+                      <div className="selected-fighter-divider" style={{ 
+                        width: '100%', 
+                        height: '2%', 
+                        background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, #FFD966 20%, #FFD966 80%, rgba(255,255,255,0) 100%)',
+                        opacity: 0.9,
+                      }}></div>
+                      <div className="selected-fighter-name" style={{
+                        width: '100%',
+                        height: '23%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 'clamp(6px, 1.8vw, 9px)',
+                        fontWeight: 500,
+                        color: '#FFFFFF',
+                        textAlign: 'center',
+                        padding: '2% 4%',
+                        wordBreak: 'break-word',
+                        lineHeight: 1.2,
+                      }}>
+                        Ticket
+                      </div>
+                    </div>
+                    {ticketsAmount > 5 && idx === 4 && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '5%',
+                        right: '5%',
+                        background: 'rgba(0,0,0,0.8)',
+                        color: '#FFD966',
+                        borderRadius: '50%',
+                        width: 'clamp(16px, 4vw, 24px)',
+                        height: 'clamp(16px, 4vw, 24px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 'clamp(8px, 2vw, 10px)',
+                        fontWeight: 700,
+                        border: '1px solid #FFD966',
+                      }}>
+                        +{ticketsAmount - 4}
+                      </div>
+                    )}
                   </div>
-                </div>
-                {/* ❌ УБРАЛИ ТЕКСТ "X Tickets added to your account!" */}
+                ))}
+                {/* Если билетов меньше 5, ничего не добавляем — flex центрирует имеющиеся */}
               </div>
             ) : (
               // ===== CARD PACKS: grid из 5 карт =====
@@ -541,12 +599,12 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           </div>
 
           <div style={{
-            width: '25%',
+            width: '100%',
             padding: '3% 4%',
             background: '#313130',
             borderRadius: '8px',
             flexShrink: 0,
-            marginTop: 'clamp(6px, 1.5vh, 12px)',
+            marginTop: 'clamp(8px, 2vh, 16px)',
           }}>
             <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 3vw, 12px)', textAlign: 'center', lineHeight: 1.4 }}>
               {isFree 
