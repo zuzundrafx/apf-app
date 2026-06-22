@@ -333,8 +333,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     await loadCurrencyItemInfo(itemName);
   }
 
-    setShowPurchaseModal(false);
-    setSelectedPack(null);
+    /*setShowPurchaseModal(false);
+    setSelectedPack(null);*/
   };
 
   // ========== ОБЩИЕ ФУНКЦИИ ==========
