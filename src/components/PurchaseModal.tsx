@@ -312,7 +312,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     width: '100%',
     padding: '0 clamp(2px, 1vh, 4px)',
     flexShrink: 1,
-    height: '75%',
+    height: '55%',
     minHeight: 0,
   }}>
     <div 
