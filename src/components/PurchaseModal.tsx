@@ -304,103 +304,56 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
             {/* КОНТЕНТ */}
             {isCurrency ? (
-              // ===== CURRENCY: одна карточка с иконкой и бейджем, центрированная через flex =====
+              // ===== CURRENCY: одна карточка с иконкой и количеством =====
               <div style={{
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
                 width: '100%',
-                padding: '0 clamp(2px, 1vh, 4px)',
+                padding: 'clamp(4px, 2vh, 12px) 0', // ← ОТСТУПЫ КАК У GRID
                 flex: 1,
                 minHeight: 0,
               }}>
                 <div 
-                  className="selected-fighter-card" 
                   style={{ 
-                    backgroundColor: '#313130',
-                    aspectRatio: '1 / 1.4',
-                    width: 'calc((100% - 4 * clamp(4px, 1vw, 8px)) / 5)',
-                    maxWidth: '120px',
+                    position: 'relative',
+                    width: 'clamp(100px, 35vw, 180px)',
+                    aspectRatio: '1 / 1',
                     display: 'flex',
-                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    position: 'relative',
-                    borderRadius: '2vw',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    flexGrow: 0,
+                    animation: 'ticketsReveal 0.6s ease-out forwards',
                   }}
                 >
-                  <div className="selected-fighter-inner" style={{
-                    width: '97%',
-                    height: '90%',
-                    background: '#191a1f',
-                    borderRadius: '1vw',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                    marginTop: '4%',
-                  }}>
-                    <div className="selected-fighter-icon-container" style={{
-                      width: '95%',
-                      aspectRatio: '1 / 1',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '2% 0',
-                    }}>
-                      <img 
-                        src={itemIcon} 
-                        alt={itemName}
-                        style={{ width: '95%', height: 'auto', maxHeight: '90%', objectFit: 'contain' }}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
-                        }}
-                      />
-                    </div>
-                    <div className="selected-fighter-divider" style={{ 
-                      width: '100%', 
-                      height: '2%', 
-                      background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, #FFD966 20%, #FFD966 80%, rgba(255,255,255,0) 100%)',
-                      opacity: 0.9,
-                    }}></div>
-                    <div className="selected-fighter-name" style={{
+                  <img 
+                    src={itemIcon} 
+                    alt={itemName}
+                    style={{
                       width: '100%',
-                      height: '23%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 'clamp(6px, 1.8vw, 9px)',
-                      fontWeight: 500,
-                      color: '#FFFFFF',
-                      textAlign: 'center',
-                      padding: '2% 4%',
-                      wordBreak: 'break-word',
-                      lineHeight: 1.2,
-                    }}>
-                      {itemName}
-                    </div>
-                  </div>
-                  {/* Бейдж с количеством билетов */}
+                      height: '100%',
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0 0 20px rgba(255, 217, 102, 0.3))',
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
+                    }}
+                  />
+                  {/* Количество билетов в прямоугольнике */}
                   <div style={{
                     position: 'absolute',
-                    bottom: '5%',
-                    right: '5%',
-                    background: 'rgba(0,0,0,0.8)',
+                    bottom: '-5%',
+                    right: '-5%',
+                    background: 'rgba(0, 0, 0, 0.85)',
                     color: '#FFD966',
-                    borderRadius: '50%',
-                    width: 'clamp(20px, 5vw, 30px)',
-                    height: 'clamp(20px, 5vw, 30px)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 'clamp(10px, 2.5vw, 14px)',
+                    padding: 'clamp(4px, 1vh, 8px) clamp(12px, 3vw, 20px)',
+                    borderRadius: '4px',
+                    fontSize: 'clamp(16px, 4vw, 24px)',
                     fontWeight: 700,
                     border: '2px solid #FFD966',
-                    boxShadow: '0 0 10px rgba(255, 217, 102, 0.3)',
+                    boxShadow: '0 0 20px rgba(255, 217, 102, 0.3)',
+                    lineHeight: 1,
+                    minWidth: 'clamp(30px, 8vw, 50px)',
+                    textAlign: 'center',
                   }}>
                     +{ticketsAmount}
                   </div>
