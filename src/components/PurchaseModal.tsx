@@ -43,7 +43,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [showPricePulse, setShowPricePulse] = useState(false);
   const [purchaseState, setPurchaseState] = useState<'idle' | 'loading' | 'success'>('idle');
   const [purchasedCards, setPurchasedCards] = useState<any[]>([]);
-  const [currentPrice, _setCurrentPrice] = useState(price);
+  const [currentPrice, setCurrentPrice] = useState(price);
   const [showCompleteMessage, setShowCompleteMessage] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -214,9 +214,13 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const formattedTournamentName = formatTournamentName(tournamentName);
   const leagueUpper = league.toUpperCase();
 
+  // ============================================================
+  // СОСТОЯНИЕ УСПЕШНОЙ ПОКУПКИ
+  // ============================================================
   if (purchaseState === 'success') {
     return (
       <div className="rewards-modal-overlay">
+        {/* НАДПИСЬ PURCHASE COMPLETE! */}
         {showCompleteMessage && (
           <div style={{
             position: 'absolute',
@@ -243,7 +247,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             pointerEvents: 'none',
             transition: 'box-shadow 0.3s ease',
           }}>
-            {isFree ? 'PACK CLAIMED!' : isCurrency ? `${ticketsAmount} TICKETS ADDED!` : 'PURCHASE COMPLETE!'}
+            PURCHASE COMPLETE!
           </div>
         )}
 
@@ -261,6 +265,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             width: '95%',
           }}
         >
+          {/* КРЕСТИК УБРАН */}
           <div className="rewards-header" style={{ top: '-8%', zIndex: 100, height: '0', minHeight: '0' }}>
           </div>
 
@@ -282,6 +287,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               padding: 0,
             }}
           >
+            {/* НАЗВАНИЕ ТУРНИРА / ПРЕДМЕТА */}
             <div style={{
               textAlign: 'center',
               color: '#FFD966',
@@ -296,7 +302,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               {isCurrency ? itemName : `${leagueUpper}: ${formattedTournamentName}`}
             </div>
 
+            {/* КОНТЕНТ */}
             {isCurrency ? (
+              // ===== CURRENCY: большая иконка из Supabase, занимает всё пространство =====
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -305,9 +313,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
                 flex: 1,
                 width: '100%',
                 animation: 'ticketsReveal 0.6s ease-out forwards',
+                minHeight: 0,
               }}>
                 <div style={{
-                  position: 'relative',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -315,15 +323,19 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
                   aspectRatio: '1 / 1',
                 }}>
                   <img 
-                    src={`${BASE_URL}/icons/Ticket_icon.webp`}
-                    alt="Tickets"
+                    src={itemIcon}  // ← ИКОНКА ИЗ SUPABASE
+                    alt={itemName}
                     style={{
                       width: '100%',
                       height: '100%',
                       objectFit: 'contain',
                       filter: 'drop-shadow(0 0 20px rgba(255, 217, 102, 0.3))',
                     }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
+                    }}
                   />
+                  {/* Количество билетов поверх иконки */}
                   <div style={{
                     position: 'absolute',
                     bottom: '5%',
@@ -341,16 +353,10 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
                     +{ticketsAmount}
                   </div>
                 </div>
-                <div style={{
-                  color: '#888888',
-                  fontSize: 'clamp(10px, 3vw, 14px)',
-                  textAlign: 'center',
-                  marginTop: 'clamp(8px, 2vh, 16px)',
-                }}>
-                  {ticketsAmount} Tickets added to your account!
-                </div>
+                {/* ❌ УБРАЛИ ТЕКСТ "X Tickets added to your account!" */}
               </div>
             ) : (
+              // ===== CARD PACKS: grid из 5 карт =====
               <div className="selected-fighters-grid" style={{ 
                 display: 'grid', 
                 gridTemplateColumns: 'repeat(5, 1fr)', 
@@ -402,6 +408,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             )}
           </div>
 
+          {/* КНОПКА GOT IT! */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'center', 
@@ -423,6 +430,9 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     );
   }
 
+  // ============================================================
+  // СОСТОЯНИЕ ОЖИДАНИЯ
+  // ============================================================
   return (
     <div className="rewards-modal-overlay">
       <div 
