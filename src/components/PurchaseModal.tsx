@@ -304,114 +304,107 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
             {/* КОНТЕНТ */}
             {isCurrency ? (
-              // ===== CURRENCY: flex с центрированием (как на арене) =====
+              // ===== CURRENCY: одна карточка с иконкой и бейджем, центрированная через flex =====
               <div style={{
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: 'clamp(4px, 1vw, 8px)',
                 width: '100%',
                 padding: '0 clamp(2px, 1vh, 4px)',
                 flex: 1,
                 minHeight: 0,
-                alignContent: 'center',
               }}>
-                {Array.from({ length: Math.min(ticketsAmount, 5) }).map((_, idx) => (
-                  <div 
-                    key={idx} 
-                    className="selected-fighter-card" 
-                    style={{ 
-                      backgroundColor: '#313130',
-                      aspectRatio: '1 / 1.4',
-                      width: 'calc((100% - 4 * clamp(4px, 1vw, 8px)) / 5)',
-                      maxWidth: '120px',
+                <div 
+                  className="selected-fighter-card" 
+                  style={{ 
+                    backgroundColor: '#313130',
+                    aspectRatio: '1 / 1.4',
+                    width: 'calc((100% - 4 * clamp(4px, 1vw, 8px)) / 5)',
+                    maxWidth: '120px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    borderRadius: '2vw',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    flexGrow: 0,
+                  }}
+                >
+                  <div className="selected-fighter-inner" style={{
+                    width: '97%',
+                    height: '90%',
+                    background: '#191a1f',
+                    borderRadius: '1vw',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    marginTop: '4%',
+                  }}>
+                    <div className="selected-fighter-icon-container" style={{
+                      width: '95%',
+                      aspectRatio: '1 / 1',
                       display: 'flex',
-                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      position: 'relative',
-                      borderRadius: '2vw',
-                      overflow: 'hidden',
-                      flexShrink: 0,
-                      flexGrow: 0,
-                    }}
-                  >
-                    <div className="selected-fighter-inner" style={{
-                      width: '97%',
-                      height: '90%',
-                      background: '#191a1f',
-                      borderRadius: '1vw',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
-                      marginTop: '4%',
+                      padding: '2% 0',
                     }}>
-                      <div className="selected-fighter-icon-container" style={{
-                        width: '95%',
-                        aspectRatio: '1 / 1',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '2% 0',
-                      }}>
-                        <img 
-                          src={itemIcon} 
-                          alt={itemName}
-                          style={{ width: '95%', height: 'auto', maxHeight: '90%', objectFit: 'contain' }}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
-                          }}
-                        />
-                      </div>
-                      <div className="selected-fighter-divider" style={{ 
-                        width: '100%', 
-                        height: '2%', 
-                        background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, #FFD966 20%, #FFD966 80%, rgba(255,255,255,0) 100%)',
-                        opacity: 0.9,
-                      }}></div>
-                      <div className="selected-fighter-name" style={{
-                        width: '100%',
-                        height: '23%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 'clamp(6px, 1.8vw, 9px)',
-                        fontWeight: 500,
-                        color: '#FFFFFF',
-                        textAlign: 'center',
-                        padding: '2% 4%',
-                        wordBreak: 'break-word',
-                        lineHeight: 1.2,
-                      }}>
-                        Ticket
-                      </div>
+                      <img 
+                        src={itemIcon} 
+                        alt={itemName}
+                        style={{ width: '95%', height: 'auto', maxHeight: '90%', objectFit: 'contain' }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
+                        }}
+                      />
                     </div>
-                    {ticketsAmount > 5 && idx === 4 && (
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '5%',
-                        right: '5%',
-                        background: 'rgba(0,0,0,0.8)',
-                        color: '#FFD966',
-                        borderRadius: '50%',
-                        width: 'clamp(16px, 4vw, 24px)',
-                        height: 'clamp(16px, 4vw, 24px)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 'clamp(8px, 2vw, 10px)',
-                        fontWeight: 700,
-                        border: '1px solid #FFD966',
-                      }}>
-                        +{ticketsAmount - 4}
-                      </div>
-                    )}
+                    <div className="selected-fighter-divider" style={{ 
+                      width: '100%', 
+                      height: '2%', 
+                      background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, #FFD966 20%, #FFD966 80%, rgba(255,255,255,0) 100%)',
+                      opacity: 0.9,
+                    }}></div>
+                    <div className="selected-fighter-name" style={{
+                      width: '100%',
+                      height: '23%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 'clamp(6px, 1.8vw, 9px)',
+                      fontWeight: 500,
+                      color: '#FFFFFF',
+                      textAlign: 'center',
+                      padding: '2% 4%',
+                      wordBreak: 'break-word',
+                      lineHeight: 1.2,
+                    }}>
+                      {itemName}
+                    </div>
                   </div>
-                ))}
-                {/* Если билетов меньше 5, ничего не добавляем — flex центрирует имеющиеся */}
+                  {/* Бейдж с количеством билетов */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '5%',
+                    right: '5%',
+                    background: 'rgba(0,0,0,0.8)',
+                    color: '#FFD966',
+                    borderRadius: '50%',
+                    width: 'clamp(20px, 5vw, 30px)',
+                    height: 'clamp(20px, 5vw, 30px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 'clamp(10px, 2.5vw, 14px)',
+                    fontWeight: 700,
+                    border: '2px solid #FFD966',
+                    boxShadow: '0 0 10px rgba(255, 217, 102, 0.3)',
+                  }}>
+                    +{ticketsAmount}
+                  </div>
+                </div>
               </div>
             ) : (
               // ===== CARD PACKS: grid из 5 карт =====
