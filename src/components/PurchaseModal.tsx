@@ -334,7 +334,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           width: '100%',
           height: '100%',
           objectFit: 'contain',
-          filter: 'drop-shadow(0 0 20px rgba(255, 217, 102, 0.3))',
+          filter: 'drop-shadow(0 0 20px rgba(255, 255, 255, 0.35))',
         }}
         onError={(e) => {
           (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
@@ -343,13 +343,13 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
       {/* Количество билетов в прямоугольнике - на одном уровне с иконкой */}
       <div style={{
         position: 'absolute',
-        bottom: '0%',
+        bottom: '5%',
         right: '0%',
-        background: 'rgba(0, 0, 0, 0.6)', // ← ПОЛУПРОЗРАЧНЫЙ
-        color: '#FFD966',
+        background: 'rgba(0, 0, 0, 0.5)', // ← ПОЛУПРОЗРАЧНЫЙ
+        color: '#ffffff',
         padding: 'clamp(2px, 0.8vh, 6px) clamp(10px, 2.5vw, 18px)',
         borderRadius: '4px',
-        fontSize: 'clamp(16px, 4vw, 24px)',
+        fontSize: 'clamp(12px, 3vw, 18px)',
         fontWeight: 700,
         border: '2px solid rgba(255, 217, 102, 0.4)', // ← ПОЛУПРОЗРАЧНАЯ ОБВОДКА
         lineHeight: 1,
