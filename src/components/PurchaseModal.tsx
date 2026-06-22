@@ -312,13 +312,13 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     width: '100%',
     padding: '0 clamp(2px, 1vh, 4px)',
     flexShrink: 1,
-    height: '55%',
+    /*height: '55%',*/
     minHeight: 0,
   }}>
     <div 
       style={{ 
         position: 'relative',
-        /*width: 'clamp(100px, 35vw, 180px)',*/
+        width: '25%',
         aspectRatio: '1 / 1',
         display: 'flex',
         alignItems: 'center',
