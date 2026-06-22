@@ -541,12 +541,12 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           </div>
 
           <div style={{
-            width: '100%',
+            width: '25%',
             padding: '3% 4%',
             background: '#313130',
             borderRadius: '8px',
             flexShrink: 0,
-            marginTop: 'clamp(8px, 2vh, 16px)',
+            marginTop: 'clamp(6px, 1.5vh, 12px)',
           }}>
             <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 3vw, 12px)', textAlign: 'center', lineHeight: 1.4 }}>
               {isFree 
