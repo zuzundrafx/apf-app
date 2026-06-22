@@ -547,9 +547,70 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       );
     }
     
+    // Разделяем платные и бесплатные
+    const paidItems = currencyItems.filter(item => item.item_coins_price > 0);
+    const freeItems = currencyItems.filter(item => item.item_coins_price === 0);
+    
     return (
       <div className="shop-cardpacks-list">
-        {currencyItems.map((item) => {
+        {/* Бесплатные предметы */}
+        {freeItems.map((item) => {
+          const reloadSecondsLeft = localCurrencyReload[item.item_name] || 0;
+          const isOnCooldown = reloadSecondsLeft > 0;
+          const iconSrc = item.item_icon 
+            ? `${BASE_URL}/${item.item_icon}` 
+            : `${BASE_URL}/icons/Ticket_icon.webp`;
+          
+          return (
+            <div key={item.id} className="shop-cardpack-item">
+              <div className="shop-cardpack-icon">
+                <img 
+                  src={iconSrc} 
+                  alt={item.item_name} 
+                  className="shop-cardpack-icon-img"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `${BASE_URL}/icons/Ticket_icon.webp`;
+                  }}
+                />
+              </div>
+              
+              <div className="shop-cardpack-info">
+                <div className="shop-cardpack-title" style={{ color: '#4CAF50' }}>
+                  🎁 {item.item_name}
+                </div>
+                <div className="shop-cardpack-tournament">
+                  {item.item_info}
+                </div>
+                {isOnCooldown && (
+                  <div className="shop-cardpack-timer" style={{ color: '#FF6B6B', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                    ⏳ Recharge: {formatReloadTime(reloadSecondsLeft)}
+                  </div>
+                )}
+              </div>
+              
+              <div className="shop-cardpack-action">
+                <div className="shop-cardpack-price" style={{ color: '#4CAF50' }}>
+                  FREE
+                </div>
+                <button 
+                  className={`shop-cardpack-purchase ${isOnCooldown ? 'disabled' : ''}`}
+                  style={{
+                    opacity: isOnCooldown ? 0.5 : 1,
+                    cursor: isOnCooldown ? 'not-allowed' : 'pointer',
+                    background: isOnCooldown ? '#666D74' : 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)'
+                  }}
+                  onClick={() => !isOnCooldown && handleCurrencyPurchase(item)}
+                  disabled={isOnCooldown}
+                >
+                  {isOnCooldown ? 'RECHARGING' : 'GET'}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+        
+        {/* Платные предметы */}
+        {paidItems.map((item) => {
           const reloadSecondsLeft = localCurrencyReload[item.item_name] || 0;
           const isOnCooldown = reloadSecondsLeft > 0;
           const iconSrc = item.item_icon 
