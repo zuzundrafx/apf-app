@@ -379,7 +379,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       name: `${leagueName} Card Pack Free`,
       icon: iconSrc,
       isFree: true,
-      isCurrency: false
+      isCurrency: false,
+      itemDescription: packConfig?.item_info || ''  // ← ДОБАВИТЬ
     });
     setShowPurchaseModal(true);
   };
@@ -398,7 +399,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       name: `${leagueName} Card Pack`,
       icon: iconSrc,
       isFree: false,
-      isCurrency: false
+      isCurrency: false,
+      itemDescription: packConfig?.item_info || ''  // ← ДОБАВИТЬ
     });
     setShowPurchaseModal(true);
   };
