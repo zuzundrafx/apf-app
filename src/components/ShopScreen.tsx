@@ -446,42 +446,42 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   };
 
   const handleFightPassPurchase = (item: FightPassItem) => {
-    const iconSrc = item.item_icon 
-      ? `${BASE_URL}/${item.item_icon}` 
-      : `${BASE_URL}/icons/fight_pass_icon.webp`;
-    
-    const currentPrice = fightPassPrices[item.item_name] || item.item_coins_price;
-    const isFree = item.item_coins_price === 0 && item.item_fiat_price === 0;
-    const isFiatOnly = item.item_fiat_price > 0 && item.item_coins_price === 0;
-    
-    setSelectedPack({
-      tournament: { 
-        id: 'fight_pass',
-        name: item.item_name,
-        league: 'Fight Pass',
-        date: new Date().toISOString(),
-        status: 'active',
-        filename: '',
-        data: null,
-        url: ''
-      },
-      league: 'Fight Pass',
-      price: currentPrice,
+  const iconSrc = item.item_icon 
+    ? `${BASE_URL}/${item.item_icon}` 
+    : `${BASE_URL}/icons/fight_pass_icon.webp`;
+  
+  const currentPrice = fightPassPrices[item.item_name] || item.item_coins_price;
+  const isFree = item.item_coins_price === 0 && item.item_fiat_price === 0;
+  const isFiatOnly = item.item_fiat_price > 0 && item.item_coins_price === 0;
+  
+  setSelectedPack({
+    tournament: { 
+      id: 'fight_pass',
       name: item.item_name,
-      icon: iconSrc,
-      isFree: isFree,
-      isCurrency: false,
-      isFightPass: true,
-      isFiatOnly: isFiatOnly,
-      ticketsAmount: 0,
-      coinsAmount: 0,
-      expMultiplier: item.exp_multiplier || 1.0,
-      durationDays: item.duration_days || 1,
-      itemInfo: item.item_info,
-      itemDescription: item.item_description
-    });
-    setShowPurchaseModal(true);
-  };
+      league: 'Fight Pass',
+      date: new Date().toISOString(),
+      status: 'active',
+      filename: '',
+      data: null,
+      url: ''
+    },
+    league: 'Fight Pass',
+    price: currentPrice,
+    name: item.item_name,
+    icon: iconSrc,
+    isFree: isFree,
+    isCurrency: false,
+    isFightPass: true,
+    isFiatOnly: isFiatOnly,
+    ticketsAmount: 0,
+    coinsAmount: 0,
+    expMultiplier: item.exp_multiplier,
+    durationDays: item.duration_days,
+    itemInfo: item.item_info,
+    itemDescription: item.item_description
+  });
+  setShowPurchaseModal(true);
+};
 
   const handleFightPassPurchaseComplete = async (newCoins: number) => {
     if (onUpdateBalance) {
@@ -924,11 +924,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
               
               <div className="shop-cardpack-info">
                 <div className="shop-cardpack-title" style={{ color: hasActivePass ? '#4CAF50' : '#FFD966' }}>
-                  {item.item_name}
-                  <span style={{ fontSize: 'clamp(8px, 2vw, 10px)', color: '#888', marginLeft: '8px' }}>
-                    ({item.duration_days} day{item.duration_days > 1 ? 's' : ''})
-                  </span>
-                </div>
+  {item.item_name}
+</div>
                 <div className="shop-cardpack-tournament">
                   {item.item_info}
                 </div>
