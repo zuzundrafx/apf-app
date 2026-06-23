@@ -923,7 +923,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
               </div>
               
               <div className="shop-cardpack-info">
-                <div className="shop-cardpack-title" style={{ color: hasActivePass ? '#4CAF50' : '#FFD966' }}>
+                <div className="shop-cardpack-title" style={{ color: hasActivePass ? '#4CAF50' : '#ffffff' }}>
   {item.item_name}
 </div>
                 <div className="shop-cardpack-tournament">
