@@ -1,5 +1,5 @@
 // src/components/ShopScreen.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tournament } from '../types';
 import PurchaseModal from './PurchaseModal';
 
@@ -85,7 +85,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     isFiatOnly?: boolean;
     ticketsAmount?: number;
     coinsAmount?: number;
-    /*tonAmount?: number;*/
     expMultiplier?: number;
     durationDays?: number;
     itemInfo?: string;
@@ -131,6 +130,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       loadCurrencyItems();
       loadFightPassItems();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authToken]);
 
   useEffect(() => {
@@ -141,6 +141,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
         loadPackInfo(league, `${league} Card Pack Free`, true);
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authToken, activeTournaments]);
 
   useEffect(() => {
@@ -378,7 +379,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
 
   // ========== FIGHT PASS ==========
 
-  const loadFightPassItems = useCallback(async () => {
+  const loadFightPassItems = async () => {
     if (!authToken) return;
     setLoadingFightPass(true);
     try {
@@ -398,9 +399,9 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     } finally {
       setLoadingFightPass(false);
     }
-  }, [authToken]);
+  };
 
-  const loadFightPassItemInfo = useCallback(async (itemName: string) => {
+  const loadFightPassItemInfo = async (itemName: string) => {
     if (!authToken) return;
     try {
       const response = await fetch(`${API_BASE}/api/shop/fight-pass-info`, {
@@ -434,7 +435,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     } catch (err) {
       console.error(`Failed to load fight pass info for ${itemName}:`, err);
     }
-  }, [authToken]);
+  };
 
   const handleFightPassPurchase = (item: FightPassItem) => {
     const iconSrc = item.item_icon 
@@ -466,7 +467,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       isFiatOnly: isFiatOnly,
       ticketsAmount: 0,
       coinsAmount: 0,
-      /*tonAmount: 0,*/
       expMultiplier: item.exp_multiplier || 1.0,
       durationDays: item.duration_days || 1,
       itemInfo: item.item_info,
@@ -484,18 +484,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       const itemName = selectedPack.name;
       await loadFightPassItemInfo(itemName);
     }
-  };
-
-  const formatTimeLeft = (seconds: number): string => {
-    if (seconds <= 0) return 'Expired';
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m ${secs}s`;
-    }
-    return `${minutes}m ${secs}s`;
   };
 
   // ========== ОБЩИЕ ФУНКЦИИ ==========
@@ -873,6 +861,18 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       );
     }
 
+    const formatTimeLeft = (seconds: number): string => {
+      if (seconds <= 0) return 'Expired';
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      
+      if (hours > 0) {
+        return `${hours}h ${minutes}m ${secs}s`;
+      }
+      return `${minutes}m ${secs}s`;
+    };
+
     return (
       <div className="shop-cardpacks-list">
         {fightPassItems.map((item) => {
@@ -989,8 +989,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
         </div>
       );
     }
-    
-    const paidPacks = allPackConfigs.filter(p => p.item_price > 0);
     
     if (loadingPacks) {
       return (
@@ -1125,7 +1123,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           isFiatOnly={selectedPack.isFiatOnly || false}
           ticketsAmount={selectedPack.ticketsAmount || 0}
           coinsAmount={selectedPack.coinsAmount || 0}
-          /*tonAmount={selectedPack.tonAmount || 0}*/
           expMultiplier={selectedPack.expMultiplier || 1.0}
           durationDays={selectedPack.durationDays || 1}
           onPurchaseComplete={handlePurchaseComplete}
