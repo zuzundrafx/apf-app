@@ -99,8 +99,15 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   };
 
   const handlePurchaseClick = async () => {
+    console.log('🔴🔴🔴 handlePurchaseClick CALLED');
+  console.log('🔴 isCurrency:', isCurrency);
+  console.log('🔴 isFree:', isFree);
+  console.log('🔴 userCoins:', userCoins);
+  console.log('🔴 currentPrice:', currentPrice);
+  console.log('🔴 userCoins >= currentPrice:', userCoins >= currentPrice);
     // Проверка монет только для платных currency
     if (isCurrency && !isFree && userCoins < currentPrice) {
+      console.log('🔴🔴🔴 БЛОКИРОВКА: Not enough coins');
       setShowPricePulse(true);
       setTimeout(() => setShowPricePulse(false), 500);
       return;
@@ -595,6 +602,12 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           marginBottom: '2vh',
           width: '100%'
         }}>
+
+          {(() => {
+    console.log('🔴 Рендер кнопки: isPurchasing =', isPurchasing, 'isCurrency =', isCurrency, 'isFree =', isFree, 'userCoins =', userCoins, 'currentPrice =', currentPrice);
+    return null;
+  })()}
+  
           <button 
             className="rewards-claim-button"
             style={buttonStyle}
