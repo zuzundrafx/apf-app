@@ -107,6 +107,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   const [fightPassReload, setFightPassReload] = useState<Record<string, number>>({});
   const [fightPassPrices, setFightPassPrices] = useState<Record<string, number>>({});
   const [fightPassStatus, setFightPassStatus] = useState<Record<string, FightPassStatus>>({});
+  const [fightPassLoaded, setFightPassLoaded] = useState(false);
 
   const promotions = [
     "🎁 FREE daily reward! Claim now!",
@@ -124,14 +125,20 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  // Загружаем CARD PACKS и CURRENCY при монтировании
   useEffect(() => {
     if (authToken) {
       loadAllPackConfigs();
       loadCurrencyItems();
+    }
+  }, [authToken]);
+
+  // Загружаем FIGHT PASS только при переходе на вкладку
+  useEffect(() => {
+    if (authToken && activeTab === 'fightPass' && !fightPassLoaded) {
       loadFightPassItems();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authToken]);
+  }, [authToken, activeTab, fightPassLoaded]);
 
   useEffect(() => {
     if (authToken && activeTournaments.length > 0) {
@@ -141,7 +148,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
         loadPackInfo(league, `${league} Card Pack Free`, true);
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authToken, activeTournaments]);
 
   useEffect(() => {
@@ -390,9 +396,11 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       if (response.ok) {
         const data = await response.json();
         setFightPassItems(data);
-        data.forEach((item: FightPassItem) => {
-          loadFightPassItemInfo(item.item_name);
-        });
+        // Загружаем информацию о каждом предмете
+        for (const item of data) {
+          await loadFightPassItemInfo(item.item_name);
+        }
+        setFightPassLoaded(true);
       }
     } catch (err) {
       console.error('Failed to load fight pass items:', err);
@@ -846,7 +854,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       return (
         <div className="shop-empty-state" style={{ gap: '16px' }}>
           <div className="arena-loading-spinner" style={{ width: '40px', height: '40px', border: '3px solid #3D3D3B', borderTopColor: '#B20101', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-          <div className="shop-empty-text" style={{ color: '#FFFFFF', fontSize: 'clamp(14px, 4vw, 18px)' }}>Loading Fight Pass...</div>
+          <div className="shop-empty-text" style={{ color: '#FFFFFF', fontSize: 'clamp(14px, 4vw, 18px)' }}>Loading ...</div>
         </div>
       );
     }
@@ -916,19 +924,14 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
               
               <div className="shop-cardpack-info">
                 <div className="shop-cardpack-title" style={{ color: hasActivePass ? '#4CAF50' : '#FFD966' }}>
-                  {hasActivePass ? '✅ ' : '🎖️ '}{item.item_name}
+                  {item.item_name}
                   <span style={{ fontSize: 'clamp(8px, 2vw, 10px)', color: '#888', marginLeft: '8px' }}>
                     ({item.duration_days} day{item.duration_days > 1 ? 's' : ''})
                   </span>
                 </div>
                 <div className="shop-cardpack-tournament">
-                  {item.item_info} — {item.item_description}
+                  {item.item_info}
                 </div>
-                {item.exp_multiplier > 1 && (
-                  <div style={{ color: '#FFD966', fontSize: 'clamp(8px, 2vw, 10px)' }}>
-                    ⚡ EXP x{item.exp_multiplier}
-                  </div>
-                )}
                 {hasActivePass && (
                   <div style={{ color: '#4CAF50', fontSize: 'clamp(8px, 2vw, 10px)' }}>
                     🔥 {formatTimeLeft(timeLeftSeconds)} remaining
