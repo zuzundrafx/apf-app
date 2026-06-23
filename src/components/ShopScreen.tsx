@@ -16,7 +16,6 @@ interface ShopScreenProps {
   authToken?: string;
 }
 
-// Тип для конфигурации пака из БД
 interface PackConfig {
   id: number;
   item_name: string;
@@ -26,14 +25,12 @@ interface PackConfig {
   item_icon?: string;
 }
 
-// Тип для информации о паке пользователя
 interface PackInfo {
   currentPrice: number;
   reloadSecondsLeft: number;
   isFree?: boolean;
 }
 
-// Тип для currency предмета
 interface CurrencyItem {
   id: number;
   item_name: string;
@@ -44,6 +41,7 @@ interface CurrencyItem {
   item_reload_time: number;
   item_icon: string;
   tickets_amount: number;
+  coins_amount: number;
 }
 
 const ShopScreen: React.FC<ShopScreenProps> = ({ 
@@ -64,6 +62,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     isFree: boolean;
     isCurrency?: boolean;
     ticketsAmount?: number;
+    coinsAmount?: number;
     itemInfo?: string;
     itemDescription?: string;
   } | null>(null);
@@ -73,7 +72,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   const [allPackConfigs, setAllPackConfigs] = useState<PackConfig[]>([]);
   const [loadingPacks, setLoadingPacks] = useState(true);
 
-  // Currency состояния
   const [currencyItems, setCurrencyItems] = useState<CurrencyItem[]>([]);
   const [loadingCurrency, setLoadingCurrency] = useState(true);
   const [localCurrencyReload, setLocalCurrencyReload] = useState<Record<string, number>>({});
@@ -95,7 +93,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Загружаем все конфигурации паков
   useEffect(() => {
     if (authToken) {
       loadAllPackConfigs();
@@ -103,20 +100,16 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     }
   }, [authToken]);
 
-  // Загружаем информацию для каждого турнира
   useEffect(() => {
     if (authToken && activeTournaments.length > 0) {
       activeTournaments.forEach(tournament => {
         const league = (tournament.league || 'UFC').toUpperCase();
-        // Загружаем инфо для платных паков
         loadPackInfo(league, `${league} Card Pack`);
-        // Загружаем инфо для бесплатных паков
         loadPackInfo(league, `${league} Card Pack Free`, true);
       });
     }
   }, [authToken, activeTournaments]);
 
-  // Обновляем локальный таймер при загрузке новых данных
   useEffect(() => {
     Object.keys(packInfo).forEach(key => {
       setLocalReloadSeconds(prev => ({
@@ -126,7 +119,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     });
   }, [packInfo]);
 
-  // Интервал для уменьшения локального таймера (паки)
   useEffect(() => {
     const interval = setInterval(() => {
       setLocalReloadSeconds(prev => {
@@ -144,7 +136,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Интервал для уменьшения локального таймера (currency)
   useEffect(() => {
     const interval = setInterval(() => {
       setLocalCurrencyReload(prev => {
@@ -299,9 +290,10 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       price: currentPrice,
       name: item.item_name,
       icon: iconSrc,
-      isFree: item.item_coins_price === 0,
+      isFree: item.item_coins_price === 0 && item.item_fiat_price === 0,
       isCurrency: true,
       ticketsAmount: item.tickets_amount,
+      coinsAmount: item.coins_amount,
       itemInfo: item.item_info,
       itemDescription: item.item_description
     });
@@ -313,14 +305,10 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       await onUpdateBalance(newCoins, newTickets);
     }
 
-    // Обновляем информацию о предмете (цену и таймер)
-  if (selectedPack) {
-    const itemName = selectedPack.name;
-    await loadCurrencyItemInfo(itemName);
-  }
-
-    /*setShowPurchaseModal(false);
-    setSelectedPack(null);*/
+    if (selectedPack) {
+      const itemName = selectedPack.name;
+      await loadCurrencyItemInfo(itemName);
+    }
   };
 
   // ========== ОБЩИЕ ФУНКЦИИ ==========
@@ -380,7 +368,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       icon: iconSrc,
       isFree: true,
       isCurrency: false,
-      itemDescription: packConfig?.item_info || ''  // ← ДОБАВИТЬ
+      itemDescription: packConfig?.item_info || ''
     });
     setShowPurchaseModal(true);
   };
@@ -400,7 +388,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       icon: iconSrc,
       isFree: false,
       isCurrency: false,
-      itemDescription: packConfig?.item_info || ''  // ← ДОБАВИТЬ
+      itemDescription: packConfig?.item_info || ''
     });
     setShowPurchaseModal(true);
   };
@@ -446,10 +434,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   };
 
   const renderFreeTab = () => {
-    // Бесплатные картпаки
     const freePacks = allPackConfigs.filter(p => p.item_price === 0);
-    // Бесплатные currency предметы (цена 0)
-    const freeCurrencyItems = currencyItems.filter(item => item.item_coins_price === 0);
+    const freeCurrencyItems = currencyItems.filter(item => item.item_coins_price === 0 && item.item_fiat_price === 0);
     
     if (loadingPacks || loadingCurrency) {
       return (
@@ -472,7 +458,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     
     return (
       <div className="shop-cardpacks-list">
-        {/* ===== БЕСПЛАТНЫЕ КАРТПАКИ (без изменений) ===== */}
         {freePacks.map((packConfig) => {
           const leagueName = packConfig.item_name.replace(' Card Pack Free', '').toUpperCase();
           const tournament = activeTournaments.find(t => (t.league || 'UFC').toUpperCase() === leagueName);
@@ -532,7 +517,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           );
         })}
         
-        {/* ===== БЕСПЛАТНЫЕ CURRENCY ПРЕДМЕТЫ (Free Tickets) ===== */}
         {freeCurrencyItems.map((item) => {
           const reloadSecondsLeft = localCurrencyReload[item.item_name] || 0;
           const isOnCooldown = reloadSecondsLeft > 0;
@@ -601,8 +585,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       );
     }
     
-    // Показываем только платные предметы (price > 0)
-    const paidItems = currencyItems.filter(item => item.item_coins_price > 0);
+    const paidItems = currencyItems.filter(item => item.item_coins_price > 0 || item.item_fiat_price > 0);
     
     if (paidItems.length === 0) {
       return (
@@ -624,6 +607,8 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
             : `${BASE_URL}/icons/Ticket_icon.webp`;
           
           const currentPrice = currencyCurrentPrices[item.item_name] || item.item_coins_price;
+          const isFiat = item.item_fiat_price > 0;
+          const isDisabled = isFiat;
           
           return (
             <div key={item.id} className="shop-cardpack-item">
@@ -652,18 +637,32 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
               
               <div className="shop-cardpack-action">
                 <div className="shop-cardpack-price">
-                  {currentPrice}
-                  <img 
-                    src={`${BASE_URL}/icons/Coin_icon.webp`} 
-                    alt="Coins" 
-                    className="shop-cardpack-price-icon"
-                  />
+                  {isFiat ? (
+                    <>
+                      {item.item_fiat_price} RUB
+                    </>
+                  ) : (
+                    <>
+                      {currentPrice}
+                      <img 
+                        src={`${BASE_URL}/icons/Coin_icon.webp`} 
+                        alt="Coins" 
+                        className="shop-cardpack-price-icon"
+                      />
+                    </>
+                  )}
                 </div>
                 <button 
-                  className="shop-cardpack-purchase"
-                  onClick={() => handleCurrencyPurchase(item)}
+                  className={`shop-cardpack-purchase ${isDisabled ? 'disabled' : ''}`}
+                  style={{
+                    opacity: isDisabled ? 0.5 : 1,
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    background: isDisabled ? '#666D74' : 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)'
+                  }}
+                  onClick={() => !isDisabled && handleCurrencyPurchase(item)}
+                  disabled={isDisabled}
                 >
-                  PURCHASE
+                  {isDisabled ? 'SOON' : 'PURCHASE'}
                 </button>
               </div>
             </div>
@@ -684,7 +683,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       );
     }
     
-    // Показываем только платные паки (price > 0)
     const paidPacks = allPackConfigs.filter(p => p.item_price > 0);
     
     if (loadingPacks) {
@@ -802,7 +800,6 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
         <PurchaseModal
           isOpen={showPurchaseModal}
           onClose={() => {
-            console.log('🔍 onClose called');
             setShowPurchaseModal(false);
             setSelectedPack(null);
           }}
@@ -818,6 +815,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           isFree={selectedPack.isFree}
           isCurrency={selectedPack.isCurrency || false}
           ticketsAmount={selectedPack.ticketsAmount || 0}
+          coinsAmount={selectedPack.coinsAmount || 0}
           onPurchaseComplete={handlePurchaseComplete}
           onCurrencyPurchaseComplete={handleCurrencyPurchaseComplete}
         />

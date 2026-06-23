@@ -21,6 +21,7 @@ interface PurchaseModalProps {
   isFree?: boolean;
   isCurrency?: boolean;
   ticketsAmount?: number;
+  coinsAmount?: number;
   onPurchaseComplete?: (newCoins: number) => void;
   onCurrencyPurchaseComplete?: (newCoins: number, newTickets: number) => void;
 }
@@ -40,6 +41,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   isFree = false,
   isCurrency = false,
   ticketsAmount = 0,
+  coinsAmount = 0,
   onPurchaseComplete,
   onCurrencyPurchaseComplete
 }) => {
@@ -51,7 +53,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [showCompleteMessage, setShowCompleteMessage] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Добавляем keyframes для анимации
   useEffect(() => {
     if (!document.querySelector('#purchase-modal-animations')) {
       const style = document.createElement('style');
@@ -99,15 +100,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   };
 
   const handlePurchaseClick = async () => {
-    console.log('🔴🔴🔴 handlePurchaseClick CALLED');
-  console.log('🔴 isCurrency:', isCurrency);
-  console.log('🔴 isFree:', isFree);
-  console.log('🔴 userCoins:', userCoins);
-  console.log('🔴 currentPrice:', currentPrice);
-  console.log('🔴 userCoins >= currentPrice:', userCoins >= currentPrice);
-    // Проверка монет только для платных currency
     if (isCurrency && !isFree && userCoins < currentPrice) {
-      console.log('🔴🔴🔴 БЛОКИРОВКА: Not enough coins');
       setShowPricePulse(true);
       setTimeout(() => setShowPricePulse(false), 500);
       return;
@@ -125,7 +118,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     try {
       let response;
       
-      // Бесплатный картпак
       if (isFree && !isCurrency) {
         response = await fetch(`${API_BASE}/api/shop/claim-free-card-pack`, {
           method: 'POST',
@@ -139,7 +131,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           })
         });
       } 
-      // Бесплатный currency (Free Tickets)
       else if (isFree && isCurrency) {
         response = await fetch(`${API_BASE}/api/shop/purchase-currency`, {
           method: 'POST',
@@ -153,7 +144,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           })
         });
       } 
-      // Платный currency
       else if (isCurrency) {
         response = await fetch(`${API_BASE}/api/shop/purchase-currency`, {
           method: 'POST',
@@ -167,7 +157,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           })
         });
       } 
-      // Платный картпак
       else {
         response = await fetch(`${API_BASE}/api/shop/purchase-card-pack`, {
           method: 'POST',
@@ -223,7 +212,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   };
 
   const handleGotIt = () => {
-    console.log('🔍 handleGotIt called');
     setPurchaseState('idle');
     setPurchasedCards([]);
     setShowCompleteMessage(false);
@@ -253,7 +241,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   if (purchaseState === 'success') {
     return (
       <div className="rewards-modal-overlay">
-        {/* НАДПИСЬ */}
         {showCompleteMessage && (
           <div style={{
             position: 'absolute',
@@ -298,7 +285,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             width: '95%',
           }}
         >
-          {/* КРЕСТИК УБРАН */}
           <div className="rewards-header" style={{ top: '-8%', zIndex: 100, height: '0', minHeight: '0' }}>
           </div>
 
@@ -319,7 +305,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               padding: 0,
             }}
           >
-            {/* НАЗВАНИЕ ТУРНИРА / ПРЕДМЕТА */}
             <div style={{
               textAlign: 'center',
               color: '#FFD966',
@@ -334,7 +319,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               {isCurrency ? itemName : `${leagueUpper}: ${formattedTournamentName}`}
             </div>
 
-            {/* КОНТЕНТ */}
             {isCurrency ? (
               <div style={{
                 display: 'flex',
@@ -386,7 +370,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
                     textAlign: 'center',
                     boxShadow: '0 0 20px rgba(255, 217, 102, 0.15)',
                   }}>
-                    +{ticketsAmount}
+                    {ticketsAmount > 0 ? `+${ticketsAmount}` : `+${coinsAmount}`}
                   </div>
                 </div>
               </div>
@@ -442,7 +426,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             )}
           </div>
 
-          {/* КНОПКА GOT IT! */}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'center', 
@@ -584,11 +567,11 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           }}>
             <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 3vw, 12px)', textAlign: 'center', lineHeight: 1.4 }}>
               {isFree && isCurrency 
-                ? itemDescription || `Get ${ticketsAmount} Free Tickets! (24h cooldown)`
+                ? itemDescription || (ticketsAmount > 0 ? `Get ${ticketsAmount} Free Tickets! (24h cooldown)` : `Get ${coinsAmount} Free Coins! (24h cooldown)`)
                 : isFree 
                 ? itemDescription || `Get 5 random fighter cards for the active ${leagueUpper} tournament with this FREE pack! (24h cooldown)`
                 : isCurrency
-                ? itemDescription || `Get ${ticketsAmount} Tickets for ${currentPrice} coins! (2h cooldown)`
+                ? itemDescription || (ticketsAmount > 0 ? `Get ${ticketsAmount} Tickets for ${currentPrice} coins! (2h cooldown)` : `Get ${coinsAmount} Coins for ${currentPrice} coins! (2h cooldown)`)
                 : `Get 5 random fighter cards for the active ${leagueUpper} tournament with this pack!`
               }
             </div>
@@ -602,12 +585,6 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
           marginBottom: '2vh',
           width: '100%'
         }}>
-
-          {(() => {
-    console.log('🔴 Рендер кнопки: isPurchasing =', isPurchasing, 'isCurrency =', isCurrency, 'isFree =', isFree, 'userCoins =', userCoins, 'currentPrice =', currentPrice);
-    return null;
-  })()}
-
           <button 
             className="rewards-claim-button"
             style={buttonStyle}
