@@ -20,10 +20,16 @@ interface PurchaseModalProps {
   authToken?: string;
   isFree?: boolean;
   isCurrency?: boolean;
+  isFightPass?: boolean;
+  isFiatOnly?: boolean;
   ticketsAmount?: number;
   coinsAmount?: number;
+  /*tonAmount?: number;*/
+  expMultiplier?: number;
+  durationDays?: number;
   onPurchaseComplete?: (newCoins: number) => void;
   onCurrencyPurchaseComplete?: (newCoins: number, newTickets: number) => void;
+  onFightPassPurchaseComplete?: (newCoins: number) => Promise<void>;
 }
 
 const PurchaseModal: React.FC<PurchaseModalProps> = ({
@@ -40,10 +46,16 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   authToken,
   isFree = false,
   isCurrency = false,
+  isFightPass = false,
+  isFiatOnly = false,
   ticketsAmount = 0,
   coinsAmount = 0,
+  /*tonAmount = 0,*/
+  expMultiplier = 1.0,
+  durationDays = 1,
   onPurchaseComplete,
-  onCurrencyPurchaseComplete
+  onCurrencyPurchaseComplete,
+  onFightPassPurchaseComplete
 }) => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [showPricePulse, setShowPricePulse] = useState(false);
@@ -100,13 +112,26 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   };
 
   const handlePurchaseClick = async () => {
+    // Проверка для FIGHT PASS (фиат)
+    if (isFightPass && isFiatOnly) {
+      alert('Fiat payments are not available yet. Coming soon!');
+      return;
+    }
+
+    // Проверка для FIGHT PASS (монеты)
+    if (isFightPass && !isFiatOnly && !isFree && userCoins < currentPrice) {
+      setShowPricePulse(true);
+      setTimeout(() => setShowPricePulse(false), 500);
+      return;
+    }
+
     if (isCurrency && !isFree && userCoins < currentPrice) {
       setShowPricePulse(true);
       setTimeout(() => setShowPricePulse(false), 500);
       return;
     }
     
-    if (!isFree && !isCurrency && userCoins < currentPrice) {
+    if (!isFree && !isCurrency && !isFightPass && userCoins < currentPrice) {
       setShowPricePulse(true);
       setTimeout(() => setShowPricePulse(false), 500);
       return;
@@ -118,7 +143,20 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     try {
       let response;
       
-      if (isFree && !isCurrency) {
+      if (isFightPass) {
+        // FIGHT PASS покупка
+        response = await fetch(`${API_BASE}/api/shop/purchase-fight-pass`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            itemName: itemName,
+            price: currentPrice
+          })
+        });
+      } else if (isFree && !isCurrency) {
         response = await fetch(`${API_BASE}/api/shop/claim-free-card-pack`, {
           method: 'POST',
           headers: {
@@ -179,7 +217,18 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
       
       const data = await response.json();
       
-      if (isCurrency) {
+      if (isFightPass) {
+        setPurchasedCards([]);
+        setPurchaseState('success');
+        setShowCompleteMessage(true);
+        setIsAnimating(true);
+        
+        setTimeout(() => setIsAnimating(false), 1000);
+        
+        if (onFightPassPurchaseComplete) {
+          await onFightPassPurchaseComplete(data.newCoins);
+        }
+      } else if (isCurrency) {
         setPurchasedCards([]);
         setPurchaseState('success');
         setShowCompleteMessage(true);
@@ -267,7 +316,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             pointerEvents: 'none',
             transition: 'box-shadow 0.3s ease',
           }}>
-            {isFree && isCurrency ? 'CLAIMED!' : isFree ? 'PACK CLAIMED!' : 'PURCHASE COMPLETE!'}
+            {isFree && isCurrency ? 'CLAIMED!' : isFree ? 'PACK CLAIMED!' : isFightPass ? 'FIGHT PASS ACTIVATED!' : 'PURCHASE COMPLETE!'}
           </div>
         )}
 
@@ -316,10 +365,36 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               width: '100%',
               borderBottom: '1px solid rgba(255, 217, 102, 0.2)',
             }}>
-              {isCurrency ? itemName : `${leagueUpper}: ${formattedTournamentName}`}
+              {isFightPass ? itemName : (isCurrency ? itemName : `${leagueUpper}: ${formattedTournamentName}`)}
             </div>
 
-            {isCurrency ? (
+            {isFightPass ? (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '12px',
+                width: '100%',
+                padding: '0 clamp(2px, 1vh, 4px)',
+                margin: 'clamp(4px, 2vh, 12px) 0',
+                flexShrink: 1,
+                minHeight: 0,
+              }}>
+                <div style={{ 
+                  background: '#313130', 
+                  padding: '4% 8%', 
+                  borderRadius: '8px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ color: '#FFD966', fontSize: 'clamp(14px, 4vw, 18px)', fontWeight: 700 }}>
+                    EXP x{expMultiplier}
+                  </div>
+                  <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 2.5vw, 12px)' }}>
+                    {durationDays} day{durationDays > 1 ? 's' : ''} of Fight Pass
+                  </div>
+                </div>
+              </div>
+            ) : isCurrency ? (
               <div style={{
                 display: 'flex',
                 justifyContent: 'center',
@@ -552,7 +627,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
                 fontWeight: 400,
                 lineHeight: 1.3,
               }}>
-                {isCurrency ? itemInfo || itemName : formattedTournamentName}
+                {isFightPass ? (itemInfo || itemName) : (isCurrency ? itemInfo || itemName : formattedTournamentName)}
               </div>
             </div>
           </div>
@@ -566,14 +641,17 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             marginTop: 'clamp(8px, 2vh, 16px)',
           }}>
             <div style={{ color: '#FFFFFF', fontSize: 'clamp(10px, 3vw, 12px)', textAlign: 'center', lineHeight: 1.4 }}>
-              {isFree && isCurrency 
-                ? itemDescription || (ticketsAmount > 0 ? `Get ${ticketsAmount} Free Tickets! (24h cooldown)` : `Get ${coinsAmount} Free Coins! (24h cooldown)`)
-                : isFree 
-                ? itemDescription || `Get 5 random fighter cards for the active ${leagueUpper} tournament with this FREE pack! (24h cooldown)`
-                : isCurrency
-                ? itemDescription || (ticketsAmount > 0 ? `Get ${ticketsAmount} Tickets for ${currentPrice} coins! (2h cooldown)` : `Get ${coinsAmount} Coins for ${currentPrice} coins! (2h cooldown)`)
-                : `Get 5 random fighter cards for the active ${leagueUpper} tournament with this pack!`
-              }
+              {isFightPass ? (
+                itemDescription || `Get ${expMultiplier}x EXP for ${durationDays} day${durationDays > 1 ? 's' : ''}!`
+              ) : (isFree && isCurrency) ? (
+                itemDescription || (ticketsAmount > 0 ? `Get ${ticketsAmount} Free Tickets! (24h cooldown)` : `Get ${coinsAmount} Free Coins! (24h cooldown)`)
+              ) : isFree ? (
+                itemDescription || `Get 5 random fighter cards for the active ${leagueUpper} tournament with this FREE pack! (24h cooldown)`
+              ) : isCurrency ? (
+                itemDescription || (ticketsAmount > 0 ? `Get ${ticketsAmount} Tickets for ${currentPrice} coins! (2h cooldown)` : `Get ${coinsAmount} Coins for ${currentPrice} coins! (2h cooldown)`)
+              ) : (
+                `Get 5 random fighter cards for the active ${leagueUpper} tournament with this pack!`
+              )}
             </div>
           </div>
         </div>
@@ -589,15 +667,34 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
             className="rewards-claim-button"
             style={buttonStyle}
             onClick={handlePurchaseClick}
-            disabled={isPurchasing}
+            disabled={isPurchasing || (isFightPass && isFiatOnly)}
           >
             {isPurchasing ? (
               'PROCESSING...'
+            ) : (isFightPass && isFiatOnly) ? (
+              'SOON'
             ) : (isFree && isCurrency) ? (
               'CLAIM'
             ) : isFree ? (
               'GET FREE PACK'
             ) : isCurrency ? (
+              <>
+                CONFIRM PAYMENT: 
+                <span style={{ 
+                  fontWeight: 700, 
+                  fontSize: 'clamp(16px, 4vw, 20px)',
+                  marginLeft: '4px',
+                  color: '#FFD966'
+                }}>
+                  {currentPrice}
+                </span>
+                <img 
+                  src={`${BASE_URL}/icons/Coin_icon.webp`} 
+                  alt="Coins" 
+                  style={{ width: 'auto', height: 'clamp(14px, 3.5vw, 18px)', objectFit: 'contain', marginLeft: '2px' }}
+                />
+              </>
+            ) : isFightPass ? (
               <>
                 CONFIRM PAYMENT: 
                 <span style={{ 

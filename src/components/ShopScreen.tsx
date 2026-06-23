@@ -1,5 +1,5 @@
 // src/components/ShopScreen.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Tournament } from '../types';
 import PurchaseModal from './PurchaseModal';
 
@@ -44,6 +44,26 @@ interface CurrencyItem {
   coins_amount: number;
 }
 
+interface FightPassItem {
+  id: number;
+  item_name: string;
+  item_info: string;
+  item_description: string;
+  item_coins_price: number;
+  item_fiat_price: number;
+  item_reload_time: number;
+  item_icon: string;
+  exp_multiplier: number;
+  duration_days: number;
+  sort_order: number;
+}
+
+interface FightPassStatus {
+  hasActivePass: boolean;
+  timeLeftSeconds: number;
+  expiresAt?: string;
+}
+
 const ShopScreen: React.FC<ShopScreenProps> = ({ 
   activeTournaments, 
   userCoins = 0,
@@ -61,8 +81,13 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     icon: string;
     isFree: boolean;
     isCurrency?: boolean;
+    isFightPass?: boolean;
+    isFiatOnly?: boolean;
     ticketsAmount?: number;
     coinsAmount?: number;
+    /*tonAmount?: number;*/
+    expMultiplier?: number;
+    durationDays?: number;
     itemInfo?: string;
     itemDescription?: string;
   } | null>(null);
@@ -76,6 +101,13 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
   const [loadingCurrency, setLoadingCurrency] = useState(true);
   const [localCurrencyReload, setLocalCurrencyReload] = useState<Record<string, number>>({});
   const [currencyCurrentPrices, setCurrencyCurrentPrices] = useState<Record<string, number>>({});
+
+  // ===== FIGHT PASS состояния =====
+  const [fightPassItems, setFightPassItems] = useState<FightPassItem[]>([]);
+  const [loadingFightPass, setLoadingFightPass] = useState(true);
+  const [fightPassReload, setFightPassReload] = useState<Record<string, number>>({});
+  const [fightPassPrices, setFightPassPrices] = useState<Record<string, number>>({});
+  const [fightPassStatus, setFightPassStatus] = useState<Record<string, FightPassStatus>>({});
 
   const promotions = [
     "🎁 FREE daily reward! Claim now!",
@@ -97,6 +129,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     if (authToken) {
       loadAllPackConfigs();
       loadCurrencyItems();
+      loadFightPassItems();
     }
   }, [authToken]);
 
@@ -119,6 +152,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     });
   }, [packInfo]);
 
+  // Таймер для CARD PACKS
   useEffect(() => {
     const interval = setInterval(() => {
       setLocalReloadSeconds(prev => {
@@ -136,6 +170,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  // Таймер для CURRENCY
   useEffect(() => {
     const interval = setInterval(() => {
       setLocalCurrencyReload(prev => {
@@ -144,6 +179,36 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
         Object.keys(updated).forEach(key => {
           if (updated[key] > 0) {
             updated[key] = updated[key] - 1;
+            hasChanges = true;
+          }
+        });
+        return hasChanges ? updated : prev;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Таймер для FIGHT PASS
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFightPassReload(prev => {
+        const updated = { ...prev };
+        let hasChanges = false;
+        Object.keys(updated).forEach(key => {
+          if (updated[key] > 0) {
+            updated[key] = updated[key] - 1;
+            hasChanges = true;
+          }
+        });
+        return hasChanges ? updated : prev;
+      });
+
+      setFightPassStatus(prev => {
+        const updated = { ...prev };
+        let hasChanges = false;
+        Object.keys(updated).forEach(key => {
+          if (updated[key].hasActivePass && updated[key].timeLeftSeconds > 0) {
+            updated[key].timeLeftSeconds = updated[key].timeLeftSeconds - 1;
             hasChanges = true;
           }
         });
@@ -311,6 +376,128 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     }
   };
 
+  // ========== FIGHT PASS ==========
+
+  const loadFightPassItems = useCallback(async () => {
+    if (!authToken) return;
+    setLoadingFightPass(true);
+    try {
+      const response = await fetch(`${API_BASE}/api/shop/fight-pass`, {
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFightPassItems(data);
+        data.forEach((item: FightPassItem) => {
+          loadFightPassItemInfo(item.item_name);
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load fight pass items:', err);
+    } finally {
+      setLoadingFightPass(false);
+    }
+  }, [authToken]);
+
+  const loadFightPassItemInfo = useCallback(async (itemName: string) => {
+    if (!authToken) return;
+    try {
+      const response = await fetch(`${API_BASE}/api/shop/fight-pass-info`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ itemName })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFightPassReload(prev => ({
+          ...prev,
+          [itemName]: data.reloadSecondsLeft || 0
+        }));
+        setFightPassPrices(prev => ({
+          ...prev,
+          [itemName]: data.currentPrice || data.itemCoinsPrice
+        }));
+        setFightPassStatus(prev => ({
+          ...prev,
+          [itemName]: {
+            hasActivePass: data.hasActivePass || false,
+            timeLeftSeconds: data.timeLeftSeconds || 0,
+            expiresAt: data.expiresAt
+          }
+        }));
+      }
+    } catch (err) {
+      console.error(`Failed to load fight pass info for ${itemName}:`, err);
+    }
+  }, [authToken]);
+
+  const handleFightPassPurchase = (item: FightPassItem) => {
+    const iconSrc = item.item_icon 
+      ? `${BASE_URL}/${item.item_icon}` 
+      : `${BASE_URL}/icons/fight_pass_icon.webp`;
+    
+    const currentPrice = fightPassPrices[item.item_name] || item.item_coins_price;
+    const isFree = item.item_coins_price === 0 && item.item_fiat_price === 0;
+    const isFiatOnly = item.item_fiat_price > 0 && item.item_coins_price === 0;
+    
+    setSelectedPack({
+      tournament: { 
+        id: 'fight_pass',
+        name: item.item_name,
+        league: 'Fight Pass',
+        date: new Date().toISOString(),
+        status: 'active',
+        filename: '',
+        data: null,
+        url: ''
+      },
+      league: 'Fight Pass',
+      price: currentPrice,
+      name: item.item_name,
+      icon: iconSrc,
+      isFree: isFree,
+      isCurrency: false,
+      isFightPass: true,
+      isFiatOnly: isFiatOnly,
+      ticketsAmount: 0,
+      coinsAmount: 0,
+      /*tonAmount: 0,*/
+      expMultiplier: item.exp_multiplier || 1.0,
+      durationDays: item.duration_days || 1,
+      itemInfo: item.item_info,
+      itemDescription: item.item_description
+    });
+    setShowPurchaseModal(true);
+  };
+
+  const handleFightPassPurchaseComplete = async (newCoins: number) => {
+    if (onUpdateBalance) {
+      await onUpdateBalance(newCoins, userTickets);
+    }
+
+    if (selectedPack) {
+      const itemName = selectedPack.name;
+      await loadFightPassItemInfo(itemName);
+    }
+  };
+
+  const formatTimeLeft = (seconds: number): string => {
+    if (seconds <= 0) return 'Expired';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${secs}s`;
+    }
+    return `${minutes}m ${secs}s`;
+  };
+
   // ========== ОБЩИЕ ФУНКЦИИ ==========
 
   const formatReloadTime = (seconds: number): string => {
@@ -419,13 +606,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
       case 'currency':
         return renderCurrencyTab();
       case 'fightPass':
-        return (
-          <div className="shop-empty-state">
-            <div className="shop-empty-icon">🎖️</div>
-            <div className="shop-empty-text">Fight Pass coming soon!</div>
-            <div className="shop-empty-subtext">Premium subscription with exclusive benefits</div>
-          </div>
-        );
+        return renderFightPassTab();
       case 'cardPacks':
         return renderCardPacksTab();
       default:
@@ -672,6 +853,132 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
     );
   };
 
+  const renderFightPassTab = () => {
+    if (loadingFightPass) {
+      return (
+        <div className="shop-empty-state" style={{ gap: '16px' }}>
+          <div className="arena-loading-spinner" style={{ width: '40px', height: '40px', border: '3px solid #3D3D3B', borderTopColor: '#B20101', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+          <div className="shop-empty-text" style={{ color: '#FFFFFF', fontSize: 'clamp(14px, 4vw, 18px)' }}>Loading Fight Pass...</div>
+        </div>
+      );
+    }
+
+    if (fightPassItems.length === 0) {
+      return (
+        <div className="shop-empty-state">
+          <div className="shop-empty-icon">🎖️</div>
+          <div className="shop-empty-text">Fight Pass coming soon!</div>
+          <div className="shop-empty-subtext">Premium subscription with exclusive benefits</div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="shop-cardpacks-list">
+        {fightPassItems.map((item) => {
+          const reloadSecondsLeft = fightPassReload[item.item_name] || 0;
+          const status = fightPassStatus[item.item_name];
+          const hasActivePass = status?.hasActivePass || false;
+          const timeLeftSeconds = status?.timeLeftSeconds || 0;
+          const isOnCooldown = reloadSecondsLeft > 0;
+          const iconSrc = item.item_icon 
+            ? `${BASE_URL}/${item.item_icon}` 
+            : `${BASE_URL}/icons/fight_pass_icon.webp`;
+          const currentPrice = fightPassPrices[item.item_name] || item.item_coins_price;
+          const isFiatOnly = item.item_fiat_price > 0 && item.item_coins_price === 0;
+          const isFree = item.item_coins_price === 0 && item.item_fiat_price === 0;
+          
+          const isDisabled = hasActivePass || isOnCooldown || isFiatOnly;
+          
+          let buttonText = 'PURCHASE';
+          if (hasActivePass) {
+            buttonText = `ACTIVE (${formatTimeLeft(timeLeftSeconds)})`;
+          } else if (isOnCooldown) {
+            buttonText = 'RECHARGING';
+          } else if (isFiatOnly) {
+            buttonText = 'SOON';
+          } else if (isFree) {
+            buttonText = 'CLAIM';
+          }
+          
+          return (
+            <div key={item.id} className="shop-cardpack-item">
+              <div className="shop-cardpack-icon">
+                <img 
+                  src={iconSrc} 
+                  alt={item.item_name} 
+                  className="shop-cardpack-icon-img"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `${BASE_URL}/icons/fight_pass_icon.webp`;
+                  }}
+                />
+              </div>
+              
+              <div className="shop-cardpack-info">
+                <div className="shop-cardpack-title" style={{ color: hasActivePass ? '#4CAF50' : '#FFD966' }}>
+                  {hasActivePass ? '✅ ' : '🎖️ '}{item.item_name}
+                  <span style={{ fontSize: 'clamp(8px, 2vw, 10px)', color: '#888', marginLeft: '8px' }}>
+                    ({item.duration_days} day{item.duration_days > 1 ? 's' : ''})
+                  </span>
+                </div>
+                <div className="shop-cardpack-tournament">
+                  {item.item_info} — {item.item_description}
+                </div>
+                {item.exp_multiplier > 1 && (
+                  <div style={{ color: '#FFD966', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                    ⚡ EXP x{item.exp_multiplier}
+                  </div>
+                )}
+                {hasActivePass && (
+                  <div style={{ color: '#4CAF50', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                    🔥 {formatTimeLeft(timeLeftSeconds)} remaining
+                  </div>
+                )}
+                {isOnCooldown && !hasActivePass && (
+                  <div style={{ color: '#FF6B6B', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                    ⏳ Recharge: {formatReloadTime(reloadSecondsLeft)}
+                  </div>
+                )}
+                {isFiatOnly && !hasActivePass && (
+                  <div style={{ color: '#FF6B6B', fontSize: 'clamp(8px, 2vw, 10px)' }}>
+                    💳 Coming soon
+                  </div>
+                )}
+              </div>
+              
+              <div className="shop-cardpack-action">
+                <div className="shop-cardpack-price">
+                  {isFree ? 'FREE' : isFiatOnly ? `${item.item_fiat_price} RUB` : (
+                    <>
+                      {currentPrice}
+                      <img 
+                        src={`${BASE_URL}/icons/Coin_icon.webp`} 
+                        alt="Coins" 
+                        className="shop-cardpack-price-icon"
+                      />
+                    </>
+                  )}
+                </div>
+                <button 
+                  className={`shop-cardpack-purchase ${isDisabled ? 'disabled' : ''}`}
+                  style={{
+                    opacity: isDisabled ? 0.5 : 1,
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    background: hasActivePass ? '#4CAF50' : (isDisabled ? '#666D74' : 'linear-gradient(180deg, #5b5b5b 0%, #302f30 100%)')
+                  }}
+                  onClick={() => !isDisabled && handleFightPassPurchase(item)}
+                  disabled={isDisabled}
+                >
+                  {buttonText}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const renderCardPacksTab = () => {
     if (activeTournaments.length === 0) {
       return (
@@ -814,10 +1121,16 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
           authToken={authToken}
           isFree={selectedPack.isFree}
           isCurrency={selectedPack.isCurrency || false}
+          isFightPass={selectedPack.isFightPass || false}
+          isFiatOnly={selectedPack.isFiatOnly || false}
           ticketsAmount={selectedPack.ticketsAmount || 0}
           coinsAmount={selectedPack.coinsAmount || 0}
+          /*tonAmount={selectedPack.tonAmount || 0}*/
+          expMultiplier={selectedPack.expMultiplier || 1.0}
+          durationDays={selectedPack.durationDays || 1}
           onPurchaseComplete={handlePurchaseComplete}
           onCurrencyPurchaseComplete={handleCurrencyPurchaseComplete}
+          onFightPassPurchaseComplete={handleFightPassPurchaseComplete}
         />
       )}
     </div>
