@@ -586,7 +586,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
               {isFree && isCurrency 
                 ? itemDescription || `Get ${ticketsAmount} Free Tickets! (24h cooldown)`
                 : isFree 
-                ? `Get 5 random fighter cards for the active ${leagueUpper} tournament with this FREE pack! (24h cooldown)`
+                ? itemDescription || `Get 5 random fighter cards for the active ${leagueUpper} tournament with this FREE pack! (24h cooldown)`
                 : isCurrency
                 ? itemDescription || `Get ${ticketsAmount} Tickets for ${currentPrice} coins! (2h cooldown)`
                 : `Get 5 random fighter cards for the active ${leagueUpper} tournament with this pack!`
@@ -607,7 +607,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
     console.log('🔴 Рендер кнопки: isPurchasing =', isPurchasing, 'isCurrency =', isCurrency, 'isFree =', isFree, 'userCoins =', userCoins, 'currentPrice =', currentPrice);
     return null;
   })()}
-  
+
           <button 
             className="rewards-claim-button"
             style={buttonStyle}
