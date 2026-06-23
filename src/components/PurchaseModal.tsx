@@ -216,6 +216,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({
   };
 
   const handleGotIt = () => {
+    console.log('🔍 handleGotIt called');
     setPurchaseState('idle');
     setPurchasedCards([]);
     setShowCompleteMessage(false);

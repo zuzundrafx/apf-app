@@ -800,6 +800,7 @@ const ShopScreen: React.FC<ShopScreenProps> = ({
         <PurchaseModal
           isOpen={showPurchaseModal}
           onClose={() => {
+            console.log('🔍 onClose called');
             setShowPurchaseModal(false);
             setSelectedPack(null);
           }}
