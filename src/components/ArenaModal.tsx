@@ -436,7 +436,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       try {
         el.animate(keyframes, {
           duration,
-          easing: 'cubic-bezier(0.4, 0, 0.6, 1)',
+          easing: 'linear',
           fill: 'none',
         });
       } catch (err) {
