@@ -2896,10 +2896,10 @@ body {
     transform: scale(1);
   }
   30% {
-    transform: scale(var(--hit-scale, 1.1));
+    transform: scale(1.15);
   }
   70% {
-    transform: scale(calc(1 + (var(--hit-scale, 1.1) - 1) * 0.5));
+    transform: scale(1.08);
   }
   100% {
     transform: scale(1);
@@ -2908,7 +2908,6 @@ body {
 
 .avatar-hit {
   animation: avatarHit 0.3s ease-out forwards;
-  /* Изолируем transform, чтобы он не влиял на layout других элементов */
   will-change: transform;
   transform-origin: center center;
 }

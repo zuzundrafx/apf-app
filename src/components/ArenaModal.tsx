@@ -168,10 +168,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     return () => stopTipRotation();
   }, [stopTipRotation]);
 
-    const applyHitEffect = (target: 'player' | 'rival', damage: number) => {
+      const applyHitEffect = (target: 'player' | 'rival', damage: number) => {
     const avatarElement = document.querySelector(
       target === 'player' ? '.arena-bottom .arena-avatar' : '.arena-top .arena-avatar'
-    );
+    ) as HTMLElement | null;
     if (!avatarElement) return;
 
     // Цвет свечения в зависимости от урона
@@ -180,40 +180,48 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     else if (damage >= 50 && damage < 150) glowColor = 'rgba(255, 0, 0, 0.3)';
     else glowColor = 'rgba(255, 0, 0, 0.3)';
 
-    // ❗ Масштаб в зависимости от урона
-    // < 50: 1.05 (5%)
-    // 50-200: 1.10 (10%)
-    // >= 200: 1.15 (15%)
-    let hitScale = 1.05;
-    if (damage >= 200) hitScale = 1.15;
-    else if (damage >= 50) hitScale = 1.10;
+    // Масштаб в зависимости от урона
+    let hitScale = 1.05;   // < 50   → +5%
+    if (damage >= 200) hitScale = 1.15;   // ≥ 200 → +15%
+    else if (damage >= 50) hitScale = 1.10; // 50-199 → +10%
 
-    // Сбрасываем классы, форсируем reflow, чтобы анимация перезапустилась
-    avatarElement.classList.remove('avatar-hit', 'avatar-glow');
-    void (avatarElement as HTMLElement).offsetHeight;
+    // === МАСШТАБИРОВАНИЕ через WAAPI ===
+    // Отменяем старую анимацию, если она была
+    if ((avatarElement as any)._hitAnim) {
+      try { (avatarElement as any)._hitAnim.cancel(); } catch {}
+    }
 
-    // Устанавливаем CSS-переменные
-    (avatarElement as HTMLElement).style.setProperty('--glow-color', glowColor);
-    (avatarElement as HTMLElement).style.setProperty('--hit-scale', String(hitScale));
+    try {
+      const anim = avatarElement.animate(
+        [
+          { transform: 'scale(1)' },
+          { transform: `scale(${hitScale})`, offset: 0.3 },
+          { transform: `scale(${1 + (hitScale - 1) * 0.5})`, offset: 0.7 },
+          { transform: 'scale(1)' },
+        ],
+        {
+          duration: 300,
+          easing: 'ease-out',
+          fill: 'none',
+        }
+      );
+      (avatarElement as any)._hitAnim = anim;
+      anim.onfinish = () => {
+        (avatarElement as any)._hitAnim = null;
+      };
+    } catch (err) {
+      console.error('❌ avatar scale animation error:', err);
+    }
 
-    // Добавляем классы — анимации стартуют
-    avatarElement.classList.add('avatar-hit');
+    // === СВЕЧЕНИЕ через CSS-класс (оставляем как было) ===
+    avatarElement.classList.remove('avatar-glow');
+    void avatarElement.offsetHeight; // reflow, чтобы анимация перезапустилась
+    avatarElement.style.setProperty('--glow-color', glowColor);
     avatarElement.classList.add('avatar-glow');
-    // ❗ ЛОГ
-  console.log('🎯 applyHitEffect:', {
-    target,
-    damage,
-    hitScale,
-    glowColor,
-    hasClass: avatarElement.classList.contains('avatar-hit'),
-    computedTransform: window.getComputedStyle(avatarElement).transform,
-    computedAnimation: window.getComputedStyle(avatarElement).animation,
-  });
 
     setTimeout(() => {
-      avatarElement.classList.remove('avatar-hit', 'avatar-glow');
-      (avatarElement as HTMLElement).style.removeProperty('--glow-color');
-      (avatarElement as HTMLElement).style.removeProperty('--hit-scale');
+      avatarElement.classList.remove('avatar-glow');
+      avatarElement.style.removeProperty('--glow-color');
     }, 300);
   };
 
