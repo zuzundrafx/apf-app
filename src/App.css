@@ -4396,11 +4396,14 @@ body {
   left: 50%;
   width: 60px;
   height: 12px;
-  transform-origin: 0% 50%;
-  /* Хвост направлен в противоположную сторону движения */
-  transform: translate(-100%, -50%) rotate(var(--trail-angle, 0deg));
+  /* Точка вращения — на левом краю хвоста (у снаряда) */
+  transform-origin: 0 50%;
+  /* Сдвигаем левый край хвоста к центру снаряда, затем вращаем */
+  margin-left: -9px;                       /* половина ширины снаряда (18/2) */
+  margin-top: -6px;                        /* половина высоты хвоста (12/2) */
+  transform: rotate(var(--trail-angle, 0deg));
   background: linear-gradient(
-    90deg,
+    -90deg,
     transparent 0%,
     currentColor 100%
   );
@@ -4410,7 +4413,6 @@ body {
   pointer-events: none;
 }
 
-/* Второй слой хвоста — шире и прозрачнее (свечение) */
 .projectile::after {
   content: '';
   position: absolute;
@@ -4418,10 +4420,12 @@ body {
   left: 50%;
   width: 80px;
   height: 20px;
-  transform-origin: 0% 50%;
-  transform: translate(-100%, -50%) rotate(var(--trail-angle, 0deg));
+  transform-origin: 0 50%;
+  margin-left: -9px;
+  margin-top: -10px;
+  transform: rotate(var(--trail-angle, 0deg));
   background: linear-gradient(
-    90deg,
+    -90deg,
     transparent 0%,
     currentColor 100%
   );
