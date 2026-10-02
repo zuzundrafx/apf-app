@@ -246,52 +246,90 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     toY: number,
     trajectory: 'straight' | 'arc-left' | 'arc-right'
   ): Keyframe[] => {
-    const midX = (fromX + toX) / 2;
-    const midY = (fromY + toY) / 2;
+    const dx = toX - fromX;
+    const dy = toY - fromY;
 
-    const dx = Math.abs(toX - fromX);
-    const dy = Math.abs(toY - fromY);
-    const arcOffset = dx * 0.4;
-    const arcLift = dy * 0.5 + 60;
-
-    let controlX = midX;
-    let controlY = midY;
+    // Контрольная точка для квадратичной кривой Безье
+    let controlX = fromX;
+    let controlY = fromY;
 
     if (trajectory === 'arc-left') {
-      controlX = midX - arcOffset;
-      controlY = midY - arcLift;
+      // Дуга влево: отклонение по X — влево, подъём по Y — вверх
+      controlX = fromX + dx * 0.2 - Math.abs(dx) * 0.5;
+      controlY = fromY - Math.abs(dy) * 0.8 - 40;
     } else if (trajectory === 'arc-right') {
-      controlX = midX + arcOffset;
-      controlY = midY - arcLift;
+      // Дуга вправо: отклонение по X — вправо, подъём по Y — вверх
+      controlX = fromX + dx * 0.8 + Math.abs(dx) * 0.5;
+      controlY = fromY - Math.abs(dy) * 0.8 - 40;
+    } else {
+      // Прямая: контрольная точка ровно посередине
+      controlX = fromX + dx * 0.5;
+      controlY = fromY + dy * 0.5;
     }
 
-    return [
-      {
-        transform: `translate(${fromX}px, ${fromY}px) scale(0.4)`,
-        opacity: 0,
-        offset: 0,
-      },
-      {
-        transform: `translate(${fromX}px, ${fromY}px) scale(1)`,
+    // Функция для точки на квадратичной кривой Безье
+    const bezierPoint = (t: number) => {
+      const x =
+        (1 - t) * (1 - t) * fromX +
+        2 * (1 - t) * t * controlX +
+        t * t * toX;
+      const y =
+        (1 - t) * (1 - t) * fromY +
+        2 * (1 - t) * t * controlY +
+        t * t * toY;
+      return { x, y };
+    };
+
+    // Генерируем 15 точек на кривой
+    const STEPS = 15;
+    const keyframes: Keyframe[] = [];
+
+    for (let i = 0; i <= STEPS; i++) {
+      const t = i / STEPS;
+      const { x, y } = bezierPoint(t);
+
+      // Первая точка — маленькая и прозрачная (появление)
+      if (i === 0) {
+        keyframes.push({
+          transform: `translate(${x}px, ${y}px) scale(0.4)`,
+          opacity: 0,
+          offset: 0,
+        });
+        continue;
+      }
+
+      // Вторая точка — полноразмерная, непрозрачная (старт полёта)
+      if (i === 1) {
+        keyframes.push({
+          transform: `translate(${x}px, ${y}px) scale(1)`,
+          opacity: 1,
+          offset: 0.05,
+        });
+        continue;
+      }
+
+      // Последняя точка — исчезновение
+      if (i === STEPS) {
+        keyframes.push({
+          transform: `translate(${x}px, ${y}px) scale(1.6)`,
+          opacity: 0,
+          offset: 1,
+        });
+        continue;
+      }
+
+      // Промежуточные точки — плавный полёт
+      // Масштаб слегка растёт по мере полёта
+      const scale = 1 + t * 0.3;
+      keyframes.push({
+        transform: `translate(${x}px, ${y}px) scale(${scale})`,
         opacity: 1,
-        offset: 0.12,
-      },
-      {
-        transform: `translate(${controlX}px, ${controlY}px) scale(1.1)`,
-        opacity: 1,
-        offset: 0.55,
-      },
-      {
-        transform: `translate(${toX}px, ${toY}px) scale(1.4)`,
-        opacity: 1,
-        offset: 0.95,
-      },
-      {
-        transform: `translate(${toX}px, ${toY}px) scale(1.8)`,
-        opacity: 0,
-        offset: 1,
-      },
-    ];
+        // offset рассчитываем с учётом «сжатых» первой и последней точек
+        offset: 0.05 + (i - 1) / (STEPS - 1) * 0.95,
+      });
+    }
+
+    return keyframes;
   };
 
   /**
