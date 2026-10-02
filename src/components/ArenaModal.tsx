@@ -477,7 +477,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           el.style.opacity = '1';
           el.classList.add('impact');
         } catch {}
-        setTimeout(safeResolve, 180);
+        setTimeout(safeResolve, 40);
       };
 
       // Основной таймер попадания — через duration
