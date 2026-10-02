@@ -200,21 +200,40 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     return '#FFFFFF';
   };
 
-  /**
-   * Определяет траекторию полёта по индексу удара
+    /**
+   * Возвращает массив уникальных траекторий длиной count.
+   * Каждая траектория — случайно выбранная из 3 типов, без повторов.
+   *
+   * Примеры:
+   *   count = 1 → ['arc-left'] (случайная)
+   *   count = 2 → ['straight', 'arc-right'] (две разные)
+   *   count = 3 → ['straight', 'arc-left', 'arc-right'] (все разные)
+   *   count = 4 → ['straight', 'arc-left', 'arc-right', 'arc-left'] (перемешаны, с повторами)
    */
-  const getTrajectoryByIndex = (
-    index: number,
-    totalHits: number
-  ): 'straight' | 'arc-left' | 'arc-right' => {
-    if (totalHits === 1) return 'straight';
-    if (totalHits === 2) return index === 0 ? 'straight' : 'arc-left';
-    const trajectories: Array<'straight' | 'arc-left' | 'arc-right'> = [
+  const getUniqueTrajectories = (
+    count: number
+  ): Array<'straight' | 'arc-left' | 'arc-right'> => {
+    const all: Array<'straight' | 'arc-left' | 'arc-right'> = [
       'straight',
       'arc-left',
       'arc-right',
     ];
-    return trajectories[index % 3];
+
+    // Перемешиваем (Fisher-Yates shuffle)
+    const shuffled = [...all];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    // Если count <= 3 — берём первые count (все уникальные)
+    // Если count > 3 — циклично добавляем из перемешанных
+    const result: Array<'straight' | 'arc-left' | 'arc-right'> = [];
+    for (let i = 0; i < count; i++) {
+      result.push(shuffled[i % 3]);
+    }
+
+    return result;
   };
 
   /**
@@ -588,11 +607,14 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setRivalComboText(null);
           }
 
-          // ========== УДАРЫ ПО ПРОТИВНИКУ (игрок атакует) ==========
+                    // ========== УДАРЫ ПО ПРОТИВНИКУ (игрок атакует) ==========
           if (userHitCount > 0) {
             const damagePerHit = Math.round(playerDamageDealt / userHitCount);
             const playerAvatarEl = document.querySelector('.arena-bottom .arena-avatar') as HTMLElement;
             const rivalAvatarEl = document.querySelector('.arena-top .arena-avatar') as HTMLElement;
+
+            // ❗ Заранее генерируем уникальные траектории для всех ударов
+            const trajectories = getUniqueTrajectories(userHitCount);
 
             let currentHealth = rivalHealth;
 
@@ -603,7 +625,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   playerAvatarEl,
                   rivalAvatarEl,
                   damagePerHit,
-                  getTrajectoryByIndex(i, userHitCount),
+                  trajectories[i],
                   400
                 );
               }
@@ -635,11 +657,14 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
             setRivalHealth(event.rivalHealthAfter!);
           }
 
-          // ========== УДАРЫ ПО ИГРОКУ (противник атакует) ==========
+                    // ========== УДАРЫ ПО ИГРОКУ (противник атакует) ==========
           if (rivalHitCount > 0) {
             const damagePerHit = Math.round(rivalDamageDealt / rivalHitCount);
             const playerAvatarEl = document.querySelector('.arena-bottom .arena-avatar') as HTMLElement;
             const rivalAvatarEl = document.querySelector('.arena-top .arena-avatar') as HTMLElement;
+
+            // ❗ Заранее генерируем уникальные траектории для всех ударов
+            const trajectories = getUniqueTrajectories(rivalHitCount);
 
             let currentHealth = userHealth;
 
@@ -650,7 +675,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   rivalAvatarEl,
                   playerAvatarEl,
                   damagePerHit,
-                  getTrajectoryByIndex(i, rivalHitCount),
+                  trajectories[i],
                   400
                 );
               }
