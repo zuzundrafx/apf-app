@@ -199,6 +199,16 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     // Добавляем классы — анимации стартуют
     avatarElement.classList.add('avatar-hit');
     avatarElement.classList.add('avatar-glow');
+    // ❗ ЛОГ
+  console.log('🎯 applyHitEffect:', {
+    target,
+    damage,
+    hitScale,
+    glowColor,
+    hasClass: avatarElement.classList.contains('avatar-hit'),
+    computedTransform: window.getComputedStyle(avatarElement).transform,
+    computedAnimation: window.getComputedStyle(avatarElement).animation,
+  });
 
     setTimeout(() => {
       avatarElement.classList.remove('avatar-hit', 'avatar-glow');
