@@ -359,7 +359,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       const toX = toRect.left + toRect.width / 2 - 9;
       const toY = toRect.top + toRect.height / 2 - 9;
 
-           const el = document.createElement('div');
+                 const el = document.createElement('div');
       el.className = 'projectile';
       el.style.color = getProjectileColor(damage);
 
@@ -369,13 +369,34 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       el.style.top = '0px';
       el.style.transform = `translate(${fromX}px, ${fromY}px) scale(1)`;
 
-      // ❗ Вычисляем угол направления движения — для хвоста
-      // atan2 возвращает угол между осью X и точкой (dy, dx)
-      // Хвост должен смотреть в ПРОТИВОПОЛОЖНУЮ сторону, поэтому +180°
-      const angleRad = Math.atan2(toY - fromY, toX - fromX);
+      // ❗ Вычисляем угол хвоста ПО КАСАТЕЛЬНОЙ к траектории в точке старта
+      // (а не по прямой линии старт-финиш)
+      //
+      // Для квадратичной кривой Безье B(t) = (1-t)²P0 + 2(1-t)t·P1 + t²P2
+      // Касательная в точке t: B'(t) = 2(1-t)(P1-P0) + 2t(P2-P1)
+      // В точке t=0: B'(0) = 2(P1-P0) — направление от P0 к P1 (control point)
+      //
+      // Значит, угол = atan2(controlY - fromY, controlX - fromX)
+
+      // Повторяем расчёт контрольной точки (как в createProjectileKeyframes)
+      let controlX = fromX;
+      let controlY = fromY;
+
+      if (trajectory === 'straight') {
+        controlX = (fromX + toX) / 2;
+        controlY = (fromY + toY) / 2;
+      } else {
+        const arcWidth = Math.abs(toY - fromY) * 0.6;
+        controlX = trajectory === 'arc-left'
+          ? fromX - arcWidth
+          : fromX + arcWidth;
+        controlY = (fromY + toY) / 2;
+      }
+
+      // Угол направления движения (касательная к кривой в старте)
+      const angleRad = Math.atan2(controlY - fromY, controlX - fromX);
       const angleDeg = (angleRad * 180) / Math.PI;
-      // Хвост смотрит в сторону, ОТКУДА летит снаряд (назад)
-      // transform-origin — на острие (у снаряда), поэтому поворот = угол + 180
+      // Хвост смотрит назад — противоположно движению
       el.style.setProperty('--trail-angle', `${angleDeg + 180}deg`);
 
       document.body.appendChild(el);
