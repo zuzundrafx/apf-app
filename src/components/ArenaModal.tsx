@@ -328,6 +328,8 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
         animation.onfinish = () => {
           try {
+            el.style.transform = `translate(${toX}px, ${toY}px) scale(1.4)`;
+            el.style.opacity = '1';
             el.classList.add('impact');
           } catch {}
         };
