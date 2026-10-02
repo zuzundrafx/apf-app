@@ -359,7 +359,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       const toX = toRect.left + toRect.width / 2 - 9;
       const toY = toRect.top + toRect.height / 2 - 9;
 
-            const el = document.createElement('div');
+           const el = document.createElement('div');
       el.className = 'projectile';
       el.style.color = getProjectileColor(damage);
 
@@ -368,6 +368,15 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       el.style.left = '0px';
       el.style.top = '0px';
       el.style.transform = `translate(${fromX}px, ${fromY}px) scale(1)`;
+
+      // ❗ Вычисляем угол направления движения — для хвоста
+      // atan2 возвращает угол между осью X и точкой (dy, dx)
+      // Хвост должен смотреть в ПРОТИВОПОЛОЖНУЮ сторону, поэтому +180°
+      const angleRad = Math.atan2(toY - fromY, toX - fromX);
+      const angleDeg = (angleRad * 180) / Math.PI;
+      // Хвост смотрит в сторону, ОТКУДА летит снаряд (назад)
+      // transform-origin — на острие (у снаряда), поэтому поворот = угол + 180
+      el.style.setProperty('--trail-angle', `${angleDeg + 180}deg`);
 
       document.body.appendChild(el);
 
