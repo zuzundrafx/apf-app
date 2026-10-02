@@ -586,7 +586,7 @@ if (data.tierProgress) {
             const playerAvatarEl = document.querySelector('.arena-bottom .arena-avatar') as HTMLElement;
             const rivalAvatarEl = document.querySelector('.arena-top .arena-avatar') as HTMLElement;
 
-            if (playerAvatarEl && rivalAvatarEl) {
+            if (false && playerAvatarEl && rivalAvatarEl) {
               let currentHealth = rivalHealth;
 
               for (let i = 0; i < userHitCount; i++) {
@@ -659,7 +659,7 @@ if (data.tierProgress) {
             const playerAvatarEl = document.querySelector('.arena-bottom .arena-avatar') as HTMLElement;
             const rivalAvatarEl = document.querySelector('.arena-top .arena-avatar') as HTMLElement;
 
-            if (playerAvatarEl && rivalAvatarEl) {
+            if (false && playerAvatarEl && rivalAvatarEl) {
               let currentHealth = userHealth;
 
               for (let i = 0; i < rivalHitCount; i++) {
