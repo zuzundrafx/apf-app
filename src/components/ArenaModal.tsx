@@ -281,7 +281,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   /**
    * Запускает полёт снаряда и резолвит Promise при попадании
    */
-  const flyProjectile = (
+    const flyProjectile = (
     fromEl: HTMLElement,
     toEl: HTMLElement,
     damage: number,
@@ -292,7 +292,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       const fromRect = fromEl.getBoundingClientRect();
       const toRect = toEl.getBoundingClientRect();
 
-      // Центр аватарки минус половина размера снаряда (18/2 = 9)
       const fromX = fromRect.left + fromRect.width / 2 - 9;
       const fromY = fromRect.top + fromRect.height / 2 - 9;
       const toX = toRect.left + toRect.width / 2 - 9;
@@ -305,14 +304,24 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
       const keyframes = createProjectileKeyframes(fromX, fromY, toX, toY, trajectory);
 
+      // ВАЖНО: не используем fill: 'forwards' — иначе будет конфликт
+      // с последующей CSS-анимацией .impact (оба меняют transform)
       const animation = el.animate(keyframes, {
         duration,
         easing: 'cubic-bezier(0.4, 0, 0.6, 1)',
-        fill: 'forwards',
+        fill: 'none',
       });
 
+      // Резолвим ровно тогда, когда WAAPI закончил
       animation.onfinish = () => {
+        // Сначала фиксируем финальную позицию через inline-стиль,
+        // чтобы не потерять её после снятия WAAPI-анимации
+        el.style.transform = `translate(${toX}px, ${toY}px) scale(1.4)`;
+        el.style.opacity = '1';
+
+        // Теперь можно безопасно запустить CSS-анимацию вспышки
         el.classList.add('impact');
+
         setTimeout(() => {
           el.remove();
           resolve();
