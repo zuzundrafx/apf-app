@@ -281,7 +281,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   /**
    * Запускает полёт снаряда и резолвит Promise при попадании
    */
-      const flyProjectile = (
+        const flyProjectile = (
     fromEl: HTMLElement,
     toEl: HTMLElement,
     damage: number,
@@ -303,6 +303,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       const fromRect = fromEl.getBoundingClientRect();
       const toRect = toEl.getBoundingClientRect();
 
+      // Проверка: если аватарка не отрисована (0x0) — пропускаем снаряд
+      if (fromRect.width === 0 || toRect.width === 0) {
+        console.warn('⚠️ Avatar has zero size, skipping projectile');
+        resolve();
+        return;
+      }
+
       const fromX = fromRect.left + fromRect.width / 2 - 9;
       const fromY = fromRect.top + fromRect.height / 2 - 9;
       const toX = toRect.left + toRect.width / 2 - 9;
@@ -315,12 +322,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
       const keyframes = createProjectileKeyframes(fromX, fromY, toX, toY, trajectory);
 
-      // ❗ СТРАХОВКА: если через duration + 500ms ничего не произошло — резолвим
-      const safetyTimeout = setTimeout(() => {
-        console.warn('⚠️ Projectile safety timeout triggered');
-        safeResolve();
-      }, duration + 500);
-
+      // Запускаем WAAPI-анимацию, но НЕ ждём её onfinish
       try {
         const animation = el.animate(keyframes, {
           duration,
@@ -328,28 +330,24 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           fill: 'none',
         });
 
+        // Молча игнорируем завершение — резолв идёт через setTimeout
         animation.onfinish = () => {
-          clearTimeout(safetyTimeout);
-
-          // Фиксируем финальную позицию
           try {
-            el.style.transform = `translate(${toX}px, ${toY}px) scale(1.4)`;
-            el.style.opacity = '1';
             el.classList.add('impact');
           } catch {}
-
-          setTimeout(safeResolve, 180);
         };
-
-        animation.oncancel = () => {
-          clearTimeout(safetyTimeout);
-          safeResolve();
-        };
+        animation.oncancel = () => {};
       } catch (err) {
         console.error('❌ Projectile animation error:', err);
-        clearTimeout(safetyTimeout);
-        safeResolve();
       }
+
+      // ❗ ВСЕГДА резолвим через setTimeout — это единственный надёжный способ
+      setTimeout(() => {
+        try {
+          el.classList.add('impact');
+        } catch {}
+        setTimeout(safeResolve, 180);
+      }, duration);
     });
   };
 
