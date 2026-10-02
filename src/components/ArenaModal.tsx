@@ -239,7 +239,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   /**
    * Создаёт keyframes для полёта снаряда через WAAPI
    */
-  const createProjectileKeyframes = (
+    const createProjectileKeyframes = (
     fromX: number,
     fromY: number,
     toX: number,
@@ -253,18 +253,22 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     let controlX = fromX;
     let controlY = fromY;
 
-    if (trajectory === 'arc-left') {
-      // Дуга влево: отклонение по X — влево, подъём по Y — вверх
-      controlX = fromX + dx * 0.2 - Math.abs(dx) * 0.5;
-      controlY = fromY - Math.abs(dy) * 0.8 - 40;
-    } else if (trajectory === 'arc-right') {
-      // Дуга вправо: отклонение по X — вправо, подъём по Y — вверх
-      controlX = fromX + dx * 0.8 + Math.abs(dx) * 0.5;
-      controlY = fromY - Math.abs(dy) * 0.8 - 40;
-    } else {
+    if (trajectory === 'straight') {
       // Прямая: контрольная точка ровно посередине
-      controlX = fromX + dx * 0.5;
-      controlY = fromY + dy * 0.5;
+      controlX = (fromX + toX) / 2;
+      controlY = (fromY + toY) / 2;
+    } else {
+      // Отклонение по X пропорционально высоте полёта
+      const arcWidth = Math.abs(dy) * 0.6;
+
+      if (trajectory === 'arc-left') {
+        controlX = fromX - arcWidth;
+        controlY = (fromY + toY) / 2;
+      } else {
+        // arc-right
+        controlX = fromX + arcWidth;
+        controlY = (fromY + toY) / 2;
+      }
     }
 
     // Функция для точки на квадратичной кривой Безье
@@ -288,7 +292,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       const t = i / STEPS;
       const { x, y } = bezierPoint(t);
 
-      // Первая точка — маленькая и прозрачная (появление)
       if (i === 0) {
         keyframes.push({
           transform: `translate(${x}px, ${y}px) scale(0.4)`,
@@ -298,7 +301,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         continue;
       }
 
-      // Вторая точка — полноразмерная, непрозрачная (старт полёта)
       if (i === 1) {
         keyframes.push({
           transform: `translate(${x}px, ${y}px) scale(1)`,
@@ -308,7 +310,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         continue;
       }
 
-      // Последняя точка — исчезновение
       if (i === STEPS) {
         keyframes.push({
           transform: `translate(${x}px, ${y}px) scale(1.6)`,
@@ -318,13 +319,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         continue;
       }
 
-      // Промежуточные точки — плавный полёт
-      // Масштаб слегка растёт по мере полёта
       const scale = 1 + t * 0.3;
       keyframes.push({
         transform: `translate(${x}px, ${y}px) scale(${scale})`,
         opacity: 1,
-        // offset рассчитываем с учётом «сжатых» первой и последней точек
         offset: 0.05 + (i - 1) / (STEPS - 1) * 0.95,
       });
     }
