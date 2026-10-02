@@ -239,7 +239,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   /**
    * Создаёт keyframes для полёта снаряда через WAAPI
    */
-    const createProjectileKeyframes = (
+      const createProjectileKeyframes = (
     fromX: number,
     fromY: number,
     toX: number,
@@ -249,29 +249,24 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     const dx = toX - fromX;
     const dy = toY - fromY;
 
-    // Контрольная точка для квадратичной кривой Безье
     let controlX = fromX;
     let controlY = fromY;
 
     if (trajectory === 'straight') {
-      // Прямая: контрольная точка ровно посередине
       controlX = (fromX + toX) / 2;
       controlY = (fromY + toY) / 2;
     } else {
-      // Отклонение по X пропорционально высоте полёта
       const arcWidth = Math.abs(dy) * 0.6;
 
       if (trajectory === 'arc-left') {
         controlX = fromX - arcWidth;
         controlY = (fromY + toY) / 2;
       } else {
-        // arc-right
         controlX = fromX + arcWidth;
         controlY = (fromY + toY) / 2;
       }
     }
 
-    // Функция для точки на квадратичной кривой Безье
     const bezierPoint = (t: number) => {
       const x =
         (1 - t) * (1 - t) * fromX +
@@ -284,46 +279,43 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       return { x, y };
     };
 
-    // Генерируем 15 точек на кривой
-    const STEPS = 15;
+    const STEPS = 20;   // ← увеличили для более плавной кривой opacity
     const keyframes: Keyframe[] = [];
 
     for (let i = 0; i <= STEPS; i++) {
       const t = i / STEPS;
       const { x, y } = bezierPoint(t);
 
-      if (i === 0) {
-        keyframes.push({
-          transform: `translate(${x}px, ${y}px) scale(0.4)`,
-          opacity: 0,
-          offset: 0,
-        });
-        continue;
+      // ⬇️ НОВАЯ ЛОГИКА OPACITY ⬇️
+      // t = 0.0 → 0    (старт, невидим)
+      // t = 0.5 → 1    (середина, полностью видим)
+      // t = 1.0 → 1    (финиш, видим до вспышки)
+      let opacity: number;
+      if (t < 0.5) {
+        // Плавное проявление: 0 → 1 на первой половине
+        opacity = t * 2;
+      } else {
+        // На второй половине — полностью виден
+        opacity = 1;
       }
 
-      if (i === 1) {
-        keyframes.push({
-          transform: `translate(${x}px, ${y}px) scale(1)`,
-          opacity: 1,
-          offset: 0.05,
-        });
-        continue;
-      }
+      // Масштаб: снаряд «формируется» — растёт с 0.3 до 1.3
+      const scale = 0.3 + t * 1.0;
 
+      // Последняя точка — исчезновение (за кадр до вспышки)
       if (i === STEPS) {
         keyframes.push({
-          transform: `translate(${x}px, ${y}px) scale(1.6)`,
+          transform: `translate(${x}px, ${y}px) scale(1.4)`,
           opacity: 0,
           offset: 1,
         });
         continue;
       }
 
-      const scale = 1 + t * 0.3;
       keyframes.push({
         transform: `translate(${x}px, ${y}px) scale(${scale})`,
-        opacity: 1,
-        offset: 0.05 + (i - 1) / (STEPS - 1) * 0.95,
+        opacity,
+        offset: t,
       });
     }
 
