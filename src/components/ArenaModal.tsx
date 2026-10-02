@@ -326,19 +326,24 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
    * Запускает полёт снаряда и резолвит Promise при попадании.
    * Резолв гарантирован через setTimeout — не зависим от onfinish (WAAPI-баг в WebView).
    */
-  const flyProjectile = (
+    const flyProjectile = (
     fromEl: HTMLElement,
     toEl: HTMLElement,
     damage: number,
     trajectory: 'straight' | 'arc-left' | 'arc-right' = 'straight',
-    duration: number = 400
+    duration: number = 200
   ): Promise<void> => {
     return new Promise((resolve) => {
       let resolved = false;
+      let rafId: number | null = null;
 
       const safeResolve = () => {
         if (resolved) return;
         resolved = true;
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
         try {
           el.remove();
         } catch {}
@@ -348,7 +353,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       const fromRect = fromEl.getBoundingClientRect();
       const toRect = toEl.getBoundingClientRect();
 
-      // Если аватарка не отрисована — пропускаем снаряд
       if (fromRect.width === 0 || toRect.width === 0) {
         resolve();
         return;
@@ -359,26 +363,18 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       const toX = toRect.left + toRect.width / 2 - 9;
       const toY = toRect.top + toRect.height / 2 - 9;
 
-                 const el = document.createElement('div');
+      const el = document.createElement('div');
       el.className = 'projectile';
       el.style.color = getProjectileColor(damage);
 
-      // ❗ Позиционируем через left/top — они НЕ перебиваются CSS-анимацией
       el.style.position = 'fixed';
       el.style.left = '0px';
       el.style.top = '0px';
       el.style.transform = `translate(${fromX}px, ${fromY}px) scale(1)`;
 
-      // ❗ Вычисляем угол хвоста ПО КАСАТЕЛЬНОЙ к траектории в точке старта
-      // (а не по прямой линии старт-финиш)
-      //
-      // Для квадратичной кривой Безье B(t) = (1-t)²P0 + 2(1-t)t·P1 + t²P2
-      // Касательная в точке t: B'(t) = 2(1-t)(P1-P0) + 2t(P2-P1)
-      // В точке t=0: B'(0) = 2(P1-P0) — направление от P0 к P1 (control point)
-      //
-      // Значит, угол = atan2(controlY - fromY, controlX - fromX)
+      document.body.appendChild(el);
 
-      // Повторяем расчёт контрольной точки (как в createProjectileKeyframes)
+      // === Вычисляем контрольную точку Безье (как в createProjectileKeyframes) ===
       let controlX = fromX;
       let controlY = fromY;
 
@@ -393,41 +389,88 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         controlY = (fromY + toY) / 2;
       }
 
-      // Угол направления движения (касательная к кривой в старте)
-      const angleRad = Math.atan2(controlY - fromY, controlX - fromX);
-      const angleDeg = (angleRad * 180) / Math.PI;
-      // Хвост смотрит назад — противоположно движению
-      el.style.setProperty('--trail-angle', `${angleDeg + 180}deg`);
+      // === Функция для точки на кривой Безье при параметре t ===
+      const bezierPoint = (t: number) => {
+        const x =
+          (1 - t) * (1 - t) * fromX +
+          2 * (1 - t) * t * controlX +
+          t * t * toX;
+        const y =
+          (1 - t) * (1 - t) * fromY +
+          2 * (1 - t) * t * controlY +
+          t * t * toY;
+        return { x, y };
+      };
 
-      document.body.appendChild(el);
+      // === Функция для производной (касательной) в точке t ===
+      const bezierTangent = (t: number) => {
+        // B'(t) = 2(1-t)(P1 - P0) + 2t(P2 - P1)
+        const dx =
+          2 * (1 - t) * (controlX - fromX) +
+          2 * t * (toX - controlX);
+        const dy =
+          2 * (1 - t) * (controlY - fromY) +
+          2 * t * (toY - controlY);
+        return { dx, dy };
+      };
 
+      // === Устанавливаем начальный угол хвоста ===
+      const initialTangent = bezierTangent(0);
+      const initialAngleDeg = (Math.atan2(initialTangent.dy, initialTangent.dx) * 180) / Math.PI;
+      el.style.setProperty('--trail-angle', `${initialAngleDeg + 180}deg`);
+
+      // === WAAPI-анимация позиции ===
       const keyframes = createProjectileKeyframes(fromX, fromY, toX, toY, trajectory);
 
       try {
-        const animation = el.animate(keyframes, {
+        el.animate(keyframes, {
           duration,
           easing: 'cubic-bezier(0.4, 0, 0.6, 1)',
           fill: 'none',
         });
-
-        animation.onfinish = () => {
-          try {
-            // ❗ Переставляем left/top в точку попадания и убираем transform
-            el.style.left = `${toX}px`;
-            el.style.top = `${toY}px`;
-            el.style.transform = 'none';
-            el.style.opacity = '1';
-            el.classList.add('impact');
-          } catch {}
-        };
-        animation.oncancel = () => {};
       } catch (err) {
         console.error('❌ Projectile animation error:', err);
       }
 
-      // Гарантированный резолв через setTimeout
-      setTimeout(() => {
+      // === rAF-цикл для обновления угла хвоста ===
+      const startTime = performance.now();
+      // Обновляем угол не чаще, чем каждые 2 кадра (30 Hz) — для оптимизации
+      let lastUpdateTime = 0;
+      const UPDATE_INTERVAL = 33; // ~30 Hz
+
+      const tick = () => {
+        const now = performance.now();
+        const elapsed = now - startTime;
+        const t = Math.min(elapsed / duration, 1);
+
+        // Обновляем угол только раз в ~33ms
+        if (now - lastUpdateTime >= UPDATE_INTERVAL) {
+          lastUpdateTime = now;
+
+          // Касательная в текущей точке траектории
+          const tangent = bezierTangent(t);
+          const angleDeg = (Math.atan2(tangent.dy, tangent.dx) * 180) / Math.PI;
+
+          try {
+            el.style.setProperty('--trail-angle', `${angleDeg + 180}deg`);
+          } catch {}
+        }
+
+        if (t < 1) {
+          rafId = requestAnimationFrame(tick);
+        }
+        // Если t === 1 — цикл завершается сам, безопасно
+      };
+
+      rafId = requestAnimationFrame(tick);
+
+      // === Момент попадания — фиксируем позицию и вспышку ===
+      const handleImpact = () => {
         try {
+          if (rafId !== null) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+          }
           el.style.left = `${toX}px`;
           el.style.top = `${toY}px`;
           el.style.transform = 'none';
@@ -435,7 +478,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           el.classList.add('impact');
         } catch {}
         setTimeout(safeResolve, 180);
-      }, duration);
+      };
+
+      // Основной таймер попадания — через duration
+      setTimeout(handleImpact, duration);
     });
   };
 
