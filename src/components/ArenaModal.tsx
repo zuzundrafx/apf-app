@@ -168,23 +168,42 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     return () => stopTipRotation();
   }, [stopTipRotation]);
 
-  const applyHitEffect = (target: 'player' | 'rival', damage: number) => {
+    const applyHitEffect = (target: 'player' | 'rival', damage: number) => {
     const avatarElement = document.querySelector(
       target === 'player' ? '.arena-bottom .arena-avatar' : '.arena-top .arena-avatar'
     );
     if (!avatarElement) return;
+
+    // Цвет свечения в зависимости от урона
     let glowColor = '';
     if (damage < 50) glowColor = 'rgba(255, 255, 255, 0.3)';
     else if (damage >= 50 && damage < 150) glowColor = 'rgba(255, 0, 0, 0.3)';
     else glowColor = 'rgba(255, 0, 0, 0.3)';
+
+    // ❗ Масштаб в зависимости от урона
+    // < 50: 1.05 (5%)
+    // 50-200: 1.10 (10%)
+    // >= 200: 1.15 (15%)
+    let hitScale = 1.05;
+    if (damage >= 200) hitScale = 1.15;
+    else if (damage >= 50) hitScale = 1.10;
+
+    // Сбрасываем классы, форсируем reflow, чтобы анимация перезапустилась
     avatarElement.classList.remove('avatar-hit', 'avatar-glow');
     void (avatarElement as HTMLElement).offsetHeight;
-    avatarElement.classList.add('avatar-hit');
+
+    // Устанавливаем CSS-переменные
     (avatarElement as HTMLElement).style.setProperty('--glow-color', glowColor);
+    (avatarElement as HTMLElement).style.setProperty('--hit-scale', String(hitScale));
+
+    // Добавляем классы — анимации стартуют
+    avatarElement.classList.add('avatar-hit');
     avatarElement.classList.add('avatar-glow');
+
     setTimeout(() => {
       avatarElement.classList.remove('avatar-hit', 'avatar-glow');
       (avatarElement as HTMLElement).style.removeProperty('--glow-color');
+      (avatarElement as HTMLElement).style.removeProperty('--hit-scale');
     }, 300);
   };
 
