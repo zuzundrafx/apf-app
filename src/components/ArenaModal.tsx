@@ -651,6 +651,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
             // ❗ Заранее генерируем уникальные траектории для всех ударов
             const trajectories = getUniqueTrajectories(userHitCount);
+            console.log('🎯 [Player] trajectories:', trajectories);
 
             let currentHealth = rivalHealth;
 
@@ -701,6 +702,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
             // ❗ Заранее генерируем уникальные траектории для всех ударов
             const trajectories = getUniqueTrajectories(rivalHitCount);
+            console.log('🎯 [Rival] trajectories:', trajectories);
 
             let currentHealth = userHealth;
 
