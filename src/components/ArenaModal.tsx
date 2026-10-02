@@ -175,7 +175,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     if (!avatarElement) return;
     let glowColor = '';
     if (damage < 50) glowColor = 'rgba(255, 255, 255, 0.3)';
-    else if (damage >= 50 && damage < 150) glowColor = 'rgba(255, 255, 0, 0.3)';
+    else if (damage >= 50 && damage < 150) glowColor = 'rgba(255, 0, 0, 0.3)';
     else glowColor = 'rgba(255, 0, 0, 0.3)';
     avatarElement.classList.remove('avatar-hit', 'avatar-glow');
     void (avatarElement as HTMLElement).offsetHeight;
@@ -187,6 +187,166 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       (avatarElement as HTMLElement).style.removeProperty('--glow-color');
     }, 300);
   };
+
+  // ========== СИСТЕМА СНАРЯДОВ (WAAPI) ==========
+
+  /**
+   * Определяет цвет снаряда по величине урона
+   * Белый (<50) / Жёлтый (50-200) / Красный (>=200)
+   */
+  const getProjectileColor = (damage: number): string => {
+    if (damage >= 200) return '#FF3333';
+    if (damage >= 50) return '#FFD966';
+    return '#FFFFFF';
+  };
+
+  /**
+   * Определяет траекторию полёта по индексу удара
+   */
+  const getTrajectoryByIndex = (
+    index: number,
+    totalHits: number
+  ): 'straight' | 'arc-left' | 'arc-right' => {
+    if (totalHits === 1) return 'straight';
+    if (totalHits === 2) return index === 0 ? 'straight' : 'arc-left';
+    const trajectories: Array<'straight' | 'arc-left' | 'arc-right'> = [
+      'straight',
+      'arc-left',
+      'arc-right',
+    ];
+    return trajectories[index % 3];
+  };
+
+  /**
+   * Создаёт keyframes для полёта снаряда через WAAPI
+   */
+  const createProjectileKeyframes = (
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+    trajectory: 'straight' | 'arc-left' | 'arc-right'
+  ): Keyframe[] => {
+    const midX = (fromX + toX) / 2;
+    const midY = (fromY + toY) / 2;
+
+    const dx = Math.abs(toX - fromX);
+    const dy = Math.abs(toY - fromY);
+    const arcOffset = dx * 0.4;
+    const arcLift = dy * 0.5 + 60;
+
+    let controlX = midX;
+    let controlY = midY;
+
+    if (trajectory === 'arc-left') {
+      controlX = midX - arcOffset;
+      controlY = midY - arcLift;
+    } else if (trajectory === 'arc-right') {
+      controlX = midX + arcOffset;
+      controlY = midY - arcLift;
+    }
+
+    return [
+      {
+        transform: `translate(${fromX}px, ${fromY}px) scale(0.4)`,
+        opacity: 0,
+        offset: 0,
+      },
+      {
+        transform: `translate(${fromX}px, ${fromY}px) scale(1)`,
+        opacity: 1,
+        offset: 0.12,
+      },
+      {
+        transform: `translate(${controlX}px, ${controlY}px) scale(1.1)`,
+        opacity: 1,
+        offset: 0.55,
+      },
+      {
+        transform: `translate(${toX}px, ${toY}px) scale(1.4)`,
+        opacity: 1,
+        offset: 0.95,
+      },
+      {
+        transform: `translate(${toX}px, ${toY}px) scale(1.8)`,
+        opacity: 0,
+        offset: 1,
+      },
+    ];
+  };
+
+  /**
+   * Запускает полёт снаряда и резолвит Promise при попадании.
+   * Резолв гарантирован через setTimeout — не зависим от onfinish (WAAPI-баг в WebView).
+   */
+  const flyProjectile = (
+    fromEl: HTMLElement,
+    toEl: HTMLElement,
+    damage: number,
+    trajectory: 'straight' | 'arc-left' | 'arc-right' = 'straight',
+    duration: number = 400
+  ): Promise<void> => {
+    return new Promise((resolve) => {
+      let resolved = false;
+
+      const safeResolve = () => {
+        if (resolved) return;
+        resolved = true;
+        try {
+          el.remove();
+        } catch {}
+        resolve();
+      };
+
+      const fromRect = fromEl.getBoundingClientRect();
+      const toRect = toEl.getBoundingClientRect();
+
+      // Если аватарка не отрисована — пропускаем снаряд
+      if (fromRect.width === 0 || toRect.width === 0) {
+        resolve();
+        return;
+      }
+
+      const fromX = fromRect.left + fromRect.width / 2 - 9;
+      const fromY = fromRect.top + fromRect.height / 2 - 9;
+      const toX = toRect.left + toRect.width / 2 - 9;
+      const toY = toRect.top + toRect.height / 2 - 9;
+
+      const el = document.createElement('div');
+      el.className = 'projectile';
+      el.style.color = getProjectileColor(damage);
+      document.body.appendChild(el);
+
+      const keyframes = createProjectileKeyframes(fromX, fromY, toX, toY, trajectory);
+
+      try {
+        const animation = el.animate(keyframes, {
+          duration,
+          easing: 'cubic-bezier(0.4, 0, 0.6, 1)',
+          fill: 'none',
+        });
+
+        animation.onfinish = () => {
+          try {
+            el.classList.add('impact');
+          } catch {}
+        };
+        animation.oncancel = () => {};
+      } catch (err) {
+        console.error('❌ Projectile animation error:', err);
+      }
+
+      // Гарантированный резолв через setTimeout
+      setTimeout(() => {
+        try {
+          el.classList.add('impact');
+        } catch {}
+        setTimeout(safeResolve, 180);
+      }, duration);
+    });
+  };
+
+  // ========== КОНЕЦ СИСТЕМЫ СНАРЯДОВ ==========
 
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -307,11 +467,9 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         setBetAmountWithRake(data.betAmountWithRake);
         console.log('🏆 Rewards received:', data.rewards);
 
-        // Обновляем прогресс лиг из ответа сервера
-if (data.tierProgress) {
-  // Передаём через колбэк в Pvp
-  onPvpComplete?.(data.tierProgress);
-}
+        if (data.tierProgress) {
+          onPvpComplete?.(data.tierProgress);
+        }
 
         setWeightClasses(['Flyweight', 'Bantamweight', 'Featherweight', 'Lightweight', 'Heavyweight']);
 
@@ -414,73 +572,101 @@ if (data.tierProgress) {
             setRivalComboText(null);
           }
 
-                                        // Удары по противнику
+          // ========== УДАРЫ ПО ПРОТИВНИКУ (игрок атакует) ==========
           if (userHitCount > 0) {
             const damagePerHit = Math.round(playerDamageDealt / userHitCount);
-            const startHealth = rivalHealth;
-            let currentHealth = startHealth;
-            
+            const playerAvatarEl = document.querySelector('.arena-bottom .arena-avatar') as HTMLElement;
+            const rivalAvatarEl = document.querySelector('.arena-top .arena-avatar') as HTMLElement;
+
+            let currentHealth = rivalHealth;
+
             for (let i = 0; i < userHitCount; i++) {
+              // 1. СНАРЯД ЛЕТИТ (ждём попадания)
+              if (playerAvatarEl && rivalAvatarEl) {
+                await flyProjectile(
+                  playerAvatarEl,
+                  rivalAvatarEl,
+                  damagePerHit,
+                  getTrajectoryByIndex(i, userHitCount),
+                  400
+                );
+              }
+
+              // 2. ТОЛЬКО ПОСЛЕ ПОПАДАНИЯ — наносим урон
               currentHealth = Math.max(0, currentHealth - damagePerHit);
               setRivalHealth(currentHealth);
-              
-              // Принудительно ждём перерисовку React
-              await new Promise(resolve => {
-                setTimeout(resolve, 0);
-              });
-              
+
+              await new Promise(resolve => setTimeout(resolve, 0));
+
+              // 3. Эффекты удара
               setShowDamageNumber({ player: null, rival: damagePerHit });
               setHealthFlash('rival');
               applyHitEffect('rival', damagePerHit);
+
               if (damagePerHit > 50) {
                 setShakeScreen(true);
                 setTimeout(() => setShakeScreen(false), 400);
               }
-              
-              await delay(400);
-              
+
+              await delay(220);
+
               setShowDamageNumber({ player: null, rival: null });
               setHealthFlash(null);
-              if (i < userHitCount - 1) await delay(200);
+
+              if (i < userHitCount - 1) await delay(80);
             }
           } else {
             setRivalHealth(event.rivalHealthAfter!);
           }
 
-                                                  // Удары по игроку
+          // ========== УДАРЫ ПО ИГРОКУ (противник атакует) ==========
           if (rivalHitCount > 0) {
             const damagePerHit = Math.round(rivalDamageDealt / rivalHitCount);
-            const startHealth = userHealth;
-            let currentHealth = startHealth;
-            
+            const playerAvatarEl = document.querySelector('.arena-bottom .arena-avatar') as HTMLElement;
+            const rivalAvatarEl = document.querySelector('.arena-top .arena-avatar') as HTMLElement;
+
+            let currentHealth = userHealth;
+
             for (let i = 0; i < rivalHitCount; i++) {
+              // 1. СНАРЯД ЛЕТИТ ОТ ПРОТИВНИКА К ИГРОКУ
+              if (playerAvatarEl && rivalAvatarEl) {
+                await flyProjectile(
+                  rivalAvatarEl,
+                  playerAvatarEl,
+                  damagePerHit,
+                  getTrajectoryByIndex(i, rivalHitCount),
+                  400
+                );
+              }
+
+              // 2. Урон после попадания
               currentHealth = Math.max(0, currentHealth - damagePerHit);
               setUserHealth(currentHealth);
-              
-              // Принудительно ждём перерисовку React
-              await new Promise(resolve => {
-                setTimeout(resolve, 0);
-              });
-              
+
+              await new Promise(resolve => setTimeout(resolve, 0));
+
+              // 3. Эффекты
               setShowDamageNumber({ player: damagePerHit, rival: null });
               setHealthFlash('player');
               applyHitEffect('player', damagePerHit);
+
               if (damagePerHit > 50) {
                 setShakeScreen(true);
                 setTimeout(() => setShakeScreen(false), 400);
               }
-              
-              await delay(400);
-              
+
+              await delay(220);
+
               setShowDamageNumber({ player: null, rival: null });
               setHealthFlash(null);
-              if (i < rivalHitCount - 1) await delay(200);
+
+              if (i < rivalHitCount - 1) await delay(80);
             }
           } else {
             setUserHealth(event.userHealthAfter!);
           }
 
-          await delay(300);
+          await delay(200);
           setCurrentEventIndex(prev => prev + 1);
         })();
         break;
@@ -504,7 +690,7 @@ if (data.tierProgress) {
 
   const handleResultClose = () => {
     setBattleResult(null);
-    setIsBattleLoaded(false); // сразу убираем арену
+    setIsBattleLoaded(false);
     onSurrender();
   };
 
