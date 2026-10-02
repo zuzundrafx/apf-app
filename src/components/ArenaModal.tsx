@@ -312,9 +312,16 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       const toX = toRect.left + toRect.width / 2 - 9;
       const toY = toRect.top + toRect.height / 2 - 9;
 
-      const el = document.createElement('div');
+            const el = document.createElement('div');
       el.className = 'projectile';
       el.style.color = getProjectileColor(damage);
+
+      // ❗ Позиционируем через left/top — они НЕ перебиваются CSS-анимацией
+      el.style.position = 'fixed';
+      el.style.left = '0px';
+      el.style.top = '0px';
+      el.style.transform = `translate(${fromX}px, ${fromY}px) scale(1)`;
+
       document.body.appendChild(el);
 
       const keyframes = createProjectileKeyframes(fromX, fromY, toX, toY, trajectory);
@@ -328,7 +335,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
         animation.onfinish = () => {
           try {
-            el.style.transform = `translate(${toX}px, ${toY}px) scale(1.4)`;
+            // ❗ Переставляем left/top в точку попадания и убираем transform
+            el.style.left = `${toX}px`;
+            el.style.top = `${toY}px`;
+            el.style.transform = 'none';
             el.style.opacity = '1';
             el.classList.add('impact');
           } catch {}
@@ -341,6 +351,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       // Гарантированный резолв через setTimeout
       setTimeout(() => {
         try {
+          el.style.left = `${toX}px`;
+          el.style.top = `${toY}px`;
+          el.style.transform = 'none';
+          el.style.opacity = '1';
           el.classList.add('impact');
         } catch {}
         setTimeout(safeResolve, 180);
