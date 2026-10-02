@@ -311,7 +311,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       }
 
       // Масштаб: снаряд «формируется» — растёт с 0.3 до 1.3
-      const scale = 0.3 + t * 2.2;
+      const scale = 0.3 + t * 1.8;
 
       // Последняя точка — исчезновение (за кадр до вспышки)
       if (i === STEPS) {
@@ -742,7 +742,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   rivalAvatarEl,
                   damagePerHit,
                   trajectories[i],
-                  200
+                  160
                 );
               }
 
@@ -793,7 +793,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   playerAvatarEl,
                   damagePerHit,
                   trajectories[i],
-                  200
+                  160
                 );
               }
 
