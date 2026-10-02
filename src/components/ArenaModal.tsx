@@ -281,7 +281,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   /**
    * Запускает полёт снаряда и резолвит Promise при попадании
    */
-    const flyProjectile = (
+      const flyProjectile = (
     fromEl: HTMLElement,
     toEl: HTMLElement,
     damage: number,
@@ -289,6 +289,17 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
     duration: number = 400
   ): Promise<void> => {
     return new Promise((resolve) => {
+      let resolved = false;
+
+      const safeResolve = () => {
+        if (resolved) return;
+        resolved = true;
+        try {
+          el.remove();
+        } catch {}
+        resolve();
+      };
+
       const fromRect = fromEl.getBoundingClientRect();
       const toRect = toEl.getBoundingClientRect();
 
@@ -304,29 +315,41 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
       const keyframes = createProjectileKeyframes(fromX, fromY, toX, toY, trajectory);
 
-      // ВАЖНО: не используем fill: 'forwards' — иначе будет конфликт
-      // с последующей CSS-анимацией .impact (оба меняют transform)
-      const animation = el.animate(keyframes, {
-        duration,
-        easing: 'cubic-bezier(0.4, 0, 0.6, 1)',
-        fill: 'none',
-      });
+      // ❗ СТРАХОВКА: если через duration + 500ms ничего не произошло — резолвим
+      const safetyTimeout = setTimeout(() => {
+        console.warn('⚠️ Projectile safety timeout triggered');
+        safeResolve();
+      }, duration + 500);
 
-      // Резолвим ровно тогда, когда WAAPI закончил
-      animation.onfinish = () => {
-        // Сначала фиксируем финальную позицию через inline-стиль,
-        // чтобы не потерять её после снятия WAAPI-анимации
-        el.style.transform = `translate(${toX}px, ${toY}px) scale(1.4)`;
-        el.style.opacity = '1';
+      try {
+        const animation = el.animate(keyframes, {
+          duration,
+          easing: 'cubic-bezier(0.4, 0, 0.6, 1)',
+          fill: 'none',
+        });
 
-        // Теперь можно безопасно запустить CSS-анимацию вспышки
-        el.classList.add('impact');
+        animation.onfinish = () => {
+          clearTimeout(safetyTimeout);
 
-        setTimeout(() => {
-          el.remove();
-          resolve();
-        }, 180);
-      };
+          // Фиксируем финальную позицию
+          try {
+            el.style.transform = `translate(${toX}px, ${toY}px) scale(1.4)`;
+            el.style.opacity = '1';
+            el.classList.add('impact');
+          } catch {}
+
+          setTimeout(safeResolve, 180);
+        };
+
+        animation.oncancel = () => {
+          clearTimeout(safetyTimeout);
+          safeResolve();
+        };
+      } catch (err) {
+        console.error('❌ Projectile animation error:', err);
+        clearTimeout(safetyTimeout);
+        safeResolve();
+      }
     });
   };
 
