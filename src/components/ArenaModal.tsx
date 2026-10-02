@@ -675,7 +675,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 setTimeout(() => setShakeScreen(false), 400);
               }
 
-              await delay(320);
+              await delay(420);
 
               setShowDamageNumber({ player: null, rival: null });
               setHealthFlash(null);
@@ -726,7 +726,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 setTimeout(() => setShakeScreen(false), 400);
               }
 
-              await delay(320);
+              await delay(420);
 
               setShowDamageNumber({ player: null, rival: null });
               setHealthFlash(null);
