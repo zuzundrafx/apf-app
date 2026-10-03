@@ -430,7 +430,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         controlX = (fromX + toX) / 2;
         controlY = (fromY + toY) / 2;
       } else {
-        const arcWidth = Math.abs(toY - fromY) * 0.6;
+        const arcWidth = Math.abs(toY - fromY) * 0.45;
         controlX = trajectory === 'arc-left'
           ? fromX - arcWidth
           : fromX + arcWidth;
