@@ -293,7 +293,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       controlX = (fromX + toX) / 2;
       controlY = (fromY + toY) / 2;
     } else {
-      const arcWidth = Math.abs(dy) * 0.6;
+      const arcWidth = Math.abs(dy) * 0.45;
 
       if (trajectory === 'arc-left') {
         controlX = fromX - arcWidth;
@@ -473,7 +473,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       try {
         el.animate(keyframes, {
           duration,
-          easing: 'linear',
+          easing: 'cubic-bezier(0.4, 0, 0.6, 1)',
           fill: 'none',
         });
       } catch (err) {
@@ -779,7 +779,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   rivalAvatarEl,
                   damagePerHit,
                   trajectories[i],
-                  160
+                  125
                 );
               }
 
@@ -830,7 +830,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   playerAvatarEl,
                   damagePerHit,
                   trajectories[i],
-                  160
+                  125
                 );
               }
 
