@@ -462,10 +462,19 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         return { dx, dy };
       };
 
-      // === Устанавливаем начальный угол хвоста ===
-      const initialTangent = bezierTangent(0);
-      const initialAngleDeg = (Math.atan2(initialTangent.dy, initialTangent.dx) * 180) / Math.PI;
-      el.style.setProperty('--trail-angle', `${initialAngleDeg + 180}deg`);
+            // === Устанавливаем начальный угол хвоста: направление ОТ ЦЕЛИ ===
+      // Считаем вектор от снаряда (fromX, fromY) к цели (toX, toY)
+      // Хвост должен смотреть ПРОТИВ этого вектора (на 180°)
+      const initDirX = toX - fromX;
+      const initDirY = toY - fromY;
+      let initialAngleDeg = (Math.atan2(initDirY, initDirX) * 180) / Math.PI + 180;
+      // Нормализуем в диапазон (-180, 180]
+      while (initialAngleDeg > 180) initialAngleDeg -= 360;
+      while (initialAngleDeg <= -180) initialAngleDeg += 360;
+      el.style.setProperty('--trail-angle', `${initialAngleDeg}deg`);
+
+      // Сохраняем предыдущий угол — для плавного обновления
+      let previousTrailAngle = initialAngleDeg;
 
       // === WAAPI-анимация позиции ===
       const keyframes = createProjectileKeyframes(fromX, fromY, toX, toY, trajectory);
@@ -486,7 +495,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       let lastUpdateTime = 0;
       const UPDATE_INTERVAL = 33; // ~30 Hz
 
-      const tick = () => {
+            const tick = () => {
         const now = performance.now();
         const elapsed = now - startTime;
         const t = Math.min(elapsed / duration, 1);
@@ -495,19 +504,31 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         if (now - lastUpdateTime >= UPDATE_INTERVAL) {
           lastUpdateTime = now;
 
-          // Касательная в текущей точке траектории
-          const tangent = bezierTangent(t);
-          const angleDeg = (Math.atan2(tangent.dy, tangent.dx) * 180) / Math.PI;
+          // Текущая позиция снаряда на кривой Безье
+          const { x: curX, y: curY } = bezierPoint(t);
+
+          // Вектор от снаряда к цели
+          const dirX = toX - curX;
+          const dirY = toY - curY;
+
+          // Угол хвоста: направление ОТ ЦЕЛИ (против вектора снаряд → цель)
+          let angleDeg = (Math.atan2(dirY, dirX) * 180) / Math.PI + 180;
+
+          // Нормализация с сохранением непрерывности
+          let delta = angleDeg - previousTrailAngle;
+          while (delta > 180) delta -= 360;
+          while (delta < -180) delta += 360;
+          const smoothAngle = previousTrailAngle + delta;
+          previousTrailAngle = smoothAngle;
 
           try {
-            el.style.setProperty('--trail-angle', `${angleDeg + 180}deg`);
+            el.style.setProperty('--trail-angle', `${smoothAngle}deg`);
           } catch {}
         }
 
         if (t < 1) {
           rafId = requestAnimationFrame(tick);
         }
-        // Если t === 1 — цикл завершается сам, безопасно
       };
 
       rafId = requestAnimationFrame(tick);
