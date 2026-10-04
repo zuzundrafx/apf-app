@@ -531,12 +531,16 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       const initialSpriteDirY = toY - fromY;
       let previousSpriteAngle = (Math.atan2(initialSpriteDirY, initialSpriteDirX) * 180) / Math.PI + 90;
 
-      const tick = () => {
+            const tick = () => {
         const now = performance.now();
         const elapsed = now - startTime;
         const t = Math.min(elapsed / duration, 1);
 
-        if (now - lastUpdateTime >= UPDATE_INTERVAL) {
+        // ❗ Игнорируем обновление углов в самом конце полёта
+        // (вектор снаряд → цель становится нулевым, atan2 даёт 0° → перчатка становится горизонтальной)
+        const isAtTarget = t >= 0.99;
+
+        if (!isAtTarget && now - lastUpdateTime >= UPDATE_INTERVAL) {
           lastUpdateTime = now;
 
           const { x: curX, y: curY } = bezierPoint(t);
