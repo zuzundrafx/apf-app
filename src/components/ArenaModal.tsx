@@ -533,7 +533,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         const elapsed = now - startTime;
         const t = Math.min(elapsed / duration, 1);
 
-                if (now - lastUpdateTime >= UPDATE_INTERVAL) {
+        if (now - lastUpdateTime >= UPDATE_INTERVAL) {
           lastUpdateTime = now;
 
           const { x: curX, y: curY } = bezierPoint(t);
@@ -541,40 +541,36 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           const dirX = toX - curX;
           const dirY = toY - curY;
 
-          // ❗ Проверяем: если вектор "снаряд → цель" слишком мал
-          // (снаряд уже на цели) — НЕ обновляем углы, оставляем предыдущие
-          const dirLengthSq = dirX * dirX + dirY * dirY;
-          const MIN_DIR_SQ = 100; // 10px в квадрате
+          // === 1. Угол хвоста (против цели) ===
+          let trailAngleDeg = (Math.atan2(dirY, dirX) * 180) / Math.PI + 180;
+          let delta1 = trailAngleDeg - previousTrailAngle;
+          while (delta1 > 180) delta1 -= 360;
+          while (delta1 < -180) delta1 += 360;
+          const smoothTrailAngle = previousTrailAngle + delta1;
+          previousTrailAngle = smoothTrailAngle;
 
-          if (dirLengthSq >= MIN_DIR_SQ) {
-            // === 1. Угол хвоста (против цели) ===
-            let trailAngleDeg = (Math.atan2(dirY, dirX) * 180) / Math.PI + 180;
-            let delta1 = trailAngleDeg - previousTrailAngle;
-            while (delta1 > 180) delta1 -= 360;
-            while (delta1 < -180) delta1 += 360;
-            const smoothTrailAngle = previousTrailAngle + delta1;
-            previousTrailAngle = smoothTrailAngle;
+          try {
+            el.style.setProperty('--trail-angle', `${smoothTrailAngle}deg`);
+          } catch {}
 
-            try {
-              el.style.setProperty('--trail-angle', `${smoothTrailAngle}deg`);
-            } catch {}
+          // === 2. Угол перчатки (смотрит НА цель) ===
+          // Картинка изначально смотрит ВВЕРХ (пальцами вверх) = 0° в CSS
+          // При atan2 направление "вверх на экране" = -90°
+          // Значит, чтобы перчатка смотрела на цель: atan2 * 180/π + 90
+          let spriteAngleDeg = (Math.atan2(dirY, dirX) * 180) / Math.PI + 90;
 
-            // === 2. Угол перчатки (смотрит НА цель) ===
-            let spriteAngleDeg = (Math.atan2(dirY, dirX) * 180) / Math.PI + 90;
-            let delta2 = spriteAngleDeg - previousSpriteAngle;
-            while (delta2 > 180) delta2 -= 360;
-            while (delta2 < -180) delta2 += 360;
-            const smoothSpriteAngle = previousSpriteAngle + delta2;
-            previousSpriteAngle = smoothSpriteAngle;
+          let delta2 = spriteAngleDeg - previousSpriteAngle;
+          while (delta2 > 180) delta2 -= 360;
+          while (delta2 < -180) delta2 += 360;
+          const smoothSpriteAngle = previousSpriteAngle + delta2;
+          previousSpriteAngle = smoothSpriteAngle;
 
-            try {
-              const imageEl = el.firstChild as HTMLElement | null;
-              if (imageEl) {
-                imageEl.style.setProperty('--sprite-angle', `${smoothSpriteAngle}deg`);
-              }
-            } catch {}
-          }
-          // Если вектор слишком мал — пропускаем обновление, углы остаются прежними
+          try {
+            const imageEl = el.firstChild as HTMLElement | null;
+            if (imageEl) {
+              imageEl.style.transform = `rotate(${smoothSpriteAngle}deg)`;
+            }
+          } catch {}
         }
 
         if (t < 1) {
