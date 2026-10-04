@@ -329,21 +329,21 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       // t = 1.0 → 1    (финиш, видим до вспышки)
             let opacity: number;
 
-      // 0 → 0.25: НЕВИДИМ (снаряд ещё не появился)
-      if (t < 0.25) {
+      // 0 → 0.1: НЕВИДИМ (короткий старт)
+      if (t < 0.1) {
         opacity = 0;
       }
-      // 0.25 → 0.5: плавное проявление (0 → 1)
-      else if (t < 0.5) {
-        opacity = (t - 0.25) * 4;
+      // 0.1 → 0.3: плавное проявление (0 → 1)
+      else if (t < 0.3) {
+        opacity = (t - 0.1) / 0.2;
       }
-      // 0.5 → 0.75: полностью видим
-      else if (t < 0.75) {
+      // 0.3 → 0.85: полностью видим (долго)
+      else if (t < 0.85) {
         opacity = 1;
       }
-      // 0.75 → 1: плавное затухание (1 → 0)
+      // 0.85 → 1: плавное затухание (1 → 0)
       else {
-        const fadeProgress = (t - 0.75) / 0.25;   // 0..1
+        const fadeProgress = (t - 0.85) / 0.15;
         opacity = 1 - fadeProgress * fadeProgress;
       }
 
@@ -524,7 +524,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
              // === rAF-цикл: обновляем угол хвоста И ориентацию перчатки ===
       const startTime = performance.now();
       let lastUpdateTime = 0;
-      const UPDATE_INTERVAL = 33;
+      const UPDATE_INTERVAL = 16;
 
       // Предыдущий угол перчатки — для плавной интерполяции
             // ❗ Начальный угол перчатки — считаем сразу, как направление на цель
@@ -903,7 +903,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   rivalAvatarEl,
                   damagePerHit,
                   trajectories[i],
-                  125
+                  150
                 );
               }
 
@@ -954,7 +954,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   playerAvatarEl,
                   damagePerHit,
                   trajectories[i],
-                  125
+                  150
                 );
               }
 
