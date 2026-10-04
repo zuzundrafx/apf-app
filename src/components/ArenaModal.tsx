@@ -423,14 +423,25 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       el.style.top = '0px';
       el.style.transform = `translate(${fromX}px, ${fromY}px) scale(1)`;
 
+            // ❗ Определяем направление полёта: снизу вверх или сверху вниз
+      const isDownwardAttack = toY > fromY;
+
       // ❗ Выбираем картинку в зависимости от траектории
+      // Для ответных ударов (сверху вниз) — меняем L и R местами,
+      // потому что при повороте на 180° левая перчатка визуально становится правой
       let armImage: string;
       if (trajectory === 'arc-left') {
-        armImage = 'L_Arm_Top.webp';
+        armImage = isDownwardAttack ? 'R_Arm_Top.webp' : 'L_Arm_Top.webp';
       } else if (trajectory === 'arc-right') {
-        armImage = 'R_Arm_Top.webp';
+        armImage = isDownwardAttack ? 'L_Arm_Top.webp' : 'R_Arm_Top.webp';
       } else {
-        armImage = Math.random() < 0.5 ? 'L_Arm_Top.webp' : 'R_Arm_Top.webp';
+        // straight — случайно
+        const rand = Math.random() < 0.5;
+        if (isDownwardAttack) {
+          armImage = rand ? 'R_Arm_Top.webp' : 'L_Arm_Top.webp';
+        } else {
+          armImage = rand ? 'L_Arm_Top.webp' : 'R_Arm_Top.webp';
+        }
       }
 
       // ❗ Вложенный слой для картинки — здесь применяется rotate к цели
