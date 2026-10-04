@@ -4455,3 +4455,32 @@ body {
     opacity: 0;
   }
 }
+
+/* ===== ВСПЫШКА ПРИ ПОПАДАНИИ (отдельный элемент) ===== */
+.impact-flash {
+  background: radial-gradient(
+    circle,
+    #FFFFFF 0%,
+    currentColor 40%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  animation: impactFlashAnim 0.2s ease-out forwards;
+  filter: blur(0.5vw);
+  pointer-events: none;
+}
+
+@keyframes impactFlashAnim {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(2.2);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(3.5);
+    opacity: 0;
+  }
+}

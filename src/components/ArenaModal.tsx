@@ -584,26 +584,48 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
       rafId = requestAnimationFrame(tick);
 
-      // === Момент попадания — фиксируем позицию и вспышку ===
+            // === Момент попадания — удаляем снаряд СРАЗУ + создаём отдельную вспышку ===
       const handleImpact = () => {
         try {
           if (rafId !== null) {
             cancelAnimationFrame(rafId);
             rafId = null;
           }
-          el.style.left = `${toX}px`;
-          el.style.top = `${toY}px`;
-          el.style.transform = 'none';
-          el.style.opacity = '1';
 
-          // ❗ Фиксируем последний корректный угол перчатки
-          const imageEl = el.firstChild as HTMLElement | null;
-          if (imageEl) {
-            imageEl.style.transform = `rotate(${previousSpriteAngle}deg)`;
-            imageEl.classList.add('impact');
+          const impactX = toX;
+          const impactY = toY;
+          const colorForImpact = getProjectileColor(damage);
+          const sizeForImpact = window.innerWidth * 0.12;
+
+          el.remove();
+          if (!resolved) {
+            resolved = true;
+            resolve();
           }
-        } catch {}
-        setTimeout(safeResolve, 40);
+
+          const flashEl = document.createElement('div');
+          flashEl.className = 'impact-flash';
+          flashEl.style.position = 'fixed';
+          flashEl.style.left = `${impactX}px`;
+          flashEl.style.top = `${impactY}px`;
+          flashEl.style.width = `${sizeForImpact}px`;
+          flashEl.style.height = `${sizeForImpact}px`;
+          flashEl.style.color = colorForImpact;
+          flashEl.style.pointerEvents = 'none';
+          flashEl.style.zIndex = '9998';
+
+          document.body.appendChild(flashEl);
+
+          setTimeout(() => {
+            try { flashEl.remove(); } catch {}
+          }, 200);
+        } catch (e) {
+          console.error('❌ handleImpact error:', e);
+          if (!resolved) {
+            resolved = true;
+            resolve();
+          }
+        }
       };
 
       // Основной таймер попадания — через duration
