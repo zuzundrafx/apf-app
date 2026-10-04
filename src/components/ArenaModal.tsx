@@ -353,7 +353,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       // Последняя точка — исчезновение (за кадр до вспышки)
       if (i === STEPS) {
         keyframes.push({
-          transform: `translate(${x}px, ${y}px) scale(1.4)`,
+          transform: `translate3d(${x}px, ${y}px, 0) scale(1.4)`,
           opacity: 0,
           offset: 1,
         });
@@ -361,7 +361,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       }
 
       keyframes.push({
-        transform: `translate(${x}px, ${y}px) scale(${scale})`,
+        transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`,
         opacity,
         offset: t,
       });
@@ -421,7 +421,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       el.style.position = 'fixed';
       el.style.left = '0px';
       el.style.top = '0px';
-      el.style.transform = `translate(${fromX}px, ${fromY}px) scale(1)`;
+      el.style.transform = `translate3d(${fromX}px, ${fromY}px, 0) scale(1)`;
       el.style.opacity = '0';   // ❗ Не показываем перчатку до старта анимации
 
             // ❗ Определяем направление полёта: снизу вверх или сверху вниз
