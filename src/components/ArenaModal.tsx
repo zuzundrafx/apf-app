@@ -132,13 +132,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
   const [rivalComboText, setRivalComboText] = useState<string | null>(null);
   const [currentLoadingTip, setCurrentLoadingTip] = useState<string>(loadingTip || DEFAULT_LOADING_TIPS[0]);
   const tipIntervalRef = useRef<IntervalId | null>(null);
-
-  // ❗ Координаты аватарок, вычисленные ОДИН РАЗ после загрузки арены
-  const avatarCentersRef = useRef<{
-    player: { x: number; y: number; size: number } | null;
-    rival: { x: number; y: number; size: number } | null;
-  }>({ player: null, rival: null });
-
   const [rivalData, setRivalData] = useState<{
     username: string;
     photoUrl?: string;
@@ -405,28 +398,21 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         resolve();
       };
 
-            // ❗ Используем СОХРАНЁННЫЕ координаты аватарок
-      // (вычислены при загрузке арены — layout стабилен)
-      const playerCenter = avatarCentersRef.current.player;
-      const rivalCenter = avatarCentersRef.current.rival;
+      const fromRect = fromEl.getBoundingClientRect();
+      const toRect = toEl.getBoundingClientRect();
 
-      if (!playerCenter || !rivalCenter) {
-        console.warn('⚠️ Avatar centers not ready');
+      if (fromRect.width === 0 || toRect.width === 0) {
         resolve();
         return;
       }
 
-      // Определяем, кто атакующий — по классу родителя
-      const isFromPlayer = fromEl.closest('.arena-bottom') !== null;
-      const fromCenter = isFromPlayer ? playerCenter : rivalCenter;
-      const toCenter = isFromPlayer ? rivalCenter : playerCenter;
-
+      // Размер снаряда = 10vw, половина = 5vw
       const projectileHalfSize = (window.innerWidth * 0.10) / 2;
 
-      const fromX = fromCenter.x - projectileHalfSize;
-      const fromY = fromCenter.y - projectileHalfSize;
-      const toX = toCenter.x - projectileHalfSize;
-      const toY = toCenter.y - projectileHalfSize;
+      const fromX = fromRect.left + fromRect.width / 2 - projectileHalfSize;
+      const fromY = fromRect.top + fromRect.height / 2 - projectileHalfSize;
+      const toX = toRect.left + toRect.width / 2 - projectileHalfSize;
+      const toY = toRect.top + toRect.height / 2 - projectileHalfSize;
 
             const el = document.createElement('div');
       el.className = 'projectile';
@@ -551,7 +537,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         const elapsed = now - startTime;
         const t = Math.min(elapsed / duration, 1);
 
-                if (now - lastUpdateTime >= UPDATE_INTERVAL) {
+        if (now - lastUpdateTime >= UPDATE_INTERVAL) {
           lastUpdateTime = now;
 
           const { x: curX, y: curY } = bezierPoint(t);
@@ -559,39 +545,36 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           const dirX = toX - curX;
           const dirY = toY - curY;
 
-          // ❗ Пропускаем ОБНОВЛЕНИЕ УГЛОВ, если снаряд у цели (dirX, dirY оба ~ 0)
-          // (иначе atan2(0, 0) даёт 90° — перчатка становится горизонтальной)
-          const dirLengthSq = dirX * dirX + dirY * dirY;
+          // === 1. Угол хвоста (против цели) ===
+          let trailAngleDeg = (Math.atan2(dirY, dirX) * 180) / Math.PI + 180;
+          let delta1 = trailAngleDeg - previousTrailAngle;
+          while (delta1 > 180) delta1 -= 360;
+          while (delta1 < -180) delta1 += 360;
+          const smoothTrailAngle = previousTrailAngle + delta1;
+          previousTrailAngle = smoothTrailAngle;
 
-          if (dirLengthSq > 4) {  // > 2px
-            // === 1. Угол хвоста (против цели) ===
-            let trailAngleDeg = (Math.atan2(dirY, dirX) * 180) / Math.PI + 180;
-            let delta1 = trailAngleDeg - previousTrailAngle;
-            while (delta1 > 180) delta1 -= 360;
-            while (delta1 < -180) delta1 += 360;
-            const smoothTrailAngle = previousTrailAngle + delta1;
-            previousTrailAngle = smoothTrailAngle;
+          try {
+            el.style.setProperty('--trail-angle', `${smoothTrailAngle}deg`);
+          } catch {}
 
-            try {
-              el.style.setProperty('--trail-angle', `${smoothTrailAngle}deg`);
-            } catch {}
+          // === 2. Угол перчатки (смотрит НА цель) ===
+          // Картинка изначально смотрит ВВЕРХ (пальцами вверх) = 0° в CSS
+          // При atan2 направление "вверх на экране" = -90°
+          // Значит, чтобы перчатка смотрела на цель: atan2 * 180/π + 90
+          let spriteAngleDeg = (Math.atan2(dirY, dirX) * 180) / Math.PI + 90;
 
-            // === 2. Угол перчатки (смотрит НА цель) ===
-            let spriteAngleDeg = (Math.atan2(dirY, dirX) * 180) / Math.PI + 90;
+          let delta2 = spriteAngleDeg - previousSpriteAngle;
+          while (delta2 > 180) delta2 -= 360;
+          while (delta2 < -180) delta2 += 360;
+          const smoothSpriteAngle = previousSpriteAngle + delta2;
+          previousSpriteAngle = smoothSpriteAngle;
 
-            let delta2 = spriteAngleDeg - previousSpriteAngle;
-            while (delta2 > 180) delta2 -= 360;
-            while (delta2 < -180) delta2 += 360;
-            const smoothSpriteAngle = previousSpriteAngle + delta2;
-            previousSpriteAngle = smoothSpriteAngle;
-
-            try {
-              const imageEl = el.firstChild as HTMLElement | null;
-              if (imageEl) {
-                imageEl.style.transform = `rotate(${smoothSpriteAngle}deg)`;
-              }
-            } catch {}
-          }
+          try {
+            const imageEl = el.firstChild as HTMLElement | null;
+            if (imageEl) {
+              imageEl.style.transform = `rotate(${smoothSpriteAngle}deg)`;
+            }
+          } catch {}
         }
 
         if (t < 1) {
@@ -810,33 +793,6 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                 setIsLoading(false);
         setIsBattleLoaded(true);
         stopTipRotation();
-
-        // ❗ Вычисляем координаты аватарок ОДИН РАЗ после загрузки
-        // (они не меняются в layout — только масштабируются)
-        setTimeout(() => {
-          const playerEl = document.querySelector('.arena-bottom .arena-avatar') as HTMLElement | null;
-          const rivalEl = document.querySelector('.arena-top .arena-avatar') as HTMLElement | null;
-
-          if (playerEl) {
-            const r = playerEl.getBoundingClientRect();
-            avatarCentersRef.current.player = {
-              x: r.left + r.width / 2,
-              y: r.top + r.height / 2,
-              size: r.width,
-            };
-            console.log('🎯 Player avatar center:', avatarCentersRef.current.player);
-          }
-
-          if (rivalEl) {
-            const r = rivalEl.getBoundingClientRect();
-            avatarCentersRef.current.rival = {
-              x: r.left + r.width / 2,
-              y: r.top + r.height / 2,
-              size: r.width,
-            };
-            console.log('🎯 Rival avatar center:', avatarCentersRef.current.rival);
-          }
-        }, 100);
       } catch (error: any) {
         console.error('❌ PvP error:', error);
         alert(error.message || 'Failed to start PvP battle');
