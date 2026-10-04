@@ -430,10 +430,20 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       } else if (trajectory === 'arc-right') {
         armImage = 'R_Arm_Top.webp';
       } else {
-        // straight — случайно L или R
         armImage = Math.random() < 0.5 ? 'L_Arm_Top.webp' : 'R_Arm_Top.webp';
       }
-      el.style.backgroundImage = `url('${BASE_URL}/items/${armImage}')`;
+
+      // ❗ Вложенный слой для картинки (позволяет переворачивать без конфликта с WAAPI)
+      const imgEl = document.createElement('div');
+      imgEl.className = 'projectile-image';
+      imgEl.style.backgroundImage = `url('${BASE_URL}/items/${armImage}')`;
+
+      // Определяем направление: если цель НИЖЕ старта — переворачиваем
+      if (toY > fromY) {
+        imgEl.classList.add('flipped');
+      }
+
+      el.appendChild(imgEl);
 
       document.body.appendChild(el);
 

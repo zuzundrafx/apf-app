@@ -4368,6 +4368,7 @@ body {
 /* ===== СНАРЯДЫ УДАРОВ (WAAPI) ===== */
 
 /* Контейнер снаряда */
+/* Контейнер снаряда — отвечает за позицию и glow */
 .projectile {
   position: fixed;
   width: 10vw;
@@ -4377,12 +4378,24 @@ body {
   top: 0;
   left: 0;
   will-change: transform, opacity, filter;
-  /* Картинка задаётся через JS (background-image) */
+  filter: drop-shadow(0 0 1vw currentColor) drop-shadow(0 0 2vw currentColor);
+}
+
+/* Внутренний слой — картинка перчатки + переворот */
+.projectile-image {
+  width: 100%;
+  height: 100%;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  /* Glow через drop-shadow — ореол вокруг формы перчатки */
-  filter: drop-shadow(0 0 1vw currentColor) drop-shadow(0 0 2vw currentColor);
+  /* По умолчанию — без переворота */
+  transform: scaleY(1);
+  transition: transform 0.05s linear;
+}
+
+/* Перевёрнутая картинка (для атаки сверху вниз) */
+.projectile-image.flipped {
+  transform: scaleY(-1);
 }
 
 /* Короткий затухающий трейл */
