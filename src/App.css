@@ -4377,8 +4377,8 @@ body {
   z-index: 9999;
   top: 0;
   left: 0;
-  will-change: transform, opacity, filter;
-  filter: drop-shadow(0 0 1vw currentColor) drop-shadow(0 0 2vw currentColor);
+  will-change: transform, opacity;
+  filter: drop-shadow(0 0 1.5vw currentColor);
 }
 
 /* Внутренний слой — картинка перчатки */
