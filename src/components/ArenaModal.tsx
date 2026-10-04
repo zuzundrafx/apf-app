@@ -353,7 +353,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       // Последняя точка — исчезновение (за кадр до вспышки)
       if (i === STEPS) {
         keyframes.push({
-          transform: `translate(${x}px, ${y}px) scale(1.4)`,
+          transform: `translate3d(${x}px, ${y}px, 0) scale(1.4)`,
           opacity: 0,
           offset: 1,
         });
@@ -565,10 +565,11 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           const smoothSpriteAngle = previousSpriteAngle + delta2;
           previousSpriteAngle = smoothSpriteAngle;
 
-          try {
+                    try {
             const imageEl = el.firstChild as HTMLElement | null;
             if (imageEl) {
-              imageEl.style.transform = `rotate(${smoothSpriteAngle}deg)`;
+              // ❗ Через CSS-переменную — чтобы impact-анимация сохранила угол
+              imageEl.style.setProperty('--sprite-angle', `${smoothSpriteAngle}deg`);
             }
           } catch {}
         }
@@ -581,7 +582,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       rafId = requestAnimationFrame(tick);
 
       // === Момент попадания — фиксируем позицию и вспышку ===
-      const handleImpact = () => {
+            const handleImpact = () => {
         try {
           if (rafId !== null) {
             cancelAnimationFrame(rafId);
@@ -591,7 +592,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           el.style.top = `${toY}px`;
           el.style.transform = 'none';
           el.style.opacity = '1';
-          el.classList.add('impact');
+          const imageEl = el.firstChild as HTMLElement | null;
+          if (imageEl) {
+            imageEl.classList.add('impact');
+            // ❗ На всякий случай, ещё раз фиксируем угол в переменной
+            // (используем последний previousSpriteAngle)
+            imageEl.style.setProperty('--sprite-angle', `${previousSpriteAngle}deg`);
+          }
         } catch {}
         setTimeout(safeResolve, 40);
       };
