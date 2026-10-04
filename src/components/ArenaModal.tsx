@@ -803,9 +803,46 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           setBattleScript([{ type: 'countdown' }, { type: 'battle-end', result: { isOpen: true, result: 'draw' } }]);
         }
 
-        setIsLoading(false);
+         setIsLoading(false);
         setIsBattleLoaded(true);
         stopTipRotation();
+
+        // ❗ ПРОГРЕВ ПЕРЧАТОК: создаём их вне экрана, чтобы браузер
+        // отрисовал их один раз и создал GPU-слои до первого удара
+        setTimeout(() => {
+          const warmupContainer = document.createElement('div');
+          warmupContainer.style.position = 'fixed';
+          warmupContainer.style.left = '-9999px';
+          warmupContainer.style.top = '-9999px';
+          warmupContainer.style.width = '12vw';
+          warmupContainer.style.height = '12vw';
+          warmupContainer.style.pointerEvents = 'none';
+          warmupContainer.style.opacity = '0.01';
+
+          // Прогреваем обе перчатки
+          const warmupImgL = document.createElement('div');
+          warmupImgL.style.width = '100%';
+          warmupImgL.style.height = '100%';
+          warmupImgL.style.backgroundImage = `url('${BASE_URL}/items/L_Arm_Top.webp')`;
+          warmupImgL.style.backgroundSize = 'contain';
+          warmupImgL.style.backgroundRepeat = 'no-repeat';
+          warmupImgL.style.backgroundPosition = 'center';
+
+          const warmupImgR = document.createElement('div');
+          warmupImgR.style.width = '100%';
+          warmupImgR.style.height = '100%';
+          warmupImgR.style.backgroundImage = `url('${BASE_URL}/items/R_Arm_Top.webp')`;
+          warmupImgR.style.backgroundSize = 'contain';
+          warmupImgR.style.backgroundRepeat = 'no-repeat';
+          warmupImgR.style.backgroundPosition = 'center';
+
+          warmupContainer.appendChild(warmupImgL);
+          warmupContainer.appendChild(warmupImgR);
+          document.body.appendChild(warmupContainer);
+
+          // Убираем через 100ms — к этому времени браузер уже отрисовал
+          setTimeout(() => warmupContainer.remove(), 100);
+        }, 100);
       } catch (error: any) {
         console.error('❌ PvP error:', error);
         alert(error.message || 'Failed to start PvP battle');
