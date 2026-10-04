@@ -4367,7 +4367,6 @@ body {
 
 /* ===== СНАРЯДЫ УДАРОВ (WAAPI) ===== */
 
-/* Контейнер снаряда */
 /* Контейнер снаряда — отвечает за позицию и glow */
 .projectile {
   position: fixed;
@@ -4377,10 +4376,8 @@ body {
   z-index: 9999;
   top: 0;
   left: 0;
-  /* ❌ Убрали will-change — не провоцируем создание GPU-слоя */
-  /* ❌ Убрали filter — не провоцируем артефакты композитинга */
-  /* Лёгкое свечение через box-shadow (дешевле и без артефактов) */
-  filter: drop-shadow(0 0 1.5vw currentColor);
+  will-change: transform, opacity;
+  filter: drop-shadow(0 0 1vw currentColor) drop-shadow(0 0 2vw currentColor);
 }
 
 /* Внутренний слой — картинка перчатки */
@@ -4391,7 +4388,7 @@ body {
   background-repeat: no-repeat;
   background-position: center;
   transform-origin: center center;
-  /* ❌ Убрали will-change — не создаём лишний слой */
+  will-change: transform;
 }
 
 /* Короткий затухающий трейл */
