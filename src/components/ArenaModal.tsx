@@ -433,15 +433,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         armImage = Math.random() < 0.5 ? 'L_Arm_Top.webp' : 'R_Arm_Top.webp';
       }
 
-      // ❗ Вложенный слой для картинки (позволяет переворачивать без конфликта с WAAPI)
+      // ❗ Вложенный слой для картинки — здесь применяется rotate к цели
       const imgEl = document.createElement('div');
       imgEl.className = 'projectile-image';
       imgEl.style.backgroundImage = `url('${BASE_URL}/items/${armImage}')`;
-
-      // Определяем направление: если цель НИЖЕ старта — переворачиваем
-      if (toY > fromY) {
-        imgEl.classList.add('flipped');
-      }
 
       el.appendChild(imgEl);
 
@@ -514,40 +509,56 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         console.error('❌ Projectile animation error:', err);
       }
 
-      // === rAF-цикл для обновления угла хвоста ===
+             // === rAF-цикл: обновляем угол хвоста И ориентацию перчатки ===
       const startTime = performance.now();
-      // Обновляем угол не чаще, чем каждые 2 кадра (30 Hz) — для оптимизации
       let lastUpdateTime = 0;
-      const UPDATE_INTERVAL = 33; // ~30 Hz
+      const UPDATE_INTERVAL = 33;
 
-            const tick = () => {
+      // Предыдущий угол перчатки — для плавной интерполяции
+      let previousSpriteAngle = 0;
+
+      const tick = () => {
         const now = performance.now();
         const elapsed = now - startTime;
         const t = Math.min(elapsed / duration, 1);
 
-        // Обновляем угол только раз в ~33ms
         if (now - lastUpdateTime >= UPDATE_INTERVAL) {
           lastUpdateTime = now;
 
-          // Текущая позиция снаряда на кривой Безье
           const { x: curX, y: curY } = bezierPoint(t);
 
-          // Вектор от снаряда к цели
           const dirX = toX - curX;
           const dirY = toY - curY;
 
-          // Угол хвоста: направление ОТ ЦЕЛИ (против вектора снаряд → цель)
-          let angleDeg = (Math.atan2(dirY, dirX) * 180) / Math.PI + 180;
-
-          // Нормализация с сохранением непрерывности
-          let delta = angleDeg - previousTrailAngle;
-          while (delta > 180) delta -= 360;
-          while (delta < -180) delta += 360;
-          const smoothAngle = previousTrailAngle + delta;
-          previousTrailAngle = smoothAngle;
+          // === 1. Угол хвоста (против цели) ===
+          let trailAngleDeg = (Math.atan2(dirY, dirX) * 180) / Math.PI + 180;
+          let delta1 = trailAngleDeg - previousTrailAngle;
+          while (delta1 > 180) delta1 -= 360;
+          while (delta1 < -180) delta1 += 360;
+          const smoothTrailAngle = previousTrailAngle + delta1;
+          previousTrailAngle = smoothTrailAngle;
 
           try {
-            el.style.setProperty('--trail-angle', `${smoothAngle}deg`);
+            el.style.setProperty('--trail-angle', `${smoothTrailAngle}deg`);
+          } catch {}
+
+          // === 2. Угол перчатки (смотрит НА цель) ===
+          // Картинка изначально смотрит ВВЕРХ (пальцами вверх) = 0° в CSS
+          // При atan2 направление "вверх на экране" = -90°
+          // Значит, чтобы перчатка смотрела на цель: atan2 * 180/π + 90
+          let spriteAngleDeg = (Math.atan2(dirY, dirX) * 180) / Math.PI + 90;
+
+          let delta2 = spriteAngleDeg - previousSpriteAngle;
+          while (delta2 > 180) delta2 -= 360;
+          while (delta2 < -180) delta2 += 360;
+          const smoothSpriteAngle = previousSpriteAngle + delta2;
+          previousSpriteAngle = smoothSpriteAngle;
+
+          try {
+            const imageEl = el.firstChild as HTMLElement | null;
+            if (imageEl) {
+              imageEl.style.transform = `rotate(${smoothSpriteAngle}deg)`;
+            }
           } catch {}
         }
 
