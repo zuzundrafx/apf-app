@@ -4466,7 +4466,7 @@ body {
   );
   border-radius: 50%;
   animation: impactFlashAnim 0.2s ease-out forwards;
-  filter: blur(2px);
+  filter: blur(0.5vw);
   pointer-events: none;
 }
 
