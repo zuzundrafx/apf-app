@@ -903,7 +903,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   rivalAvatarEl,
                   damagePerHit,
                   trajectories[i],
-                  150
+                  125
                 );
               }
 
@@ -954,7 +954,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
                   playerAvatarEl,
                   damagePerHit,
                   trajectories[i],
-                  150
+                  125
                 );
               }
 
