@@ -526,7 +526,10 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       const UPDATE_INTERVAL = 33;
 
       // Предыдущий угол перчатки — для плавной интерполяции
-      let previousSpriteAngle = 0;
+            // ❗ Начальный угол перчатки — считаем сразу, как направление на цель
+      const initialSpriteDirX = toX - fromX;
+      const initialSpriteDirY = toY - fromY;
+      let previousSpriteAngle = (Math.atan2(initialSpriteDirY, initialSpriteDirX) * 180) / Math.PI + 90;
 
       const tick = () => {
         const now = performance.now();
@@ -565,6 +568,15 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           const smoothSpriteAngle = previousSpriteAngle + delta2;
           previousSpriteAngle = smoothSpriteAngle;
 
+          // ❗ ДИАГНОСТИКА
+          console.log('🎯 rAF tick:', {
+            t: t.toFixed(3),
+            dirX: dirX.toFixed(1),
+            dirY: dirY.toFixed(1),
+            rawSpriteAngle: spriteAngleDeg.toFixed(1),
+            smoothSpriteAngle: smoothSpriteAngle.toFixed(1),
+          });
+
           try {
             const imageEl = el.firstChild as HTMLElement | null;
             if (imageEl) {
@@ -591,7 +603,13 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
           el.style.top = `${toY}px`;
           el.style.transform = 'none';
           el.style.opacity = '1';
-          el.classList.add('impact');
+
+          // ❗ Фиксируем последний корректный угол перчатки
+          const imageEl = el.firstChild as HTMLElement | null;
+          if (imageEl) {
+            imageEl.style.transform = `rotate(${previousSpriteAngle}deg)`;
+            imageEl.classList.add('impact');
+          }
         } catch {}
         setTimeout(safeResolve, 40);
       };
