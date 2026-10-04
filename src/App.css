@@ -4377,7 +4377,9 @@ body {
   z-index: 9999;
   top: 0;
   left: 0;
-  will-change: transform, opacity;
+  /* ❌ Убрали will-change — не провоцируем создание GPU-слоя */
+  /* ❌ Убрали filter — не провоцируем артефакты композитинга */
+  /* Лёгкое свечение через box-shadow (дешевле и без артефактов) */
   filter: drop-shadow(0 0 1.5vw currentColor);
 }
 
@@ -4388,9 +4390,8 @@ body {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  /* Поворот задаётся через inline-стиль из JS */
   transform-origin: center center;
-  will-change: transform;
+  /* ❌ Убрали will-change — не создаём лишний слой */
 }
 
 /* Короткий затухающий трейл */
