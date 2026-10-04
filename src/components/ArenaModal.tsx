@@ -422,6 +422,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       el.style.left = '0px';
       el.style.top = '0px';
       el.style.transform = `translate(${fromX}px, ${fromY}px) scale(1)`;
+      el.style.opacity = '0';   // ❗ Не показываем перчатку до старта анимации
 
             // ❗ Определяем направление полёта: снизу вверх или сверху вниз
       const isDownwardAttack = toY > fromY;
