@@ -524,7 +524,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
              // === rAF-цикл: обновляем угол хвоста И ориентацию перчатки ===
       const startTime = performance.now();
       let lastUpdateTime = 0;
-      const UPDATE_INTERVAL = 16;
+      const UPDATE_INTERVAL = 50;
 
       // Предыдущий угол перчатки — для плавной интерполяции
             // ❗ Начальный угол перчатки — считаем сразу, как направление на цель
