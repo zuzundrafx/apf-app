@@ -4388,10 +4388,9 @@ body {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+  /* Поворот задаётся через inline-стиль из JS */
   transform-origin: center center;
   will-change: transform;
-  /* Поворот через CSS-переменную — чтобы impact сохранил угол */
-  transform: rotate(var(--sprite-angle, 0deg));
 }
 
 /* Короткий затухающий трейл */
@@ -4446,15 +4445,15 @@ body {
 
 @keyframes projectileImpact {
   0% {
-    transform: rotate(var(--sprite-angle, 0deg)) scale(1);
+    transform: scale(1);
     opacity: 1;
   }
   60% {
-    transform: rotate(var(--sprite-angle, 0deg)) scale(2.6);
+    transform: scale(2.6);
     opacity: 0.9;
   }
   100% {
-    transform: rotate(var(--sprite-angle, 0deg)) scale(3.4);
+    transform: scale(3.4);
     opacity: 0;
   }
 }
