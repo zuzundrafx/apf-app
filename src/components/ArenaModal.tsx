@@ -728,20 +728,53 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
         setWeightClasses(['Flyweight', 'Bantamweight', 'Featherweight', 'Lightweight', 'Heavyweight']);
 
-        if (data.battleScript && data.battleScript.events) {
+                if (data.battleScript && data.battleScript.events) {
           setBattleScript(data.battleScript.events);
           const allCards = new Set<string>();
+
+          // 1. Аватарки весовых категорий (маленькие карточки)
           data.battleScript.events.forEach((event: any) => {
             if (event.type === 'card-appear') {
               event.userActiveCards?.forEach((card: any) => allCards.add(`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`));
               event.rivalActiveCards?.forEach((card: any) => allCards.add(`${BASE_URL}/avatars/${getAvatarFilename(card.weightClass)}`));
             }
           });
-          await Promise.allSettled(Array.from(allCards).map(src => new Promise((resolve, reject) => {
+
+          // 2. Перчатки
+          allCards.add(`${BASE_URL}/items/L_Arm_Top.webp`);
+          allCards.add(`${BASE_URL}/items/R_Arm_Top.webp`);
+
+          // 3. Иконки стилей бойцов
+          allCards.add(`${BASE_URL}/icons/Striker_style_icon.webp`);
+          allCards.add(`${BASE_URL}/icons/Grappler_style_icon.webp`);
+          allCards.add(`${BASE_URL}/icons/Universal_style_icon.webp`);
+          allCards.add(`${BASE_URL}/icons/Simple_style_icon.webp`);
+
+          // 4. Иконки весовых категорий (для карточек раундов)
+          const weightClassIcons = [
+            'Flyweight_icon.webp', 'Bantamweight_icon.webp', 'Featherweight_icon.webp',
+            'Lightweight_icon.webp', 'Welterweight_icon.webp', 'Middleweight_icon.webp',
+            'Ligh_Heavyweight_icon.webp', 'Heavyweight_icon.webp',
+            "Women's_Strawweight_icon.webp", "Women's_Flyweight_icon.webp",
+            "Women's_Bantamweight_icon.webp", 'Catch_weight_icon.webp'
+          ];
+          weightClassIcons.forEach(icon => allCards.add(`${BASE_URL}/icons/${icon}`));
+
+          // 5. Фон арены
+          allCards.add(`${BASE_URL}/backgrounds/Arena_1_bg.webp`);
+
+          // 6. VS-логотип (для модалки результата)
+          allCards.add(`${BASE_URL}/VS_logo.webp`);
+
+          // 7. Аватарки игрока/противника (могут быть внешние URL)
+          if (userAvatar) allCards.add(userAvatar);
+          if (displayRivalData?.photoUrl) allCards.add(displayRivalData.photoUrl);
+
+          await Promise.allSettled(Array.from(allCards).map(src => new Promise((resolve) => {
             const img = new Image();
             img.src = src;
-            img.onload = resolve;
-            img.onerror = reject;
+            img.onload = () => resolve(undefined);
+            img.onerror = () => resolve(undefined);   // ← не блокируем на ошибках
           })));
         } else {
           setBattleScript([{ type: 'countdown' }, { type: 'battle-end', result: { isOpen: true, result: 'draw' } }]);
