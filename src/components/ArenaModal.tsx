@@ -953,7 +953,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
 
   const handleResultClose = () => {
     setBattleResult(null);
-    setIsBattleLoaded(false);
+    /*setIsBattleLoaded(false);*/
     onSurrender();
   };
 
