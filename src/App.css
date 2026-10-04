@@ -4370,24 +4370,19 @@ body {
 /* Контейнер снаряда */
 .projectile {
   position: fixed;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
+  width: 10vw;
+  height: 10vw;
   pointer-events: none;
   z-index: 9999;
   top: 0;
   left: 0;
-  will-change: transform, opacity;
-  background: radial-gradient(
-    circle,
-    #FFFFFF 0%,
-    currentColor 45%,
-    transparent 100%
-  );
-  box-shadow:
-    0 0 10px currentColor,
-    0 0 20px currentColor,
-    0 0 30px currentColor;
+  will-change: transform, opacity, filter;
+  /* Картинка задаётся через JS (background-image) */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  /* Glow через drop-shadow — ореол вокруг формы перчатки */
+  filter: drop-shadow(0 0 1vw currentColor) drop-shadow(0 0 2vw currentColor);
 }
 
 /* Короткий затухающий трейл */
@@ -4396,22 +4391,20 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 60px;
-  height: 12px;
-  /* Точка вращения — на левом краю хвоста (у снаряда) */
+  width: 15vw;
+  height: 3vw;
   transform-origin: 0 50%;
-  /* Сдвигаем левый край хвоста к центру снаряда, затем вращаем */
-  margin-left: -9px;                       /* половина ширины снаряда (18/2) */
-  margin-top: -6px;                        /* половина высоты хвоста (12/2) */
+  margin-left: -5vw;                       /* половина ширины снаряда (10vw / 2) */
+  margin-top: -1.5vw;                      /* половина высоты хвоста (3vw / 2) */
   transform: rotate(var(--trail-angle, 0deg));
   background: linear-gradient(
     -90deg,
     transparent 0%,
     currentColor 100%
   );
-  border-radius: 6px;
+  border-radius: 1.5vw;
   opacity: 0.7;
-  filter: blur(4px);
+  filter: blur(1vw);
   pointer-events: none;
 }
 
@@ -4420,20 +4413,20 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 80px;
-  height: 20px;
+  width: 20vw;
+  height: 5vw;
   transform-origin: 0 50%;
-  margin-left: -9px;
-  margin-top: -10px;
+  margin-left: -5vw;                       /* половина ширины снаряда (10vw / 2) */
+  margin-top: -2.5vw;                      /* половина высоты хвоста (5vw / 2) */
   transform: rotate(var(--trail-angle, 0deg));
   background: linear-gradient(
     -90deg,
     transparent 0%,
     currentColor 100%
   );
-  border-radius: 10px;
+  border-radius: 2.5vw;
   opacity: 0.25;
-  filter: blur(8px);
+  filter: blur(2vw);
   pointer-events: none;
 }
 

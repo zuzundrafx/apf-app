@@ -406,12 +406,15 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
         return;
       }
 
-      const fromX = fromRect.left + fromRect.width / 2 - 9;
-      const fromY = fromRect.top + fromRect.height / 2 - 9;
-      const toX = toRect.left + toRect.width / 2 - 9;
-      const toY = toRect.top + toRect.height / 2 - 9;
+      // Размер снаряда = 10vw, половина = 5vw
+      const projectileHalfSize = (window.innerWidth * 0.10) / 2;
 
-      const el = document.createElement('div');
+      const fromX = fromRect.left + fromRect.width / 2 - projectileHalfSize;
+      const fromY = fromRect.top + fromRect.height / 2 - projectileHalfSize;
+      const toX = toRect.left + toRect.width / 2 - projectileHalfSize;
+      const toY = toRect.top + toRect.height / 2 - projectileHalfSize;
+
+            const el = document.createElement('div');
       el.className = 'projectile';
       el.style.color = getProjectileColor(damage);
 
@@ -419,6 +422,18 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       el.style.left = '0px';
       el.style.top = '0px';
       el.style.transform = `translate(${fromX}px, ${fromY}px) scale(1)`;
+
+      // ❗ Выбираем картинку в зависимости от траектории
+      let armImage: string;
+      if (trajectory === 'arc-left') {
+        armImage = 'L_Arm_Top.webp';
+      } else if (trajectory === 'arc-right') {
+        armImage = 'R_Arm_Top.webp';
+      } else {
+        // straight — случайно L или R
+        armImage = Math.random() < 0.5 ? 'L_Arm_Top.webp' : 'R_Arm_Top.webp';
+      }
+      el.style.backgroundImage = `url('${BASE_URL}/items/${armImage}')`;
 
       document.body.appendChild(el);
 
