@@ -353,7 +353,7 @@ const ArenaModal: React.FC<ArenaModalProps> = ({
       // Последняя точка — исчезновение (за кадр до вспышки)
       if (i === STEPS) {
         keyframes.push({
-          transform: `translate3d(${x}px, ${y}px, 0) scale(1.4)`,
+          transform: `translate(${x}px, ${y}px) scale(1.4)`,
           opacity: 0,
           offset: 1,
         });
